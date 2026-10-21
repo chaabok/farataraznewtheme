@@ -1,0 +1,26 @@
+// Desktop Service - Prisma schema
+// NOTE: This schema is intentionally written with PostgreSQL-compatible types
+// (String/Int/DateTime, uuid ids, no SQLite-specific features) so that moving
+// to PostgreSQL in production only requires changing `provider` + DATABASE_URL.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+/// Icons displayed on the desktop grid
+model DesktopIcon {
+  id        String   @id @default(uuid())
+  name      String
+  iconKey   String
+  color     String   @default("#38bdf8")
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([sortOrder])
+}
