@@ -324,6 +324,9 @@ export const zhDictionary: Record<string, string> = {
   'formWindow.nodeEdit': '编辑',
   'formWindow.nodeDelete': '删除',
   'formWindow.treeSelectHint': '请从树中选择一个项目以查看详情',
+  'formWindow.treeContextNewSub': '新建子分支',
+  'formWindow.treeContextDelete': '删除分支',
+  'formWindow.treeContextDeleteDisabled': '该分支包含子分支',
 
   // ── New calendar hint keys (not yet in dictionaries.ts) ──────
   'formWindow.hintJalali': '伊朗阳历（贾拉利历）— 例如 ۱۴۰۵/۰۷/۳۰',

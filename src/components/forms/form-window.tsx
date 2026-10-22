@@ -117,6 +117,8 @@ export function DataFormWindow({ moduleId, form, onClose }: DataFormWindowProps)
    * `close` = delete then close the window.
    */
   const [deleteIntent, setDeleteIntent] = useState<DeleteIntent>(null);
+  /** Record the confirmed delete targets (defaults to the loaded one). */
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   const [isListOpen, setIsListOpen] = useState(false);
   const [activeTabKey, setActiveTabKey] = useState<string | null>(null);
 
@@ -350,33 +352,49 @@ export function DataFormWindow({ moduleId, form, onClose }: DataFormWindowProps)
     onClose?.();
   }, [isDeleting, isSaving, onClose, performSave, t]);
 
-  /** First click on any delete action opens the confirm dialog. */
+  /** Resets the shared delete-confirmation dialog. */
+  const cancelDelete = useCallback(() => {
+    setDeleteIntent(null);
+    setDeleteTargetId(null);
+  }, []);
+
+  /**
+   * First click on any delete action opens the confirm dialog. The
+   * target defaults to the loaded record; the tree context menu passes
+   * the right-clicked branch id explicitly.
+   */
   const requestDelete = useCallback(
-    (intent: Exclude<DeleteIntent, null>) => {
-      if (!current || mode === 'new' || isSaving || isDeleting) return;
+    (intent: Exclude<DeleteIntent, null>, targetId?: string) => {
+      if (mode === 'new' || isSaving || isDeleting) return;
+      const target = targetId
+        ? records.find((record) => record.id === targetId) ?? null
+        : current;
+      if (!target) return;
+      setDeleteTargetId(target.id);
       setDeleteIntent(intent);
     },
-    [current, isDeleting, isSaving, mode],
+    [current, isDeleting, isSaving, mode, records],
   );
 
   /** Runs after the user presses «بلی» in the confirm dialog. */
   const confirmDelete = useCallback(async () => {
     if (isDeleting || !deleteIntent) return;
     const intent = deleteIntent;
-    if (!basePath || !current) {
-      setDeleteIntent(null);
+    const targetId = deleteTargetId ?? current?.id ?? '';
+    if (!basePath || !targetId) {
+      cancelDelete();
       return;
     }
     setIsDeleting(true);
     try {
       // DELETE answers 204 with an empty body — nothing to parse.
       await apiFetch(
-        `${basePath}/records/${encodeURIComponent(current.id)}`,
+        `${basePath}/records/${encodeURIComponent(targetId)}`,
         {
           method: 'DELETE',
         },
       );
-      setDeleteIntent(null);
+      cancelDelete();
       if (intent === 'close') {
         toast({ title: t('formWindow.deleteCloseSuccess') });
         onClose?.();
@@ -395,7 +413,7 @@ export function DataFormWindow({ moduleId, form, onClose }: DataFormWindowProps)
         toast({ title: t('formWindow.deleteSuccess') });
       }
     } catch (error) {
-      setDeleteIntent(null);
+      cancelDelete();
       if (error instanceof SessionExpiredError) return;
       toast({
         title: error instanceof Error && error.message
@@ -409,9 +427,11 @@ export function DataFormWindow({ moduleId, form, onClose }: DataFormWindowProps)
   }, [
     applyRecord,
     basePath,
+    cancelDelete,
     currentIndex,
     current,
     deleteIntent,
+    deleteTargetId,
     isDeleting,
     onClose,
     refreshRecords,
@@ -534,11 +554,17 @@ export function DataFormWindow({ moduleId, form, onClose }: DataFormWindowProps)
           if (index >= 0) navigateTo(index);
         }}
         onFieldChange={handleFieldChange}
-        onNewChild={(preset) => startNew(preset)}
-        onEditNode={() =>
-          setMode((prev) => (prev === 'view' && current ? 'edit' : prev))
-        }
-        onDeleteNode={() => requestDelete('current')}
+        onNewChild={(preset) => {
+          if (
+            mode !== 'view' &&
+            isDirty &&
+            !window.confirm(t('formWindow.navDiscardConfirm'))
+          ) {
+            return;
+          }
+          startNew(preset);
+        }}
+        onDeleteNode={(recordId) => requestDelete('current', recordId)}
         onCopyNode={(record) => {
           if (
             mode !== 'view' &&
@@ -690,7 +716,7 @@ export function DataFormWindow({ moduleId, form, onClose }: DataFormWindowProps)
     <AlertDialog
       open={deleteIntent !== null}
       onOpenChange={(open) => {
-        if (!open) setDeleteIntent(null);
+        if (!open) cancelDelete();
       }}
     >
       <AlertDialogContent className="max-w-[calc(100vw-2rem)] rounded-2xl border border-white/15 bg-[#1e2128]/95 text-white shadow-2xl shadow-black/60 backdrop-blur-xl sm:max-w-md">

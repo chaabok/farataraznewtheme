@@ -525,3 +525,24 @@ Stage Summary:
 - معماری: TreeForm صرفاً presentation است و ماشین وضعیت CRUD را از DataFormWindow به ارث می‌برد؛ بنابراین اکشن‌بار، دیالوگ تأیید حذف، فوتر وضعیت و Ctrl+S بدون تکرار کد در فرم درختی هم کار می‌کنند
 - فرم نمونه «گروه کالا-خدمت» با داده درختواره‌ای در منوی عمومی تنظیمات در دسترس است (formKey=product-service-group)
 - فایل‌های کلیدی: tree-form.tsx (جدید)، form-window.tsx، action-bar.tsx (hideNav)، form-utils.ts (pickParentField)، module-menu.tsx (رفع باگ تب فرم)، dictionaries.ts + ۷ locale (۶ کلید ×۱۱ زبان)، seed-tree-form.ts، seed-product-service-group-menu.ts
+
+---
+Task ID: 8
+Agent: main (Z.ai Code)
+Task: اصلاح کامپوننت TreeForm — حذف دکمه‌های «جدید / تغییر / حذف» از تولبار درختواره (به‌دلیل وجود معادل‌ها در اکشن‌بار) + افزودن منوی راست‌کلیک روی نودها: «زیرشاخه جدید» و «حذف شاخه» (فقط برای برگ بدون زیرشاخه)
+
+Work Log:
+- حذف کامل تولبار سه‌دکمه‌ای (جدید/تغییر/حذف) از هدر باکس درختواره در tree-form.tsx — هدر حالا فقط عنوان «درختواره» + شمارنده + جستجو را دارد؛ ایمپورت‌های بلااستفاده (Plus/Pencil) حذف و FolderPlus اضافه شد
+- تغییر قرارداد props کامپوننت: حذف onEditNode و تبدیل onDeleteNode به onDeleteNode(recordId) که شناسه نودِ راست‌کلیک‌شده را صریح پاس می‌دهد
+- منوی راست‌کلیک (context menu) روی هر treeitem: منوی شناور fixed-position با انیمیشن framer-motion (AnimatePresence)، موقعیت‌دهی clamp‌شده داخل viewport، بستن با کلیک بیرون/Escape (useDismiss) و بستن خودکار روی scroll/resize
+  - «زیرشاخه جدید» (FolderPlus، سبز): startNew با preset والد = نود راست‌کلیک‌شده؛ در DataFormWindow با تأیید discard برای پیش‌نویس کثیف محافظت شد
+  - «حذف شاخه» (Trash2، قرمز): فقط برای نود بدون فرزند فعال است؛ روی والد غیرفعال با tooltip «این شاخه دارای زیرشاخه است»؛ در حالت new و isBusy هم غیرفعال
+- DataFormWindow: requestDelete حالا targetId اختیاری می‌گیرد؛ state جدید deleteTargetId + helper cancelDelete (پاک‌سازی intent و target با هم)؛ confirmDelete رکورد هدف را با deleteTargetId ?? current.id حذف می‌کند — دیالوگ تأیید مشترک «بلی/خیر» بدون تغییر برای هر دو مسیر اکشن‌بار و راست‌کلیک کار می‌کند
+- i18n: ۳ کلید جدید formWindow.treeContextNewSub / treeContextDelete / treeContextDeleteDisabled به هر ۱۱ زبان (dictionaries.ts: fa/en/tr/ar + locales/: hi/ps/ckb/pt/ko/fr/zh)
+- E2E با agent-browser (فرم گروه کالا-خدمت): راست‌کلیک روی «کالا» (والد) → «حذف شاخه» disabled ✓؛ راست‌کلیک روی «مشاوره» (برگ) → enabled ✓؛ «زیرشاخه جدید» روی کالا → حالت جدید با ParentPicker پیش‌فرض «10 — کالا» ✓؛ ذخیره → نود سطح ۲ در درخت ✓؛ حذف همان نود: خیر → لغو ✓، بلی → حذف و بازسازی درخت ✓؛ تست locale انگلیسی → "New sub-branch / Delete branch" با چیدمان LTR ✓؛ بدون خطای کنسول، dev.log پاک، lint پاس
+
+Stage Summary:
+- تولبار درختواره حذف شد؛ CRUD فرم درختی فقط از اکشن‌بار + منوی راست‌کلیک مدیریت می‌شود
+- منوی راست‌کلیک نودها: «زیرشاخه جدید» همیشه فعال، «حذف شاخه» مشروط به برگ‌بودن (بدون زیرشاخه) — نما به همان دیالوگ تأیید حذف مشترک وصل است
+- deleteTargetId در DataFormWindow امکان حذف رکورد هدف مستقل از رکورد جاری را می‌دهد (بدون شکستن مسیرهای action-bar)
+- فایل‌ها: tree-form.tsx، form-window.tsx، dictionaries.ts، locales/{hi,ps,ckb,pt,ko,fr,zh}.ts

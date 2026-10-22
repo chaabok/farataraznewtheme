@@ -328,4 +328,7 @@ export const koDictionary: Record<string, string> = {
   'formWindow.nodeEdit': '편집',
   'formWindow.nodeDelete': '삭제',
   'formWindow.treeSelectHint': '세부 정보를 보려면 트리에서 항목을 선택하세요',
+  'formWindow.treeContextNewSub': '새 하위 분기',
+  'formWindow.treeContextDelete': '분기 삭제',
+  'formWindow.treeContextDeleteDisabled': '이 분기에는 하위 분기가 있습니다',
 };

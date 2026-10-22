@@ -328,4 +328,7 @@ export const ckbDictionary: Record<string, string> = {
   'formWindow.nodeEdit': 'دەستکاری',
   'formWindow.nodeDelete': 'سڕینەوە',
   'formWindow.treeSelectHint': 'بۆ بینینی وردەکارییەکان، دانەیەک لە دارەکە هەڵبژێرە',
+  'formWindow.treeContextNewSub': 'لقی نوێ',
+  'formWindow.treeContextDelete': 'سڕینەوەی لق',
+  'formWindow.treeContextDeleteDisabled': 'ئەم لقە لقی تێدایە',
 };

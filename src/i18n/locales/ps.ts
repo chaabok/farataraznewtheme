@@ -328,4 +328,7 @@ export const psDictionary: Record<string, string> = {
   'formWindow.nodeEdit': 'بدلون',
   'formWindow.nodeDelete': 'ړنګول',
   'formWindow.treeSelectHint': 'د جزئیاتو لپاره له درخت څخه یو توکی وټاکه',
+  'formWindow.treeContextNewSub': 'نوې فرعي څانګه',
+  'formWindow.treeContextDelete': 'د څانګې حذف',
+  'formWindow.treeContextDeleteDisabled': 'دا څانګه فرعي څانګې لري',
 };

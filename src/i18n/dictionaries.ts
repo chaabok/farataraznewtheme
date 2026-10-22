@@ -342,6 +342,9 @@ const fa = {
   'formWindow.nodeEdit': 'تغییر',
   'formWindow.nodeDelete': 'حذف',
   'formWindow.treeSelectHint': 'برای نمایش جزئیات، یک مورد را از درختواره انتخاب کنید',
+  'formWindow.treeContextNewSub': 'زیرشاخه جدید',
+  'formWindow.treeContextDelete': 'حذف شاخه',
+  'formWindow.treeContextDeleteDisabled': 'این شاخه دارای زیرشاخه است',
 } satisfies Record<string, string>;
 
 const en: Record<string, string> = {
@@ -647,6 +650,9 @@ const en: Record<string, string> = {
   'formWindow.nodeEdit': 'Edit',
   'formWindow.nodeDelete': 'Delete',
   'formWindow.treeSelectHint': 'Select an item in the tree to see its details',
+  'formWindow.treeContextNewSub': 'New sub-branch',
+  'formWindow.treeContextDelete': 'Delete branch',
+  'formWindow.treeContextDeleteDisabled': 'This branch has sub-branches',
 };
 
 const tr: Record<string, string> = {
@@ -952,6 +958,9 @@ const tr: Record<string, string> = {
   'formWindow.nodeEdit': 'Düzenle',
   'formWindow.nodeDelete': 'Sil',
   'formWindow.treeSelectHint': 'Ayrıntıları görmek için ağaçtan bir öğe seçin',
+  'formWindow.treeContextNewSub': 'Yeni alt dal',
+  'formWindow.treeContextDelete': 'Dalı sil',
+  'formWindow.treeContextDeleteDisabled': 'Bu dalın alt dalları var',
 };
 
 const ar: Record<string, string> = {
@@ -1257,6 +1266,9 @@ const ar: Record<string, string> = {
   'formWindow.nodeEdit': 'تعديل',
   'formWindow.nodeDelete': 'حذف',
   'formWindow.treeSelectHint': 'اختر عنصراً من الشجرة لعرض تفاصيله',
+  'formWindow.treeContextNewSub': 'فرع جديد',
+  'formWindow.treeContextDelete': 'حذف الفرع',
+  'formWindow.treeContextDeleteDisabled': 'هذا الفرع يحتوي على فروع فرعية',
 };
 
 export const DICTIONARIES: Record<Locale, Record<string, string>> = {

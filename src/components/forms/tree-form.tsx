@@ -1,6 +1,12 @@
 'use client';
 
-import { useCallback, useId, useMemo, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useMemo,
+  useState,
+} from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   Check,
@@ -9,9 +15,8 @@ import {
   Copy,
   FileText,
   Folder,
+  FolderPlus,
   Network,
-  Pencil,
-  Plus,
   Search,
   Trash2,
   X,
@@ -54,14 +59,16 @@ interface TreeFormProps {
   onSelect: (recordId: string) => void;
   onFieldChange: (fieldKey: string, value: FormFieldValue) => void;
   /**
-   * Tree toolbar «جدید» — receives a preset map assigning the selected
-   * node as parent (empty when nothing is selected → root entry).
+   * Node context-menu «زیرشاخه جدید» — receives a preset map assigning
+   * the right-clicked node as parent of the fresh entry.
    */
   onNewChild: (preset: FormDataMap) => void;
-  /** Tree toolbar «تغییر» — puts the loaded record into edit mode. */
-  onEditNode: () => void;
-  /** Tree toolbar «حذف» — opens the shared delete confirmation. */
-  onDeleteNode: () => void;
+  /**
+   * Node context-menu «حذف شاخه» — receives the right-clicked record id
+   * (offered only for leaf nodes); the hosting window opens the shared
+   * delete confirmation.
+   */
+  onDeleteNode: (recordId: string) => void;
   /** Per-node copy icon — starts a new entry prefilled with that node. */
   onCopyNode: (record: FormRecord) => void;
 }
@@ -75,9 +82,12 @@ interface TreeNode {
 /**
  * Two-box renderer of `type: 'tree'` ERP forms (e.g. «گروه کالا-خدمت»):
  *
- * - Tree box (درختواره): toolbar (جدید / تغییر / حذف), a search field and
- *   the expandable hierarchy built from the records' parent field, with
- *   code badges, per-node copy and folder/file glyphs.
+ * - Tree box (درختواره): a search field and the expandable hierarchy
+ *   built from the records' parent field, with code badges, per-node
+ *   copy and folder/file glyphs. Right-clicking a node opens a context
+ *   menu: «زیرشاخه جدید» (new branch under it) and «حذف شاخه» (delete
+ *   the branch — only for leaves without children). CRUD itself stays
+ *   in the action bar of the hosting window.
  * - Detail box: the header fields of the selected record (the parent
  *   field renders as a self-referencing picker), plus the tabbed body
  *   sections — sharing the exact same field components as every form.
@@ -98,7 +108,6 @@ export function TreeForm({
   onSelect,
   onFieldChange,
   onNewChild,
-  onEditNode,
   onDeleteNode,
   onCopyNode,
 }: TreeFormProps) {
@@ -212,6 +221,58 @@ export function TreeForm({
     });
   }, []);
 
+  // ── Node context menu (زیرشاخه جدید / حذف شاخه) ─────────────────
+  const [menu, setMenu] = useState<{
+    x: number;
+    y: number;
+    recordId: string;
+  } | null>(null);
+  const closeMenu = useCallback(() => setMenu(null), []);
+  const menuRef = useDismiss<HTMLDivElement>(menu !== null, closeMenu);
+
+  /** Node the open menu belongs to (hidden again once it disappears). */
+  const menuNode = useMemo(
+    () =>
+      menu
+        ? nodes.find((node) => node.record.id === menu.recordId) ?? null
+        : null,
+    [menu, nodes],
+  );
+
+  /** Opens the menu inside the viewport (approximate panel size). */
+  const openMenu = useCallback((event: React.MouseEvent, recordId: string) => {
+    event.preventDefault();
+    const x = Math.min(event.clientX, window.innerWidth - 220);
+    const y = Math.min(event.clientY, window.innerHeight - 104);
+    setMenu({ x: Math.max(8, x), y: Math.max(8, y), recordId });
+  }, []);
+
+  // Fixed-position menu must not linger above a scrolled/resized tree.
+  useEffect(() => {
+    if (!menu) return;
+    const close = () => setMenu(null);
+    window.addEventListener('scroll', close, true);
+    window.addEventListener('resize', close);
+    return () => {
+      window.removeEventListener('scroll', close, true);
+      window.removeEventListener('resize', close);
+    };
+  }, [menu]);
+
+  const handleMenuNewSub = useCallback(() => {
+    if (!menu || !parentField) return;
+    onNewChild({ [parentField.fieldKey]: menu.recordId });
+    closeMenu();
+  }, [closeMenu, menu, onNewChild, parentField]);
+
+  const handleMenuDelete = useCallback(() => {
+    if (!menu || mode === 'new' || isBusy) return;
+    const node = nodes.find((item) => item.record.id === menu.recordId);
+    if (!node || node.children.length > 0) return;
+    onDeleteNode(menu.recordId);
+    closeMenu();
+  }, [closeMenu, isBusy, menu, mode, nodes, onDeleteNode]);
+
   // ── Body tabs (tabKey !== null groups, definition order kept) ───
   const bodyTabs = useMemo(() => {
     const groups: Array<{ key: string; name: string; fields: FormFieldDef[] }> = [];
@@ -293,47 +354,7 @@ export function TreeForm({
             </span>
           </div>
 
-          {/* Toolbar: جدید / تغییر / حذف */}
-          <div className="mb-2.5 flex items-center gap-1.5">
-            <button
-              type="button"
-              title={t('formWindow.nodeNew')}
-              onClick={() =>
-                onNewChild(
-                  selectedId && parentField
-                    ? { [parentField.fieldKey]: selectedId }
-                    : {},
-                )
-              }
-              disabled={isBusy}
-              className="flex h-7 items-center gap-1 rounded-md bg-emerald-500/15 px-2.5 text-[11px] font-medium text-emerald-400 ring-1 ring-white/10 transition-all duration-150 hover:bg-emerald-500/25 hover:shadow-[0_0_14px_-4px_rgba(52,211,153,0.55)] active:scale-95 disabled:pointer-events-none disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/50"
-            >
-              <Plus className="h-3 w-3" strokeWidth={2.4} />
-              {t('formWindow.nodeNew')}
-            </button>
-            <button
-              type="button"
-              title={t('formWindow.nodeEdit')}
-              onClick={onEditNode}
-              disabled={!current || mode === 'new' || isBusy}
-              className="flex h-7 items-center gap-1 rounded-md bg-sky-500/15 px-2.5 text-[11px] font-medium text-sky-400 ring-1 ring-white/10 transition-all duration-150 hover:bg-sky-500/25 hover:shadow-[0_0_14px_-4px_rgba(56,189,248,0.55)] active:scale-95 disabled:pointer-events-none disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/50"
-            >
-              <Pencil className="h-3 w-3" strokeWidth={2.2} />
-              {t('formWindow.nodeEdit')}
-            </button>
-            <button
-              type="button"
-              title={t('formWindow.nodeDelete')}
-              onClick={onDeleteNode}
-              disabled={!current || mode === 'new' || isBusy}
-              className="flex h-7 items-center gap-1 rounded-md bg-rose-500/15 px-2.5 text-[11px] font-medium text-rose-400 ring-1 ring-white/10 transition-all duration-150 hover:bg-rose-500/25 hover:shadow-[0_0_14px_-4px_rgba(251,113,133,0.55)] active:scale-95 disabled:pointer-events-none disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400/50"
-            >
-              <Trash2 className="h-3 w-3" strokeWidth={2.2} />
-              {t('formWindow.nodeDelete')}
-            </button>
-          </div>
-
-          {/* Search inside the tree */}
+          {/* Search inside the tree (CRUD lives in the action bar) */}
           <div className="relative">
             <Search
               className="pointer-events-none absolute start-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/35"
@@ -392,6 +413,7 @@ export function TreeForm({
                   aria-level={node.depth + 1}
                   aria-expanded={hasChildren ? !isCollapsed : undefined}
                   style={{ paddingInlineStart: node.depth * 14 }}
+                  onContextMenu={(event) => openMenu(event, node.record.id)}
                 >
                   <div
                     className={cn(
@@ -521,6 +543,55 @@ export function TreeForm({
           </div>
         )}
       </section>
+
+      {/* ── Node context menu (right click) ─────────────────────────── */}
+      <AnimatePresence>
+        {menu && menuNode && (
+          <motion.div
+            ref={menuRef}
+            role="menu"
+            aria-label={t('formWindow.treePanel')}
+            initial={{ opacity: 0, scale: 0.95, y: -3 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: -3 }}
+            transition={{ duration: 0.13, ease: 'easeOut' }}
+            style={{ left: menu.x, top: menu.y }}
+            className="fixed z-[70] min-w-[190px] origin-top overflow-hidden rounded-xl bg-[#1b1e26]/[0.97] p-1 shadow-2xl shadow-black/50 ring-1 ring-white/10 backdrop-blur-xl"
+          >
+            <button
+              type="button"
+              role="menuitem"
+              disabled={!parentField || isBusy}
+              onClick={handleMenuNewSub}
+              className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-start text-[12.5px] text-white/85 transition-colors enabled:hover:bg-emerald-500/15 enabled:hover:text-emerald-300 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-emerald-400/50 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <FolderPlus
+                className="h-3.5 w-3.5 shrink-0 text-emerald-400"
+                aria-hidden="true"
+              />
+              {t('formWindow.treeContextNewSub')}
+            </button>
+            <button
+              type="button"
+              role="menuitem"
+              title={
+                menuNode.children.length > 0
+                  ? t('formWindow.treeContextDeleteDisabled')
+                  : undefined
+              }
+              disabled={menuNode.children.length > 0 || mode === 'new' || isBusy}
+              onClick={handleMenuDelete}
+              className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-start text-[12.5px] text-white/85 transition-colors enabled:hover:bg-rose-500/15 enabled:hover:text-rose-300 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-rose-400/50 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <Trash2
+                className="h-3.5 w-3.5 shrink-0 text-rose-400"
+                aria-hidden="true"
+              />
+              {t('formWindow.treeContextDelete')}
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

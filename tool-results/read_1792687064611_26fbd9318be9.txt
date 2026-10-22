@@ -1,0 +1,768 @@
+     1→     1→'use client';
+     2→     2→
+     3→     3→import { useCallback, useId, useMemo, useState } from 'react';
+     4→     4→import { AnimatePresence, motion } from 'framer-motion';
+     5→     5→import {
+     6→     6→  Check,
+     7→     7→  ChevronRight,
+     8→     8→  ChevronsUpDown,
+     9→     9→  Copy,
+    10→    10→  FileText,
+    11→    11→  Folder,
+    12→    12→  Network,
+    13→    13→  Pencil,
+    14→    14→  Plus,
+    15→    15→  Search,
+    16→    16→  Trash2,
+    17→    17→  X,
+    18→    18→} from 'lucide-react';
+    19→    19→import { useTranslation } from '@/i18n';
+    20→    20→import type {
+    21→    21→  FormDataMap,
+    22→    22→  FormFieldDef,
+    23→    23→  FormFieldValue,
+    24→    24→  FormRecord,
+    25→    25→} from '@/types/forms';
+    26→    26→import { cn } from '@/lib/utils';
+    27→    27→import type { FormMode } from './action-bar';
+    28→    28→import { FieldRenderer } from './field-renderer';
+    29→    29→import { FormTabs } from './form-tabs';
+    30→    30→import { controlClasses } from './form-styles';
+    31→    31→import {
+    32→    32→  fieldLabel,
+    33→    33→  formatFieldValue,
+    34→    34→  pickListColumns,
+    35→    35→  pickParentField,
+    36→    36→} from './form-utils';
+    37→    37→import { useDismiss } from './use-dismiss';
+    38→    38→
+    39→    39→interface TreeFormProps {
+    40→    40→  records: FormRecord[];
+    41→    41→  fields: FormFieldDef[];
+    42→    42→  /** Draft values of the loaded / new entry (owned by the form window). */
+    43→    43→  draft: FormDataMap;
+    44→    44→  mode: FormMode;
+    45→    45→  /** Id of the record loaded in the detail box (null in new mode). */
+    46→    46→  selectedId: string | null;
+    47→    47→  /** True while a save/delete request is in flight. */
+    48→    48→  isBusy: boolean;
+    49→    49→  /** Accent hex color from the FormDef. */
+    50→    50→  accentColor: string;
+    51→    51→  /** Base path ending in `/lookups` for lookup fields. */
+    52→    52→  lookupUrlBase: string;
+    53→    53→  /** Clicking a tree node loads it into the detail box. */
+    54→    54→  onSelect: (recordId: string) => void;
+    55→    55→  onFieldChange: (fieldKey: string, value: FormFieldValue) => void;
+    56→    56→  /**
+    57→    57→   * Tree toolbar «جدید» — receives a preset map assigning the selected
+    58→    58→   * node as parent (empty when nothing is selected → root entry).
+    59→    59→   */
+    60→    60→  onNewChild: (preset: FormDataMap) => void;
+    61→    61→  /** Tree toolbar «تغییر» — puts the loaded record into edit mode. */
+    62→    62→  onEditNode: () => void;
+    63→    63→  /** Tree toolbar «حذف» — opens the shared delete confirmation. */
+    64→    64→  onDeleteNode: () => void;
+    65→    65→  /** Per-node copy icon — starts a new entry prefilled with that node. */
+    66→    66→  onCopyNode: (record: FormRecord) => void;
+    67→    67→}
+    68→    68→
+    69→    69→interface TreeNode {
+    70→    70→  record: FormRecord;
+    71→    71→  depth: number;
+    72→    72→  children: TreeNode[];
+    73→    73→}
+    74→    74→
+    75→    75→/**
+    76→    76→ * Two-box renderer of `type: 'tree'` ERP forms (e.g. «گروه کالا-خدمت»):
+    77→    77→ *
+    78→    78→ * - Tree box (درختواره): toolbar (جدید / تغییر / حذف), a search field and
+    79→    79→ *   the expandable hierarchy built from the records' parent field, with
+    80→    80→ *   code badges, per-node copy and folder/file glyphs.
+    81→    81→ * - Detail box: the header fields of the selected record (the parent
+    82→    82→ *   field renders as a self-referencing picker), plus the tabbed body
+    83→    83→ *   sections — sharing the exact same field components as every form.
+    84→    84→ *
+    85→    85→ * Purely presentational: the record state machine (save/delete/navigate)
+    86→    86→ * lives in the hosting DataFormWindow, so the whole CRUD surface —
+    87→    87→ * action bar, confirm dialog, status footer — stays identical.
+    88→    88→ */
+    89→    89→export function TreeForm({
+    90→    90→  records,
+    91→    91→  fields,
+    92→    92→  draft,
+    93→    93→  mode,
+    94→    94→  selectedId,
+    95→    95→  isBusy,
+    96→    96→  accentColor,
+    97→    97→  lookupUrlBase,
+    98→    98→  onSelect,
+    99→    99→  onFieldChange,
+   100→   100→  onNewChild,
+   101→   101→  onEditNode,
+   102→   102→  onDeleteNode,
+   103→   103→  onCopyNode,
+   104→   104→}: TreeFormProps) {
+   105→   105→  const { direction, formatNumber, t } = useTranslation();
+   106→   106→
+   107→   107→  const sortedFields = useMemo(
+   108→   108→    () => [...fields].sort((a, b) => a.sortOrder - b.sortOrder),
+   109→   109→    [fields],
+   110→   110→  );
+   111→   111→  const parentField = useMemo(() => pickParentField(sortedFields), [sortedFields]);
+   112→   112→  const { codeField, titleField } = useMemo(
+   113→   113→    () => pickListColumns(sortedFields),
+   114→   114→    [sortedFields],
+   115→   115→  );
+   116→   116→
+   117→   117→  // ── Hierarchy ────────────────────────────────────────────────────
+   118→   118→  const nodes = useMemo<TreeNode[]>(() => {
+   119→   119→    const byId = new Map<string, TreeNode>(
+   120→   120→      records.map((record) => [record.id, { record, depth: 0, children: [] }]),
+   121→   121→    );
+   122→   122→    const roots: TreeNode[] = [];
+   123→   123→    for (const node of byId.values()) {
+   124→   124→      const parentValue = parentField
+   125→   125→        ? node.record.data[parentField.fieldKey]
+   126→   126→        : null;
+   127→   127→      const parent =
+   128→   128→        typeof parentValue === 'string' ? byId.get(parentValue) : undefined;
+   129→   129→      if (parent && parent !== node) parent.children.push(node);
+   130→   130→      else roots.push(node);
+   131→   131→    }
+   132→   132→    const flat: TreeNode[] = [];
+   133→   133→    const walk = (list: TreeNode[], depth: number) => {
+   134→   134→      for (const node of list) {
+   135→   135→        node.depth = depth;
+   136→   136→        flat.push(node);
+   137→   137→        walk(node.children, depth + 1);
+   138→   138→      }
+   139→   139→    };
+   140→   140→    walk(roots, 0);
+   141→   141→    return flat;
+   142→   142→  }, [records, parentField]);
+   143→   143→
+   144→   144→  /** Ids of the selected record's descendants (excluded from parent picker). */
+   145→   145→  const descendantIds = useMemo(() => {
+   146→   146→    const ids = new Set<string>();
+   147→   147→    if (!selectedId) return ids;
+   148→   148→    const walk = (list: TreeNode[]): boolean => {
+   149→   149→      for (const node of list) {
+   150→   150→        if (walk(node.children)) return true;
+   151→   151→        if (node.record.id === selectedId) {
+   152→   152→          ids.add(node.record.id);
+   153→   153→          return true;
+   154→   154→        }
+   155→   155→        if (ids.size) ids.add(node.record.id);
+   156→   156→      }
+   157→   157→      return false;
+   158→   158→    };
+   159→   159→    walk(nodes);
+   160→   160→    return ids;
+   161→   161→  }, [nodes, selectedId]);
+   162→   162→
+   163→   163→  // ── Search + expand state ───────────────────────────────────────
+   164→   164→  const [query, setQuery] = useState('');
+   165→   165→  const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set());
+   166→   166→
+   167→   167→  const needle = query.trim().toLowerCase();
+   168→   168→  const isSearching = needle.length > 0;
+   169→   169→
+   170→   170→  /** Node matches when its code or title contains the query. */
+   171→   171→  const nodeMatches = useCallback(
+   172→   172→    (node: TreeNode) => {
+   173→   173→      const code = codeField
+   174→   174→        ? String(node.record.data[codeField.fieldKey] ?? '')
+   175→   175→        : '';
+   176→   176→      const title = titleField
+   177→   177→        ? String(node.record.data[titleField.fieldKey] ?? '')
+   178→   178→        : '';
+   179→   179→      return (
+   180→   180→        code.toLowerCase().includes(needle) ||
+   181→   181→        title.toLowerCase().includes(needle)
+   182→   182→      );
+   183→   183→    },
+   184→   184→    [codeField, needle, titleField],
+   185→   185→  );
+   186→   186→
+   187→   187→  /** Visible nodes while searching: matches + their ancestors. */
+   188→   188→  const visibleNodes = useMemo(() => {
+   189→   189→    if (!isSearching) return nodes;
+   190→   190→    const keep = new Set<string>();
+   191→   191→    const match = (list: TreeNode[]): boolean => {
+   192→   192→      let any = false;
+   193→   193→      for (const node of list) {
+   194→   194→        const childMatch = match(node.children);
+   195→   195→        if (childMatch || nodeMatches(node)) {
+   196→   196→          keep.add(node.record.id);
+   197→   197→          any = true;
+   198→   198→        }
+   199→   199→      }
+   200→   200→      return any;
+   201→   201→    };
+   202→   202→    match(nodes);
+   203→   203→    return nodes.filter((node) => keep.has(node.record.id));
+   204→   204→  }, [isSearching, nodeMatches, nodes]);
+   205→   205→
+   206→   206→  const toggle = useCallback((recordId: string) => {
+   207→   207→    setCollapsed((prev) => {
+   208→   208→      const next = new Set(prev);
+   209→   209→      if (next.has(recordId)) next.delete(recordId);
+   210→   210→      else next.add(recordId);
+   211→   211→      return next;
+   212→   212→    });
+   213→   213→  }, []);
+   214→   214→
+   215→   215→  // ── Body tabs (tabKey !== null groups, definition order kept) ───
+   216→   216→  const bodyTabs = useMemo(() => {
+   217→   217→    const groups: Array<{ key: string; name: string; fields: FormFieldDef[] }> = [];
+   218→   218→    for (const field of sortedFields) {
+   219→   219→      if (field.tabKey === null) continue;
+   220→   220→      let group = groups.find((candidate) => candidate.key === field.tabKey);
+   221→   221→      if (!group) {
+   222→   222→        group = {
+   223→   223→          key: field.tabKey,
+   224→   224→          name: field.tabName ?? field.tabKey,
+   225→   225→          fields: [],
+   226→   226→        };
+   227→   227→        groups.push(group);
+   228→   228→      }
+   229→   229→      group.fields.push(field);
+   230→   230→    }
+   231→   231→    return groups;
+   232→   232→  }, [sortedFields]);
+   233→   233→
+   234→   234→  const headerFields = useMemo(
+   235→   235→    () => sortedFields.filter((field) => field.tabKey === null),
+   236→   236→    [sortedFields],
+   237→   237→  );
+   238→   238→
+   239→   239→  const [activeTabKey, setActiveTabKey] = useState<string | null>(null);
+   240→   240→  const activeBodyTab =
+   241→   241→    bodyTabs.find((tab) => tab.key === activeTabKey) ?? bodyTabs[0] ?? null;
+   242→   242→
+   243→   243→  const current = records.find((record) => record.id === selectedId) ?? null;
+   244→   244→  const showDetail = mode === 'new' || current !== null;
+   245→   245→
+   246→   246→  const renderFields = (list: FormFieldDef[]) => (
+   247→   247→    <div className="grid grid-cols-1 gap-x-5 gap-y-4 p-4 sm:grid-cols-2">
+   248→   248→      {list.map((field) =>
+   249→   249→        parentField && field.fieldKey === parentField.fieldKey ? (
+   250→   250→          <ParentPicker
+   251→   251→            key={field.fieldKey}
+   252→   252→            field={field}
+   253→   253→            nodes={nodes}
+   254→   254→            excludeIds={descendantIds}
+   255→   255→            value={
+   256→   256→              typeof draft[field.fieldKey] === 'string'
+   257→   257→                ? (draft[field.fieldKey] as string)
+   258→   258→                : null
+   259→   259→            }
+   260→   260→            onChange={(value) => onFieldChange(field.fieldKey, value)}
+   261→   261→            disabled={isBusy}
+   262→   262→          />
+   263→   263→        ) : (
+   264→   264→          <FieldRenderer
+   265→   265→            key={field.fieldKey}
+   266→   266→            field={field}
+   267→   267→            value={draft[field.fieldKey] ?? null}
+   268→   268→            onChange={(value) => onFieldChange(field.fieldKey, value)}
+   269→   269→            disabled={isBusy}
+   270→   270→            lookupUrlBase={lookupUrlBase}
+   271→   271→          />
+   272→   272→        ),
+   273→   273→      )}
+   274→   274→    </div>
+   275→   275→  );
+   276→   276→
+   277→   277→  return (
+   278→   278→    <div className="flex h-full min-h-0 flex-col md:flex-row">
+   279→   279→      {/* ── Box 1: tree panel (درختواره) ─────────────────────────── */}
+   280→   280→      <aside
+   281→   281→        aria-label={t('formWindow.treePanel')}
+   282→   282→        className="flex max-h-56 w-full shrink-0 flex-col border-b border-white/10 bg-white/[0.02] md:max-h-none md:w-60 md:border-b-0 md:border-e lg:w-72"
+   283→   283→      >
+   284→   284→        <div className="shrink-0 border-b border-white/10 px-3 pb-2.5 pt-3">
+   285→   285→          {/* Panel title + record count */}
+   286→   286→          <div className="mb-2.5 flex items-center gap-1.5">
+   287→   287→            <Network className="h-3.5 w-3.5 text-white/45" aria-hidden="true" />
+   288→   288→            <span className="text-[12px] font-semibold text-white/85">
+   289→   289→              {t('formWindow.treePanel')}
+   290→   290→            </span>
+   291→   291→            <span className="rounded bg-white/[0.07] px-1.5 py-px text-[10px] tabular-nums text-white/45">
+   292→   292→              {formatNumber(records.length)}
+   293→   293→            </span>
+   294→   294→          </div>
+   295→   295→
+   296→   296→          {/* Toolbar: جدید / تغییر / حذف */}
+   297→   297→          <div className="mb-2.5 flex items-center gap-1.5">
+   298→   298→            <button
+   299→   299→              type="button"
+   300→   300→              title={t('formWindow.nodeNew')}
+   301→   301→              onClick={() =>
+   302→   302→                onNewChild(
+   303→   303→                  selectedId && parentField
+   304→   304→                    ? { [parentField.fieldKey]: selectedId }
+   305→   305→                    : {},
+   306→   306→                )
+   307→   307→              }
+   308→   308→              disabled={isBusy}
+   309→   309→              className="flex h-7 items-center gap-1 rounded-md bg-emerald-500/15 px-2.5 text-[11px] font-medium text-emerald-400 ring-1 ring-white/10 transition-all duration-150 hover:bg-emerald-500/25 hover:shadow-[0_0_14px_-4px_rgba(52,211,153,0.55)] active:scale-95 disabled:pointer-events-none disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/50"
+   310→   310→            >
+   311→   311→              <Plus className="h-3 w-3" strokeWidth={2.4} />
+   312→   312→              {t('formWindow.nodeNew')}
+   313→   313→            </button>
+   314→   314→            <button
+   315→   315→              type="button"
+   316→   316→              title={t('formWindow.nodeEdit')}
+   317→   317→              onClick={onEditNode}
+   318→   318→              disabled={!current || mode === 'new' || isBusy}
+   319→   319→              className="flex h-7 items-center gap-1 rounded-md bg-sky-500/15 px-2.5 text-[11px] font-medium text-sky-400 ring-1 ring-white/10 transition-all duration-150 hover:bg-sky-500/25 hover:shadow-[0_0_14px_-4px_rgba(56,189,248,0.55)] active:scale-95 disabled:pointer-events-none disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/50"
+   320→   320→            >
+   321→   321→              <Pencil className="h-3 w-3" strokeWidth={2.2} />
+   322→   322→              {t('formWindow.nodeEdit')}
+   323→   323→            </button>
+   324→   324→            <button
+   325→   325→              type="button"
+   326→   326→              title={t('formWindow.nodeDelete')}
+   327→   327→              onClick={onDeleteNode}
+   328→   328→              disabled={!current || mode === 'new' || isBusy}
+   329→   329→              className="flex h-7 items-center gap-1 rounded-md bg-rose-500/15 px-2.5 text-[11px] font-medium text-rose-400 ring-1 ring-white/10 transition-all duration-150 hover:bg-rose-500/25 hover:shadow-[0_0_14px_-4px_rgba(251,113,133,0.55)] active:scale-95 disabled:pointer-events-none disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400/50"
+   330→   330→            >
+   331→   331→              <Trash2 className="h-3 w-3" strokeWidth={2.2} />
+   332→   332→              {t('formWindow.nodeDelete')}
+   333→   333→            </button>
+   334→   334→          </div>
+   335→   335→
+   336→   336→          {/* Search inside the tree */}
+   337→   337→          <div className="relative">
+   338→   338→            <Search
+   339→   339→              className="pointer-events-none absolute start-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/35"
+   340→   340→              aria-hidden="true"
+   341→   341→            />
+   342→   342→            <input
+   343→   343→              type="text"
+   344→   344→              value={query}
+   345→   345→              onChange={(event) => setQuery(event.target.value)}
+   346→   346→              placeholder={t('formWindow.treeSearch')}
+   347→   347→              aria-label={t('formWindow.treeSearch')}
+   348→   348→              className={cn(controlClasses, 'h-7 ps-7 pe-7')}
+   349→   349→            />
+   350→   350→            {isSearching && (
+   351→   351→              <button
+   352→   352→                type="button"
+   353→   353→                title={t('formWindow.clear')}
+   354→   354→                aria-label={t('formWindow.clear')}
+   355→   355→                onClick={() => setQuery('')}
+   356→   356→                className="absolute end-1 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-md text-white/40 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40"
+   357→   357→              >
+   358→   358→                <X className="h-3 w-3" />
+   359→   359→              </button>
+   360→   360→            )}
+   361→   361→          </div>
+   362→   362→        </div>
+   363→   363→
+   364→   364→        {/* Nodes */}
+   365→   365→        <div
+   366→   366→          role="tree"
+   367→   367→          aria-label={t('formWindow.treePanel')}
+   368→   368→          className="min-h-0 flex-1 overflow-y-auto p-1.5 [scrollbar-width:thin]"
+   369→   369→        >
+   370→   370→          {nodes.length === 0 ? (
+   371→   371→            <div className="flex flex-col items-center gap-2 px-3 py-8 text-center">
+   372→   372→              <Network className="h-5 w-5 text-white/25" aria-hidden="true" />
+   373→   373→              <p className="text-[12px] text-white/40">
+   374→   374→                {t('formWindow.emptyRecords')}
+   375→   375→              </p>
+   376→   376→            </div>
+   377→   377→          ) : visibleNodes.length === 0 ? (
+   378→   378→            <p className="px-3 py-8 text-center text-[12px] text-white/40">
+   379→   379→              {t('formWindow.noMatch')}
+   380→   380→            </p>
+   381→   381→          ) : (
+   382→   382→            visibleNodes.map((node) => {
+   383→   383→              const hasChildren = node.children.length > 0;
+   384→   384→              const isCollapsed = !isSearching && collapsed.has(node.record.id);
+   385→   385→              const isSelected =
+   386→   386→                mode !== 'new' && node.record.id === selectedId;
+   387→   387→              return (
+   388→   388→                <div
+   389→   389→                  key={node.record.id}
+   390→   390→                  role="treeitem"
+   391→   391→                  aria-selected={isSelected}
+   392→   392→                  aria-level={node.depth + 1}
+   393→   393→                  aria-expanded={hasChildren ? !isCollapsed : undefined}
+   394→   394→                  style={{ paddingInlineStart: node.depth * 14 }}
+   395→   395→                >
+   396→   396→                  <div
+   397→   397→                    className={cn(
+   398→   398→                      'group flex items-center gap-0.5 rounded-lg pe-1 transition-colors',
+   399→   399→                      isSelected
+   400→   400→                        ? 'bg-sky-500/15 ring-1 ring-sky-400/30'
+   401→   401→                        : 'hover:bg-white/[0.05]',
+   402→   402→                    )}
+   403→   403→                  >
+   404→   404→                    <button
+   405→   405→                      type="button"
+   406→   406→                      onClick={() => onSelect(node.record.id)}
+   407→   407→                      className="flex min-w-0 flex-1 items-center gap-1.5 py-1.5 ps-1.5 text-start"
+   408→   408→                    >
+   409→   409→                      {hasChildren ? (
+   410→   410→                        <Folder
+   411→   411→                          className="h-3.5 w-3.5 shrink-0 text-amber-400/80"
+   412→   412→                          aria-hidden="true"
+   413→   413→                        />
+   414→   414→                      ) : (
+   415→   415→                        <FileText
+   416→   416→                          className="h-3.5 w-3.5 shrink-0 text-white/40"
+   417→   417→                          aria-hidden="true"
+   418→   418→                        />
+   419→   419→                      )}
+   420→   420→                      <span className="min-w-0 flex-1 truncate text-[12px] text-white/85">
+   421→   421→                        {titleField
+   422→   422→                          ? formatFieldValue(
+   423→   423→                              titleField,
+   424→   424→                              node.record.data[titleField.fieldKey],
+   425→   425→                              formatNumber,
+   426→   426→                            )
+   427→   427→                          : node.record.id}
+   428→   428→                      </span>
+   429→   429→                      {codeField && (
+   430→   430→                        <span className="shrink-0 rounded bg-white/[0.07] px-1.5 py-0.5 font-mono text-[10px] text-white/60">
+   431→   431→                          {formatFieldValue(
+   432→   432→                            codeField,
+   433→   433→                            node.record.data[codeField.fieldKey],
+   434→   434→                            formatNumber,
+   435→   435→                          )}
+   436→   436→                        </span>
+   437→   437→                      )}
+   438→   438→                    </button>
+   439→   439→                    <button
+   440→   440→                      type="button"
+   441→   441→                      title={t('formWindow.actionCopy')}
+   442→   442→                      aria-label={t('formWindow.actionCopy')}
+   443→   443→                      onClick={() => onCopyNode(node.record)}
+   444→   444→                      className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-white/35 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40"
+   445→   445→                    >
+   446→   446→                      <Copy className="h-3 w-3" />
+   447→   447→                    </button>
+   448→   448→                    <button
+   449→   449→                      type="button"
+   450→   450→                      aria-label={
+   451→   451→                        hasChildren ? t('formWindow.treePanel') : undefined
+   452→   452→                      }
+   453→   453→                      disabled={!hasChildren}
+   454→   454→                      onClick={() => toggle(node.record.id)}
+   455→   455→                      className={cn(
+   456→   456→                        'flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-white/45 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40',
+   457→   457→                        hasChildren
+   458→   458→                          ? 'hover:bg-white/10 hover:text-white'
+   459→   459→                          : 'pointer-events-none opacity-0',
+   460→   460→                      )}
+   461→   461→                    >
+   462→   462→                      <ChevronRight
+   463→   463→                        className={cn(
+   464→   464→                          'h-3.5 w-3.5 transition-transform rtl:-scale-x-100',
+   465→   465→                          !isCollapsed && 'rotate-90 rtl:-rotate-90',
+   466→   466→                        )}
+   467→   467→                      />
+   468→   468→                    </button>
+   469→   469→                  </div>
+   470→   470→                </div>
+   471→   471→              );
+   472→   472→            })
+   473→   473→          )}
+   474→   474→        </div>
+   475→   475→      </aside>
+   476→   476→
+   477→   477→      {/* ── Box 2: detail (fields + tabs) ────────────────────────── */}
+   478→   478→      <section
+   479→   479→        aria-label={t('formWindow.mainSection')}
+   480→   480→        className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto [scrollbar-width:thin]"
+   481→   481→      >
+   482→   482→        {showDetail ? (
+   483→   483→          <>
+   484→   484→            <div className="bg-white/[0.02]">
+   485→   485→              {renderFields(headerFields)}
+   486→   486→            </div>
+   487→   487→            {bodyTabs.length > 0 && (
+   488→   488→              <div className="flex min-h-0 flex-col">
+   489→   489→                <FormTabs
+   490→   490→                  tabs={bodyTabs.map((tab) => ({
+   491→   491→                    key: tab.key,
+   492→   492→                    name: tab.name,
+   493→   493→                    count: tab.fields.length,
+   494→   494→                  }))}
+   495→   495→                  active={activeBodyTab?.key ?? null}
+   496→   496→                  onChange={setActiveTabKey}
+   497→   497→                  accentColor={accentColor}
+   498→   498→                  direction={direction}
+   499→   499→                >
+   500→   500→                  {renderFields(activeBodyTab?.fields ?? [])}
+   501→   501→                </FormTabs>
+   502→   502→              </div>
+   503→   503→            )}
+   504→   504→          </>
+   505→   505→        ) : records.length === 0 ? (
+   506→   506→          <div className="flex flex-1 flex-col items-center justify-center gap-2 p-6 text-center">
+   507→   507→            <Network className="h-6 w-6 text-white/25" aria-hidden="true" />
+   508→   508→            <p className="text-[13px] text-white/55">
+   509→   509→              {t('formWindow.emptyRecords')}
+   510→   510→            </p>
+   511→   511→            <p className="text-[11px] text-white/35">
+   512→   512→              {t('formWindow.emptyRecordsHint')}
+   513→   513→            </p>
+   514→   514→          </div>
+   515→   515→        ) : (
+   516→   516→          <div className="flex flex-1 flex-col items-center justify-center gap-2 p-6 text-center">
+   517→   517→            <Network className="h-6 w-6 text-white/25" aria-hidden="true" />
+   518→   518→            <p className="text-[12.5px] text-white/45">
+   519→   519→              {t('formWindow.treeSelectHint')}
+   520→   520→            </p>
+   521→   521→          </div>
+   522→   522→        )}
+   523→   523→      </section>
+   524→   524→    </div>
+   525→   525→  );
+   526→   526→}
+   527→   527→
+   528→   528→interface ParentPickerProps {
+   529→   529→  field: FormFieldDef;
+   530→   530→  nodes: TreeNode[];
+   531→   531→  /** Record ids that may not become a parent (self + descendants). */
+   532→   532→  excludeIds: ReadonlySet<string>;
+   533→   533→  value: string | null;
+   534→   534→  onChange: (value: FormFieldValue) => void;
+   535→   535→  disabled?: boolean;
+   536→   536→}
+   537→   537→
+   538→   538→/**
+   539→   539→ * Self-referencing parent selector of tree forms: lists the form's own
+   540→   540→ * records in hierarchy order (indented, code + title) and stores the
+   541→   541→ * chosen record's id — the same value the tree hierarchy is built from.
+   542→   542→ */
+   543→   543→function ParentPicker({
+   544→   544→  field,
+   545→   545→  nodes,
+   546→   546→  excludeIds,
+   547→   547→  value,
+   548→   548→  onChange,
+   549→   549→  disabled,
+   550→   550→}: ParentPickerProps) {
+   551→   551→  const { locale, t } = useTranslation();
+   552→   552→  const listboxId = useId();
+   553→   553→  const [open, setOpen] = useState(false);
+   554→   554→  const [query, setQuery] = useState('');
+   555→   555→  const [activeIndex, setActiveIndex] = useState(0);
+   556→   556→  const rootRef = useDismiss<HTMLDivElement>(
+   557→   557→    open,
+   558→   558→    useCallback(() => setOpen(false), []),
+   559→   559→  );
+   560→   560→
+   561→   561→  const options = useMemo(
+   562→   562→    () =>
+   563→   563→      nodes
+   564→   564→        .filter((node) => !excludeIds.has(node.record.id))
+   565→   565→        .map((node) => ({ node, depth: node.depth })),
+   566→   566→    [excludeIds, nodes],
+   567→   567→  );
+   568→   568→
+   569→   569→  const needle = query.trim().toLowerCase();
+   570→   570→  const filtered = useMemo(() => {
+   571→   571→    if (!needle) return options;
+   572→   572→    return options.filter(({ node }) => {
+   573→   573→      const title = String(node.record.data.title ?? '');
+   574→   574→      const code = String(node.record.data.code ?? '');
+   575→   575→      return (
+   576→   576→        title.toLowerCase().includes(needle) ||
+   577→   577→        code.toLowerCase().includes(needle)
+   578→   578→      );
+   579→   579→    });
+   580→   580→  }, [needle, options]);
+   581→   581→
+   582→   582→  const labelOf = useCallback(
+   583→   583→    (node: TreeNode) => {
+   584→   584→      const title = String(node.record.data.title ?? '').trim();
+   585→   585→      const code = String(node.record.data.code ?? '').trim();
+   586→   586→      return code && title ? `${code} — ${title}` : title || code || node.record.id;
+   587→   587→    },
+   588→   588→    [],
+   589→   589→  );
+   590→   590→
+   591→   591→  const selectedNode = useMemo(
+   592→   592→    () => nodes.find((node) => node.record.id === value) ?? null,
+   593→   593→    [nodes, value],
+   594→   594→  );
+   595→   595→
+   596→   596→  const openPanel = () => {
+   597→   597→    setQuery('');
+   598→   598→    setActiveIndex(0);
+   599→   599→    setOpen(true);
+   600→   600→  };
+   601→   601→
+   602→   602→  const pick = (node: TreeNode) => {
+   603→   603→    onChange(node.record.id);
+   604→   604→    setOpen(false);
+   605→   605→  };
+   606→   606→
+   607→   607→  const onKeyDown = (event: React.KeyboardEvent) => {
+   608→   608→    if (!open) {
+   609→   609→      if (event.key === 'ArrowDown' || event.key === 'Enter') {
+   610→   610→        event.preventDefault();
+   611→   611→        openPanel();
+   612→   612→      }
+   613→   613→      return;
+   614→   614→    }
+   615→   615→    if (event.key === 'ArrowDown') {
+   616→   616→      event.preventDefault();
+   617→   617→      setActiveIndex((index) => Math.min(filtered.length - 1, index + 1));
+   618→   618→    } else if (event.key === 'ArrowUp') {
+   619→   619→      event.preventDefault();
+   620→   620→      setActiveIndex((index) => Math.max(0, index - 1));
+   621→   621→    } else if (event.key === 'Enter') {
+   622→   622→      event.preventDefault();
+   623→   623→      const target = filtered[activeIndex];
+   624→   624→      if (target) pick(target.node);
+   625→   625→    } else if (event.key === 'Escape') {
+   626→   626→      event.stopPropagation();
+   627→   627→      setOpen(false);
+   628→   628→    }
+   629→   629→  };
+   630→   630→
+   631→   631→  return (
+   632→   632→    <div
+   633→   633→      className={cn('relative', field.span === 2 && 'col-span-full')}
+   634→   634→      ref={rootRef}
+   635→   635→      onKeyDown={onKeyDown}
+   636→   636→    >
+   637→   637→      <div className="mb-1 flex items-baseline gap-1">
+   638→   638→        <label
+   639→   639→          htmlFor={field.fieldKey}
+   640→   640→          className="text-[13px] leading-none text-white/70"
+   641→   641→        >
+   642→   642→          {fieldLabel(field, locale)}
+   643→   643→        </label>
+   644→   644→        {field.isRequired && (
+   645→   645→          <span
+   646→   646→            title={t('formWindow.requiredHint')}
+   647→   647→            aria-hidden="true"
+   648→   648→            className="text-[13px] leading-none text-red-400"
+   649→   649→          >
+   650→   650→            *
+   651→   651→          </span>
+   652→   652→        )}
+   653→   653→      </div>
+   654→   654→      <div className="flex items-center gap-1.5">
+   655→   655→        <button
+   656→   656→          type="button"
+   657→   657→          id={field.fieldKey}
+   658→   658→          role="combobox"
+   659→   659→          aria-expanded={open}
+   660→   660→          aria-controls={listboxId}
+   661→   661→          aria-haspopup="listbox"
+   662→   662→          disabled={disabled}
+   663→   663→          onClick={() => (open ? setOpen(false) : openPanel())}
+   664→   664→          className={cn(
+   665→   665→            controlClasses,
+   666→   666→            'flex items-center justify-between gap-2 pe-2 text-start',
+   667→   667→          )}
+   668→   668→        >
+   669→   669→          <span
+   670→   670→            className={cn(
+   671→   671→              'min-w-0 flex-1 truncate',
+   672→   672→              selectedNode ? 'text-white' : 'text-white/30',
+   673→   673→            )}
+   674→   674→          >
+   675→   675→            {selectedNode
+   676→   676→              ? labelOf(selectedNode)
+   677→   677→              : t('formWindow.selectPlaceholder')}
+   678→   678→          </span>
+   679→   679→          <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 text-white/35" />
+   680→   680→        </button>
+   681→   681→      </div>
+   682→   682→
+   683→   683→      <AnimatePresence>
+   684→   684→        {open && (
+   685→   685→          <motion.div
+   686→   686→            initial={{ opacity: 0, scale: 0.97, y: -4 }}
+   687→   687→            animate={{ opacity: 1, scale: 1, y: 0 }}
+   688→   688→            exit={{ opacity: 0, scale: 0.97, y: -4 }}
+   689→   689→            transition={{ duration: 0.14, ease: 'easeOut' }}
+   690→   690→            className="absolute top-full z-50 mt-1.5 w-full min-w-[220px] overflow-hidden rounded-xl bg-[#1b1e26]/[0.97] shadow-2xl shadow-black/50 ring-1 ring-white/10 backdrop-blur-xl"
+   691→   691→          >
+   692→   692→            <div className="flex items-center gap-2 border-b border-white/10 px-3 py-2">
+   693→   693→              <Search className="h-3.5 w-3.5 shrink-0 text-white/35" />
+   694→   694→              <input
+   695→   695→                autoFocus
+   696→   696→                type="text"
+   697→   697→                value={query}
+   698→   698→                onChange={(event) => {
+   699→   699→                  setQuery(event.target.value);
+   700→   700→                  setActiveIndex(0);
+   701→   701→                }}
+   702→   702→                placeholder={t('formWindow.search')}
+   703→   703→                className="h-7 w-full bg-transparent text-sm text-white placeholder:text-white/30 focus:outline-none"
+   704→   704→              />
+   705→   705→            </div>
+   706→   706→            <div
+   707→   707→              id={listboxId}
+   708→   708→              role="listbox"
+   709→   709→              aria-label={fieldLabel(field, locale)}
+   710→   710→              className="max-h-64 overflow-y-auto py-1 [scrollbar-width:thin]"
+   711→   711→            >
+   712→   712→              {filtered.length === 0 && (
+   713→   713→                <p className="px-3 py-4 text-center text-xs text-white/40">
+   714→   714→                  {t('formWindow.noMatch')}
+   715→   715→                </p>
+   716→   716→              )}
+   717→   717→              {filtered.map(({ node }, index) => {
+   718→   718→                const isSelected = node.record.id === value;
+   719→   719→                const isActive = index === activeIndex;
+   720→   720→                return (
+   721→   721→                  <button
+   722→   722→                    key={node.record.id}
+   723→   723→                    type="button"
+   724→   724→                    role="option"
+   725→   725→                    aria-selected={isSelected}
+   726→   726→                    onMouseEnter={() => setActiveIndex(index)}
+   727→   727→                    onClick={() => pick(node)}
+   728→   728→                    style={{ paddingInlineStart: 12 + node.depth * 14 }}
+   729→   729→                    className={cn(
+   730→   730→                      'flex w-full items-center gap-2 pe-3 py-1.5 text-start text-[12.5px] transition-colors',
+   731→   731→                      isActive
+   732→   732→                        ? 'bg-sky-500/15 text-white'
+   733→   733→                        : 'text-white/80 hover:bg-white/[0.05]',
+   734→   734→                      isSelected && !isActive && 'bg-white/[0.04]',
+   735→   735→                    )}
+   736→   736→                  >
+   737→   737→                    <span className="min-w-0 flex-1 truncate">
+   738→   738→                      {labelOf(node)}
+   739→   739→                    </span>
+   740→   740→                    {isSelected && (
+   741→   741→                      <Check className="h-3.5 w-3.5 shrink-0 text-sky-400" />
+   742→   742→                    )}
+   743→   743→                  </button>
+   744→   744→                );
+   745→   745→              })}
+   746→   746→            </div>
+   747→   747→            {value !== null && value !== '' && (
+   748→   748→              <div className="border-t border-white/10 p-1.5">
+   749→   749→                <button
+   750→   750→                  type="button"
+   751→   751→                  onClick={() => {
+   752→   752→                    onChange(null);
+   753→   753→                    setOpen(false);
+   754→   754→                  }}
+   755→   755→                  className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs text-rose-300 transition-colors hover:bg-rose-500/15 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-rose-400/50"
+   756→   756→                >
+   757→   757→                  <X className="h-3.5 w-3.5" />
+   758→   758→                  {t('formWindow.clear')}
+   759→   759→                </button>
+   760→   760→              </div>
+   761→   761→            )}
+   762→   762→          </motion.div>
+   763→   763→        )}
+   764→   764→      </AnimatePresence>
+   765→   765→    </div>
+   766→   766→  );
+   767→   767→}
+   768→   768→

@@ -324,6 +324,9 @@ export const ptDictionary: Record<string, string> = {
   'formWindow.nodeEdit': 'Editar',
   'formWindow.nodeDelete': 'Excluir',
   'formWindow.treeSelectHint': 'Selecione um item da árvore para ver os detalhes',
+  'formWindow.treeContextNewSub': 'Novo sub-ramo',
+  'formWindow.treeContextDelete': 'Excluir ramo',
+  'formWindow.treeContextDeleteDisabled': 'Este ramo possui sub-ramos',
 
   // ── Calendar hints (new keys) ──────────────────────────────────
   'formWindow.hintJalali': 'Calendário solar hejir (jalali) — ex.: ۱۴۰۵/۰۷/۳۰',

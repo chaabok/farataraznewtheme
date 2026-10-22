@@ -324,6 +324,9 @@ export const hiDictionary: Record<string, string> = {
   'formWindow.nodeEdit': 'संपादित करें',
   'formWindow.nodeDelete': 'हटाएँ',
   'formWindow.treeSelectHint': 'विवरण देखने के लिए वृक्ष से एक आइटम चुनें',
+  'formWindow.treeContextNewSub': 'नई उपशाखा',
+  'formWindow.treeContextDelete': 'शाखा हटाएँ',
+  'formWindow.treeContextDeleteDisabled': 'इस शाखा में उप-शाखाएँ मौजूद हैं',
 
   // ── Calendar hints (new keys for Task 7) ─────────────────────
   'formWindow.hintJalali': 'सौर हिजरी (जलाली) कैलेंडर — जैसे ۱۴۰۵/۰۷/۳۰',
