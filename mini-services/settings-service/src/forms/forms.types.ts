@@ -32,6 +32,11 @@ export interface FormFieldDef {
   lookupKey: string | null;
   defaultValue: string | null;
   sortOrder: number;
+  /**
+   * Column-filter dropdown mode of the data-list window.
+   * Optional (backward-compatible) — `undefined` renders as `multi`.
+   */
+  filterMode?: 'single' | 'multi';
 }
 
 /** One form definition row (FormDefinition in the DB) with its fields. */
@@ -90,6 +95,7 @@ export interface LookupOption {
  * Server-side filter operators of the data-list windows
  * (`?filters=[…]` query param on the records endpoint — evaluated here,
  * inside the owning service, on the normalized *display text* of cells).
+ * `in` matches one of the picked dropdown values (`values`).
  */
 export type ListFilterOp =
   | 'all'
@@ -99,11 +105,22 @@ export type ListFilterOp =
   | 'notContains'
   | 'startsWith'
   | 'endsWith'
-  | 'equals';
+  | 'equals'
+  | 'in';
 
 /** One column filter entry of the `?filters=` JSON query param. */
 export interface ListColumnFilter {
   field: string;
   op: ListFilterOp;
   value?: string;
+  /** Picked dropdown values — only for `op: 'in'`. */
+  values?: string[];
+}
+
+/** One distinct display value of a column (filter-values dropdown list). */
+export interface FieldValueOption {
+  /** Display text exactly as rendered in the grid cell. */
+  value: string;
+  /** How many records carry this value. */
+  count: number;
 }

@@ -57,12 +57,37 @@ export class FormsController {
     @Param('formKey') formKey: string,
     @Query('locale') locale?: string,
     @Query('filters') filters?: string,
+    @Query('yesLabel') yesLabel?: string,
+    @Query('noLabel') noLabel?: string,
   ) {
     const data = await this.formsService.listRecords(
       moduleKey,
       formKey,
       locale ?? 'fa',
       filters,
+      yesLabel ?? 'بلی',
+      noLabel ?? 'خیر',
+    );
+    return { data };
+  }
+
+  /** Distinct display values of one column (filter-values dropdown). */
+  @Get(':moduleKey/:formKey/fields/:fieldKey/values')
+  async getFieldValues(
+    @Param('moduleKey') moduleKey: string,
+    @Param('formKey') formKey: string,
+    @Param('fieldKey') fieldKey: string,
+    @Query('locale') locale?: string,
+    @Query('yesLabel') yesLabel?: string,
+    @Query('noLabel') noLabel?: string,
+  ) {
+    const data = await this.formsService.getFieldValues(
+      moduleKey,
+      formKey,
+      fieldKey,
+      locale ?? 'fa',
+      yesLabel ?? 'بلی',
+      noLabel ?? 'خیر',
     );
     return { data };
   }

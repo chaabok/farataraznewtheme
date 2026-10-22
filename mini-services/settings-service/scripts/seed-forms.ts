@@ -61,6 +61,8 @@ interface FieldSeed {
   span: 1 | 2;
   lookupKey?: string;
   defaultValue?: string;
+  /** Data-list column filter dropdown mode (undefined = multi). */
+  filterMode?: 'single' | 'multi';
 }
 
 const FIELDS: FieldSeed[] = [
@@ -256,6 +258,7 @@ async function main(): Promise<void> {
       lookupKey: field.lookupKey ?? null,
       defaultValue: field.defaultValue ?? null,
       sortOrder: index + 1,
+      filterMode: field.filterMode ?? null,
     })),
   });
 

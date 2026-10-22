@@ -9,6 +9,7 @@ import { getModuleService } from '@/lib/services-registry';
  *   PUT    /api/modules/<module>/forms/<formKey>/records/<recordId>  → update record
  *   DELETE /api/modules/<module>/forms/<formKey>/records/<recordId>  → delete record
  *   GET    /api/modules/<module>/forms/<formKey>/lookups/<lookupKey> → lookup options
+ *   GET    /api/modules/<module>/forms/<formKey>/fields/<fieldKey>/values → distinct column values
  *
  * proxied to `<module-service>/api/forms/<module>/<...path>`.
  *
@@ -19,9 +20,9 @@ import { getModuleService } from '@/lib/services-registry';
  * - the user's JWT is forwarded; microservices enforce both layers
  */
 
-/** formKey (+ optional /records|/lookups + recordId|lookupKey) whitelist. */
+/** formKey (+ optional /records|/lookups|/fields/…/values) sub-path whitelist. */
 const SUB_PATH_PATTERN =
-  /^[a-z][a-zA-Z0-9-]{0,49}(\/(records|lookups)(\/[0-9a-fA-F-]{36}|\/[a-z][a-zA-Z0-9-]{0,49})?)?$/;
+  /^[a-z][a-zA-Z0-9-]{0,49}(\/(records|lookups)(\/[0-9a-fA-F-]{36}|\/[a-z][a-zA-Z0-9-]{0,49})?|\/fields\/[a-z][a-zA-Z0-9-]{0,49}\/values)?$/;
 
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
 

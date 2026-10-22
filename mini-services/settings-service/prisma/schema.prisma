@@ -58,6 +58,8 @@ model FormFieldDefinition {
   lookupKey    String?
   defaultValue String?
   sortOrder    Int      @default(0)
+  /// Column-filter dropdown mode of the data-list window (null = multi)
+  filterMode   String?  // single | multi
   isActive     Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt

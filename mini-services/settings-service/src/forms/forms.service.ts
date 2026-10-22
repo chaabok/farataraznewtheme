@@ -8,6 +8,7 @@ import type { FormFieldDefinition, FormDefinition } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { SaveRecordDto } from './dto/save-record.dto';
 import type {
+  FieldValueOption,
   FormDataMap,
   FormDef,
   FormFieldDef,
@@ -32,7 +33,15 @@ const FILTER_OPS: ReadonlySet<string> = new Set<ListFilterOp>([
   'startsWith',
   'endsWith',
   'equals',
+  'in',
 ]);
+
+/** Guard rails of the `values` array of `op: 'in'` filters. */
+const MAX_FILTER_VALUES = 20;
+const MAX_FILTER_VALUE_LENGTH = 200;
+
+/** Hard cap of the distinct values returned by the values endpoint. */
+const MAX_DISTINCT_VALUES = 1000;
 
 const PERSIAN_DIGITS = '۰۱۲۳۴۵۶۷۸۹';
 const ARABIC_DIGITS = '٠١٢٣٤٥٦٧٨٩';
@@ -78,12 +87,37 @@ function parseColumnFilters(raw: unknown): ListColumnFilter[] {
     if (!KEY_PATTERN.test(field) || !FILTER_OPS.has(op)) continue;
     if (op === 'all') continue; // cleared client-side, nothing to apply
     const value =
-      typeof candidate.value === 'string' ? candidate.value.slice(0, 200) : '';
+      typeof candidate.value === 'string'
+        ? candidate.value.slice(0, MAX_FILTER_VALUE_LENGTH)
+        : '';
+
+    // `in` carries the picked dropdown values instead of a typed value.
+    if (op === 'in') {
+      const values = (Array.isArray(candidate.values) ? candidate.values : [])
+        .filter((item): item is string => typeof item === 'string')
+        .map((item) => item.slice(0, MAX_FILTER_VALUE_LENGTH))
+        .filter((item) => item.trim() !== '')
+        .slice(0, MAX_FILTER_VALUES);
+      if (!values.length) continue;
+      filters.push({ field, op, value, values });
+      continue;
+    }
+
     const needsValue = op !== 'hasValue' && op !== 'noValue';
     if (needsValue && value.trim() === '') continue;
     filters.push({ field, op: op as ListFilterOp, value });
   }
   return filters;
+}
+
+/**
+ * Normalized texts of one cell — `display` is the pure grid text (exact
+ * matching for `equals` / `in`), `search` adds cross-locale extras for the
+ * loose text operators (e.g. a checkbox cell also matches Yes/No/true).
+ */
+interface CellText {
+  display: string;
+  search: string;
 }
 
 /**
@@ -94,24 +128,29 @@ function parseColumnFilters(raw: unknown): ListColumnFilter[] {
 function matchesFilter(
   raw: FormFieldValue,
   filter: ListColumnFilter,
-  displayText: string,
+  cell: CellText,
 ): boolean {
   const needle = normalizeSearchText(filter.value ?? '');
+  const display = normalizeSearchText(cell.display);
   switch (filter.op) {
     case 'hasValue':
       return raw !== null && raw !== undefined && String(raw).trim() !== '';
     case 'noValue':
       return raw === null || raw === undefined || String(raw).trim() === '';
     case 'contains':
-      return displayText.includes(needle);
+      return cell.search.includes(needle);
     case 'notContains':
-      return !displayText.includes(needle);
+      return !cell.search.includes(needle);
     case 'startsWith':
-      return displayText.startsWith(needle);
+      return cell.search.startsWith(needle);
     case 'endsWith':
-      return displayText.endsWith(needle);
+      return cell.search.endsWith(needle);
     case 'equals':
-      return displayText === needle;
+      return display === needle;
+    case 'in':
+      return (filter.values ?? []).some(
+        (picked) => normalizeSearchText(picked) === display,
+      );
     default:
       return true;
   }
@@ -231,12 +270,16 @@ export class FormsService {
    * `?filters=` (JSON ListColumnFilter[]) is evaluated SERVER-SIDE on the
    * normalized display text of each cell (lookup labels, tree parent
    * titles and checkbox labels resolved exactly like the frontend grid).
+   * `yesLabel`/`noLabel` keep checkbox display text in sync with the UI
+   * locale (also used by the `in` operator of the filter-values dropdown).
    */
   async listRecords(
     moduleKey: string,
     formKey: string,
     locale = 'fa',
     filtersParam?: string,
+    yesLabel = 'بلی',
+    noLabel = 'خیر',
   ): Promise<FormRecord[]> {
     assertKey(moduleKey, 'moduleKey');
     assertKey(formKey, 'formKey');
@@ -257,18 +300,81 @@ export class FormsService {
       where: { formId: form.id, isActive: true },
       orderBy: { sortOrder: 'asc' },
     });
-    const searchText = await this.buildSearchTextResolver(
+    const resolveCell = await this.buildCellTextResolver(
       form.id,
       fields,
       records,
       locale,
+      yesLabel,
+      noLabel,
     );
 
     return records.filter((record) =>
       filters.every((filter) =>
-        matchesFilter(record.data[filter.field], filter, searchText(filter.field, record)),
+        matchesFilter(
+          record.data[filter.field],
+          filter,
+          resolveCell(filter.field, record),
+        ),
       ),
     );
+  }
+
+  /**
+   * GET /:moduleKey/:formKey/fields/:fieldKey/values → distinct display
+   * values of one column (the filter-values dropdown list) with record
+   * counts, sorted by the display text. Empty cells are excluded — the
+   * operator menu already covers them (hasValue / noValue).
+   */
+  async getFieldValues(
+    moduleKey: string,
+    formKey: string,
+    fieldKey: string,
+    locale = 'fa',
+    yesLabel = 'بلی',
+    noLabel = 'خیر',
+  ): Promise<FieldValueOption[]> {
+    assertKey(moduleKey, 'moduleKey');
+    assertKey(formKey, 'formKey');
+    assertKey(fieldKey, 'fieldKey');
+
+    const form = await this.getActiveForm(moduleKey, formKey);
+    const fields = await this.prisma.formFieldDefinition.findMany({
+      where: { formId: form.id, isActive: true },
+      orderBy: { sortOrder: 'asc' },
+    });
+    if (!fields.some((field) => field.fieldKey === fieldKey)) {
+      throw new NotFoundException('فیلد درخواستی یافت نشد');
+    }
+
+    const rows = await this.prisma.formDataRecord.findMany({
+      where: { formId: form.id },
+      orderBy: { createdAt: 'asc' },
+    });
+    const records = rows.map((row) =>
+      toFormRecord(row.id, row.dataJson, row.createdAt, row.updatedAt),
+    );
+    const resolveCell = await this.buildCellTextResolver(
+      form.id,
+      fields,
+      records,
+      locale,
+      yesLabel,
+      noLabel,
+    );
+
+    const counts = new Map<string, number>();
+    for (const record of records) {
+      const display = resolveCell(fieldKey, record).display;
+      if (!display) continue;
+      counts.set(display, (counts.get(display) ?? 0) + 1);
+    }
+
+    const options: FieldValueOption[] = [...counts.entries()].map(
+      ([value, count]) => ({ value, count }),
+    );
+    options.sort((a, b) => a.value.localeCompare(b.value, locale || 'fa'));
+    return options.slice(0, MAX_DISTINCT_VALUES);
   }
 
   /** POST /:moduleKey/:formKey/records → create a saved record. */
@@ -374,17 +480,20 @@ export class FormsService {
   }
 
   /**
-   * Builds a `(fieldKey, record) → normalized display text` resolver that
+   * Builds a `(fieldKey, record) → { display, search }` resolver that
    * mirrors the frontend `cellText`: tree-parent columns show the parent
    * record's title, lookup columns the localized option label and checkbox
-   * cells their بلی/خیر (plus Yes/No + raw for cross-locale matching).
+   * cells their localized بلی/خیر label. `search` adds the cross-locale
+   * checkbox extras (بلی/Yes/true) for the loose text operators.
    */
-  private async buildSearchTextResolver(
+  private async buildCellTextResolver(
     formId: string,
     fields: FormFieldDefinition[],
     records: FormRecord[],
     locale: string,
-  ): Promise<(fieldKey: string, record: FormRecord) => string> {
+    yesLabel: string,
+    noLabel: string,
+  ): Promise<(fieldKey: string, record: FormRecord) => CellText> {
     const byKey = new Map(fields.map((field) => [field.fieldKey, field]));
 
     // Tree parent column: stored value = parent record id → title.
@@ -441,20 +550,33 @@ export class FormsService {
     return (fieldKey, record) => {
       const field = byKey.get(fieldKey);
       const raw = record.data[fieldKey];
-      if (!field || raw === null || raw === undefined || raw === '') return '';
+      if (!field || raw === null || raw === undefined || raw === '') {
+        return { display: '', search: '' };
+      }
       if (field.fieldType === 'checkbox') {
-        return normalizeSearchText(
-          `${raw === true ? 'بلی Yes' : 'خیر No'} ${String(raw)}`,
-        );
+        const faLabel = raw === true ? 'بلی' : 'خیر';
+        const enLabel = raw === true ? 'Yes' : 'No';
+        const fallbackYes = locale === 'fa' ? 'بلی' : 'Yes';
+        const fallbackNo = locale === 'fa' ? 'خیر' : 'No';
+        return {
+          // Grid/dropdown label of the UI locale (passed by the caller);
+          // `search` keeps the fixed cross-locale extras for loose ops.
+          display: raw === true ? (yesLabel || fallbackYes) : (noLabel || fallbackNo),
+          search: normalizeSearchText(
+            `${faLabel} ${enLabel} ${String(raw)}`,
+          ),
+        };
       }
+      let display: string;
       if (parentField && fieldKey === parentField.fieldKey) {
-        return normalizeSearchText(parentTitles.get(String(raw)) ?? String(raw));
-      }
-      if (field.fieldType === 'lookup' && field.lookupKey) {
+        display = parentTitles.get(String(raw)) ?? String(raw);
+      } else if (field.fieldType === 'lookup' && field.lookupKey) {
         const labels = lookupLabels.get(field.lookupKey);
-        return normalizeSearchText(labels?.get(String(raw)) ?? String(raw));
+        display = labels?.get(String(raw)) ?? String(raw);
+      } else {
+        display = String(raw);
       }
-      return normalizeSearchText(String(raw));
+      return { display, search: normalizeSearchText(display) };
     };
   }
 
@@ -496,5 +618,9 @@ function mapField(field: FormFieldDefinition, locale: string): FormFieldDef {
     lookupKey: field.lookupKey,
     defaultValue: field.defaultValue,
     sortOrder: field.sortOrder,
+    filterMode:
+      field.filterMode === 'single' || field.filterMode === 'multi'
+        ? field.filterMode
+        : undefined,
   };
 }

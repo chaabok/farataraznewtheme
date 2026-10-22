@@ -13,6 +13,7 @@ import {
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   Check,
+  ChevronDown,
   Columns3,
   FileDown,
   FilePen,
@@ -23,6 +24,7 @@ import {
   Loader2,
   Printer,
   RefreshCw,
+  X,
   type LucideIcon,
 } from 'lucide-react';
 import {
@@ -63,6 +65,10 @@ import {
   formatFieldValue,
   pickParentField,
 } from './form-utils';
+import {
+  FilterValuesDropdown,
+  FILTER_VALUES_PANEL_WIDTH,
+} from './filter-values-dropdown';
 import { DEFAULT_FORM_ACCENT } from './form-styles';
 
 export interface DataListWindowProps {
@@ -119,7 +125,18 @@ function measureColumns(table: HTMLTableElement | null): Record<string, number> 
 interface ColumnFilterState {
   op: ListFilterOp;
   value: string;
+  /** Picked dropdown values — set when `op === 'in'`. */
+  values?: string[];
 }
+
+/** Operators driven by the inline text input of the filter cell. */
+const TEXT_FILTER_OPS: ReadonlySet<ListFilterOp> = new Set([
+  'contains',
+  'notContains',
+  'startsWith',
+  'endsWith',
+  'equals',
+]);
 
 /**
  * Operator menu items — order mirrors the reference screenshot:
@@ -139,12 +156,10 @@ const FILTER_OP_ITEMS: Array<{ op: ListFilterOp; labelKey: string }> = [
 
 /** True when a column contributes an effective server-side filter. */
 function isColumnFilterActive(filter?: ColumnFilterState): boolean {
-  return (
-    !!filter &&
-    (filter.op === 'hasValue' ||
-      filter.op === 'noValue' ||
-      filter.value.trim() !== '')
-  );
+  if (!filter) return false;
+  if (filter.op === 'hasValue' || filter.op === 'noValue') return true;
+  if (filter.op === 'in') return (filter.values?.length ?? 0) > 0;
+  return filter.value.trim() !== '';
 }
 
 /** Lightweight table checkbox (button-based, no Radix overhead per row). */
@@ -227,6 +242,17 @@ export function DataListWindow({ moduleId, list, onClose }: DataListWindowProps)
     left: number;
     openUp: boolean;
   } | null>(null);
+  /**
+   * Open filter-values dropdown («دراپ‌داون مقادیر فیلتر») anchored to
+   * the value trigger of one column — lists the column's distinct values
+   * and applies the picked ones as a server-side `op: 'in'` filter.
+   */
+  const [valueMenu, setValueMenu] = useState<{
+    fieldKey: string;
+    rect: DOMRect;
+    left: number;
+    openUp: boolean;
+  } | null>(null);
   const [hiddenColumns, setHiddenColumns] = useState<Set<string>>(new Set());
   /**
    * Explicit px width per data column — `null` = classic auto layout that
@@ -253,7 +279,13 @@ export function DataListWindow({ moduleId, list, onClose }: DataListWindowProps)
   const fetchRecordsPage = useCallback(
     async (columns: ListColumnFilter[]): Promise<FormRecord[]> => {
       if (!basePath) return [];
-      const params = new URLSearchParams({ locale });
+      const params = new URLSearchParams({
+        locale,
+        // Keep the service-side checkbox display in sync with the grid
+        // labels of the active UI locale (used by equals / in operators).
+        yesLabel: t('dataList.yes'),
+        noLabel: t('dataList.no'),
+      });
       if (columns.length) {
         params.set('filters', JSON.stringify(columns));
       }
@@ -262,7 +294,7 @@ export function DataListWindow({ moduleId, list, onClose }: DataListWindowProps)
       );
       return res.data ?? [];
     },
-    [basePath, locale],
+    [basePath, locale, t],
   );
   const loadLookups = useCallback(
     async (formDef: FormDef) => {
@@ -447,11 +479,11 @@ export function DataListWindow({ moduleId, list, onClose }: DataListWindowProps)
     () =>
       Object.entries(filters)
         .filter(([, filter]) => isColumnFilterActive(filter))
-        .map(([field, filter]) => ({
-          field,
-          op: filter.op,
-          value: filter.value,
-        })),
+        .map(([field, filter]) =>
+          filter.op === 'in'
+            ? { field, op: filter.op, value: filter.value, values: filter.values ?? [] }
+            : { field, op: filter.op, value: filter.value },
+        ),
     [filters],
   );
 
@@ -497,6 +529,8 @@ export function DataListWindow({ moduleId, list, onClose }: DataListWindowProps)
   // ── Column filter operator menu ──
   const toggleFilterMenu = useCallback(
     (fieldKey: string, button: HTMLButtonElement) => {
+      // The two popovers are mutually exclusive.
+      setValueMenu(null);
       setFilterMenu((prev) => {
         if (prev?.fieldKey === fieldKey) return null;
         const rect = button.getBoundingClientRect();
@@ -508,6 +542,33 @@ export function DataListWindow({ moduleId, list, onClose }: DataListWindowProps)
           left: Math.max(
             8,
             Math.min(rect.left, window.innerWidth - menuWidth - 8),
+          ),
+          openUp:
+            rect.bottom + menuHeight > window.innerHeight - 8 &&
+            rect.top - menuHeight > 8,
+        };
+      });
+    },
+    [],
+  );
+
+  /** Opens the filter-values dropdown of one column (value trigger). */
+  const toggleValueMenu = useCallback(
+    (fieldKey: string, button: HTMLButtonElement) => {
+      setFilterMenu(null);
+      setValueMenu((prev) => {
+        if (prev?.fieldKey === fieldKey) return null;
+        const rect = button.getBoundingClientRect();
+        const menuHeight = 420;
+        return {
+          fieldKey,
+          rect,
+          left: Math.max(
+            8,
+            Math.min(
+              rect.left,
+              window.innerWidth - FILTER_VALUES_PANEL_WIDTH - 8,
+            ),
           ),
           openUp:
             rect.bottom + menuHeight > window.innerHeight - 8 &&
@@ -548,10 +609,39 @@ export function DataListWindow({ moduleId, list, onClose }: DataListWindowProps)
       };
       return next;
     });
-    if (op !== 'hasValue' && op !== 'noValue' && op !== 'all') {
+    if (TEXT_FILTER_OPS.has(op)) {
       requestAnimationFrame(() => filterInputRefs.current[fieldKey]?.focus());
     }
   }, []);
+
+  /** Clears one column filter (the × inside the trigger cell). */
+  const clearColumnFilter = useCallback((fieldKey: string) => {
+    setFilters((prev) => {
+      const next = { ...prev };
+      delete next[fieldKey];
+      return next;
+    });
+  }, []);
+
+  /**
+   * Commits the dropdown selection of one column as a server-side
+   * `op: 'in'` filter (empty selection clears the column filter).
+   */
+  const applyColumnValues = useCallback(
+    (fieldKey: string, values: string[]) => {
+      setValueMenu(null);
+      setFilters((prev) => {
+        const next = { ...prev };
+        if (!values.length) {
+          delete next[fieldKey];
+          return next;
+        }
+        next[fieldKey] = { op: 'in', value: '', values };
+        return next;
+      });
+    },
+    [],
+  );
 
   // Dismiss the operator menu on outside click / Escape / scroll / resize.
   useEffect(() => {
@@ -942,6 +1032,25 @@ export function DataListWindow({ moduleId, list, onClose }: DataListWindowProps)
                   {visibleFields.map((field) => {
                     const columnFilter = filters[field.fieldKey];
                     const isActive = isColumnFilterActive(columnFilter);
+                    // Text operators keep the inline input; every other
+                    // state (none / hasValue / noValue / picked values)
+                    // shows the value-dropdown trigger («فیلتر...»).
+                    const isTextOp = columnFilter
+                      ? TEXT_FILTER_OPS.has(columnFilter.op)
+                      : false;
+                    const pickedValues =
+                      columnFilter?.op === 'in'
+                        ? (columnFilter.values ?? [])
+                        : [];
+                    const extraCount = Math.max(0, pickedValues.length - 1);
+                    const opLabel =
+                      columnFilter?.op === 'hasValue'
+                        ? t('dataList.filterOpHasValue')
+                        : columnFilter?.op === 'noValue'
+                          ? t('dataList.filterOpNoValue')
+                          : null;
+                    const isValueMenuOpen =
+                      valueMenu?.fieldKey === field.fieldKey;
                     return (
                       <th
                         key={`filter-${field.fieldKey}`}
@@ -979,19 +1088,86 @@ export function DataListWindow({ moduleId, list, onClose }: DataListWindowProps)
                           >
                             <Filter className="h-3 w-3" />
                           </button>
-                          <input
-                            ref={(element) => {
-                              filterInputRefs.current[field.fieldKey] = element;
-                            }}
-                            type="text"
-                            value={columnFilter?.value ?? ''}
-                            onChange={(event) =>
-                              setFilterValue(field.fieldKey, event.target.value)
-                            }
-                            placeholder={t('dataList.filterPlaceholder')}
-                            aria-label={fieldLabel(field, locale)}
-                            className="h-6 w-full min-w-0 bg-transparent text-[11px] text-white placeholder:text-white/25 focus:outline-none"
-                          />
+                          {isTextOp ? (
+                            <input
+                              ref={(element) => {
+                                filterInputRefs.current[field.fieldKey] = element;
+                              }}
+                              type="text"
+                              value={columnFilter?.value ?? ''}
+                              onChange={(event) =>
+                                setFilterValue(field.fieldKey, event.target.value)
+                              }
+                              placeholder={t('dataList.filterPlaceholder')}
+                              aria-label={fieldLabel(field, locale)}
+                              className="h-6 w-full min-w-0 bg-transparent text-[11px] text-white placeholder:text-white/25 focus:outline-none"
+                            />
+                          ) : (
+                            <>
+                              <button
+                                type="button"
+                                data-filter-values-button="true"
+                                title={t('dataList.filterValuesAria')}
+                                aria-label={`${t('dataList.filterValuesAria')} — ${fieldLabel(field, locale)}`}
+                                aria-haspopup="dialog"
+                                aria-expanded={isValueMenuOpen}
+                                onClick={(event) =>
+                                  toggleValueMenu(
+                                    field.fieldKey,
+                                    event.currentTarget,
+                                  )
+                                }
+                                className="flex h-6 min-w-0 flex-1 items-center gap-1 rounded focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-sky-400/60"
+                              >
+                                <span
+                                  className={cn(
+                                    'min-w-0 flex-1 truncate text-start text-[11px]',
+                                    pickedValues.length
+                                      ? 'text-sky-200'
+                                      : opLabel
+                                        ? 'text-white/70'
+                                        : 'text-white/45',
+                                  )}
+                                >
+                                  {pickedValues.length
+                                    ? pickedValues[0]
+                                    : (opLabel ??
+                                      t('dataList.filterPlaceholder'))}
+                                </span>
+                                {extraCount > 0 && (
+                                  <span
+                                    className="shrink-0 rounded-full bg-sky-500/20 px-1.5 py-0.5 text-[9px] font-semibold tabular-nums text-sky-200"
+                                    aria-hidden="true"
+                                  >
+                                    +{formatNumber(extraCount)}
+                                  </span>
+                                )}
+                                <ChevronDown
+                                  className={cn(
+                                    'h-3 w-3 shrink-0 transition-colors',
+                                    isValueMenuOpen
+                                      ? 'text-sky-300'
+                                      : 'text-white/35',
+                                  )}
+                                />
+                              </button>
+                              {isActive && (
+                                <button
+                                  type="button"
+                                  title={t('dataList.clearFilters')}
+                                  aria-label={`${t('dataList.clearFilters')} — ${fieldLabel(field, locale)}`}
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    setValueMenu(null);
+                                    clearColumnFilter(field.fieldKey);
+                                  }}
+                                  className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-white/40 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40"
+                                >
+                                  <X className="h-3 w-3" />
+                                </button>
+                              )}
+                            </>
+                          )}
                         </div>
                       </th>
                     );
@@ -1200,6 +1376,38 @@ export function DataListWindow({ moduleId, list, onClose }: DataListWindowProps)
             })}
           </motion.div>
         )}
+      </AnimatePresence>
+
+      {/* Filter-values dropdown — the beautiful value picker of the
+          clicked filter cell («دراپ‌داون مقادیر فیلتر»). */}
+      <AnimatePresence>
+        {valueMenu &&
+          (() => {
+            const field = sortedFields.find(
+              (item) => item.fieldKey === valueMenu.fieldKey,
+            );
+            if (!field || !basePath) return null;
+            const params = new URLSearchParams({
+              locale,
+              yesLabel: t('dataList.yes'),
+              noLabel: t('dataList.no'),
+            });
+            const selectedValues =
+              filters[field.fieldKey]?.op === 'in'
+                ? (filters[field.fieldKey]?.values ?? [])
+                : [];
+            return (
+              <FilterValuesDropdown
+                field={field}
+                anchor={valueMenu}
+                valuesUrl={`${basePath}/fields/${encodeURIComponent(field.fieldKey)}/values?${params.toString()}`}
+                cacheKey={`${moduleKey ?? ''}/${formKey ?? ''}/${field.fieldKey}/${locale}`}
+                selected={selectedValues}
+                onApply={(values) => applyColumnValues(field.fieldKey, values)}
+                onClose={() => setValueMenu(null)}
+              />
+            );
+          })()}
       </AnimatePresence>
 
       {/* Delete confirmation (بلی / خیر) — same dialog as the form windows. */}

@@ -385,6 +385,18 @@ const fa = {
   'dataList.filterOpNotContains': 'حاوی نباشد',
   'dataList.filterOpContains': 'حاوی تایپ‌شده',
   'dataList.columnResizeHint': 'برای تغییر عرض ستون بکشید — دوبار کلیک: بازنشانی',
+  'dataList.filterValuesAria': 'انتخاب مقدار برای فیلتر ستون',
+  'dataList.filterValuesMultiHint': 'چند انتخابی',
+  'dataList.filterValuesSingleHint': 'تک‌انتخابی',
+  'dataList.filterValuesSearch': 'جستجوی مقدار...',
+  'dataList.filterValuesEmpty': 'مقداری برای این ستون ثبت نشده است',
+  'dataList.filterValuesNoMatch': 'موردی مطابق جستجو یافت نشد',
+  'dataList.filterValuesSelectShown': 'انتخاب موارد پیداشده',
+  'dataList.filterValuesClear': 'پاک‌کردن',
+  'dataList.filterValuesApply': 'اعمال فیلتر',
+  'dataList.filterValuesSelectedCount': '{count} مورد انتخاب شد',
+  'dataList.filterValuesCount': '{count} مقدار',
+  'dataList.filterValuesLoadError': 'دریافت مقادیر فیلتر ناموفق بود',
 } satisfies Record<string, string>;
 
 const en: Record<string, string> = {
@@ -732,6 +744,18 @@ const en: Record<string, string> = {
   'dataList.filterOpNotContains': 'Does not contain',
   'dataList.filterOpContains': 'Contains',
   'dataList.columnResizeHint': 'Drag to resize the column — double-click to reset',
+  'dataList.filterValuesAria': 'Select column filter values',
+  'dataList.filterValuesMultiHint': 'Multi-select',
+  'dataList.filterValuesSingleHint': 'Single-select',
+  'dataList.filterValuesSearch': 'Search values...',
+  'dataList.filterValuesEmpty': 'No values recorded for this column',
+  'dataList.filterValuesNoMatch': 'Nothing matches the search',
+  'dataList.filterValuesSelectShown': 'Select shown',
+  'dataList.filterValuesClear': 'Clear',
+  'dataList.filterValuesApply': 'Apply filter',
+  'dataList.filterValuesSelectedCount': '{count} selected',
+  'dataList.filterValuesCount': '{count} values',
+  'dataList.filterValuesLoadError': 'Failed to load filter values',
 };
 
 const tr: Record<string, string> = {
@@ -1079,6 +1103,18 @@ const tr: Record<string, string> = {
   'dataList.filterOpNotContains': 'Şunu içermesin',
   'dataList.filterOpContains': 'Şunu içeren',
   'dataList.columnResizeHint': 'Sütunu yeniden boyutlandırmak için sürükleyin — sıfırlamak için çift tıklayın',
+  'dataList.filterValuesAria': 'Sütun filtre değerlerini seç',
+  'dataList.filterValuesMultiHint': 'Çoklu seçim',
+  'dataList.filterValuesSingleHint': 'Tek seçim',
+  'dataList.filterValuesSearch': 'Değer ara...',
+  'dataList.filterValuesEmpty': 'Bu sütun için değer kaydedilmemiş',
+  'dataList.filterValuesNoMatch': 'Aramayla eşleşen bir şey yok',
+  'dataList.filterValuesSelectShown': 'Görünenleri seç',
+  'dataList.filterValuesClear': 'Temizle',
+  'dataList.filterValuesApply': 'Filtreyi uygula',
+  'dataList.filterValuesSelectedCount': '{count} seçildi',
+  'dataList.filterValuesCount': '{count} değer',
+  'dataList.filterValuesLoadError': 'Filtre değerleri yüklenemedi',
 };
 
 const ar: Record<string, string> = {
@@ -1426,6 +1462,18 @@ const ar: Record<string, string> = {
   'dataList.filterOpNotContains': 'لا يحتوي على',
   'dataList.filterOpContains': 'يحتوي على المُدخل',
   'dataList.columnResizeHint': 'اسحب لتغيير عرض العمود — نقرة مزدوجة لإعادة التعيين',
+  'dataList.filterValuesAria': 'اختيار قيمة لتصفية العمود',
+  'dataList.filterValuesMultiHint': 'تحديد متعدد',
+  'dataList.filterValuesSingleHint': 'تحديد مفرد',
+  'dataList.filterValuesSearch': 'البحث عن قيمة...',
+  'dataList.filterValuesEmpty': 'لا قيم مسجلة لهذا العمود',
+  'dataList.filterValuesNoMatch': 'لا يوجد عنصر مطابق للبحث',
+  'dataList.filterValuesSelectShown': 'تحديد العناصر الظاهرة',
+  'dataList.filterValuesClear': 'مسح',
+  'dataList.filterValuesApply': 'تطبيق التصفية',
+  'dataList.filterValuesSelectedCount': 'تم تحديد {count} عنصر',
+  'dataList.filterValuesCount': '{count} قيمة',
+  'dataList.filterValuesLoadError': 'فشل جلب قيم التصفية',
 };
 
 export const DICTIONARIES: Record<Locale, Record<string, string>> = {
