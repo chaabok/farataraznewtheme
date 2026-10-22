@@ -589,3 +589,22 @@ Stage Summary:
 - DataListWindow عمومی و direction-محور: RTL/LTR آینه‌ای، ۱۱ زبان، جدول/فیلتر/انتخاب/حذف/خروجی CSV/انتخاب ستون/بازخوانی
 - فایل‌های جدید: data-list-window.tsx، app-events.ts، api/modules/[module]/forms/route.ts — فایل‌های تغییر یافته: forms.service/controller/types (settings-service)، menus/[moduleKey]/route.ts، desktop-store.ts، form-window.tsx، module-menu.tsx، desktop-shell.tsx، index.ts (forms barrel)، dictionaries.ts + ۷ فایل locale
 - E2E با agent-browser تأیید شد: fa/RTL و en/LTR، فیلتر زنده، حذف با بلی/خیر، دبل‌کلیک→فرم با رکورد درست، جدید→حالت جدید، انتخاب ستون، بازخوانی، موبایل — بدون خطای کنسول؛ lint و tsc (src) پاک
+
+---
+Task ID: 10
+Agent: main (Z.ai Code)
+Task: ایجاد فایل قانون‌گذاری برای هوش مصنوعی (AI governance) — هوش مصنوعی باید قبل از هر تغییر، قوانین را چک و کنترل کند و بر اساس آن پاسخ دهد
+
+Work Log:
+- بررسی worklog و ریشه پروژه: Task 9 (چیدمان افقی فیلدها) و Task 9 دوم (DataListWindow + منوی فهرست‌ها) هر دو تکمیل و E2E تأیید شده‌اند؛ پروژه فایل قوانین (AGENTS.md/CLAUDE.md) نداشت؛ شمارش زبان‌ها از src/i18n/config.ts به‌روز شد (۱۱ زبان، RTL: fa/ar/ps/ckb)
+- ایجاد `AGENTS.md` در ریشه پروژه به‌عنوان «قانون اساسی» پروژه (استاندارد باز AGENTS.md که اکثر ابزارهای AI به‌طور خودکار می‌خوانند) با ۱۰ بخش شماره‌دار برای استناد در پاسخ‌ها:
+  - §0 پروتکل اجباری «قبل از تغییر، قانون را چک کن»: خواندن AGENTS.md + worklog قبل از هر تغییر، اعلام قوانین مرتبط (با شناسه §)، اولویت درخواست کاربر > قوانین، ممنوعیت‌های مطلق (شکستن قراردادهای قفل‌شده / حذف فیچر / کد تست / bun run build / رنگ indigo-blue)، اعلام فرض برای اطلاعات گم‌شده
+  - §1 زبان و چندزبانی (۱۱ زبان، کلاس‌های منطقی RTL/LTR)؛ §2 استک غیرقابل تغییر؛ §3 قواعد سندباکس (پورت 3000، الگوی setsid orphan، XTransformPort، ممنوعیت build و Server Action و روت جدید)؛ §4 دیتابیس؛ §5 قراردادهای قفل‌شده (types/forms.ts، مسیرهای BFF، @erp/shared، فرم DB-driven، چیدمان w-36، رویداد erp:records-changed، پیشوند list:)؛ §6 پروتکل worklog؛ §7 تعریف «انجام‌شده» (چک‌لیست ۸ موردی شامل lint/dev.log/Agent Browser/RTL+LTR/موکایل/۱۱ زبان)؛ §8 قوانین UI/UX (فوتر sticky، max-h-96، بدون indigo/blue، 44px، ARIA)
+  - §9 English Quick Reference — خلاصه ۱۰ بندی انگلیسی برای پیروی مطمئن‌تر ابزارهای دیگر
+- ایجاد `CLAUDE.md` به‌صورت اشاره‌گر (@AGENTS.md) تا ابزارهایی که فقط CLAUDE.md را می‌خوانند (مثل Claude Code) هم به قانون‌نامه برسند
+- تغییر فقط داکیومنتی است (md)؛ به کد دست نخورده و نیازی به lint/E2E ندارد
+
+Stage Summary:
+- قانون‌نامه هوش مصنوعی فعال شد: AGENTS.md (مرجع اصلی، فارسی + خلاصه انگلیسی §9) + CLAUDE.md (اشاره‌گر)
+- مکانیزم اجرا: ابزارهای سازگار با AGENTS.md خودکار آن را می‌خوانند؛ در این محیط، عامل موظف است قبل از هر تغییر آن + worklog را بخواند، قوانین مرتبط را با شناسه § اعلام کند و «انجام‌شده» را فقط با چک‌لیست §7 اعلام کند
+- مالک می‌تواند AGENTS.md را مستقیم ویرایش کند؛ قوانین قفل‌شده فنی: §5 (قراردادها)، §3 (سندباکس)، §2 (استک)
