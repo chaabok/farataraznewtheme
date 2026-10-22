@@ -68,7 +68,12 @@ export interface ListWindowInfo {
 }
 
 /** Kind of a workspace tab shown in the dashboard tab bar. */
-export type DesktopTabKind = 'home' | 'form' | 'list' | 'module';
+export type DesktopTabKind =
+  | 'home'
+  | 'form'
+  | 'list'
+  | 'module'
+  | 'business-structure';
 
 /**
  * One browser-style workspace tab of the dashboard tab bar. The Home tab
@@ -89,6 +94,8 @@ export interface DesktopTab {
   form?: FormWindowInfo;
   /** Present for kind `list` — records browser of one form. */
   list?: ListWindowInfo;
+  /** Present for kind `business-structure` — the multi-company backbone. */
+  businessStructure?: { name: string; iconKey: string };
   /** Present for kind `module`. */
   moduleId?: string;
 }
@@ -173,6 +180,8 @@ interface DesktopState {
   addFormTab: (form: FormWindowInfo) => void;
   /** Opens (or focuses) the records list tab of a database-driven form. */
   addListTab: (list: ListWindowInfo) => void;
+  /** Opens (or focuses) the «ساختار کسب و کار» backbone window. */
+  addBusinessStructureTab: (info: { name: string; iconKey: string }) => void;
   /** Opens (or focuses) a tab hosting the generic module app. */
   addModuleTab: (info: {
     moduleId: string;
@@ -407,6 +416,31 @@ export const useDesktopStore = create<DesktopState>((set, get) => ({
         iconKey: list.iconKey,
         accentColor: '#38bdf8',
         list,
+      };
+      return {
+        tabs: exists
+          ? state.tabs.map((candidate) =>
+              candidate.id === id ? { ...candidate, ...tab } : candidate,
+            )
+          : [...state.tabs, tab],
+        activeTabId: id,
+        isTabBarActive: true,
+      };
+    });
+  },
+
+  /** Opens (or refocuses) the «ساختار کسب و کار» backbone window. */
+  addBusinessStructureTab: ({ name, iconKey }) => {
+    const id = 'business-structure';
+    set((state) => {
+      const exists = state.tabs.some((tab) => tab.id === id);
+      const tab: DesktopTab = {
+        id,
+        kind: 'business-structure',
+        title: name,
+        iconKey,
+        accentColor: '#38bdf8',
+        businessStructure: { name, iconKey },
       };
       return {
         tabs: exists

@@ -71,6 +71,9 @@ export function ModuleMenu() {
   const loadModuleMenus = useDesktopStore((s) => s.loadModuleMenus);
   const addFormTab = useDesktopStore((s) => s.addFormTab);
   const addListTab = useDesktopStore((s) => s.addListTab);
+  const addBusinessStructureTab = useDesktopStore(
+    (s) => s.addBusinessStructureTab,
+  );
   const addModuleTab = useDesktopStore((s) => s.addModuleTab);
   const openSetupWindow = useSetupStore((s) => s.openSetupWindow);
   const isAuthenticated = useAuthStore((s) => Boolean(s.token));
@@ -114,12 +117,17 @@ export function ModuleMenu() {
         });
         return;
       }
-      // Database-driven form (unified component-based form system) —
-      // every menu entry with a formKey opens as its own keep-alive tab
-      // in the dashboard tab bar (simple / tabbed / tree forms alike).
-      // Entries from the synthetic «فهرست‌های اطلاعات» menu use the
-      // `list:<formKey>` convention and open the records list instead.
-      if (form.formKey.startsWith('list:')) {
+      // Special window: the multi-company backbone «ساختار کسب و کار» —
+      // a dedicated window hosting the generic TreeForm engine.
+      if (
+        openModuleKey === 'settings' &&
+        form.formKey === 'business-structure'
+      ) {
+        addBusinessStructureTab({
+          name: form.name,
+          iconKey: form.iconKey,
+        });
+      } else if (form.formKey.startsWith('list:')) {
         addListTab({
           moduleKey: openModuleKey,
           formKey: form.formKey.slice('list:'.length),

@@ -22,6 +22,39 @@ model Setting {
   updatedAt DateTime @updatedAt
 }
 
+/// Multi-company backbone: the hierarchical business-structure tree
+/// (system root → headquarter → company → branch → agency) that feeds
+/// the future `x-company-id` tenant header of the whole ERP.
+/// Structure types: 0=System root (reserved) · 1=Headquarter/Holding ·
+/// 2=Company · 3=Branch · 4=Agency (clean greenfield enum — legacy
+/// "Department" mismatch intentionally not carried over).
+model BusinessStructure {
+  id            String   @id @default(uuid())
+  /// Parent node id — the virtual root uses the literal "0".
+  parentRef     String   @default("0")
+  /// Hierarchical code («01», «01-01», …) generated server-side inside a
+  /// transaction; unique per parent to allow the same suffix under siblings.
+  code          String
+  title         String
+  titleEn       String?
+  structureType Int      @default(2)
+  manager       String?
+  /// Logo as a data URL (sandbox scale) — swapped for an upload URL later.
+  logoUrl       String?
+  isActive      Boolean  @default(true)
+  /// The single reserved system root («ساختار سیستم») — immutable identity,
+  /// never deletable, never seeded with default data.
+  isSystem      Boolean  @default(false)
+  /// Optimistic-locking counter (consumed by hardening phase).
+  version       Int      @default(1)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([parentRef, code])
+  @@index([parentRef])
+  @@index([structureType])
+}
+
 /// A database-defined ERP form (simple | tabbed | tree), owned by a module.
 model FormDefinition {
   id          String   @id @default(uuid())

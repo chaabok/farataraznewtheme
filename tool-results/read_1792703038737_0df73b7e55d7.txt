@@ -1,0 +1,694 @@
+     1→   150→    return flat;
+     2→   151→  }, [records, parentField]);
+     3→   152→
+     4→   153→  /** Ids of the selected record's descendants (excluded from parent picker). */
+     5→   154→  const descendantIds = useMemo(() => {
+     6→   155→    const ids = new Set<string>();
+     7→   156→    if (!selectedId) return ids;
+     8→   157→    const walk = (list: TreeNode[]): boolean => {
+     9→   158→      for (const node of list) {
+    10→   159→        if (walk(node.children)) return true;
+    11→   160→        if (node.record.id === selectedId) {
+    12→   161→          ids.add(node.record.id);
+    13→   162→          return true;
+    14→   163→        }
+    15→   164→        if (ids.size) ids.add(node.record.id);
+    16→   165→      }
+    17→   166→      return false;
+    18→   167→    };
+    19→   168→    walk(nodes);
+    20→   169→    return ids;
+    21→   170→  }, [nodes, selectedId]);
+    22→   171→
+    23→   172→  // ── Search + expand state ───────────────────────────────────────
+    24→   173→  const [query, setQuery] = useState('');
+    25→   174→  const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set());
+    26→   175→
+    27→   176→  const needle = query.trim().toLowerCase();
+    28→   177→  const isSearching = needle.length > 0;
+    29→   178→
+    30→   179→  /** Node matches when its code or title contains the query. */
+    31→   180→  const nodeMatches = useCallback(
+    32→   181→    (node: TreeNode) => {
+    33→   182→      const code = codeField
+    34→   183→        ? String(node.record.data[codeField.fieldKey] ?? '')
+    35→   184→        : '';
+    36→   185→      const title = titleField
+    37→   186→        ? String(node.record.data[titleField.fieldKey] ?? '')
+    38→   187→        : '';
+    39→   188→      return (
+    40→   189→        code.toLowerCase().includes(needle) ||
+    41→   190→        title.toLowerCase().includes(needle)
+    42→   191→      );
+    43→   192→    },
+    44→   193→    [codeField, needle, titleField],
+    45→   194→  );
+    46→   195→
+    47→   196→  /** Visible nodes while searching: matches + their ancestors. */
+    48→   197→  const visibleNodes = useMemo(() => {
+    49→   198→    if (!isSearching) return nodes;
+    50→   199→    const keep = new Set<string>();
+    51→   200→    const match = (list: TreeNode[]): boolean => {
+    52→   201→      let any = false;
+    53→   202→      for (const node of list) {
+    54→   203→        const childMatch = match(node.children);
+    55→   204→        if (childMatch || nodeMatches(node)) {
+    56→   205→          keep.add(node.record.id);
+    57→   206→          any = true;
+    58→   207→        }
+    59→   208→      }
+    60→   209→      return any;
+    61→   210→    };
+    62→   211→    match(nodes);
+    63→   212→    return nodes.filter((node) => keep.has(node.record.id));
+    64→   213→  }, [isSearching, nodeMatches, nodes]);
+    65→   214→
+    66→   215→  const toggle = useCallback((recordId: string) => {
+    67→   216→    setCollapsed((prev) => {
+    68→   217→      const next = new Set(prev);
+    69→   218→      if (next.has(recordId)) next.delete(recordId);
+    70→   219→      else next.add(recordId);
+    71→   220→      return next;
+    72→   221→    });
+    73→   222→  }, []);
+    74→   223→
+    75→   224→  // ── Node context menu (زیرشاخه جدید / حذف شاخه) ─────────────────
+    76→   225→  const [menu, setMenu] = useState<{
+    77→   226→    x: number;
+    78→   227→    y: number;
+    79→   228→    recordId: string;
+    80→   229→  } | null>(null);
+    81→   230→  const closeMenu = useCallback(() => setMenu(null), []);
+    82→   231→  const menuRef = useDismiss<HTMLDivElement>(menu !== null, closeMenu);
+    83→   232→
+    84→   233→  /** Node the open menu belongs to (hidden again once it disappears). */
+    85→   234→  const menuNode = useMemo(
+    86→   235→    () =>
+    87→   236→      menu
+    88→   237→        ? nodes.find((node) => node.record.id === menu.recordId) ?? null
+    89→   238→        : null,
+    90→   239→    [menu, nodes],
+    91→   240→  );
+    92→   241→
+    93→   242→  /** Opens the menu inside the viewport (approximate panel size). */
+    94→   243→  const openMenu = useCallback((event: React.MouseEvent, recordId: string) => {
+    95→   244→    event.preventDefault();
+    96→   245→    const x = Math.min(event.clientX, window.innerWidth - 220);
+    97→   246→    const y = Math.min(event.clientY, window.innerHeight - 104);
+    98→   247→    setMenu({ x: Math.max(8, x), y: Math.max(8, y), recordId });
+    99→   248→  }, []);
+   100→   249→
+   101→   250→  // Fixed-position menu must not linger above a scrolled/resized tree.
+   102→   251→  useEffect(() => {
+   103→   252→    if (!menu) return;
+   104→   253→    const close = () => setMenu(null);
+   105→   254→    window.addEventListener('scroll', close, true);
+   106→   255→    window.addEventListener('resize', close);
+   107→   256→    return () => {
+   108→   257→      window.removeEventListener('scroll', close, true);
+   109→   258→      window.removeEventListener('resize', close);
+   110→   259→    };
+   111→   260→  }, [menu]);
+   112→   261→
+   113→   262→  const handleMenuNewSub = useCallback(() => {
+   114→   263→    if (!menu || !parentField) return;
+   115→   264→    onNewChild({ [parentField.fieldKey]: menu.recordId });
+   116→   265→    closeMenu();
+   117→   266→  }, [closeMenu, menu, onNewChild, parentField]);
+   118→   267→
+   119→   268→  const handleMenuDelete = useCallback(() => {
+   120→   269→    if (!menu || mode === 'new' || isBusy) return;
+   121→   270→    const node = nodes.find((item) => item.record.id === menu.recordId);
+   122→   271→    if (!node || node.children.length > 0) return;
+   123→   272→    onDeleteNode(menu.recordId);
+   124→   273→    closeMenu();
+   125→   274→  }, [closeMenu, isBusy, menu, mode, nodes, onDeleteNode]);
+   126→   275→
+   127→   276→  // ── Body tabs (tabKey !== null groups, definition order kept) ───
+   128→   277→  const bodyTabs = useMemo(() => {
+   129→   278→    const groups: Array<{ key: string; name: string; fields: FormFieldDef[] }> = [];
+   130→   279→    for (const field of sortedFields) {
+   131→   280→      if (field.tabKey === null) continue;
+   132→   281→      let group = groups.find((candidate) => candidate.key === field.tabKey);
+   133→   282→      if (!group) {
+   134→   283→        group = {
+   135→   284→          key: field.tabKey,
+   136→   285→          name: field.tabName ?? field.tabKey,
+   137→   286→          fields: [],
+   138→   287→        };
+   139→   288→        groups.push(group);
+   140→   289→      }
+   141→   290→      group.fields.push(field);
+   142→   291→    }
+   143→   292→    return groups;
+   144→   293→  }, [sortedFields]);
+   145→   294→
+   146→   295→  const headerFields = useMemo(
+   147→   296→    () => sortedFields.filter((field) => field.tabKey === null),
+   148→   297→    [sortedFields],
+   149→   298→  );
+   150→   299→
+   151→   300→  const [activeTabKey, setActiveTabKey] = useState<string | null>(null);
+   152→   301→  const activeBodyTab =
+   153→   302→    bodyTabs.find((tab) => tab.key === activeTabKey) ?? bodyTabs[0] ?? null;
+   154→   303→
+   155→   304→  const current = records.find((record) => record.id === selectedId) ?? null;
+   156→   305→  const showDetail = mode === 'new' || current !== null;
+   157→   306→
+   158→   307→  const renderFields = (list: FormFieldDef[]) => (
+   159→   308→    <div className="grid grid-cols-1 gap-x-5 gap-y-4 p-4 sm:grid-cols-2">
+   160→   309→      {list.map((field) =>
+   161→   310→        parentField && field.fieldKey === parentField.fieldKey ? (
+   162→   311→          <ParentPicker
+   163→   312→            key={field.fieldKey}
+   164→   313→            field={field}
+   165→   314→            nodes={nodes}
+   166→   315→            excludeIds={descendantIds}
+   167→   316→            value={
+   168→   317→              typeof draft[field.fieldKey] === 'string'
+   169→   318→                ? (draft[field.fieldKey] as string)
+   170→   319→                : null
+   171→   320→            }
+   172→   321→            onChange={(value) => onFieldChange(field.fieldKey, value)}
+   173→   322→            disabled={isBusy}
+   174→   323→          />
+   175→   324→        ) : (
+   176→   325→          <FieldRenderer
+   177→   326→            key={field.fieldKey}
+   178→   327→            field={field}
+   179→   328→            value={draft[field.fieldKey] ?? null}
+   180→   329→            onChange={(value) => onFieldChange(field.fieldKey, value)}
+   181→   330→            disabled={isBusy}
+   182→   331→            lookupUrlBase={lookupUrlBase}
+   183→   332→          />
+   184→   333→        ),
+   185→   334→      )}
+   186→   335→    </div>
+   187→   336→  );
+   188→   337→
+   189→   338→  return (
+   190→   339→    <div className="flex h-full min-h-0 flex-col md:flex-row">
+   191→   340→      {/* ── Box 1: tree panel (درختواره) ─────────────────────────── */}
+   192→   341→      <aside
+   193→   342→        aria-label={t('formWindow.treePanel')}
+   194→   343→        className="flex max-h-56 w-full shrink-0 flex-col border-b border-white/10 bg-white/[0.02] md:max-h-none md:w-60 md:border-b-0 md:border-e lg:w-72"
+   195→   344→      >
+   196→   345→        <div className="shrink-0 border-b border-white/10 px-3 pb-2.5 pt-3">
+   197→   346→          {/* Panel title + record count */}
+   198→   347→          <div className="mb-2.5 flex items-center gap-1.5">
+   199→   348→            <Network className="h-3.5 w-3.5 text-white/45" aria-hidden="true" />
+   200→   349→            <span className="text-[12px] font-semibold text-white/85">
+   201→   350→              {t('formWindow.treePanel')}
+   202→   351→            </span>
+   203→   352→            <span className="rounded bg-white/[0.07] px-1.5 py-px text-[10px] tabular-nums text-white/45">
+   204→   353→              {formatNumber(records.length)}
+   205→   354→            </span>
+   206→   355→          </div>
+   207→   356→
+   208→   357→          {/* Search inside the tree (CRUD lives in the action bar) */}
+   209→   358→          <div className="relative">
+   210→   359→            <Search
+   211→   360→              className="pointer-events-none absolute start-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/35"
+   212→   361→              aria-hidden="true"
+   213→   362→            />
+   214→   363→            <input
+   215→   364→              type="text"
+   216→   365→              value={query}
+   217→   366→              onChange={(event) => setQuery(event.target.value)}
+   218→   367→              placeholder={t('formWindow.treeSearch')}
+   219→   368→              aria-label={t('formWindow.treeSearch')}
+   220→   369→              className={cn(controlClasses, 'h-7 ps-7 pe-7')}
+   221→   370→            />
+   222→   371→            {isSearching && (
+   223→   372→              <button
+   224→   373→                type="button"
+   225→   374→                title={t('formWindow.clear')}
+   226→   375→                aria-label={t('formWindow.clear')}
+   227→   376→                onClick={() => setQuery('')}
+   228→   377→                className="absolute end-1 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-md text-white/40 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40"
+   229→   378→              >
+   230→   379→                <X className="h-3 w-3" />
+   231→   380→              </button>
+   232→   381→            )}
+   233→   382→          </div>
+   234→   383→        </div>
+   235→   384→
+   236→   385→        {/* Nodes */}
+   237→   386→        <div
+   238→   387→          role="tree"
+   239→   388→          aria-label={t('formWindow.treePanel')}
+   240→   389→          className="min-h-0 flex-1 overflow-y-auto p-1.5 [scrollbar-width:thin]"
+   241→   390→        >
+   242→   391→          {nodes.length === 0 ? (
+   243→   392→            <div className="flex flex-col items-center gap-2 px-3 py-8 text-center">
+   244→   393→              <Network className="h-5 w-5 text-white/25" aria-hidden="true" />
+   245→   394→              <p className="text-[12px] text-white/40">
+   246→   395→                {t('formWindow.emptyRecords')}
+   247→   396→              </p>
+   248→   397→            </div>
+   249→   398→          ) : visibleNodes.length === 0 ? (
+   250→   399→            <p className="px-3 py-8 text-center text-[12px] text-white/40">
+   251→   400→              {t('formWindow.noMatch')}
+   252→   401→            </p>
+   253→   402→          ) : (
+   254→   403→            visibleNodes.map((node) => {
+   255→   404→              const hasChildren = node.children.length > 0;
+   256→   405→              const isCollapsed = !isSearching && collapsed.has(node.record.id);
+   257→   406→              const isSelected =
+   258→   407→                mode !== 'new' && node.record.id === selectedId;
+   259→   408→              return (
+   260→   409→                <div
+   261→   410→                  key={node.record.id}
+   262→   411→                  role="treeitem"
+   263→   412→                  aria-selected={isSelected}
+   264→   413→                  aria-level={node.depth + 1}
+   265→   414→                  aria-expanded={hasChildren ? !isCollapsed : undefined}
+   266→   415→                  style={{ paddingInlineStart: node.depth * 14 }}
+   267→   416→                  onContextMenu={(event) => openMenu(event, node.record.id)}
+   268→   417→                >
+   269→   418→                  <div
+   270→   419→                    className={cn(
+   271→   420→                      'group flex items-center gap-0.5 rounded-lg pe-1 transition-colors',
+   272→   421→                      isSelected
+   273→   422→                        ? 'bg-sky-500/15 ring-1 ring-sky-400/30'
+   274→   423→                        : 'hover:bg-white/[0.05]',
+   275→   424→                    )}
+   276→   425→                  >
+   277→   426→                    <button
+   278→   427→                      type="button"
+   279→   428→                      onClick={() => onSelect(node.record.id)}
+   280→   429→                      className="flex min-w-0 flex-1 items-center gap-1.5 py-1.5 ps-1.5 text-start"
+   281→   430→                    >
+   282→   431→                      {hasChildren ? (
+   283→   432→                        <Folder
+   284→   433→                          className="h-3.5 w-3.5 shrink-0 text-amber-400/80"
+   285→   434→                          aria-hidden="true"
+   286→   435→                        />
+   287→   436→                      ) : (
+   288→   437→                        <FileText
+   289→   438→                          className="h-3.5 w-3.5 shrink-0 text-white/40"
+   290→   439→                          aria-hidden="true"
+   291→   440→                        />
+   292→   441→                      )}
+   293→   442→                      <span className="min-w-0 flex-1 truncate text-[12px] text-white/85">
+   294→   443→                        {titleField
+   295→   444→                          ? formatFieldValue(
+   296→   445→                              titleField,
+   297→   446→                              node.record.data[titleField.fieldKey],
+   298→   447→                              formatNumber,
+   299→   448→                            )
+   300→   449→                          : node.record.id}
+   301→   450→                      </span>
+   302→   451→                      {codeField && (
+   303→   452→                        <span className="shrink-0 rounded bg-white/[0.07] px-1.5 py-0.5 font-mono text-[10px] text-white/60">
+   304→   453→                          {formatFieldValue(
+   305→   454→                            codeField,
+   306→   455→                            node.record.data[codeField.fieldKey],
+   307→   456→                            formatNumber,
+   308→   457→                          )}
+   309→   458→                        </span>
+   310→   459→                      )}
+   311→   460→                    </button>
+   312→   461→                    <button
+   313→   462→                      type="button"
+   314→   463→                      title={t('formWindow.actionCopy')}
+   315→   464→                      aria-label={t('formWindow.actionCopy')}
+   316→   465→                      onClick={() => onCopyNode(node.record)}
+   317→   466→                      className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-white/35 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40"
+   318→   467→                    >
+   319→   468→                      <Copy className="h-3 w-3" />
+   320→   469→                    </button>
+   321→   470→                    <button
+   322→   471→                      type="button"
+   323→   472→                      aria-label={
+   324→   473→                        hasChildren ? t('formWindow.treePanel') : undefined
+   325→   474→                      }
+   326→   475→                      disabled={!hasChildren}
+   327→   476→                      onClick={() => toggle(node.record.id)}
+   328→   477→                      className={cn(
+   329→   478→                        'flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-white/45 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40',
+   330→   479→                        hasChildren
+   331→   480→                          ? 'hover:bg-white/10 hover:text-white'
+   332→   481→                          : 'pointer-events-none opacity-0',
+   333→   482→                      )}
+   334→   483→                    >
+   335→   484→                      <ChevronRight
+   336→   485→                        className={cn(
+   337→   486→                          'h-3.5 w-3.5 transition-transform rtl:-scale-x-100',
+   338→   487→                          !isCollapsed && 'rotate-90 rtl:-rotate-90',
+   339→   488→                        )}
+   340→   489→                      />
+   341→   490→                    </button>
+   342→   491→                  </div>
+   343→   492→                </div>
+   344→   493→              );
+   345→   494→            })
+   346→   495→          )}
+   347→   496→        </div>
+   348→   497→      </aside>
+   349→   498→
+   350→   499→      {/* ── Box 2: detail (fields + tabs) ────────────────────────── */}
+   351→   500→      <section
+   352→   501→        aria-label={t('formWindow.mainSection')}
+   353→   502→        className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto [scrollbar-width:thin]"
+   354→   503→      >
+   355→   504→        {showDetail ? (
+   356→   505→          <>
+   357→   506→            <div className="bg-white/[0.02]">
+   358→   507→              {renderFields(headerFields)}
+   359→   508→            </div>
+   360→   509→            {bodyTabs.length > 0 && (
+   361→   510→              <div className="flex min-h-0 flex-col">
+   362→   511→                <FormTabs
+   363→   512→                  tabs={bodyTabs.map((tab) => ({
+   364→   513→                    key: tab.key,
+   365→   514→                    name: tab.name,
+   366→   515→                    count: tab.fields.length,
+   367→   516→                  }))}
+   368→   517→                  active={activeBodyTab?.key ?? null}
+   369→   518→                  onChange={setActiveTabKey}
+   370→   519→                  accentColor={accentColor}
+   371→   520→                  direction={direction}
+   372→   521→                >
+   373→   522→                  {renderFields(activeBodyTab?.fields ?? [])}
+   374→   523→                </FormTabs>
+   375→   524→              </div>
+   376→   525→            )}
+   377→   526→          </>
+   378→   527→        ) : records.length === 0 ? (
+   379→   528→          <div className="flex flex-1 flex-col items-center justify-center gap-2 p-6 text-center">
+   380→   529→            <Network className="h-6 w-6 text-white/25" aria-hidden="true" />
+   381→   530→            <p className="text-[13px] text-white/55">
+   382→   531→              {t('formWindow.emptyRecords')}
+   383→   532→            </p>
+   384→   533→            <p className="text-[11px] text-white/35">
+   385→   534→              {t('formWindow.emptyRecordsHint')}
+   386→   535→            </p>
+   387→   536→          </div>
+   388→   537→        ) : (
+   389→   538→          <div className="flex flex-1 flex-col items-center justify-center gap-2 p-6 text-center">
+   390→   539→            <Network className="h-6 w-6 text-white/25" aria-hidden="true" />
+   391→   540→            <p className="text-[12px] text-white/45">
+   392→   541→              {t('formWindow.treeSelectHint')}
+   393→   542→            </p>
+   394→   543→          </div>
+   395→   544→        )}
+   396→   545→      </section>
+   397→   546→
+   398→   547→      {/* ── Node context menu (right click) ─────────────────────────── */}
+   399→   548→      <AnimatePresence>
+   400→   549→        {menu && menuNode && (
+   401→   550→          <motion.div
+   402→   551→            ref={menuRef}
+   403→   552→            role="menu"
+   404→   553→            aria-label={t('formWindow.treePanel')}
+   405→   554→            initial={{ opacity: 0, scale: 0.95, y: -3 }}
+   406→   555→            animate={{ opacity: 1, scale: 1, y: 0 }}
+   407→   556→            exit={{ opacity: 0, scale: 0.95, y: -3 }}
+   408→   557→            transition={{ duration: 0.13, ease: 'easeOut' }}
+   409→   558→            style={{ left: menu.x, top: menu.y }}
+   410→   559→            className="fixed z-[70] min-w-[190px] origin-top overflow-hidden rounded-xl bg-[#1b1e26]/[0.97] p-1 shadow-2xl shadow-black/50 ring-1 ring-white/10 backdrop-blur-xl"
+   411→   560→          >
+   412→   561→            <button
+   413→   562→              type="button"
+   414→   563→              role="menuitem"
+   415→   564→              disabled={!parentField || isBusy}
+   416→   565→              onClick={handleMenuNewSub}
+   417→   566→              className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-start text-[12px] text-white/85 transition-colors enabled:hover:bg-emerald-500/15 enabled:hover:text-emerald-300 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-emerald-400/50 disabled:cursor-not-allowed disabled:opacity-40"
+   418→   567→            >
+   419→   568→              <FolderPlus
+   420→   569→                className="h-3.5 w-3.5 shrink-0 text-emerald-400"
+   421→   570→                aria-hidden="true"
+   422→   571→              />
+   423→   572→              {t('formWindow.treeContextNewSub')}
+   424→   573→            </button>
+   425→   574→            <button
+   426→   575→              type="button"
+   427→   576→              role="menuitem"
+   428→   577→              title={
+   429→   578→                menuNode.children.length > 0
+   430→   579→                  ? t('formWindow.treeContextDeleteDisabled')
+   431→   580→                  : undefined
+   432→   581→              }
+   433→   582→              disabled={menuNode.children.length > 0 || mode === 'new' || isBusy}
+   434→   583→              onClick={handleMenuDelete}
+   435→   584→              className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-start text-[12px] text-white/85 transition-colors enabled:hover:bg-rose-500/15 enabled:hover:text-rose-300 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-rose-400/50 disabled:cursor-not-allowed disabled:opacity-40"
+   436→   585→            >
+   437→   586→              <Trash2
+   438→   587→                className="h-3.5 w-3.5 shrink-0 text-rose-400"
+   439→   588→                aria-hidden="true"
+   440→   589→              />
+   441→   590→              {t('formWindow.treeContextDelete')}
+   442→   591→            </button>
+   443→   592→          </motion.div>
+   444→   593→        )}
+   445→   594→      </AnimatePresence>
+   446→   595→    </div>
+   447→   596→  );
+   448→   597→}
+   449→   598→
+   450→   599→interface ParentPickerProps {
+   451→   600→  field: FormFieldDef;
+   452→   601→  nodes: TreeNode[];
+   453→   602→  /** Record ids that may not become a parent (self + descendants). */
+   454→   603→  excludeIds: ReadonlySet<string>;
+   455→   604→  value: string | null;
+   456→   605→  onChange: (value: FormFieldValue) => void;
+   457→   606→  disabled?: boolean;
+   458→   607→}
+   459→   608→
+   460→   609→/**
+   461→   610→ * Self-referencing parent selector of tree forms: lists the form's own
+   462→   611→ * records in hierarchy order (indented, code + title) and stores the
+   463→   612→ * chosen record's id — the same value the tree hierarchy is built from.
+   464→   613→ */
+   465→   614→function ParentPicker({
+   466→   615→  field,
+   467→   616→  nodes,
+   468→   617→  excludeIds,
+   469→   618→  value,
+   470→   619→  onChange,
+   471→   620→  disabled,
+   472→   621→}: ParentPickerProps) {
+   473→   622→  const { locale, t } = useTranslation();
+   474→   623→  const listboxId = useId();
+   475→   624→  const [open, setOpen] = useState(false);
+   476→   625→  const [query, setQuery] = useState('');
+   477→   626→  const [activeIndex, setActiveIndex] = useState(0);
+   478→   627→  const rootRef = useDismiss<HTMLDivElement>(
+   479→   628→    open,
+   480→   629→    useCallback(() => setOpen(false), []),
+   481→   630→  );
+   482→   631→
+   483→   632→  const options = useMemo(
+   484→   633→    () =>
+   485→   634→      nodes
+   486→   635→        .filter((node) => !excludeIds.has(node.record.id))
+   487→   636→        .map((node) => ({ node, depth: node.depth })),
+   488→   637→    [excludeIds, nodes],
+   489→   638→  );
+   490→   639→
+   491→   640→  const needle = query.trim().toLowerCase();
+   492→   641→  const filtered = useMemo(() => {
+   493→   642→    if (!needle) return options;
+   494→   643→    return options.filter(({ node }) => {
+   495→   644→      const title = String(node.record.data.title ?? '');
+   496→   645→      const code = String(node.record.data.code ?? '');
+   497→   646→      return (
+   498→   647→        title.toLowerCase().includes(needle) ||
+   499→   648→        code.toLowerCase().includes(needle)
+   500→   649→      );
+   501→   650→    });
+   502→   651→  }, [needle, options]);
+   503→   652→
+   504→   653→  const labelOf = useCallback(
+   505→   654→    (node: TreeNode) => {
+   506→   655→      const title = String(node.record.data.title ?? '').trim();
+   507→   656→      const code = String(node.record.data.code ?? '').trim();
+   508→   657→      return code && title ? `${code} — ${title}` : title || code || node.record.id;
+   509→   658→    },
+   510→   659→    [],
+   511→   660→  );
+   512→   661→
+   513→   662→  const selectedNode = useMemo(
+   514→   663→    () => nodes.find((node) => node.record.id === value) ?? null,
+   515→   664→    [nodes, value],
+   516→   665→  );
+   517→   666→
+   518→   667→  const openPanel = () => {
+   519→   668→    setQuery('');
+   520→   669→    setActiveIndex(0);
+   521→   670→    setOpen(true);
+   522→   671→  };
+   523→   672→
+   524→   673→  const pick = (node: TreeNode) => {
+   525→   674→    onChange(node.record.id);
+   526→   675→    setOpen(false);
+   527→   676→  };
+   528→   677→
+   529→   678→  const onKeyDown = (event: React.KeyboardEvent) => {
+   530→   679→    if (!open) {
+   531→   680→      if (event.key === 'ArrowDown' || event.key === 'Enter') {
+   532→   681→        event.preventDefault();
+   533→   682→        openPanel();
+   534→   683→      }
+   535→   684→      return;
+   536→   685→    }
+   537→   686→    if (event.key === 'ArrowDown') {
+   538→   687→      event.preventDefault();
+   539→   688→      setActiveIndex((index) => Math.min(filtered.length - 1, index + 1));
+   540→   689→    } else if (event.key === 'ArrowUp') {
+   541→   690→      event.preventDefault();
+   542→   691→      setActiveIndex((index) => Math.max(0, index - 1));
+   543→   692→    } else if (event.key === 'Enter') {
+   544→   693→      event.preventDefault();
+   545→   694→      const target = filtered[activeIndex];
+   546→   695→      if (target) pick(target.node);
+   547→   696→    } else if (event.key === 'Escape') {
+   548→   697→      event.stopPropagation();
+   549→   698→      setOpen(false);
+   550→   699→    }
+   551→   700→  };
+   552→   701→
+   553→   702→  return (
+   554→   703→    <div
+   555→   704→      className={cn(
+   556→   705→        'flex items-start gap-2',
+   557→   706→        field.span === 2 && 'col-span-full',
+   558→   707→      )}
+   559→   708→      ref={rootRef}
+   560→   709→      onKeyDown={onKeyDown}
+   561→   710→    >
+   562→   711→      {/* Label at the inline start: right side in RTL, left side in LTR. */}
+   563→   712→      <label
+   564→   713→        htmlFor={field.fieldKey}
+   565→   714→        className="w-36 shrink-0 text-[12px] leading-6 text-white/70"
+   566→   715→      >
+   567→   716→        {fieldLabel(field, locale)}
+   568→   717→        {field.isRequired && (
+   569→   718→          <span
+   570→   719→            title={t('formWindow.requiredHint')}
+   571→   720→            aria-hidden="true"
+   572→   721→            className="ms-1 text-[13px] leading-none text-red-400"
+   573→   722→          >
+   574→   723→            *
+   575→   724→          </span>
+   576→   725→        )}
+   577→   726→      </label>
+   578→   727→      <div className="relative min-w-0 flex-1">
+   579→   728→        <div className="flex items-center gap-1.5">
+   580→   729→          <button
+   581→   730→            type="button"
+   582→   731→            id={field.fieldKey}
+   583→   732→            role="combobox"
+   584→   733→            aria-expanded={open}
+   585→   734→            aria-controls={listboxId}
+   586→   735→            aria-haspopup="listbox"
+   587→   736→            disabled={disabled}
+   588→   737→            onClick={() => (open ? setOpen(false) : openPanel())}
+   589→   738→            className={cn(
+   590→   739→              controlClasses,
+   591→   740→              'flex items-center justify-between gap-2 pe-2 text-start',
+   592→   741→            )}
+   593→   742→          >
+   594→   743→            <span
+   595→   744→              className={cn(
+   596→   745→                'min-w-0 flex-1 truncate',
+   597→   746→                selectedNode ? 'text-white' : 'text-white/30',
+   598→   747→              )}
+   599→   748→            >
+   600→   749→              {selectedNode
+   601→   750→                ? labelOf(selectedNode)
+   602→   751→                : t('formWindow.selectPlaceholder')}
+   603→   752→            </span>
+   604→   753→            <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 text-white/35" />
+   605→   754→          </button>
+   606→   755→        </div>
+   607→   756→
+   608→   757→      <AnimatePresence>
+   609→   758→        {open && (
+   610→   759→          <motion.div
+   611→   760→            initial={{ opacity: 0, scale: 0.97, y: -4 }}
+   612→   761→            animate={{ opacity: 1, scale: 1, y: 0 }}
+   613→   762→            exit={{ opacity: 0, scale: 0.97, y: -4 }}
+   614→   763→            transition={{ duration: 0.14, ease: 'easeOut' }}
+   615→   764→            className="absolute top-full z-50 mt-1.5 w-full min-w-[220px] overflow-hidden rounded-xl bg-[#1b1e26]/[0.97] shadow-2xl shadow-black/50 ring-1 ring-white/10 backdrop-blur-xl"
+   616→   765→          >
+   617→   766→            <div className="flex items-center gap-2 border-b border-white/10 px-3 py-2">
+   618→   767→              <Search className="h-3.5 w-3.5 shrink-0 text-white/35" />
+   619→   768→              <input
+   620→   769→                autoFocus
+   621→   770→                type="text"
+   622→   771→                value={query}
+   623→   772→                onChange={(event) => {
+   624→   773→                  setQuery(event.target.value);
+   625→   774→                  setActiveIndex(0);
+   626→   775→                }}
+   627→   776→                placeholder={t('formWindow.search')}
+   628→   777→                className="h-7 w-full bg-transparent text-sm text-white placeholder:text-white/30 focus:outline-none"
+   629→   778→              />
+   630→   779→            </div>
+   631→   780→            <div
+   632→   781→              id={listboxId}
+   633→   782→              role="listbox"
+   634→   783→              aria-label={fieldLabel(field, locale)}
+   635→   784→              className="max-h-64 overflow-y-auto py-1 [scrollbar-width:thin]"
+   636→   785→            >
+   637→   786→              {filtered.length === 0 && (
+   638→   787→                <p className="px-3 py-4 text-center text-xs text-white/40">
+   639→   788→                  {t('formWindow.noMatch')}
+   640→   789→                </p>
+   641→   790→              )}
+   642→   791→              {filtered.map(({ node }, index) => {
+   643→   792→                const isSelected = node.record.id === value;
+   644→   793→                const isActive = index === activeIndex;
+   645→   794→                return (
+   646→   795→                  <button
+   647→   796→                    key={node.record.id}
+   648→   797→                    type="button"
+   649→   798→                    role="option"
+   650→   799→                    aria-selected={isSelected}
+   651→   800→                    onMouseEnter={() => setActiveIndex(index)}
+   652→   801→                    onClick={() => pick(node)}
+   653→   802→                    style={{ paddingInlineStart: 12 + node.depth * 14 }}
+   654→   803→                    className={cn(
+   655→   804→                      'flex w-full items-center gap-2 pe-3 py-1.5 text-start text-[12px] transition-colors',
+   656→   805→                      isActive
+   657→   806→                        ? 'bg-sky-500/15 text-white'
+   658→   807→                        : 'text-white/80 hover:bg-white/[0.05]',
+   659→   808→                      isSelected && !isActive && 'bg-white/[0.04]',
+   660→   809→                    )}
+   661→   810→                  >
+   662→   811→                    <span className="min-w-0 flex-1 truncate">
+   663→   812→                      {labelOf(node)}
+   664→   813→                    </span>
+   665→   814→                    {isSelected && (
+   666→   815→                      <Check className="h-3.5 w-3.5 shrink-0 text-sky-400" />
+   667→   816→                    )}
+   668→   817→                  </button>
+   669→   818→                );
+   670→   819→              })}
+   671→   820→            </div>
+   672→   821→            {value !== null && value !== '' && (
+   673→   822→              <div className="border-t border-white/10 p-1.5">
+   674→   823→                <button
+   675→   824→                  type="button"
+   676→   825→                  onClick={() => {
+   677→   826→                    onChange(null);
+   678→   827→                    setOpen(false);
+   679→   828→                  }}
+   680→   829→                  className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs text-rose-300 transition-colors hover:bg-rose-500/15 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-rose-400/50"
+   681→   830→                >
+   682→   831→                  <X className="h-3.5 w-3.5" />
+   683→   832→                  {t('formWindow.clear')}
+   684→   833→                </button>
+   685→   834→              </div>
+   686→   835→            )}
+   687→   836→          </motion.div>
+   688→   837→        )}
+   689→   838→        </AnimatePresence>
+   690→   839→      </div>
+   691→   840→    </div>
+   692→   841→  );
+   693→   842→}
+   694→   843→

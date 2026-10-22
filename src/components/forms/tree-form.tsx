@@ -6,6 +6,7 @@ import {
   useId,
   useMemo,
   useState,
+  type ReactNode,
 } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
@@ -71,6 +72,29 @@ interface TreeFormProps {
   onDeleteNode: (recordId: string) => void;
   /** Per-node copy icon — starts a new entry prefilled with that node. */
   onCopyNode: (record: FormRecord) => void;
+  /**
+   * ── Optional backward-compatible extensions (§5.1 style) ──
+   * Localized title of the tree panel header (default: «درختواره»). */
+  panelTitle?: string;
+  /** Per-node glyph override (e.g. structure-type icons). Returns the node. */
+  renderNodeGlyph?: (record: FormRecord, hasChildren: boolean) => ReactNode;
+  /**
+   * Fully custom detail box content — replaces the default header-fields
+   * + body-tabs renderer (used by dedicated windows hosting TreeForm).
+   */
+  detail?: ReactNode;
+  /**
+   * Gate for the «زیرشاخه جدید» context-menu entry — when provided and
+   * returning false, the entry is hidden entirely (e.g. max tree depth).
+   */
+  canNewChild?: (record: FormRecord, depth: number) => boolean;
+  /**
+   * Gate for the «حذف شاخه» context-menu entry — when provided and
+   * returning false, the entry is hidden (e.g. protected system nodes).
+   */
+  canDeleteNode?: (record: FormRecord) => boolean;
+  /** Hides the per-node copy affordance (identity records etc.). */
+  hideNodeCopy?: boolean;
 }
 
 interface TreeNode {
@@ -110,6 +134,12 @@ export function TreeForm({
   onNewChild,
   onDeleteNode,
   onCopyNode,
+  panelTitle,
+  renderNodeGlyph,
+  detail,
+  canNewChild,
+  canDeleteNode,
+  hideNodeCopy = false,
 }: TreeFormProps) {
   const { direction, formatNumber, t } = useTranslation();
 
@@ -347,7 +377,7 @@ export function TreeForm({
           <div className="mb-2.5 flex items-center gap-1.5">
             <Network className="h-3.5 w-3.5 text-white/45" aria-hidden="true" />
             <span className="text-[12px] font-semibold text-white/85">
-              {t('formWindow.treePanel')}
+              {panelTitle ?? t('formWindow.treePanel')}
             </span>
             <span className="rounded bg-white/[0.07] px-1.5 py-px text-[10px] tabular-nums text-white/45">
               {formatNumber(records.length)}
@@ -428,7 +458,9 @@ export function TreeForm({
                       onClick={() => onSelect(node.record.id)}
                       className="flex min-w-0 flex-1 items-center gap-1.5 py-1.5 ps-1.5 text-start"
                     >
-                      {hasChildren ? (
+                      {renderNodeGlyph ? (
+                        renderNodeGlyph(node.record, hasChildren)
+                      ) : hasChildren ? (
                         <Folder
                           className="h-3.5 w-3.5 shrink-0 text-amber-400/80"
                           aria-hidden="true"
@@ -458,15 +490,17 @@ export function TreeForm({
                         </span>
                       )}
                     </button>
-                    <button
-                      type="button"
-                      title={t('formWindow.actionCopy')}
-                      aria-label={t('formWindow.actionCopy')}
-                      onClick={() => onCopyNode(node.record)}
-                      className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-white/35 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40"
-                    >
-                      <Copy className="h-3 w-3" />
-                    </button>
+                    {!hideNodeCopy && (
+                      <button
+                        type="button"
+                        title={t('formWindow.actionCopy')}
+                        aria-label={t('formWindow.actionCopy')}
+                        onClick={() => onCopyNode(node.record)}
+                        className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-white/35 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40"
+                      >
+                        <Copy className="h-3 w-3" />
+                      </button>
+                    )}
                     <button
                       type="button"
                       aria-label={
@@ -502,28 +536,32 @@ export function TreeForm({
         className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto [scrollbar-width:thin]"
       >
         {showDetail ? (
-          <>
-            <div className="bg-white/[0.02]">
-              {renderFields(headerFields)}
-            </div>
-            {bodyTabs.length > 0 && (
-              <div className="flex min-h-0 flex-col">
-                <FormTabs
-                  tabs={bodyTabs.map((tab) => ({
-                    key: tab.key,
-                    name: tab.name,
-                    count: tab.fields.length,
-                  }))}
-                  active={activeBodyTab?.key ?? null}
-                  onChange={setActiveTabKey}
-                  accentColor={accentColor}
-                  direction={direction}
-                >
-                  {renderFields(activeBodyTab?.fields ?? [])}
-                </FormTabs>
+          detail !== undefined ? (
+            detail
+          ) : (
+            <>
+              <div className="bg-white/[0.02]">
+                {renderFields(headerFields)}
               </div>
-            )}
-          </>
+              {bodyTabs.length > 0 && (
+                <div className="flex min-h-0 flex-col">
+                  <FormTabs
+                    tabs={bodyTabs.map((tab) => ({
+                      key: tab.key,
+                      name: tab.name,
+                      count: tab.fields.length,
+                    }))}
+                    active={activeBodyTab?.key ?? null}
+                    onChange={setActiveTabKey}
+                    accentColor={accentColor}
+                    direction={direction}
+                  >
+                    {renderFields(activeBodyTab?.fields ?? [])}
+                  </FormTabs>
+                </div>
+              )}
+            </>
+          )
         ) : records.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-2 p-6 text-center">
             <Network className="h-6 w-6 text-white/25" aria-hidden="true" />
@@ -558,37 +596,41 @@ export function TreeForm({
             style={{ left: menu.x, top: menu.y }}
             className="fixed z-[70] min-w-[190px] origin-top overflow-hidden rounded-xl bg-[#1b1e26]/[0.97] p-1 shadow-2xl shadow-black/50 ring-1 ring-white/10 backdrop-blur-xl"
           >
-            <button
-              type="button"
-              role="menuitem"
-              disabled={!parentField || isBusy}
-              onClick={handleMenuNewSub}
-              className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-start text-[12px] text-white/85 transition-colors enabled:hover:bg-emerald-500/15 enabled:hover:text-emerald-300 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-emerald-400/50 disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              <FolderPlus
-                className="h-3.5 w-3.5 shrink-0 text-emerald-400"
-                aria-hidden="true"
-              />
-              {t('formWindow.treeContextNewSub')}
-            </button>
-            <button
-              type="button"
-              role="menuitem"
-              title={
-                menuNode.children.length > 0
-                  ? t('formWindow.treeContextDeleteDisabled')
-                  : undefined
-              }
-              disabled={menuNode.children.length > 0 || mode === 'new' || isBusy}
-              onClick={handleMenuDelete}
-              className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-start text-[12px] text-white/85 transition-colors enabled:hover:bg-rose-500/15 enabled:hover:text-rose-300 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-rose-400/50 disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              <Trash2
-                className="h-3.5 w-3.5 shrink-0 text-rose-400"
-                aria-hidden="true"
-              />
-              {t('formWindow.treeContextDelete')}
-            </button>
+            {!(menuNode && canNewChild && !canNewChild(menuNode.record, menuNode.depth)) && (
+              <button
+                type="button"
+                role="menuitem"
+                disabled={!parentField || isBusy}
+                onClick={handleMenuNewSub}
+                className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-start text-[12px] text-white/85 transition-colors enabled:hover:bg-emerald-500/15 enabled:hover:text-emerald-300 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-emerald-400/50 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <FolderPlus
+                  className="h-3.5 w-3.5 shrink-0 text-emerald-400"
+                  aria-hidden="true"
+                />
+                {t('formWindow.treeContextNewSub')}
+              </button>
+            )}
+            {!(menuNode && canDeleteNode && !canDeleteNode(menuNode.record)) && (
+              <button
+                type="button"
+                role="menuitem"
+                title={
+                  menuNode.children.length > 0
+                    ? t('formWindow.treeContextDeleteDisabled')
+                    : undefined
+                }
+                disabled={menuNode.children.length > 0 || mode === 'new' || isBusy}
+                onClick={handleMenuDelete}
+                className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-start text-[12px] text-white/85 transition-colors enabled:hover:bg-rose-500/15 enabled:hover:text-rose-300 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-rose-400/50 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <Trash2
+                  className="h-3.5 w-3.5 shrink-0 text-rose-400"
+                  aria-hidden="true"
+                />
+                {t('formWindow.treeContextDelete')}
+              </button>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

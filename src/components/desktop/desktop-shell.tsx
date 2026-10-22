@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { useEffect } from 'react';
 import { cn } from '@/lib/utils';
+import { BusinessStructureWindow } from '@/components/forms/business-structure-window';
 import { DataFormWindow, DataListWindow } from '@/components/forms';
 import { useTranslation } from '@/i18n';
 import { useDesktopStore } from '@/store/desktop-store';
@@ -150,6 +151,11 @@ export function DesktopShell() {
                   <DataListWindow
                     moduleId={tab.id}
                     list={tab.list}
+                    onClose={() => closeTab(tab.id)}
+                  />
+                ) : tab.kind === 'business-structure' ? (
+                  <BusinessStructureWindow
+                    tab={tab}
                     onClose={() => closeTab(tab.id)}
                   />
                 ) : tab.moduleId ? (
