@@ -674,3 +674,22 @@ Stage Summary:
 - تک/چند انتخابی per form/field کانفیگ‌پذیر است (FormFieldDefinition.filterMode؛ lookup=single، بقیه=multi به‌عنوان سید پیش‌فرض؛ undefined=multi) و از سیدهای آینده هم قابل تغییر است
 - قراردادهای جدید (سازگار با گذشته): GET …/fields/:fieldKey/values + op:'in' با values[] در ?filters=؛ BFF whitelist توسعه یافت
 - فایل‌ها: types/forms.ts، forms.types/service/controller/schema (settings-service)، scripts/set-filter-modes.ts، scripts/seed-forms.ts، BFF route، filter-values-dropdown.tsx (جدید)، data-list-window.tsx، dictionaries.ts، locales/{hi,ps,ckb,pt,ko,fr,zh}.ts
+
+---
+Task ID: 14
+Agent: main (Z.ai Code)
+Task: دریافت و تحلیل سند کامل فرم «ساختار کسب و کار» (BusinessStructure) — منطق + مشاوره مالک + پرامپت اجرایی — تأیید فهم، Gap Analysis با وضعیت فعلی پروژه و ارائه نقشه راه فازبندی‌شده (فقط مشاوره، بدون تغییر کد)
+
+Work Log:
+- طبق §0.1: AGENTS.md و worklog خوانده شد؛ وضعیت: Task 11–13 (فیلتر سرورساید، ۴ اصلاح UI، FilterValuesDropdown) تکمیل و E2E تأیید شده‌اند
+- جستجوی واقعی کد: کلیدواژه‌های BusinessStructure / business-structure / x-company-id / companyId / BaseSettings / usage-check / Permissions در کل پروژه (src + mini-services) صفر نتیجه — فرم ساختار کسب و کار و تمام مکانیزم‌های وابسته (multi-tenancy، seed/unseed، کاربران مجاز، قفل usage، مجوز granular) هنوز وجود ندارند
+- بازبینی settings-service/prisma/schema.prisma: مدل‌های فعلی Setting (key/value)، FormDefinition، FormFieldDefinition، FormLookupOption، FormDataRecord — جای خالی مدل درختی چند-شرکتی
+- بازبینی tree-form.tsx: موتور درخت موجود (جستجو، hierarchy از parent field، بج کد، منوی راست‌کلیک «زیرشاخه جدید/حذف شاخه»، ParentPicker، تب‌بندی detail) قابل استفاده مجدد است؛ اما آیکن نوع ساختار، حالت خاص ریشه، تب کاربران مجاز، مودال‌های seed/unseed و قواعد والد-فرزند شرطی را ندارد
+- Gap Analysis + مشاوره به کاربر ارائه شد: تأیید ۴ ستون منطق فرم، تأیید ریسک‌های سند مالک + ریسک‌های مخصوص بازساخت نو (SQLite بدون advisory lock، uuid به‌جای bigint ID=1، نبود endpoint آپلود، cross-service IAM با auth-service، cross-cutting بودن x-company-id، تعارض ظریف §5.4 با کامپوننت اختصاصی)
+- نقشه راه ۶ فازی پیشنهاد شد (مدل+قواعد سرورساید → UI پنجره → x-company-id → Seed/Unseed → IAM → سخت‌سازی) با ۵ تصمیم معماری در انتظار تأیید مالک
+
+Stage Summary:
+- درخواست کاربر (مشاوره/تأیید فهم) پاسخ داده شد؛ پیاده‌سازی آغاز نشده چون کاربر فقط فهم و مشاوره خواست
+- یافته کلیدی: کل زنجیره BusinessStructure در پروژه نو باید از صفر ساخته شود؛ نزدیک‌ترین دارایی قابل استفاده، موتور TreeForm + الگوی DataListWindow (پنجره اختصاصی dispatched در desktop-shell) است
+- ۵ تصمیم باز برای مالک: (۱) محل سرویس=settings-service بدون سرویس جدید (۲) الگوی UI=پنجره اختصاصی BusinessStructureWindow با حداکثر استفاده از TreeForm (۳) منبع واحد حقیقت انواع فعال=Setting های namespaced (۴) enum تمیز ۴=نمایندگی (۵) uuid + isSystem به‌جای bigint ID=1
+- Task ID بعدی برای پیاده‌سازی: ۱۵ (فاز ۱) به محض تأیید مالک
