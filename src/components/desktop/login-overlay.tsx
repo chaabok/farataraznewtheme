@@ -3,8 +3,11 @@
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Loader2, LogIn, User } from 'lucide-react';
+import { Languages, Loader2, LogIn, User } from 'lucide-react';
 import { useAuthStore } from '@/store/auth-store';
+import { useTranslation } from '@/i18n';
+import { useDesktopStore } from '@/store/desktop-store';
+import { LanguageMenu } from './taskbar/language-menu';
 
 /**
  * Windows-style lock screen shown before authentication.
@@ -14,7 +17,11 @@ export function LoginOverlay() {
   const token = useAuthStore((s) => s.token);
   const isLoggingIn = useAuthStore((s) => s.isLoggingIn);
   const error = useAuthStore((s) => s.error);
+  const errorKey = useAuthStore((s) => s.errorKey);
   const login = useAuthStore((s) => s.login);
+  const { t } = useTranslation();
+  const isLanguageMenuOpen = useDesktopStore((s) => s.isLanguageMenuOpen);
+  const toggleLanguageMenu = useDesktopStore((s) => s.toggleLanguageMenu);
 
   const [mounted, setMounted] = useState(false);
   const [username, setUsername] = useState('admin');
@@ -42,7 +49,7 @@ export function LoginOverlay() {
       transition={{ duration: 0.3 }}
       className="fixed inset-0 z-40 flex items-center justify-center"
       role="dialog"
-      aria-label="صفحه ورود"
+      aria-label={t('login.aria')}
     >
       <Image
         src="/wallpaper.jpg"
@@ -64,17 +71,15 @@ export function LoginOverlay() {
           <User className="h-8 w-8 text-white" />
         </span>
 
-        <h1 className="mt-4 text-lg font-bold text-white">ورود به داشبورد</h1>
-        <p className="mt-1 text-xs text-white/60">
-          برای دسترسی به ماژول‌های سازمانی وارد شوید
-        </p>
+        <h1 className="mt-4 text-lg font-bold text-white">{t('login.title')}</h1>
+        <p className="mt-1 text-xs text-white/60">{t('login.subtitle')}</p>
 
-        <form onSubmit={handleSubmit} className="mt-6 space-y-3 text-right">
+        <form onSubmit={handleSubmit} className="mt-6 space-y-3 text-start">
           <input
             type="text"
             value={username}
             onChange={(event) => setUsername(event.target.value)}
-            placeholder="نام کاربری"
+            placeholder={t('login.username')}
             autoComplete="username"
             dir="ltr"
             className="h-11 w-full rounded-lg border border-white/15 bg-white/10 px-4 text-center text-sm text-white placeholder:text-white/40 focus:border-sky-400/60 focus:outline-none"
@@ -83,15 +88,15 @@ export function LoginOverlay() {
             type="password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
-            placeholder="رمز عبور"
+            placeholder={t('login.password')}
             autoComplete="current-password"
             dir="ltr"
             className="h-11 w-full rounded-lg border border-white/15 bg-white/10 px-4 text-center text-sm text-white placeholder:text-white/40 focus:border-sky-400/60 focus:outline-none"
           />
 
-          {error && (
+          {(errorKey || error) && (
             <p className="rounded-lg border border-red-400/30 bg-red-500/15 px-3 py-2 text-center text-xs text-red-200">
-              {error}
+              {errorKey ? t(`login.error.${errorKey}`) : error}
             </p>
           )}
 
@@ -105,16 +110,37 @@ export function LoginOverlay() {
             ) : (
               <LogIn className="h-4 w-4" />
             )}
-            ورود
+            {t('login.submit')}
           </button>
         </form>
 
         <p className="mt-5 text-[11px] leading-5 text-white/45">
-          حساب دمو — نام کاربری: <span dir="ltr">admin</span>
+          {t('login.demoAccount')} — {t('login.username')}:{' '}
+          <span dir="ltr">admin</span>
           <br />
-          رمز عبور: <span dir="ltr">Admin@12345</span>
+          {t('login.password')}: <span dir="ltr">Admin@12345</span>
         </p>
       </motion.div>
+
+      {/* Language picker (bottom corner, like the Windows lock screen) —
+          lets the user switch fa/en/tr/ar BEFORE signing in. */}
+      <div className="absolute bottom-5 end-5 z-50 flex flex-col items-end">
+        {isLanguageMenuOpen && <LanguageMenu />}
+        <button
+          type="button"
+          data-language-toggle
+          aria-label={t('language.aria')}
+          aria-haspopup="menu"
+          aria-expanded={isLanguageMenuOpen}
+          onClick={(event) => {
+            event.stopPropagation();
+            toggleLanguageMenu();
+          }}
+          className="mt-2 flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white/85 backdrop-blur-md transition-colors hover:bg-white/20 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-sky-300/70"
+        >
+          <Languages className="h-5 w-5" strokeWidth={1.9} />
+        </button>
+      </div>
     </motion.div>
   );
 }

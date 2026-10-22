@@ -6,6 +6,7 @@ import { DesktopIcons } from './desktop-icons';
 import { LoginOverlay } from './login-overlay';
 import { WindowLayer } from './windows/window-layer';
 import { Taskbar } from './taskbar/taskbar';
+import { useTranslation } from '@/i18n';
 import { useDesktopStore } from '@/store/desktop-store';
 
 /**
@@ -17,28 +18,31 @@ export function DesktopShell() {
   const fetchIcons = useDesktopStore((s) => s.fetchIcons);
   const selectIcon = useDesktopStore((s) => s.selectIcon);
   const toggleStartMenu = useDesktopStore((s) => s.toggleStartMenu);
+  const toggleLanguageMenu = useDesktopStore((s) => s.toggleLanguageMenu);
+  const { t } = useTranslation();
 
   // Load icons from the NestJS desktop-service through the Next.js gateway.
   useEffect(() => {
     void fetchIcons();
   }, [fetchIcons]);
 
-  // Close the start menu with the Escape key (Windows behaviour).
+  // Close the start menu and the language popup with Escape (Windows behaviour).
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         toggleStartMenu(false);
+        toggleLanguageMenu(false);
       }
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [toggleStartMenu]);
+  }, [toggleStartMenu, toggleLanguageMenu]);
 
   return (
     <div className="flex min-h-screen flex-col">
       <main
         className="relative flex-1 overflow-hidden bg-[#0a1128]"
-        aria-label="دسکتاپ"
+        aria-label={t('desktop.aria')}
         onClick={() => {
           selectIcon(null);
           toggleStartMenu(false);
@@ -46,7 +50,7 @@ export function DesktopShell() {
       >
         <Image
           src="/wallpaper.jpg"
-          alt="والپیپر گل آبی شبیه ویندوز ۱۱"
+          alt={t('app.name')}
           fill
           priority
           sizes="100vw"

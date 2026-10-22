@@ -8,6 +8,7 @@ import {
   NotFoundException,
   Param,
   Post,
+  Query,
 } from '@erp/shared';
 import { PublicJwt } from '@erp/shared';
 import { IconsService } from './icons.service';
@@ -23,18 +24,24 @@ export class IconsController {
    * Reading the icon list requires the internal API key (injected by the
    * gateway) but works without a user JWT (the login screen renders before
    * authentication). Mutations require a full JWT + API key.
+   *
+   * `locale` is whitelisted in the service (fa|en|tr|ar, default fa) and
+   * resolves display names with a graceful fallback chain.
    */
   @Get()
   @PublicJwt()
-  async findAll() {
-    const icons = await this.iconsService.findAll();
+  async findAll(@Query('locale') locale?: string) {
+    const icons = await this.iconsService.findAll(locale);
     return { data: icons };
   }
 
   @Get(':id')
   @PublicJwt()
-  async findOne(@Param('id') id: string) {
-    const icon = await this.iconsService.findOne(id);
+  async findOne(
+    @Param('id') id: string,
+    @Query('locale') locale?: string,
+  ) {
+    const icon = await this.iconsService.findOne(id, locale);
     if (!icon) {
       throw new NotFoundException(`Icon with id "${id}" not found`);
     }

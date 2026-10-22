@@ -1,7 +1,9 @@
 'use client';
 
+import { useState } from 'react';
 import { LayoutGrid, Search } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { getLocalizedModuleMeta, useTranslation } from '@/i18n';
 import { cn } from '@/lib/utils';
 import { getIcon } from '../icon-registry';
 import { useDesktopStore } from '@/store/desktop-store';
@@ -11,19 +13,22 @@ import { WindowsLogo } from './windows-logo';
 /**
  * Center of the taskbar (Windows 11 style): Start, Search, Task View,
  * pinned apps and the running module windows — absolutely centered
- * regardless of tray width.
+ * regardless of tray width (the centering transform is direction-neutral).
  */
 export function TaskbarCenter() {
   const pinnedApps = useDesktopStore((s) => s.pinnedApps);
   const isStartMenuOpen = useDesktopStore((s) => s.isStartMenuOpen);
   const toggleStartMenu = useDesktopStore((s) => s.toggleStartMenu);
-  const activeTaskbarAppId = useDesktopStore((s) => s.activeTaskbarAppId);
-  const setActiveTaskbarApp = useDesktopStore((s) => s.setActiveTaskbarApp);
   const windows = useDesktopStore((s) => s.windows);
   const focusWindow = useDesktopStore((s) => s.focusWindow);
+  const { locale, t } = useTranslation();
+  // Taskbar UI state: which pinned app shows its active indicator.
+  const [activePinnedAppId, setActivePinnedAppId] = useState<string | null>(
+    null,
+  );
 
   const notify = (title: string) =>
-    toast({ title, description: 'این بخش در سفارش‌های بعدی فعال خواهد شد.' });
+    toast({ title, description: t('toast.comingSoon') });
 
   return (
     <div
@@ -31,7 +36,7 @@ export function TaskbarCenter() {
       onClick={(event) => event.stopPropagation()}
     >
       <TaskbarButton
-        label="شروع"
+        label={t('taskbar.start')}
         isActive={isStartMenuOpen}
         aria-expanded={isStartMenuOpen}
         onClick={() => toggleStartMenu()}
@@ -40,17 +45,17 @@ export function TaskbarCenter() {
       </TaskbarButton>
 
       <TaskbarButton
-        label="جستجو"
+        label={t('taskbar.search')}
         className="hidden sm:flex"
-        onClick={() => notify('جستجو')}
+        onClick={() => notify(t('taskbar.search'))}
       >
         <Search className="h-[18px] w-[18px]" strokeWidth={1.9} />
       </TaskbarButton>
 
       <TaskbarButton
-        label="نمای وظایف"
+        label={t('taskbar.taskView')}
         className="hidden sm:flex"
-        onClick={() => notify('نمای وظایف')}
+        onClick={() => notify(t('taskbar.taskView'))}
       >
         <LayoutGrid className="h-[18px] w-[18px]" strokeWidth={1.9} />
       </TaskbarButton>
@@ -60,10 +65,12 @@ export function TaskbarCenter() {
       {/* Running module windows */}
       {windows.map((win) => {
         const Icon = getIcon(win.moduleId);
+        const label =
+          getLocalizedModuleMeta(win.moduleId, locale)?.name ?? win.moduleId;
         return (
           <TaskbarButton
             key={`win-${win.moduleId}`}
-            label={win.moduleId}
+            label={label}
             isActive
             onClick={() => focusWindow(win.moduleId)}
           >
@@ -79,20 +86,20 @@ export function TaskbarCenter() {
         />
       )}
 
-      {/* Pinned apps */}
+      {/* Pinned apps (labels are translation keys like 'pin.explorer') */}
       {pinnedApps.map((app, index) => {
         const Icon = getIcon(app.iconKey);
         return (
           <TaskbarButton
             key={app.id}
-            label={app.label}
-            isActive={activeTaskbarAppId === app.id}
+            label={t(app.label)}
+            isActive={activePinnedAppId === app.id}
             className={cn(index > 2 && 'hidden sm:flex')}
             onClick={() => {
-              setActiveTaskbarApp(
-                activeTaskbarAppId === app.id ? null : app.id,
+              setActivePinnedAppId(
+                activePinnedAppId === app.id ? null : app.id,
               );
-              notify(app.label);
+              notify(t(app.label));
             }}
           >
             <span

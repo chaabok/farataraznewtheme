@@ -3,6 +3,7 @@
 import { createElement } from 'react';
 import { getIcon } from './icon-registry';
 import { toast } from '@/hooks/use-toast';
+import { useTranslation } from '@/i18n';
 import { cn } from '@/lib/utils';
 import { getModuleMeta } from '@/lib/modules-registry';
 import { useDesktopStore } from '@/store/desktop-store';
@@ -24,6 +25,7 @@ export function DesktopIcon({ icon }: DesktopIconProps) {
   const selectIcon = useDesktopStore((s) => s.selectIcon);
   const openWindow = useDesktopStore((s) => s.openWindow);
   const isAuthenticated = useAuthStore((s) => Boolean(s.token));
+  const { t } = useTranslation();
 
   const isSelected = selectedIconId === icon.id;
 
@@ -39,8 +41,8 @@ export function DesktopIcon({ icon }: DesktopIconProps) {
         event.stopPropagation();
         if (!isAuthenticated) {
           toast({
-            title: 'ابتدا وارد شوید',
-            description: 'برای باز کردن ماژول‌ها باید احراز هویت کنید.',
+            title: t('toast.loginRequired.title'),
+            description: t('toast.loginRequired.desc'),
           });
           return;
         }
@@ -49,7 +51,7 @@ export function DesktopIcon({ icon }: DesktopIconProps) {
         } else {
           toast({
             title: icon.name,
-            description: 'این بخش در سفارش‌های بعدی فعال خواهد شد.',
+            description: t('toast.comingSoon'),
           });
         }
       }}

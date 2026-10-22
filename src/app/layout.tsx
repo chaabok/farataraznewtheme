@@ -1,7 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Vazirmatn } from "next/font/google";
+import { cookies } from "next/headers";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
+import { LocaleSync } from "@/components/desktop/locale-sync";
+import { DIR_BY_LOCALE, LOCALE_COOKIE, parseLocale } from "@/i18n/config";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -44,16 +47,22 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // The language cookie is read on the server so the correct `lang`/`dir`
+  // (RTL for fa/ar, LTR for en/tr) is rendered in the very first paint.
+  const cookieStore = await cookies();
+  const locale = parseLocale(cookieStore.get(LOCALE_COOKIE)?.value);
+
   return (
-    <html lang="fa" dir="ltr" suppressHydrationWarning>
+    <html lang={locale} dir={DIR_BY_LOCALE[locale]} suppressHydrationWarning>
       <body
         className={`${vazirmatn.variable} ${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
       >
+        <LocaleSync />
         {children}
         <Toaster />
       </body>

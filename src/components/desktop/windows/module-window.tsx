@@ -4,30 +4,15 @@ import { useCallback, useEffect, useState } from 'react';
 import { Loader2, RefreshCw, Send } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { apiFetch, SessionExpiredError } from '@/lib/api-client';
-import { getModuleMeta, type ModuleField } from '@/lib/modules-registry';
+import {
+  getLocalizedModuleMeta,
+  unitLabel,
+  useTranslation,
+  type LocalizedModuleField,
+} from '@/i18n';
 
 type RecordData = Record<string, unknown>;
 type StatsData = Record<string, number>;
-
-const numberFormatter = new Intl.NumberFormat('fa-IR');
-const dateFormatter = new Intl.DateTimeFormat('fa-IR', {
-  year: 'numeric',
-  month: '2-digit',
-  day: '2-digit',
-});
-
-function formatValue(field: ModuleField, raw: unknown): string {
-  if (raw === null || raw === undefined || raw === '') return '—';
-  if (field.type === 'select') {
-    return field.options?.find((o) => o.value === raw)?.label ?? String(raw);
-  }
-  if (field.type === 'number') {
-    const num = Number(raw);
-    if (!Number.isFinite(num)) return String(raw);
-    return numberFormatter.format(num) + (field.unit ? ' ' + field.unit : '');
-  }
-  return String(raw);
-}
 
 function statusBadgeColor(value: string): string {
   const palette: Record<string, string> = {
@@ -54,9 +39,11 @@ function statusBadgeColor(value: string): string {
  * Generic ERP module app rendered inside its desktop window.
  * One component serves all 10 modules via the modules registry:
  * stats cards (module microservice aggregates) + create form + records table.
+ * All texts/numbers come locale-aware through `useTranslation()`.
  */
 export function ModuleWindow({ moduleId }: { moduleId: string }) {
-  const meta = getModuleMeta(moduleId);
+  const { locale, t, tf, formatNumber, formatMoney } = useTranslation();
+  const meta = getLocalizedModuleMeta(moduleId, locale);
 
   const [items, setItems] = useState<RecordData[]>([]);
   const [stats, setStats] = useState<StatsData | null>(null);
@@ -77,7 +64,7 @@ export function ModuleWindow({ moduleId }: { moduleId: string }) {
       setError(null);
     } catch (err) {
       if (err instanceof SessionExpiredError) return;
-      setError(err instanceof Error ? err.message : 'خطای ناشناخته');
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
     }
@@ -88,6 +75,21 @@ export function ModuleWindow({ moduleId }: { moduleId: string }) {
   }, [load]);
 
   if (!meta) return null;
+
+  /** Formats a raw record cell for the current locale. */
+  const formatValue = (field: LocalizedModuleField, raw: unknown): string => {
+    if (raw === null || raw === undefined || raw === '') return '—';
+    if (field.type === 'select') {
+      return field.options?.find((o) => o.value === raw)?.label ?? String(raw);
+    }
+    if (field.type === 'number') {
+      const num = Number(raw);
+      if (!Number.isFinite(num)) return String(raw);
+      const unit = unitLabel(field.unitKey, t);
+      return formatNumber(num) + (unit ? ' ' + unit : '');
+    }
+    return String(raw);
+  };
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -104,13 +106,15 @@ export function ModuleWindow({ moduleId }: { moduleId: string }) {
             : value;
       }
       await apiFetch(`/api/modules/${moduleId}`, { method: 'POST', body });
-      toast({ title: `${meta.recordLabel} ثبت شد` });
+      toast({
+        title: tf('module.submitSuccess', { recordLabel: meta.recordLabel }),
+      });
       setForm({});
       await load();
     } catch (err) {
       if (err instanceof SessionExpiredError) return;
       toast({
-        title: 'ثبت ناموفق بود',
+        title: t('module.submitFailed'),
         description: err instanceof Error ? err.message : undefined,
         variant: 'destructive',
       });
@@ -129,11 +133,11 @@ export function ModuleWindow({ moduleId }: { moduleId: string }) {
           if (raw !== undefined && raw !== null) {
             const num = Number(raw);
             if (stat.kind === 'money') {
-              display = numberFormatter.format(num) + ' تومان';
+              display = formatMoney(num);
             } else if (stat.kind === 'percent') {
-              display = numberFormatter.format(num) + '٪';
+              display = formatNumber(num) + ' ' + t('common.percent');
             } else {
-              display = numberFormatter.format(num);
+              display = formatNumber(num);
             }
           }
           return (
@@ -156,7 +160,7 @@ export function ModuleWindow({ moduleId }: { moduleId: string }) {
         className="rounded-lg border border-white/10 bg-white/[0.03] p-3"
       >
         <p className="mb-2.5 text-[11px] font-semibold text-white/60">
-          ثبت {meta.recordLabel} جدید
+          {tf('module.newRecord', { recordLabel: meta.recordLabel })}
         </p>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {meta.fields.map((field) => (
@@ -176,7 +180,7 @@ export function ModuleWindow({ moduleId }: { moduleId: string }) {
                   }
                   className="h-9 w-full rounded-md border border-white/15 bg-white/10 px-2 text-xs text-white focus:border-sky-400/60 focus:outline-none [&>option]:bg-[#1e2128]"
                 >
-                  <option value="">انتخاب کنید...</option>
+                  <option value="">{t('common.selectOption')}</option>
                   {field.options?.map((option) => (
                     <option key={option.value} value={option.value}>
                       {option.label}
@@ -209,14 +213,14 @@ export function ModuleWindow({ moduleId }: { moduleId: string }) {
           ) : (
             <Send className="h-3.5 w-3.5" />
           )}
-          ثبت در سرویس {meta.name}
+          {tf('module.submit', { name: meta.name })}
         </button>
       </form>
 
       {/* Error state */}
       {error && (
         <div className="rounded-lg border border-red-400/30 bg-red-950/50 p-3 text-xs text-red-200">
-          <p className="font-semibold">خطا در دریافت داده از میکروسرویس</p>
+          <p className="font-semibold">{t('module.loadError.title')}</p>
           <p className="mt-1 text-red-200/80">{error}</p>
           <button
             type="button"
@@ -224,7 +228,7 @@ export function ModuleWindow({ moduleId }: { moduleId: string }) {
             className="mt-2 flex items-center gap-1.5 rounded-md border border-red-400/40 px-2.5 py-1.5 text-[11px] text-red-100 transition-colors hover:bg-red-500/20"
           >
             <RefreshCw className="h-3 w-3" />
-            تلاش مجدد
+            {t('common.retry')}
           </button>
         </div>
       )}
@@ -232,7 +236,7 @@ export function ModuleWindow({ moduleId }: { moduleId: string }) {
       {/* Records table */}
       <div className="overflow-hidden rounded-lg border border-white/10">
         <div className="max-h-56 overflow-auto">
-          <table className="w-full min-w-[480px] text-right text-xs">
+          <table className="w-full min-w-[480px] text-start text-xs">
             <thead className="sticky top-0 bg-[#2a2d34] text-white/70">
               <tr>
                 <th className="px-2.5 py-2 font-medium">#</th>
@@ -250,7 +254,7 @@ export function ModuleWindow({ moduleId }: { moduleId: string }) {
                     colSpan={meta.fields.length + 1}
                     className="px-3 py-6 text-center text-white/40"
                   >
-                    در حال دریافت از میکروسرویس...
+                    {t('module.tableLoading')}
                   </td>
                 </tr>
               )}
@@ -260,7 +264,7 @@ export function ModuleWindow({ moduleId }: { moduleId: string }) {
                     colSpan={meta.fields.length + 1}
                     className="px-3 py-6 text-center text-white/40"
                   >
-                    هنوز {meta.recordLabel}ی ثبت نشده است
+                    {tf('module.emptyState', { recordLabel: meta.recordLabel })}
                   </td>
                 </tr>
               )}
@@ -271,7 +275,7 @@ export function ModuleWindow({ moduleId }: { moduleId: string }) {
                     className="border-t border-white/5 transition-colors hover:bg-white/5"
                   >
                     <td className="px-2.5 py-2 text-white/35">
-                      {numberFormatter.format(index + 1)}
+                      {formatNumber(index + 1)}
                     </td>
                     {meta.fields.map((field) => (
                       <td

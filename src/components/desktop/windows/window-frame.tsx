@@ -4,8 +4,8 @@ import { createElement, useRef, useState, type PointerEvent as ReactPointerEvent
 import { motion } from 'framer-motion';
 import { Minus, X } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { getLocalizedModuleMeta, useTranslation } from '@/i18n';
 import { getIcon } from '../icon-registry';
-import { getModuleMeta } from '@/lib/modules-registry';
 import { useDesktopStore } from '@/store/desktop-store';
 
 interface WindowFrameProps {
@@ -17,10 +17,13 @@ interface WindowFrameProps {
 
 /**
  * Windows 11 style app window: draggable via its title bar, focusable
- * (click anywhere brings it to front) and closable.
+ * (click anywhere brings it to front) and closable. The physical left/top
+ * drag positioning works identically in RTL and LTR; only the inline
+ * spacing of the title bar uses logical classes.
  */
 export function WindowFrame({ moduleId, z, slot, children }: WindowFrameProps) {
-  const meta = getModuleMeta(moduleId);
+  const { locale, t } = useTranslation();
+  const meta = getLocalizedModuleMeta(moduleId, locale);
   const closeWindow = useDesktopStore((s) => s.closeWindow);
   const focusWindow = useDesktopStore((s) => s.focusWindow);
 
@@ -77,7 +80,7 @@ export function WindowFrame({ moduleId, z, slot, children }: WindowFrameProps) {
       style={{ zIndex: z, left: pos.x, top: pos.y }}
       className="absolute flex w-[min(720px,calc(100vw-1rem))] flex-col overflow-hidden rounded-xl border border-white/15 bg-[#1e2128]/95 shadow-2xl shadow-black/60 backdrop-blur-xl"
       role="dialog"
-      aria-label={`پنجره ${meta.name}`}
+      aria-label={`${t('window.ariaPrefix')} ${meta.name}`}
     >
       {/* Title bar (drag handle) */}
       <div
@@ -102,17 +105,20 @@ export function WindowFrame({ moduleId, z, slot, children }: WindowFrameProps) {
           {meta.name}
         </span>
         <span className="hidden text-[10px] text-white/35 sm:inline">
-          سرویس مستقل · پورت اختصاصی
+          {t('window.serviceBadge')}
         </span>
 
-        <div className="ml-auto flex items-center gap-1">
+        <div className="ms-auto flex items-center gap-1">
           <button
             type="button"
-            title="کمینه"
-            aria-label="کمینه کردن پنجره"
+            title={t('window.minimize')}
+            aria-label={t('window.minimize')}
             onClick={(event) => {
               event.stopPropagation();
-              toast({ title: 'کمینه کردن', description: 'در سفارش‌های بعدی فعال می‌شود' });
+              toast({
+                title: t('window.minimizeToast.title'),
+                description: t('window.minimizeToast.desc'),
+              });
             }}
             className="flex h-7 w-7 items-center justify-center rounded text-white/70 transition-colors hover:bg-white/10"
           >
@@ -120,8 +126,8 @@ export function WindowFrame({ moduleId, z, slot, children }: WindowFrameProps) {
           </button>
           <button
             type="button"
-            title="بستن"
-            aria-label="بستن پنجره"
+            title={t('window.close')}
+            aria-label={t('window.close')}
             onClick={(event) => {
               event.stopPropagation();
               closeWindow(moduleId);

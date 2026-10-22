@@ -23,5 +23,21 @@ model DesktopIcon {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  /// Localized display names (fa, en, tr, ar). Base `name` stays the Persian default.
+  translations DesktopIconTranslation[]
+
   @@index([sortOrder])
+}
+
+/// Localized display names for a desktop icon (fa, en, tr, ar)
+model DesktopIconTranslation {
+  id     String @id @default(uuid())
+  iconId String
+  locale String // 'fa' | 'en' | 'tr' | 'ar'
+  name   String
+
+  icon DesktopIcon @relation(fields: [iconId], references: [id], onDelete: Cascade)
+
+  @@unique([iconId, locale])
+  @@index([locale])
 }

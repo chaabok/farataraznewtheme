@@ -68,3 +68,104 @@ Stage Summary:
 - افزودن ماژول #۱۱: یک entry در scripts/scaffold-module-services.ts + یک entry در src/lib/modules-registry.ts + db:push/seed → خودکار سرویس و پنجره
 - مهاجرت PostgreSQL: provider هر schema + url → env (کامنت راهنما بالای هر schema)
 - تمام سرویس‌ها: `bun run dev` در پس‌زمینه (bun --hot)، لاگ‌ها: logs-<service>.log
+
+---
+Task ID: 3-0
+Agent: main (Z.ai Code)
+Task: چندزبانی کردن داشبورد — ۴ زبان (فارسی/انگلیسی/ترکی استانبولی/عربی) با انتخاب توسط کاربر + چیدمان RTL برای fa/ar و LTR برای en/tr (قراردادها و فایل‌های پایه)
+
+Work Log:
+- بررسی وضعیت: فاز ۲ (۱۲ میکروسرویس + امنیت + پنجره‌ها) قبلاً کامل است؛ این تسک فقط i18n است
+- `src/types/desktop.ts`: افزودن تایپ‌های Locale ('fa'|'en'|'tr'|'ar') و Direction ('rtl'|'ltr')
+- `src/i18n/config.ts`: LOCALES، DEFAULT_LOCALE='fa'، LOCALE_COOKIE='erp.locale'، DIR_BY_LOCALE (fa/ar→rtl، en/tr→ltr)، LOCALE_TAGS (fa-IR/en-US/tr-TR/ar-EG)، LOCALE_SHORT (فا/EN/TR/ع) برای دکمه تسک‌بار
+- `src/i18n/dictionaries.ts`: دیکشنری کامل ۴ زبانه (≈۱۷۰ کلید در هر زبان): کلی، صفحه ورود، منوی شروع، تسک‌بار/سینی، منوی زبان، chrome پنجره، متن‌های ماژول و برچسب همه فیلدها/آمار/وضعیت‌های ۱۰ ماژول
+- `src/i18n/index.ts`: translate (fallback locale→fa→key)، formatTemplate با {var}، optionKey (وضعیت‌ها→کلید)، getLocalizedModuleMeta(id, locale) — ساختار از modules-registry و متن از دیکشنری، useTranslation() (t/tf/formatNumber/formatMoney/formatDate با localeTag)
+- `src/lib/modules-registry.ts`: بازسازی به «فقط ساختار» — حذف تمام متن‌های فارسی؛ فیلدها unitKey ('toman'|'percent') گرفتن به‌جای رشته واحد؛ گزینه‌ها فقط value
+- `src/store/desktop-store.ts`: افزودن locale/direction/isLanguageMenuOpen + setLocale (کوکی + <html> lang/dir + refetch آیکون‌ها با ?locale=) + initLocaleFromDocument + toggleLanguageMenu؛ fetchIcons حالا locale-aware و پیام خطا localized؛ pinnedApps.label حالا کلید ترجمه (pin.*)
+- `src/app/layout.tsx`: خواندن کوکی erp.locale سمت سرور (cookies) → html lang/dir درست در اولین paint (بدون flash جهت) + مونت <LocaleSync />
+- `src/components/desktop/locale-sync.tsx` (جدید): بعد از hydration استور را با زبان سرور همگام می‌کند
+- قرارداد برای زیرعامل‌ها: هیچ رشته UI نباید هاردکد باشد؛ از useTranslation/getLocalizedModuleMeta استفاده شود
+
+Stage Summary:
+- زیرساخت i18n کامل است: زبان پیش‌فرض fa (RTL)؛ en/tr به‌صورت LTR با اعداد لاتین، ar با اعداد عربی (ar-EG)، fa با اعداد/تاریخ شمسی
+- افزودن زبان جدید = یک entry در config + دیکشنری؛ افزودن متن جدید = یک کلید در هر ۴ دیکشنری
+- باقی کار: بک‌اند (تسک 3-a) و فرانت (تسک 3-b) موازی در حال اجرا
+
+---
+Task ID: 3-a
+Agent: backend-i18n-agent
+Task: بومی‌سازی سمت بک‌اند نام آیکون‌های دسکتاپ برای ۴ زبان (fa/en/tr/ar) با زنجیره fallback و whitelist دوسطحی (میکروسرویس + گیت‌وی)
+
+Work Log:
+- `mini-services/desktop-service/prisma/schema.prisma`: افزودن مدل DesktopIconTranslation (iconId/locale/name، @@unique([iconId,locale])، @@index([locale])، onDelete: Cascade — بدون فیچر خاص SQLite، سازگار PostgreSQL) + relation `translations` روی DesktopIcon؛ ستون name قبلی حفظ شد (پیش‌فرض فارسی برای سازگاری به عقب)
+- اجرای `bunx prisma db push` + `bunx prisma generate` در پوشه سرویس (کلاینت v6.19.3)
+- `src/icons/icons.service.ts`: findAll(locale?) → include translations با orderBy locale + whitelist locale (fa|en|tr|ar، پیش‌فرض fa) + زنجیره fallback: requested → fa → en → اولین ترجمه موجود (قطعیت با orderBy برای PG) → ستون name پایه؛ خروجی flat {id,name,iconKey,color,sortOrder} با orderBy sortOrder asc (مثل قبل)؛ findOne هم locale-aware و flat؛ create بدون تغییر رفتار (name پایه می‌نویسد، خروجی flat)
+- `src/icons/icons.controller.ts`: @Query('locale') از @erp/shared (در re-export لیست موجود بود — بدون import مستقیم @nestjs/common) روی GET / و GET /:id؛ @PublicJwt حفظ شد
+- `scripts/seed.ts`: بازنویسی — ۱۰ آیکون × ۴ ترجمه = ۴۰ ردیف، همان رنگ‌ها/sortOrder قبلی (هماهنگ با modules-registry.ts)، name پایه = نام فارسی، nested create در حلقه (createMany از nested پشتیبانی نمی‌کند)؛ اجرای `bun run db:seed`
+- Gateway `src/app/api/desktop/icons/route.ts`: خواندن ?locale= از request و whitelist سمت سرور (fa|en|tr|ar، پیش‌فرض fa) سپس forwarding با new URL('/api/icons', DESKTOP_SERVICE.baseUrl) + searchParams.set('locale', safeLocale)؛ تزریق x-api-key و پیام‌های خطای قبلی دست‌نخورده
+- ری‌استارت desktop-service: kill پردازه‌ی پورت 3001 → از پوشه سرویس: `nohup bun run dev > /home/z/my-project/logs-desktop-service.log 2>&1 &` (همان قرارداد لاگ tasks قبل)
+- تست curl مستقیم (با x-api-key از root .env): بدون key=401؛ locale=fa/en/tr/ar هرکدام ۱۰ نام صحیح مطابق جدول تسک؛ بدون locale=fa؛ locale نامعتبر/خطرناک → fa
+- تست واقعی fallback با bun:sqlite: حذف ترجمه fa → en برمی‌گردد؛ حذف fa+en → اولین ترجمه باقی‌مانده (ar؛ ترتیب locale asc)؛ حذف همه ترجمه‌ها → ستون name پایه فارسی؛ سپس seed مجدد برای بازگردانی ۴۰ ردیف
+- تست Gateway Next (پورت 3000): fa/en/tr/ar + بدون locale + locale نامعتبر — همه 200 با نام‌های localized صحیح (روت BFF بدون خطا compile و اجرا شد)
+- انحراف کوچک: Next dev server (پورت 3000) در شروع کار down بود (dev.log آخرین فعالیت 04:43)؛ برای تست گیت‌وی طبق وضعیت مستند worklog دوباره در پس‌زمینه اجرا شد (bun run dev → dev.log) و روشن ماند
+
+Stage Summary:
+- GET /api/icons?locale=<fa|en|tr|ar> (مستقیم) و GET /api/desktop/icons?locale=... (از طریق BFF) نام‌های بومی‌شده برمی‌گردانند؛ fallback: requested → fa → en → اولین ترجمه → name پایه
+- whitelist دوسطحی locale (سرویس + gateway): رشته دلخواه هرگز به سرویس داخلی forwarding نمی‌شود
+- دیتابیس: جدول DesktopIconTranslation + ۴۰ ردیف ترجمه؛ افزودن زبان جدید = افزودن locale در SUPPORTED_LOCALES سرویس + whitelist gateway + ردیف‌های seed
+- امنیت بدون تغییر: ApiKeyGuard (بدون key=401)، @PublicJwt روی GET، POST همچنان JWT+key؛ shape خروجی GET حالا flat بدون timestamp است (فرانت فقط id/name/iconKey/color/sortOrder می‌خواند)
+- وضعیت اجرا: هر ۱۲ میکروسرویس + Next dev (3000) در حال اجرا؛ لاگ دسکتاپ: /home/z/my-project/logs-desktop-service.log
+
+---
+Task ID: 3-b
+Agent: frontend-i18n-agent
+Task: Replace all hardcoded Persian UI strings in the desktop frontend with dictionary lookups, add the Win11-style taskbar language picker, and make the layout fully mirror RTL (fa/ar) vs LTR (en/tr)
+
+Work Log:
+- NEW src/components/desktop/taskbar/language-menu.tsx: Win11 glass popup (bg-[#25272c]/95 backdrop-blur-2xl, 260px, absolute bottom-[calc(100%+8px)] end-0 z-40), title row (Languages icon + language.title), one item per LOCALES with native name t(`language.${locale}`) + dirRtl/dirLtr subtitle from DIR_BY_LOCALE + sky-400 Check for active; click → setLocale + changeToast; framer-motion fade + y 8→0; own Escape effect while open; click-away via window pointerdown (panel ref + [data-language-toggle] exclusion)
+- system-tray.tsx: static «فا» → LOCALE_SHORT[locale] button (title/aria t('language.aria'), aria-haspopup/expanded, data-language-toggle, toggles menu) + renders <LanguageMenu/>; ALL titles/aria/toasts → t(): taskbar.hiddenIcons/network/networkSettings/sound/soundSettings/battery/batteryStatus, placeholder desc t('toast.comingSoon')
+- taskbar-clock.tsx: formatters in useMemo keyed on store locale (LOCALE_TAGS[locale]; hour12 true except tr), title t('taskbar.clock'); rAF pattern + suppressHydrationWarning + '--:--'/'----/--/--' placeholders kept
+- taskbar-center.tsx: t('taskbar.start'/'taskbar.search'/'taskbar.taskView'); pinned labels are translation keys → t(app.label) for tooltip AND toast; running-window tooltips now localized via getLocalizedModuleMeta(win.moduleId, locale)?.name ?? moduleId; centering transform untouched (direction-neutral); FIXED pre-existing crash: selectors s.activeTaskbarAppId / s.setActiveTaskbarApp never existed in desktop-store → pinned-app clicks threw TypeError; replaced with local useState<string|null> (store untouched per rules)
+- taskbar-button.tsx reviewed: no hardcoded strings, only centering left-1/2 indicator → no change needed
+- start-menu.tsx: t() for startMenu.aria/search/sectionTitle/guest/account/logoutTitle + toast.comingSoon + toast.loggedOut.*; module grid maps MODULE_LIST → getLocalizedModuleMeta(module.id, locale) skipping nulls (keeps module.color + getIcon(module.id))
+- login-overlay.tsx: t() for login.aria/title/subtitle/username/password/submit + demo hint composed from login.demoAccount + login.username + login.password; error box renders t(`login.error.${errorKey}`) falling back to raw error; form text-right → text-start (fa RTL identical, LTR correct); dir="ltr" inputs + rAF mounted pattern kept
+- src/store/auth-store.ts (spec-mandated minimal change): added errorKey: AuthErrorKey ('invalidCredentials'|'network'|'generic') | null derived from HTTP status (401→invalidCredentials, fetch/parse failure→network, else generic); raw `error` kept for debugging; errorKey excluded from persistence automatically (partialize persists only token/user); logout/login reset it
+- desktop-icon.tsx: toast.loginRequired.title/.desc + toast.comingSoon (aria stays icon.name); desktop-icons.tsx: desktopIcons.aria + desktopIcons.errorTitle; verified grid (grid-flow-col + justify-start, no left/right classes) flows right→left automatically under dir=rtl
+- desktop-shell.tsx: desktop.aria + alt t('app.name'); Escape now closes BOTH start menu and language menu (toggleLanguageMenu(false) added)
+- window-frame.tsx: getLocalizedModuleMeta(moduleId, locale) for name; aria-label = `${t('window.ariaPrefix')} ${meta.name}`; window.serviceBadge/minimize/minimizeToast.title/.desc/close; ml-auto → ms-auto; physical left/top drag positioning kept (works both directions)
+- module-window.tsx: removed module-level fixed fa-IR formatters → useTranslation() formatNumber/formatMoney; getLocalizedModuleMeta for meta/recordLabel/field labels/option labels/stat labels; formatValue appends localized unit via unitLabel(field.unitKey, t) and localized option label by value; keys: common.selectOption, module.newRecord/submit/submitSuccess/submitFailed/loadError.title/tableLoading/emptyState (tf with {recordLabel}/{name}), common.retry; money stats → formatMoney, percent → formatNumber + ' ' + common.percent; table text-right → text-start; '—' kept for empty values; catch-all error uses raw err.message
+- window-layer.tsx checked — no hardcoded strings, no change; use-toast.ts untouched (styling preserved)
+- src/i18n/index.ts (DEVIATION, one line): useTranslation() did not return the `direction` field its own Translation interface declares → added `direction: DIR_BY_LOCALE[locale]`; contract-preserving fix for a pre-existing tsc error, no dictionary/behavior change
+- Verified: bun run lint = clean; bunx tsc --noEmit = zero errors in src/ (remaining errors only in examples/ + mini-services/, pre-existing, separate tsconfigs); dev.log hot-reload: all "✓ Compiled", no compile/hydration errors; rg confirms zero Persian literals left in src/components (remaining: BFF route messages = task 3-a scope, layout.tsx metadata = frozen)
+
+Stage Summary:
+- Entire desktop UI is now dictionary-driven; default fa renders byte-identical strings to before; en/tr LTR + ar/fa RTL mirror via logical utilities (end-0, ms-auto, text-start) and <html dir> from the erp.locale cookie
+- Language flow: tray button (LOCALE_SHORT[locale]) → Win11 popup → setLocale (cookie + <html> lang/dir + icons refetch with ?locale= + toast); closes on Escape, outside click, or selection
+- NO new dictionary keys were required — every key used was verified to exist in all 4 locales (each key greps 4× in dictionaries.ts)
+- Bug fixed for main agent: pinned taskbar app clicks used to crash (nonexistent store selectors) — now local component state; suggest browser-testing language switch fa/en/tr/ar, RTL icon column flow, wrong-password error text, and module window numbers/units in en (latin digits)
+- Deviations from spec: (1) click-away implemented with window pointerdown listener instead of fixed inset-0 overlay because the taskbar footer's backdrop-filter creates a containing block for fixed descendants (overlay would only cover the footer strip); (2) taskbar-center broken store selectors replaced with local state; (3) i18n/index.ts one-line `direction` fix; (4) text-right → text-start in login form + module table for proper LTR mirroring (fa appearance unchanged)
+
+---
+Task ID: 3-c
+Agent: main (Z.ai Code)
+Task: ادغام و راستی‌آزمایی نهایی چندزبانی — تست مرورگری ۴ زبان × RTL/LTR، رفع ایرادها، تحویل
+
+Work Log:
+- lint کل پروژه: پاس (0 خطا/0 هشدار)؛ بررسی dev.log: بدون خطای کامپایل/hydration
+- بررسی سلامت: هر ۱۲ پورت میکروسرویس (3001-3012) پاسخ می‌دهند؛ سرویس‌های ماژول روی /api/items بدون کلید → 401 (امنیت فعال)؛ gateway آیکون‌ها 200
+- تست مرورگری (Agent Browser, 1440×900):
+  - fa پیش‌فرض: dir=rtl، آیکون‌ها از راست (تنظیمات اول)، ساعت شمسی، صفحه ورود RTL؛ رمز غلط → «نام کاربری یا رمز عبور اشتباه است.»
+  - منوی زبان از سینی: ۴ زبان با نشانگر جهت و تیک آیتم فعال؛ Escape/کلیک بیرون می‌بندد
+  - en: dir=ltr، آیکون‌ها از چپ، نام‌های انگلیسی از بک‌اند (?locale=en)، ساعت لاتین 10/22/2026، کوکی erp.locale=en
+  - tr: dir=ltr، Ayarlar/Muhasebe/...، توست ترکی
+  - ar: dir=rtl، آیکون‌ها از راست با نام‌های عربی، ساعت ar-EG (٢٢/١٠/٢٠٢٦ ارقام عربی-هندی)
+  - ورود → پنجره Sales در انگلیسی: عنوان/بج/آمار/فرم/جدول/وضعیت‌ها بومی‌سازی + دیتای زنده از میکروسرویس (5 فاکتور، 239,300,000 Toman)
+  - موبایل 390px: RTL پنجره فارسی و تسک‌بار آینه درست
+- رفع ایراد ۱: توست تغییر زبان با زبان قبلی نمایش می‌یافت → language-menu حالا از translate(next, ...) با زبان جدید استفاده می‌کند
+- رفع ایراد ۲: سوییچر زبان در صفحه قفل در دسترس نبود → دکمه گرد Languages در گوشه پایین login-overlay + همان LanguageMenu (مثل Windows) — تغییر زبان قبل از ورود ممکن شد؛ تست شد (صفحه ورود انگلیسی قبل از لاگین)
+- مدیریت OOM: next-server یک‌بار توسط OOM killer کشته شد (حافظه 4GB با ۱۲ سرویس+Next+مرورگر) → restart؛ در صورت تنگی حافظه می‌توان چند سرویس ماژول را موقتاً متوقف کرد (سابقه Task 2)
+
+Stage Summary:
+- هر ۴ زبان (fa/en/tr/ar) قابل انتخاب از سینی تسک‌بار و صفحه قفل؛ جهت چیدمان آیکون‌ها خودکار: fa/ar → راست‌به‌چپ، en/tr → چپ‌به‌راست
+- زبان در کوکی erp.locale ذخیره می‌شود و سمت سرور در اولین paint اعمال می‌شود (بدون فلش جهت)؛ آیکون‌ها و کل UI و اعداد/تاریخ‌ها locale-aware
+- افزودن زبان جدید: entry در src/i18n/config.ts + بلوک دیکشنری — بدون تغییر کامپوننت‌ها
