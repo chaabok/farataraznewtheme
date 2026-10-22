@@ -2,8 +2,23 @@
  * Shared types for the desktop dashboard.
  */
 
-/** Supported interface languages. `fa`/`ar` are RTL, `en`/`tr` are LTR. */
-export type Locale = 'fa' | 'en' | 'tr' | 'ar';
+/**
+ * Supported interface languages.
+ * RTL: fa, ar, ps (Pashto), ckb (Sorani Kurdish) — LTR: the rest.
+ * Calendars per locale live in `src/i18n/calendar.ts`.
+ */
+export type Locale =
+  | 'fa'
+  | 'en'
+  | 'tr'
+  | 'ar'
+  | 'hi'
+  | 'ps'
+  | 'ckb'
+  | 'pt'
+  | 'ko'
+  | 'fr'
+  | 'zh';
 
 /** Text/layout direction derived from the active locale. */
 export type Direction = 'rtl' | 'ltr';

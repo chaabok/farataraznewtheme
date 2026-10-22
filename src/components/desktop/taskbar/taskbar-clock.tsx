@@ -2,13 +2,19 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from '@/i18n';
-import { LOCALE_TAGS } from '@/i18n/config';
+import {
+  CALENDAR_BY_LOCALE,
+  formatCalendarDate,
+  localIsoDate,
+} from '@/i18n/calendar';
+import { HOUR12_LOCALES, LOCALE_TAGS } from '@/i18n/config';
 import { useDesktopStore } from '@/store/desktop-store';
 
 /**
  * Live clock at the end side of the taskbar:
- * top line = localized time, bottom line = localized date
- * (Jalali digits for fa, Arabic-Indic for ar, latin for en/tr).
+ * top line = localized time, bottom line = localized date in the locale's
+ * own calendar (Jalali for fa/ps, Kurdish solar for ckb, Hijri lunar for
+ * ar, Gregorian otherwise) with the locale's digit family.
  * Rendered only after mount to avoid SSR hydration mismatches.
  */
 export function TaskbarClock() {
@@ -17,19 +23,18 @@ export function TaskbarClock() {
   const [now, setNow] = useState<Date | null>(null);
 
   // Formatters are rebuilt only when the interface language changes.
-  const { timeFormatter, dateFormatter } = useMemo(() => {
+  const { timeFormatter, formatDate } = useMemo(() => {
     const tag = LOCALE_TAGS[locale];
+    const kind = CALENDAR_BY_LOCALE[locale];
     return {
       timeFormatter: new Intl.DateTimeFormat(tag, {
         hour: 'numeric',
         minute: '2-digit',
-        hour12: locale !== 'tr',
+        hour12: HOUR12_LOCALES.includes(locale),
       }),
-      dateFormatter: new Intl.DateTimeFormat(tag, {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-      }),
+      formatDate: (date: Date) =>
+        formatCalendarDate(localIsoDate(date), kind, locale) ??
+        date.toISOString().slice(0, 10),
     };
   }, [locale]);
 
@@ -53,7 +58,7 @@ export function TaskbarClock() {
         {now ? timeFormatter.format(now) : '--:--'}
       </span>
       <span suppressHydrationWarning>
-        {now ? dateFormatter.format(now) : '----/--/--'}
+        {now ? formatDate(now) : '----/--/--'}
       </span>
     </button>
   );

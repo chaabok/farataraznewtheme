@@ -82,7 +82,7 @@ export function LanguageMenu() {
         {t('language.title')}
       </div>
 
-      <div className="space-y-0.5">
+      <div className="max-h-[340px] space-y-0.5 overflow-y-auto [scrollbar-width:thin]">
         {LOCALES.map((item) => {
           const active = item === locale;
           return (

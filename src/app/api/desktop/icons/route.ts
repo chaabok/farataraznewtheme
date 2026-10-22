@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { DESKTOP_SERVICE } from '@/lib/services-registry';
 
 /** Locales the desktop-service can resolve icon names for. */
-const SUPPORTED_LOCALES = new Set(['fa', 'en', 'tr', 'ar']);
+const SUPPORTED_LOCALES = new Set(['fa', 'en', 'tr', 'ar', 'hi', 'ps', 'ckb', 'pt', 'ko', 'fr', 'zh']);
 const DEFAULT_LOCALE = 'fa';
 
 /**

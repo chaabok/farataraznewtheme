@@ -2,9 +2,16 @@
 
 import { useState } from 'react';
 import { useTranslation } from '@/i18n';
+import {
+  CALENDAR_BY_LOCALE,
+  calendarExample,
+  calendarHintKey,
+  calendarToIso,
+  formatCalendarDate,
+} from '@/i18n/calendar';
 import type { FormFieldValue } from '@/types/forms';
 import { controlClasses } from '../form-styles';
-import { isoToJalali, jalaliToIso, normalizeDigits, toPersianDigits } from './jalali';
+import { normalizeDigits } from './jalali';
 
 interface FieldDateProps {
   id?: string;
@@ -14,20 +21,21 @@ interface FieldDateProps {
 }
 
 /**
- * Jalali (Solar Hijri) date control without any picker library: the user
- * types `1405/07/30`, the value is stored as an ISO `YYYY-MM-DD` string
- * and displayed back in the Jalali calendar for Persian/Arabic users.
+ * Locale-aware date control without any picker library: the user types the
+ * date of THEIR calendar (Jalali for fa/ps, Kurdish solar for ckb, Hijri
+ * lunar for ar, Gregorian otherwise), the value is stored as an ISO
+ * `YYYY-MM-DD` string and displayed back through the same calendar.
  */
 export function FieldDate({ id, value, onChange, disabled }: FieldDateProps) {
   const { locale, t } = useTranslation();
+  const kind = CALENDAR_BY_LOCALE[locale];
   const [focusedText, setFocusedText] = useState<string | null>(null);
-  const usePersianDigits = locale === 'fa' || locale === 'ar';
 
   const display =
     focusedText !== null
       ? focusedText
       : value
-        ? toJalaliText(value, usePersianDigits)
+        ? (formatCalendarDate(value, kind, locale) ?? value.slice(0, 10))
         : '';
 
   const commit = (raw: string) => {
@@ -38,25 +46,13 @@ export function FieldDate({ id, value, onChange, disabled }: FieldDateProps) {
     }
     const match = /^(\d{4})[/\-.](\d{1,2})[/\-.](\d{1,2})$/.exec(cleaned);
     if (!match) return; // keep previous value on invalid input
-    const year = Number(match[1]);
-    const month = Number(match[2]);
-    const day = Number(match[3]);
-    if (year < 1700) {
-      const iso = jalaliToIso(year, month, day);
-      if (iso) onChange(iso);
-      return;
-    }
-    // Gregorian input is accepted too (year >= 1700).
-    const probe = new Date(Date.UTC(year, month - 1, day));
-    if (
-      probe.getUTCFullYear() === year &&
-      probe.getUTCMonth() === month - 1 &&
-      probe.getUTCDate() === day
-    ) {
-      onChange(
-        `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`,
-      );
-    }
+    const iso = calendarToIso(
+      Number(match[1]),
+      Number(match[2]),
+      Number(match[3]),
+      kind,
+    );
+    if (iso) onChange(iso);
   };
 
   return (
@@ -68,9 +64,14 @@ export function FieldDate({ id, value, onChange, disabled }: FieldDateProps) {
         dir="ltr"
         value={display}
         disabled={disabled}
-        placeholder={usePersianDigits ? '۱۴۰۵/۰۷/۳۰' : '1405/07/30'}
+        placeholder={calendarExample(kind, locale)}
         onFocus={() =>
-          setFocusedText(value ? toJalaliText(value, false) : '')
+          setFocusedText(
+            value
+              ? (formatCalendarDate(value, kind, locale, { latin: true }) ??
+                  value.slice(0, 10))
+              : '',
+          )
         }
         onChange={(event) => setFocusedText(event.target.value)}
         onBlur={(event) => {
@@ -80,18 +81,8 @@ export function FieldDate({ id, value, onChange, disabled }: FieldDateProps) {
         className={controlClasses}
       />
       <p className="mt-1 text-[10px] leading-none text-white/30">
-        {t('formWindow.jalaliHint')}
+        {t(calendarHintKey(kind))}
       </p>
     </div>
   );
-}
-
-/** Jalali text of an ISO value; `persianDigits` renders ۱۴۰۵/۰۷/۳۰ style. */
-function toJalaliText(iso: string, persianDigits: boolean): string {
-  const jalali = isoToJalali(iso);
-  if (!jalali) return iso.slice(0, 10);
-  const latin = `${jalali.jy}/${String(jalali.jm).padStart(2, '0')}/${String(
-    jalali.jd,
-  ).padStart(2, '0')}`;
-  return persianDigits ? toPersianDigits(latin) : latin;
 }

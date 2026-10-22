@@ -1,5 +1,9 @@
 'use client';
 
+import {
+  CALENDAR_BY_LOCALE,
+  formatCalendarTimestamp,
+} from '@/i18n/calendar';
 import { useTranslation } from '@/i18n';
 import { cn } from '@/lib/utils';
 
@@ -39,10 +43,15 @@ const STATUS_CONFIG: Record<
  * locale-aware last-update timestamp and the Ctrl+S hint.
  */
 export function FormFooter({ status, position, updatedAt }: FormFooterProps) {
-  const { localeTag, t, tf, formatNumber } = useTranslation();
+  const { locale, localeTag, t, tf, formatNumber } = useTranslation();
   const config = STATUS_CONFIG[status];
   const updated = updatedAt
-    ? new Date(updatedAt).toLocaleString(localeTag)
+    ? formatCalendarTimestamp(
+        updatedAt,
+        CALENDAR_BY_LOCALE[locale],
+        locale,
+        localeTag,
+      )
     : null;
 
   return (

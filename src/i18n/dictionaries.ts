@@ -1,11 +1,21 @@
 import type { Locale } from '@/types/desktop';
+import { hiDictionary } from './locales/hi';
+import { psDictionary } from './locales/ps';
+import { ckbDictionary } from './locales/ckb';
+import { ptDictionary } from './locales/pt';
+import { koDictionary } from './locales/ko';
+import { frDictionary } from './locales/fr';
+import { zhDictionary } from './locales/zh';
 
 /**
- * Flat translation dictionaries for the four supported languages.
+ * Flat translation dictionaries for the eleven supported languages.
  * Lookup falls back: active locale → fa → raw key.
  *
  * Placeholders use the `{name}` syntax and are resolved with
  * `formatTemplate()` from `src/i18n/index.ts`.
+ *
+ * The seven newer languages (hi, ps, ckb, pt, ko, fr, zh) live in
+ * `src/i18n/locales/*.ts` with the same flat key space.
  */
 const fa = {
   // ── App / common ────────────────────────────────────────────────
@@ -95,6 +105,13 @@ const fa = {
   'language.en': 'English',
   'language.tr': 'Türkçe',
   'language.ar': 'العربية',
+  'language.hi': 'हिन्दी',
+  'language.ps': 'پښتو',
+  'language.ckb': 'کوردی',
+  'language.pt': 'Português',
+  'language.ko': '한국어',
+  'language.fr': 'Français',
+  'language.zh': '中文',
   'language.dirRtl': 'راست‌به‌چپ',
   'language.dirLtr': 'چپ‌به‌راست',
   'language.changeToast.title': 'زبان تغییر کرد',
@@ -284,6 +301,10 @@ const fa = {
   'formWindow.ctrlSHint': 'Ctrl+S برای ذخیره',
   'formWindow.closeHint': 'پیش از بستن پنجره، تغییرات را ذخیره کنید',
   'formWindow.jalaliHint': 'تقویم شمسی — مانند ۱۴۰۵/۰۷/۳۰',
+  'formWindow.hintJalali': 'تقویم شمسی — مانند ۱۴۰۵/۰۷/۳۰',
+  'formWindow.hintKurdish': 'تقویم کردی (کۆچی هەتاوی) — مانند ۲۷۲۶/۰۷/۳۰',
+  'formWindow.hintHijri': 'تقویم هجری قمری — مانند ١٤٤٧/٠٥/١٢',
+  'formWindow.hintGregory': 'تقویم میلادی — مانند 2026/10/22',
   'formWindow.actionNew': 'رکورد جدید',
   'formWindow.actionSave': 'ذخیره (Ctrl+S)',
   'formWindow.actionCopy': 'کپی رکورد فعلی',
@@ -397,6 +418,13 @@ const en: Record<string, string> = {
   'language.en': 'English',
   'language.tr': 'Türkçe',
   'language.ar': 'العربية',
+  'language.hi': 'हिन्दी',
+  'language.ps': 'پښتو',
+  'language.ckb': 'کوردی',
+  'language.pt': 'Português',
+  'language.ko': '한국어',
+  'language.fr': 'Français',
+  'language.zh': '中文',
   'language.dirRtl': 'Right-to-left',
   'language.dirLtr': 'Left-to-right',
   'language.changeToast.title': 'Language changed',
@@ -572,6 +600,10 @@ const en: Record<string, string> = {
   'formWindow.ctrlSHint': 'Ctrl+S to save',
   'formWindow.closeHint': 'Save your changes before closing the window',
   'formWindow.jalaliHint': 'Jalali (Persian) calendar — e.g. 1405/07/30',
+  'formWindow.hintJalali': 'Solar Hijri (Jalali) calendar — e.g. ۱۴۰۵/۰۷/۳۰',
+  'formWindow.hintKurdish': 'Kurdish solar calendar — e.g. ۲۷۲۶/۰۷/۳۰',
+  'formWindow.hintHijri': 'Hijri lunar calendar — e.g. ١٤٤٧/٠٥/١٢',
+  'formWindow.hintGregory': 'Gregorian calendar — e.g. 2026/10/22',
   'formWindow.actionNew': 'New record',
   'formWindow.actionSave': 'Save (Ctrl+S)',
   'formWindow.actionCopy': 'Copy current record',
@@ -685,6 +717,13 @@ const tr: Record<string, string> = {
   'language.en': 'English',
   'language.tr': 'Türkçe',
   'language.ar': 'العربية',
+  'language.hi': 'हिन्दी',
+  'language.ps': 'پښتو',
+  'language.ckb': 'کوردی',
+  'language.pt': 'Português',
+  'language.ko': '한국어',
+  'language.fr': 'Français',
+  'language.zh': '中文',
   'language.dirRtl': 'Sağdan sola',
   'language.dirLtr': 'Soldan sağa',
   'language.changeToast.title': 'Dil değiştirildi',
@@ -860,6 +899,10 @@ const tr: Record<string, string> = {
   'formWindow.ctrlSHint': 'Kaydetmek için Ctrl+S',
   'formWindow.closeHint': 'Pencereyi kapatmadan önce değişiklikleri kaydedin',
   'formWindow.jalaliHint': 'Hicri Şemsi takvim — örn. 1405/07/30',
+  'formWindow.hintJalali': 'Hicr-i Şemsi (Celali) takvim — örn. ۱۴۰۵/۰۷/۳۰',
+  'formWindow.hintKurdish': 'Kürt güneş takvimi — örn. ۲۷۲۶/۰۷/۳۰',
+  'formWindow.hintHijri': 'Hicr-i Kameri takvim — örn. ١٤٤٧/٠٥/١٢',
+  'formWindow.hintGregory': 'Gregoryen takvim — örn. 2026/10/22',
   'formWindow.actionNew': 'Yeni kayıt',
   'formWindow.actionSave': 'Kaydet (Ctrl+S)',
   'formWindow.actionCopy': 'Mevcut kaydı kopyala',
@@ -973,6 +1016,13 @@ const ar: Record<string, string> = {
   'language.en': 'English',
   'language.tr': 'Türkçe',
   'language.ar': 'العربية',
+  'language.hi': 'हिन्दी',
+  'language.ps': 'پښتو',
+  'language.ckb': 'کوردی',
+  'language.pt': 'Português',
+  'language.ko': '한국어',
+  'language.fr': 'Français',
+  'language.zh': '中文',
   'language.dirRtl': 'من اليمين إلى اليسار',
   'language.dirLtr': 'من اليسار إلى اليمين',
   'language.changeToast.title': 'تم تغيير اللغة',
@@ -1148,6 +1198,10 @@ const ar: Record<string, string> = {
   'formWindow.ctrlSHint': 'Ctrl+S للحفظ',
   'formWindow.closeHint': 'احفظ تغييراتك قبل إغلاق النافذة',
   'formWindow.jalaliHint': 'التقويم الهجري الشمسي — مثال: 1405/07/30',
+  'formWindow.hintJalali': 'التقويم الهجري الشمسي (الجلالي) — مثل ۱۴۰۵/۰۷/۳۰',
+  'formWindow.hintKurdish': 'التقويم الكردي الشمسي — مثل ۲۷۲۶/۰۷/۳۰',
+  'formWindow.hintHijri': 'التقويم الهجري القمري — مثل ١٤٤٧/٠٥/١٢',
+  'formWindow.hintGregory': 'التقويم الميلادي — مثل 2026/10/22',
   'formWindow.actionNew': 'سجل جديد',
   'formWindow.actionSave': 'حفظ (Ctrl+S)',
   'formWindow.actionCopy': 'نسخ السجل الحالي',
@@ -1186,4 +1240,11 @@ export const DICTIONARIES: Record<Locale, Record<string, string>> = {
   en,
   tr,
   ar,
+  hi: hiDictionary,
+  ps: psDictionary,
+  ckb: ckbDictionary,
+  pt: ptDictionary,
+  ko: koDictionary,
+  fr: frDictionary,
+  zh: zhDictionary,
 };

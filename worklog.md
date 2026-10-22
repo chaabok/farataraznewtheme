@@ -415,3 +415,88 @@ Stage Summary:
 - DataFormWindow اکنون دو بخشی است: هدر همیشه‌نمایان (فیلدهای اصلی، بدون تب) + بدنه تب‌دار؛ نوار تب بالای فرم کاملاً حذف شد
 - کنترل‌های فرم فشرده شدند (۲۴px، فونت ۱۲px) و فوتر وضعیت فرم در هر دو معماری (تب و پنجره شناور) بدون فاصله به تسک‌بار می‌چسبد
 - WindowFrame prop عمومی dockBottom گرفت؛ هیچ تغییر schema/API/i18n لازم نشد (کلیدهای دیکشنری موجود کفایت کرد)
+---
+Task ID: 7-g
+Agent: general-purpose (zh dictionary)
+Task: Simplified Chinese (zh) UI dictionary translation
+
+Work Log:
+- Read dictionaries.ts fully and extracted the canonical fa key list programmatically (262 keys, verified via bun against all 4 locales) — note: task brief estimated ~200 keys
+- Wrote src/i18n/locales/zh.ts: full Simplified Chinese translation, export `zhDictionary`, flat keys identical to fa plus the 11 mandated new keys (7 verbatim native language names + 4 calendar hint keys with digit samples preserved exactly); all {placeholder} tokens preserved; 'common.toman'='托曼', confirmYes/No=是/否
+- Verified with bun: parses clean, 273 keys (262 fa + 11 new), zero missing/extra keys vs fa∪new, zero placeholder mismatches, verbatim language names OK, eslint clean
+
+Stage Summary:
+- src/i18n/locales/zh.ts written, 273 keys
+---
+Task ID: 7-f
+Agent: general-purpose (fr dictionary)
+Task: French (fr) UI dictionary translation
+
+Work Log:
+- Read worklog.md and the full fa canonical section of src/i18n/dictionaries.ts (lines 10-318); extracted the exact key list programmatically (262 fa keys — note: more than the ~200 estimated in the task spec)
+- Wrote src/i18n/locales/fr.ts: export frDictionary, flat keys 1:1 with fa plus the 11 new keys (7 language names verbatim + 4 formWindow.hint* calendar keys with exact digit samples); typographic apostrophes (’) used throughout to avoid escaping issues; all {placeholder} tokens preserved
+- Verified with bun: parses cleanly; strict diff vs fa + new keys shows 273 keys, 0 missing, 0 extra, 0 duplicates, 0 empty values; {forms} {menus} {count} {module} {recordLabel} {name} {n} {total} {db} {time} all match fa usage counts
+
+Stage Summary:
+- src/i18n/locales/fr.ts written, 273 keys (262 fa + 11 new) — no other file touched
+---
+Task ID: 7-a
+Agent: general-purpose (hi dictionary)
+Task: Hindi (hi) UI dictionary translation
+
+Work Log:
+- Read worklog.md + full dictionaries.ts (fa section lines 10-318 = canonical key list; extracted mechanically and diffed). Note: fa section contains 262 keys (not ~200 as the task brief estimated), so the "211 expected" figure was stale — coverage rule (every fa key + 11 new) was followed instead.
+- Wrote src/i18n/locales/hi.ts: full Hindi (Devanagari) translation, export hiDictionary, flat keys mirroring fa order with section comments; 11 new keys added = 7 verbatim native language names (hi/ps/ckb/pt/ko/fr/zh; fa/en/tr/ar already in fa) + 4 calendar hints (hintJalali/hintKurdish/hintHijri/hintGregory) with digit samples kept byte-exact (۱۴۰۵/۰۷/۳۰ / ۲۷۲۶/۰۷/۳۰ / ١٤٤٧/٠٥/١٢ / 2026/10/22). Spec pins honored: common.toman=टोमान, common.percent=٪, confirmYes=हाँ, confirmNo=नहीं, deleteDialogMessage=क्या आप वाकई जानकारी हटाना चाहते हैं?, actionSave=सहेजें (Ctrl+S), tabs.home=होम, login.submit=लॉग इन, header.logout=लॉग आउट.
+- Verified via bun import (parses clean): count 273; automated diff vs fa → missing NONE, extra = exactly the 11 mandated keys, 0 duplicate keys, 0 empty values, 0 placeholder-token mismatches ({forms} {menus} {count} {module} {recordLabel} {name} {n} {total} {db} {time} all preserved). No other file touched (dictionaries.ts / config.ts / types untouched — locale registration is the main Task 7's job).
+
+Stage Summary:
+- src/i18n/locales/hi.ts written, 273 keys (262 fa keys + 11 new)
+
+---
+Task ID: 7-b
+Agent: general-purpose (ps dictionary)
+Task: Pashto (ps) UI dictionary translation
+
+Work Log:
+- خواندن کامل `src/i18n/dictionaries.ts` (بخش fa خطوط 10-318 به‌عنوان لیست مرجع کلیدها) و کارلاگ؛ استخراج برنامه‌نویسی‌شده کلیدهای fa با bun: ۲۶۲ کلید (نه ۲۰۰ که در متن تسک تخمین زده شده بود)
+- نوشتن `src/i18n/locales/ps.ts` با export دقیق `psDictionary`: ترجمه کامل ۲۶۲ کلید fa به پشتو استاندارد (فورم/ریکارډ/خوندي کول/ړنګول/بندول) + ۱۱ کلید جدید (۷ نام زبان verbatim: hi/ps/ckb/pt/ko/fr/zh + ۴ کلید راهنمای تقویم با عین نمونه ارقام ۱۴۰۵/۰۷/۳۰، ۲۷۲۶/۰۷/۳۰، ١٤٤٧/٠٥/١٢، 2026/10/22)؛ توکن‌های {forms} {menus} {count} {module} {recordLabel} {name} {n} {total} {db} {time} و مقادیر الزامی (تومان، ٪، هو/نه، ښي-تر-کیڼ/کیڼ-تر-ښي) عیناً حفظ شد
+- راستی‌آزمایی با bun: import سالم، count=273 (262 fa + 11 جدید)، ۰ کلید جاافتاده/اضافه نسبت به fa، تطابق کامل placeholderها، هیچ آپاستروف ASCII داخل مقادیر (parse بدون خطا)
+
+Stage Summary:
+- src/i18n/locales/ps.ts written, 273 keys (262 canonical fa keys + 11 new) — count 273 به‌جای 211 تخمینی تسک است چون fa واقعاً ۲۶۲ کلید دارد؛ پوشش کامل و بدون کلید اضافه/ناقص
+---
+Task ID: 7-e
+Agent: general-purpose (ko dictionary)
+Task: Korean (ko) UI dictionary translation
+
+Work Log:
+- Read worklog + dictionaries.ts fully; extracted the canonical fa key list (lines 10-318) — actual count is 262 keys, not ~200 as the task estimated, so all 262 were translated (coverage rule "no missing keys" prioritized over the stale 211 estimate; sibling locale files fr/hi/ps/zh each have 273 keys, confirming this)
+- Wrote src/i18n/locales/ko.ts (export koDictionary, LTR): 262 fa keys + 7 new language names (hi/ps/ckb/pt/ko/fr/zh, all 11 language.* entries verbatim) + 4 calendar hint keys (hintJalali/hintKurdish/hintHijri/hintGregory per spec, digit samples preserved) = 273 keys
+- Verified with bun: import OK, count 273, fa↔ko key parity (0 missing, extras = exactly the 11 new keys), placeholder tokens identical on all keys, toman/percent/confirmYes/confirmNo/deleteDialogMessage per spec; FLAG: hintJalali uses the dictated wording '셀러리 히즈라(잘랄리) 달력' — '셀러리' is a literal transliteration of "Solar" that reads as "celery" in Korean; recommended replacement: '히즈라 태양력(잘랄리) 달력' (kept as dictated for spec compliance)
+
+Stage Summary:
+- src/i18n/locales/ko.ts written, 273 keys
+---
+Task ID: 7-d
+Agent: general-purpose (pt dictionary)
+Task: Portuguese (pt) UI dictionary translation
+
+Work Log:
+- Read worklog.md + dictionaries.ts; fa section (lines 10–318) actually contains 262 canonical keys (task estimated ~200), so full coverage = 262 + 11 new keys = 273 (consistent with fr/hi/zh locale files)
+- Wrote src/i18n/locales/pt.ts (pt-BR, LTR): all 273 keys, single quotes, {placeholder} tokens preserved, 11 native language names verbatim, 4 calendar hints with exact digit samples, gender-neutral phrasings for {recordLabel} templates (e.g. 'Novo registro: {recordLabel}')
+- Verified with bun: parses cleanly, count 273, zero missing/extra/duplicate keys, all placeholder tokens and mandated strings (Sim/Não, toman, ٪, hint texts) match
+
+Stage Summary:
+- src/i18n/locales/pt.ts written, 273 keys
+---
+Task ID: 7-c
+Agent: general-purpose (ckb dictionary)
+Task: Sorani Kurdish (ckb) UI dictionary translation
+
+Work Log:
+- Read worklog.md + full dictionaries.ts; extracted the canonical fa key list from lines 10–318 (262 keys, verified programmatically via regex extraction)
+- Wrote src/i18n/locales/ckb.ts: full Sorani Kurdish (ckb, RTL, Arabic script) translation — export `ckbDictionary`, flat keys identical to fa, all {placeholder} tokens preserved, verbatim native language names (11 language.* keys) and 4 calendar hint keys (hintJalali/hintKurdish/hintHijri/hintGregory) with digit samples kept exactly as given
+- Verified: bun import OK, tsc --strict OK, key-set diff vs fa = 0 missing / 0 extra, placeholder tokens match fa 1:1 → 273 keys (262 fa + 11 new)
+
+Stage Summary:
+- src/i18n/locales/ckb.ts written, 273 keys
