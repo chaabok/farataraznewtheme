@@ -226,6 +226,25 @@ const fa = {
   'module.financialStatement.field.netValue': 'ارزش خالص',
   'module.financialStatement.stat.count': 'تعداد گزارش‌ها',
   'module.financialStatement.stat.totalNetValue': 'خالص کل',
+
+  // ── Setup / app installation settings ─────────────────────────
+  'setup.aria': 'پنجره تنظیمات نصب برنامه',
+  'setup.title': 'تنظیمات نصب برنامه',
+  'setup.subtitle': 'سرویس‌های انتخاب‌شده در بانک اصلی و سایر سرویس‌ها در بانک ثانویه نصب می‌شوند؛ تبادل داده فقط از طریق API انجام می‌شود.',
+  'setup.mainDb': 'بانک اطلاعاتی اصلی',
+  'setup.secondaryDb': 'بانک اطلاعاتی ثانویه',
+  'setup.selectedServices': '{count} سرویس نصب‌شده',
+  'setup.recordsCount': '{count} رکورد',
+  'setup.installedMain': 'نصب‌شده در بانک اصلی',
+  'setup.installedSecondary': 'نصب‌شده در بانک ثانویه',
+  'setup.addRecord': 'افزودن رکورد آزمایشی به بانک فعلی',
+  'setup.movedToast': '{name} به {db} منتقل شد ({count} رکورد از طریق API جابه‌جا شد)',
+  'setup.recordAdded': 'رکورد آزمایشی در {db} ثبت شد',
+  'setup.loadError': 'خطا در دریافت وضعیت نصب سرویس‌ها',
+  'setup.refresh': 'به‌روزرسانی وضعیت نصب',
+  'setup.footerHint': 'با تغییر وضعیت هر سرویس، داده‌های آن از طریق API بین بانک اصلی و ثانویه جابه‌جا می‌شود.',
+  'setup.openedToast': 'پنجره تنظیمات نصب برنامه باز شد',
+  'setup.demoRecordTitle': 'رکورد آزمایشی — {time}',
 } satisfies Record<string, string>;
 
 const en: Record<string, string> = {
@@ -426,6 +445,25 @@ const en: Record<string, string> = {
   'module.financialStatement.field.netValue': 'Net value',
   'module.financialStatement.stat.count': 'Report count',
   'module.financialStatement.stat.totalNetValue': 'Total net value',
+
+  // ── Setup / app installation settings ─────────────────────────
+  'setup.aria': 'App installation settings window',
+  'setup.title': 'App Installation Settings',
+  'setup.subtitle': 'Selected services install into the main database, the rest into the secondary one; data is exchanged between them via APIs only.',
+  'setup.mainDb': 'Main database',
+  'setup.secondaryDb': 'Secondary database',
+  'setup.selectedServices': '{count} services installed',
+  'setup.recordsCount': '{count} records',
+  'setup.installedMain': 'Installed in the main database',
+  'setup.installedSecondary': 'Installed in the secondary database',
+  'setup.addRecord': 'Add a demo record to the current database',
+  'setup.movedToast': '{name} moved to {db} ({count} records exchanged via API)',
+  'setup.recordAdded': 'Demo record created in {db}',
+  'setup.loadError': 'Failed to load the installation state',
+  'setup.refresh': 'Refresh installation state',
+  'setup.footerHint': 'Toggling a service exchanges its data between the main and secondary databases through the API.',
+  'setup.openedToast': 'App installation settings opened',
+  'setup.demoRecordTitle': 'Demo record — {time}',
 };
 
 const tr: Record<string, string> = {
@@ -626,6 +664,25 @@ const tr: Record<string, string> = {
   'module.financialStatement.field.netValue': 'Net değer',
   'module.financialStatement.stat.count': 'Rapor sayısı',
   'module.financialStatement.stat.totalNetValue': 'Toplam net değer',
+
+  // ── Setup / app installation settings ─────────────────────────
+  'setup.aria': 'Uygulama kurulum ayarları penceresi',
+  'setup.title': 'Uygulama Kurulum Ayarları',
+  'setup.subtitle': 'Seçilen hizmetler ana veritabanına, diğerleri ikincil veritabanına kurulur; veri alışverişi yalnızca API üzerinden yapılır.',
+  'setup.mainDb': 'Ana veritabanı',
+  'setup.secondaryDb': 'İkincil veritabanı',
+  'setup.selectedServices': '{count} hizmet kurulu',
+  'setup.recordsCount': '{count} kayıt',
+  'setup.installedMain': 'Ana veritabanında kurulu',
+  'setup.installedSecondary': 'İkincil veritabanında kurulu',
+  'setup.addRecord': 'Mevcut veritabanına örnek kayıt ekle',
+  'setup.movedToast': '{name} → {db} taşındı ({count} kayıt API ile aktarıldı)',
+  'setup.recordAdded': 'Örnek kayıt {db} içine eklendi',
+  'setup.loadError': 'Kurulum durumu yüklenemedi',
+  'setup.refresh': 'Kurulum durumunu yenile',
+  'setup.footerHint': 'Bir hizmetin durumunu değiştirmek, verilerini API ile ana ve ikincil veritabanı arasında taşır.',
+  'setup.openedToast': 'Uygulama kurulum ayarları açıldı',
+  'setup.demoRecordTitle': 'Örnek kayıt — {time}',
 };
 
 const ar: Record<string, string> = {
@@ -826,6 +883,25 @@ const ar: Record<string, string> = {
   'module.financialStatement.field.netValue': 'القيمة الصافية',
   'module.financialStatement.stat.count': 'عدد التقارير',
   'module.financialStatement.stat.totalNetValue': 'إجمالي الصافي',
+
+  // ── Setup / app installation settings ─────────────────────────
+  'setup.aria': 'نافذة إعدادات تثبيت التطبيق',
+  'setup.title': 'إعدادات تثبيت التطبيق',
+  'setup.subtitle': 'تُثبَّت الخدمات المختارة في قاعدة البيانات الرئيسية والباقي في قاعدة البيانات الثانوية؛ ويتم تبادل البيانات عبر واجهات API فقط.',
+  'setup.mainDb': 'قاعدة البيانات الرئيسية',
+  'setup.secondaryDb': 'قاعدة البيانات الثانوية',
+  'setup.selectedServices': '{count} خدمة مثبتة',
+  'setup.recordsCount': '{count} سجل',
+  'setup.installedMain': 'مثبتة في قاعدة البيانات الرئيسية',
+  'setup.installedSecondary': 'مثبتة في قاعدة البيانات الثانوية',
+  'setup.addRecord': 'إضافة سجل تجريبي إلى قاعدة البيانات الحالية',
+  'setup.movedToast': 'تم نقل {name} إلى {db} ({count} سجل عبر API)',
+  'setup.recordAdded': 'أُضيف سجل تجريبي إلى {db}',
+  'setup.loadError': 'تعذر تحميل حالة التثبيت',
+  'setup.refresh': 'تحديث حالة التثبيت',
+  'setup.footerHint': 'عند تغيير حالة أي خدمة تُنقل بياناتها عبر API بين قاعدة البيانات الرئيسية والثانوية.',
+  'setup.openedToast': 'فُتحت نافذة إعدادات التثبيت',
+  'setup.demoRecordTitle': 'سجل تجريبي — {time}',
 };
 
 export const DICTIONARIES: Record<Locale, Record<string, string>> = {

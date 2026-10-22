@@ -5,10 +5,12 @@ import { useEffect } from 'react';
 import { DesktopIcons } from './desktop-icons';
 import { LoginOverlay } from './login-overlay';
 import { ModuleMenu } from './module-menu/module-menu';
+import { SetupWindow } from './setup/setup-window';
 import { WindowLayer } from './windows/window-layer';
 import { Taskbar } from './taskbar/taskbar';
 import { useTranslation } from '@/i18n';
 import { useDesktopStore } from '@/store/desktop-store';
+import { useSetupStore } from '@/store/setup-store';
 
 /**
  * Root shell of the dashboard: wallpaper + desktop icon grid + module
@@ -22,6 +24,7 @@ export function DesktopShell() {
   const toggleStartMenu = useDesktopStore((s) => s.toggleStartMenu);
   const toggleLanguageMenu = useDesktopStore((s) => s.toggleLanguageMenu);
   const closeModuleMenu = useDesktopStore((s) => s.closeModuleMenu);
+  const closeSetupWindow = useSetupStore((s) => s.closeSetupWindow);
   const { t } = useTranslation();
 
   // Load icons from the NestJS desktop-service through the Next.js gateway.
@@ -34,13 +37,19 @@ export function DesktopShell() {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         closeModuleMenu();
+        closeSetupWindow();
         toggleStartMenu(false);
         toggleLanguageMenu(false);
       }
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [closeModuleMenu, toggleStartMenu, toggleLanguageMenu]);
+  }, [
+    closeModuleMenu,
+    closeSetupWindow,
+    toggleStartMenu,
+    toggleLanguageMenu,
+  ]);
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -68,6 +77,8 @@ export function DesktopShell() {
         <WindowLayer />
         {/* Module flyout menu (opened by clicking a desktop icon) */}
         <ModuleMenu />
+        {/* App installation settings (opened from the settings module menu) */}
+        <SetupWindow />
       </main>
 
       <Taskbar />

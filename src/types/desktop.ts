@@ -50,3 +50,29 @@ export interface ModuleMenusPayload {
   moduleKey: string;
   menus: ModuleMenuItem[];
 }
+
+/** One of the two installation target databases (setup-service). */
+export type SetupDatabaseKey = 'main' | 'secondary';
+
+/** Installation state of one ERP module (from setup-service). */
+export interface SetupServiceItem {
+  moduleKey: string;
+  name: string;
+  selected: boolean;
+  databaseKey: SetupDatabaseKey;
+  recordCount: number;
+}
+
+/** One installation database card in the setup window. */
+export interface SetupDatabaseItem {
+  key: SetupDatabaseKey;
+  file: string;
+  serviceCount: number;
+  recordCount: number;
+}
+
+/** Payload of `GET /api/desktop/setup/overview`. */
+export interface SetupOverview {
+  databases: SetupDatabaseItem[];
+  services: SetupServiceItem[];
+}

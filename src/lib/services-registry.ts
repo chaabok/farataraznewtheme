@@ -30,6 +30,13 @@ export const DESKTOP_SERVICE: ServiceEndpoint = endpoint(
   3001,
 );
 
+/** Application installation settings (setup-service, port 3013). */
+export const SETUP_SERVICE: ServiceEndpoint = endpoint(
+  'SETUP_SERVICE_URL',
+  'SETUP_SERVICE_API_KEY',
+  3013,
+);
+
 /** Whitelist of ERP modules → their own microservice endpoint. */
 const MODULE_SERVICES: Record<string, ServiceEndpoint> = {
   settings: endpoint('SETTINGS_SERVICE_URL', 'SETTINGS_SERVICE_API_KEY', 3003),

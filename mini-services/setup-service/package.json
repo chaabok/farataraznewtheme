@@ -1,0 +1,24 @@
+{
+  "name": "setup-service",
+  "version": "1.0.0",
+  "private": true,
+  "description": "ERP setup-service microservice (port 3013) — application installation settings: selected services install into the main database, unselected ones into the secondary database; data is exchanged between the two databases through APIs only.",
+  "scripts": {
+    "dev": "bun --hot src/main.ts",
+    "start": "bun src/main.ts",
+    "db:push": "prisma db push --schema prisma/schema.prisma",
+    "db:generate": "prisma generate --schema prisma/schema.prisma && prisma generate --schema prisma/data.prisma",
+    "data:push": "prisma db push --schema prisma/data.prisma",
+    "data:push:secondary": "DATA_DATABASE_URL=\"file:/home/z/my-project/db/secondary.db\" prisma db push --schema prisma/data.prisma",
+    "db:seed": "bun scripts/seed.ts"
+  },
+  "dependencies": {
+    "@erp/shared": "file:../shared",
+    "@prisma/client": "^6.11.1",
+    "reflect-metadata": "^0.2.2"
+  },
+  "devDependencies": {
+    "bun-types": "^1.3.4",
+    "prisma": "^6.11.1"
+  }
+}

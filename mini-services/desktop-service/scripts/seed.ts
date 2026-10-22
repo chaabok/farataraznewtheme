@@ -107,6 +107,7 @@ const MODULE_MENUS: Record<string, MenuSeed[]> = {
       f('login-policy', 'lock', n('سیاست‌های ورود', 'Login Policies', 'Oturum Açma İlkeleri', 'سياسات تسجيل الدخول')),
     ]),
     m('database', n('پیکربندی سیستمی', 'System Configuration', 'Sistem Yapılandırması', 'إعداد النظام'), [
+      f('installation', 'database', n('تنظیمات نصب برنامه', 'App Installation', 'Uygulama Kurulumu', 'إعدادات تثبيت التطبيق')),
       f('system-params', 'cog', n('پارامترهای سیستم', 'System Parameters', 'Sistem Parametreleri', 'معلمات النظام')),
       f('backup-restore', 'database', n('پشتیبان‌گیری و بازیابی', 'Backup & Restore', 'Yedekleme ve Geri Yükleme', 'النسخ الاحتياطي والاستعادة')),
       f('audit-log', 'fileText', n('گزارش رخدادها', 'Audit Log', 'Denetim Günlüğü', 'سجل التدقيق')),

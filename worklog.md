@@ -227,3 +227,38 @@ Stage Summary:
 - آیکون‌های network / sound / battery به‌طور کامل از SystemTray حذف شدند
 - عناصر باقی‌مانده سینی: ChevronUp (آیکون‌های مخفی)، LanguageMenu + نشانگر زبان، TaskbarClock
 - هیچ تغییر دیگری در تسک‌بار یا دسکتاپ اعمال نشد
+
+---
+Task ID: 5
+Agent: Z.ai Code (main)
+Task: تنظیمات نصب برنامه — سرویس‌های انتخاب‌شده در بانک اصلی، سایر سرویس‌ها در بانک ثانویه؛ تبادل داده بین دو بانک فقط از طریق API
+
+Work Log:
+- میکروسرویس جدید mini-services/setup-service (پورت 3013، الگوی settings-service + @erp/shared):
+  - prisma/schema.prisma (رجیستری db/setup.db → مدل ServiceInstall: moduleKey@unique/name/selected/sortOrder)
+  - prisma/data.prisma (اسکیمای مشترک دو بانک داده → مدل AppRecord؛ کلاینت generated در src/generated/data-client)
+  - دو PrismaClient هم‌زمان با datasourceUrl متفاوت: main.db (بانک اصلی) و secondary.db (بانک ثانویه) — DataDatabasesService
+  - SetupService: overview (دو کارت بانک + ۱۰ سرویس با recordCount)، setInstalled (تغییر وضعیت + مهاجرت رکوردها read→createMany→deleteMany با dedupe بر اساس id = تبادل API)، addRecord (ثبت در بانکِ مقصد)، listRecords، exchange (POST /api/setup/exchange با moduleKey یا all، جهت toMain/toSecondary، حالت move/copy)
+  - امنیت: APP_GUARDهای JwtAuthGuard + ApiKeyGuard مثل بقیه سرویس‌ها؛ DTO با class-validator؛ bootstrapSecureService (helmet + rate-limit + CORS محدود + bind روی 127.0.0.1)؛ whitelist moduleKey با regex (traversal→400)
+  - seed: ۱۰ ماژول (settings+accounting→main، ۸ مورد→secondary) + ۲ رکورد نمونه در بانک مقصد هر کدام
+- تست curl مستقیم 3013: بدون key=401، overview بدون JWT=401، PUT sales selected=true → movedRecords=2 (secondary→main)، POST records→main، POST exchange toSecondary→transferred=3، traversal=400، body نامعتبر=400
+- گیت‌وی BFF: src/app/api/desktop/setup/[[...path]]/route.ts با whitelist ساختاری مسیر (فقط overview/health/exchange/services[/:key][/records])، تزریق x-api-key، فوروارد Authorization، فیلتر database فقط روی records؛ SETUP_SERVICE در services-registry + دو متغیر در root .env
+- فرانت:
+  - types/desktop.ts: SetupDatabaseKey/SetupServiceItem/SetupDatabaseItem/SetupOverview
+  - src/store/setup-store.ts: isSetupWindowOpen/overview/pendingKey + fetchOverview/toggleService/addDemoRecord با توست‌های بومی‌شده (formatTemplate + getLocalizedModuleMeta)
+  - src/components/desktop/setup/setup-window.tsx: پنجره شیشه‌ای Win11 (z-501، spring + AnimatePresence)، هدر گرادیانی sky→emerald، دو کارت بانک با شمارنده سرویس/رکورد، لیست ۱۰ سرویس (آیکون رنگ ماژول + وضعیت نصب + تعداد رکورد + دکمه + رکورد آزمایشی + Switch نصب)، فوتر راهنما + refresh، skeleton/error+retry
+  - module-menu.tsx: فرم formKey==='installation' در ماژول settings → openSetupWindow (به‌جای پنجره عمومی)
+  - desktop-shell.tsx: رندر SetupWindow + Escape آن را می‌بندد
+  - api-client.ts: متد PUT به apiFetch اضافه شد
+- desktop-service/scripts/seed.ts: فرم 'تنظیمات نصب برنامه' (formKey=installation) به منوی «پیکربندی سیستمی» settings اضافه شد → reseed: ۳۰ منو/۸۹ فرم (۴۷۶ ترجمه)
+- dictionaries.ts: ۱۷ کلید setup.* × ۴ زبان = ۶۸ ردیف
+- باگ حین تست: overview سرویس {data} wrapper نداشت → اصلاح کنترلر؛ توست عنوان moduleKey خام نشان می‌داد → نام بومی‌شده
+- تست مرورگری (Agent Browser): fa/RTL → مسیر منو تا پنجره، کارت‌ها (اصلی ۲ سرویس/۴ رکورد)، toggle دریافت‌وپرداخت→اصلی (۲ رکورد منتقل + توست)، + رکورد (۲→۳)، toggle برگشت→ثانویه (Escape بست)، en/LTR کامل (App Installation Settings/Main database/Secondary database/...با اعداد صحیح)، موبایل ۳۹۰px (تک‌ستونه مرتب)
+- حوادث: سرور Next پایین بود → restart؛ فشار حافظه (4GB) دو بار CDP مرورگر را مختل کرد → دو سرویس ماژول (costing/financial-statement) موقتاً متوقف و در پایان دوباره بالا آمدند؛ eslint: mini-services/** به ignores اضافه شد (کلاینت generated پرisma)
+- lint نهایی: پاس؛ دیکشنری: ۶۸ ردیف setup.*؛ هر ۱۴ پورت (3000-3013) پاسخ می‌دهند
+
+Stage Summary:
+- الزام کاربر محقق شد: تنظیمات نصب برنامه = پنجره اختصاصی از منوی تنظیمات؛ هر سرویس با Switch بین «بانک اصلی» (انتخاب‌شده) و «بانک ثانویه» (انتخاب‌نشده) جابه‌جا می‌شود و رکوردهایش به‌صورت API-محور مهاجرت می‌کنند (بدون لینک مستقیم SQL بین دو بانک)
+- POST /api/setup/exchange نقطه تبادل صریح بین دو بانک است (move/copy، تک‌سرویسی یا all) — آماده برای سرویس‌های آینده
+- مهاجرت PostgreSQL آینده: فقط provider دو اسکیمای prisma + URLها؛ معماری دو-بانکی مستقل حفظ می‌شود
+- امنیت: JWT + API key + whitelist ساختاری گیت‌وی + ValidationPipe + rate-limit + bind داخلی (تست 401/400 پاس)

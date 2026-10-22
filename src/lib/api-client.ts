@@ -14,7 +14,7 @@ export class SessionExpiredError extends Error {
  */
 export async function apiFetch<T>(
   path: string,
-  options: { method?: 'GET' | 'POST'; body?: unknown } = {},
+  options: { method?: 'GET' | 'POST' | 'PUT'; body?: unknown } = {},
 ): Promise<T> {
   const token = useAuthStore.getState().token;
 

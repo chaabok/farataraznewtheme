@@ -9,6 +9,7 @@ import { getLocalizedModuleMeta, useTranslation } from '@/i18n';
 import { getModuleMeta } from '@/lib/modules-registry';
 import { useAuthStore } from '@/store/auth-store';
 import { useDesktopStore } from '@/store/desktop-store';
+import { useSetupStore } from '@/store/setup-store';
 import type { ModuleFormItem } from '@/types/desktop';
 import { getIcon } from '../icon-registry';
 
@@ -69,6 +70,7 @@ export function ModuleMenu() {
   const selectMenu = useDesktopStore((s) => s.selectMenu);
   const loadModuleMenus = useDesktopStore((s) => s.loadModuleMenus);
   const openWindow = useDesktopStore((s) => s.openWindow);
+  const openSetupWindow = useSetupStore((s) => s.openSetupWindow);
   const isAuthenticated = useAuthStore((s) => Boolean(s.token));
 
   const { locale, direction, t, tf, formatNumber } = useTranslation();
@@ -95,6 +97,17 @@ export function ModuleMenu() {
       return;
     }
     if (getModuleMeta(openModuleKey)) {
+      // Special form: the application installation settings window
+      // (selected services → main DB, unselected → secondary DB).
+      if (openModuleKey === 'settings' && form.formKey === 'installation') {
+        closeModuleMenu();
+        openSetupWindow();
+        toast({
+          title: form.name,
+          description: t('setup.openedToast'),
+        });
+        return;
+      }
       closeModuleMenu();
       openWindow(openModuleKey);
       toast({
