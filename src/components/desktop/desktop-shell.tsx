@@ -134,7 +134,7 @@ export function DesktopShell() {
                 aria-label={tab.title}
                 aria-hidden={!active}
                 className={cn(
-                  'absolute inset-0 bg-[#0b101d] transition-[opacity,visibility] duration-200',
+                  'absolute inset-0 flex flex-col bg-[#0b101d] transition-[opacity,visibility] duration-200',
                   active
                     ? 'visible opacity-100'
                     : 'pointer-events-none invisible opacity-0',

@@ -200,9 +200,9 @@ export function LookupField({
           aria-label={t('formWindow.selectPlaceholder')}
           disabled={disabled}
           onClick={() => (open ? setOpen(false) : openPanel())}
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sky-500/20 text-sky-400 ring-1 ring-white/10 transition-all duration-150 hover:bg-sky-500/30 hover:shadow-[0_0_16px_-4px_rgba(56,189,248,0.6)] active:scale-95 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/50"
+          className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-sky-500/20 text-sky-400 ring-1 ring-white/10 transition-all duration-150 hover:bg-sky-500/30 hover:shadow-[0_0_16px_-4px_rgba(56,189,248,0.6)] active:scale-95 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/50"
         >
-          <Plus className="h-4 w-4" strokeWidth={2.2} />
+          <Plus className="h-3.5 w-3.5" strokeWidth={2.2} />
         </button>
       </div>
 

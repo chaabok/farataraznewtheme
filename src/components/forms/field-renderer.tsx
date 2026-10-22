@@ -116,7 +116,7 @@ export function FieldRenderer({
 
   return (
     <div className={field.span === 2 ? 'col-span-full' : undefined}>
-      <div className="mb-1.5 flex items-baseline gap-1">
+      <div className="mb-1 flex items-baseline gap-1">
         <label
           htmlFor={field.fieldKey}
           className="text-[13px] leading-none text-white/70"

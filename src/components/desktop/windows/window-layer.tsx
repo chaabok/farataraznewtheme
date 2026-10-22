@@ -6,9 +6,11 @@ import { DataFormWindow } from '@/components/forms';
 import { WindowFrame } from './window-frame';
 import { ModuleWindow } from './module-window';
 
-/** Taller, flush window body used by form windows (their own chrome). */
-const FORM_BODY_CLASS =
-  'flex max-h-[min(80vh,760px)] flex-col overflow-hidden';
+/**
+ * Full-height, flush window body used by form windows (their own chrome);
+ * combined with `dockBottom` the status footer touches the taskbar.
+ */
+const FORM_BODY_CLASS = 'flex min-h-0 flex-1 flex-col overflow-hidden';
 
 /**
  * Renders all open module windows above the desktop, inside the desktop
@@ -31,6 +33,7 @@ export function WindowLayer() {
           iconKey={win.form?.iconKey}
           accentColor={win.form ? '#38bdf8' : undefined}
           bodyClassName={win.form ? FORM_BODY_CLASS : undefined}
+          dockBottom={Boolean(win.form)}
         >
           {win.form ? (
             <DataFormWindow

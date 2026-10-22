@@ -25,7 +25,7 @@ export function FieldCheckbox({
   disabled,
 }: FieldCheckboxProps) {
   return (
-    <div className="flex h-10 items-center">
+    <div className="flex h-6 items-center">
       <label
         htmlFor={id}
         className="flex cursor-pointer select-none items-center gap-2.5"
@@ -35,9 +35,9 @@ export function FieldCheckbox({
           checked={value}
           disabled={disabled}
           onCheckedChange={(checked) => onChange(checked === true)}
-          className="h-[18px] w-[18px] border-white/20 bg-white/[0.04] data-[state=checked]:border-sky-400/70 data-[state=checked]:bg-sky-500/80"
+          className="h-4 w-4 border-white/20 bg-white/[0.04] data-[state=checked]:border-sky-400/70 data-[state=checked]:bg-sky-500/80"
         />
-        <span className="text-[13px] text-white/80">{label}</span>
+        <span className="text-[12px] text-white/80">{label}</span>
         {required && (
           <span
             title={requiredHint}

@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Minus, X } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { getLocalizedModuleMeta, useTranslation } from '@/i18n';
+import { cn } from '@/lib/utils';
 import { getIcon } from '../icon-registry';
 import { useDesktopStore } from '@/store/desktop-store';
 
@@ -21,6 +22,11 @@ interface WindowFrameProps {
   accentColor?: string;
   /** Overrides the default padded, height-capped window body. */
   bodyClassName?: string;
+  /**
+   * Pins the window's bottom edge to the bottom of the desktop area so a
+   * full-height body (e.g. the form status footer) touches the taskbar.
+   */
+  dockBottom?: boolean;
 }
 
 /**
@@ -38,6 +44,7 @@ export function WindowFrame({
   iconKey,
   accentColor,
   bodyClassName,
+  dockBottom = false,
 }: WindowFrameProps) {
   const { locale, t } = useTranslation();
   const meta = getLocalizedModuleMeta(moduleId, locale);
@@ -80,7 +87,10 @@ export function WindowFrame({
     const drag = dragState.current;
     if (!drag || drag.pointerId !== event.pointerId) return;
     const maxX = window.innerWidth - 120;
-    const maxY = window.innerHeight - 160;
+    // Bottom-docked windows keep a usable minimum height while dragging.
+    const maxY = dockBottom
+      ? Math.max(0, window.innerHeight - 560)
+      : window.innerHeight - 160;
     setPos({
       x: Math.min(Math.max(event.clientX - drag.offsetX, -40), maxX),
       y: Math.min(Math.max(event.clientY - drag.offsetY, 0), maxY),
@@ -100,8 +110,16 @@ export function WindowFrame({
       exit={{ opacity: 0, scale: 0.96, y: 12 }}
       transition={{ duration: 0.18, ease: 'easeOut' }}
       onMouseDown={() => focusWindow(moduleId)}
-      style={{ zIndex: z, left: pos.x, top: pos.y }}
-      className="absolute flex w-[min(720px,calc(100vw-1rem))] flex-col overflow-hidden rounded-xl border border-white/15 bg-[#1e2128]/95 shadow-2xl shadow-black/60 backdrop-blur-xl"
+      style={{
+        zIndex: z,
+        left: pos.x,
+        top: pos.y,
+        bottom: dockBottom ? 0 : undefined,
+      }}
+      className={cn(
+        'absolute flex w-[min(720px,calc(100vw-1rem))] flex-col overflow-hidden border border-white/15 bg-[#1e2128]/95 shadow-2xl shadow-black/60 backdrop-blur-xl',
+        dockBottom ? 'rounded-t-xl' : 'rounded-xl',
+      )}
       role="dialog"
       aria-label={`${t('window.ariaPrefix')} ${windowName}`}
     >

@@ -172,8 +172,11 @@ export function DataFormWindow({ moduleId, form, onClose }: DataFormWindowProps)
         setMode('new');
       }
 
-      const firstTab = deriveTabs(nextDef, locale)[0] ?? null;
-      setActiveTabKey(firstTab ? firstTab.key : null);
+      const derived = deriveTabs(nextDef, locale);
+      // The first group is the always-visible header section; the active
+      // tab state only drives the remaining body tabs (default: first one).
+      const firstBodyTab = derived[1] ?? null;
+      setActiveTabKey(firstBodyTab ? firstBodyTab.key : null);
     } catch (error) {
       if (error instanceof SessionExpiredError) return;
       setLoadError(
@@ -452,9 +455,18 @@ export function DataFormWindow({ moduleId, form, onClose }: DataFormWindowProps)
   );
 
   const tabs = useMemo(() => (def ? deriveTabs(def, locale) : []), [def, locale]);
-  const activeTab =
-    tabs.find((tab) => (tab.key ?? null) === (activeTabKey ?? null)) ??
-    tabs[0] ??
+
+  /**
+   * Two-part layout of tabbed forms: the first group is the header
+   * section (its fields are always visible, without any tab strip) and
+   * the remaining groups build the tabbed body section below it.
+   */
+  const isTabbed = def?.type === 'tabbed' && tabs.length > 0;
+  const headerTab = isTabbed ? (tabs[0] ?? null) : null;
+  const bodyTabs = isTabbed ? tabs.slice(1) : [];
+  const activeBodyTab =
+    bodyTabs.find((tab) => (tab.key ?? null) === (activeTabKey ?? null)) ??
+    bodyTabs[0] ??
     null;
 
   const listColumns = useMemo(
@@ -501,7 +513,7 @@ export function DataFormWindow({ moduleId, form, onClose }: DataFormWindowProps)
         {Array.from({ length: 6 }).map((_, index) => (
           <div key={`form-skeleton-${index}`} className="space-y-1.5">
             <Skeleton className="h-3 w-24 bg-white/[0.08]" />
-            <Skeleton className="h-10 w-full rounded-lg bg-white/[0.05]" />
+            <Skeleton className="h-6 w-full rounded-md bg-white/[0.05]" />
           </div>
         ))}
       </div>
@@ -514,21 +526,37 @@ export function DataFormWindow({ moduleId, form, onClose }: DataFormWindowProps)
         lookupUrlBase={lookupUrlBase}
       />
     );
-  } else if (def.type === 'tabbed' && tabs.length > 0) {
+  } else if (isTabbed && headerTab) {
+    // Header section (main fields, no tab strip) + tabbed body section.
     content = (
-      <FormTabs
-        tabs={tabs.map((tab) => ({
-          key: tab.key,
-          name: tab.name,
-          count: tab.fields.length,
-        }))}
-        active={activeTab?.key ?? null}
-        onChange={setActiveTabKey}
-        accentColor={accentColor}
-        direction={direction}
-      >
-        {renderFields(activeTab?.fields ?? [])}
-      </FormTabs>
+      <div className="flex min-h-0 flex-col">
+        <section
+          aria-label={headerTab.name}
+          className={cn(
+            'shrink-0 bg-white/[0.02]',
+            bodyTabs.length > 0 && 'border-b border-white/10',
+          )}
+        >
+          {renderFields(headerTab.fields)}
+        </section>
+        {bodyTabs.length > 0 && (
+          <section aria-label={activeBodyTab?.name ?? undefined}>
+            <FormTabs
+              tabs={bodyTabs.map((tab) => ({
+                key: tab.key,
+                name: tab.name,
+                count: tab.fields.length,
+              }))}
+              active={activeBodyTab?.key ?? null}
+              onChange={setActiveTabKey}
+              accentColor={accentColor}
+              direction={direction}
+            >
+              {renderFields(activeBodyTab?.fields ?? [])}
+            </FormTabs>
+          </section>
+        )}
+      </div>
     );
   } else {
     content = renderFields(sortedFields);

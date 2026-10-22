@@ -5,7 +5,7 @@
 
 /** Standard text-like control (input / textarea / lookup trigger). */
 export const controlClasses =
-  'h-10 w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 text-sm text-white ' +
+  'h-6 w-full rounded-md border border-white/10 bg-white/[0.04] px-2.5 text-[12px] text-white ' +
   'placeholder:text-white/30 transition focus:border-sky-400/60 focus:bg-white/[0.06] ' +
   'focus:ring-2 focus:ring-sky-400/25 focus:outline-none ' +
   'disabled:cursor-not-allowed disabled:opacity-50';
