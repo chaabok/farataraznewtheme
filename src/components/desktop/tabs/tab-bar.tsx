@@ -79,7 +79,7 @@ export function TabBar() {
       initial="hidden"
       animate="visible"
       aria-label={t('tabs.tabBar')}
-      className="relative z-20 flex h-11 shrink-0 items-stretch border-b border-white/10 bg-[#141721]/80 backdrop-blur-xl"
+      className="relative z-20 flex h-[26px] shrink-0 items-stretch border-b border-white/10 bg-[#141721]/80 backdrop-blur-xl"
     >
       {/* Scroll arrows (only when overflowing) */}
       {canScrollStart && (
@@ -87,10 +87,10 @@ export function TabBar() {
           type="button"
           aria-label={t('tabs.scrollStart')}
           onClick={() => scrollByPage(-1)}
-          className="relative z-10 flex w-7 shrink-0 items-center justify-center text-white/50 transition-colors hover:text-white"
+          className="relative z-10 flex w-6 shrink-0 items-center justify-center text-white/50 transition-colors hover:text-white"
         >
           <ChevronLeft
-            className={cn('h-4 w-4', direction === 'rtl' && 'rotate-180')}
+            className={cn('h-3.5 w-3.5', direction === 'rtl' && 'rotate-180')}
           />
         </button>
       )}
@@ -144,7 +144,7 @@ export function TabBar() {
                   }}
                   title={home ? t('tabs.home') : tab.title}
                   className={cn(
-                    'group relative flex min-w-0 items-center gap-2 rounded-t-lg px-3 pt-1.5 pb-1.5 text-[12px] font-medium transition-colors focus-visible:outline-none sm:px-3.5 sm:text-[12.5px]',
+                    'group relative flex min-w-0 items-center gap-1.5 rounded-t-lg px-2.5 pt-0.5 pb-0.5 text-[12px] font-medium transition-colors focus-visible:outline-none sm:px-3',
                     isActive
                       ? 'text-white'
                       : 'text-white/55 hover:bg-white/[0.05] hover:text-white/90',
@@ -155,7 +155,7 @@ export function TabBar() {
                     <motion.span
                       layoutId="tab-active-pill"
                       transition={{ type: 'spring', stiffness: 420, damping: 34 }}
-                      className="absolute inset-x-1 inset-y-1 -z-10 rounded-lg bg-white/[0.08] ring-1 ring-white/10"
+                      className="absolute inset-x-1 inset-y-0.5 -z-10 rounded-lg bg-white/[0.08] ring-1 ring-white/10"
                       aria-hidden="true"
                     />
                   )}
@@ -163,7 +163,7 @@ export function TabBar() {
                   {/* Icon chip */}
                   <span
                     className={cn(
-                      'flex h-6 w-6 shrink-0 items-center justify-center rounded-md ring-1 transition-all',
+                      'flex h-5 w-5 shrink-0 items-center justify-center rounded-md ring-1 transition-all',
                       isActive ? 'ring-white/20' : 'ring-white/10',
                     )}
                     style={
@@ -176,7 +176,7 @@ export function TabBar() {
                     }
                   >
                     {createElement(Icon, {
-                      className: cn('h-[13.5px] w-[13.5px]', !isActive && 'text-white/60'),
+                      className: cn('h-3 w-3', !isActive && 'text-white/60'),
                       strokeWidth: 1.9,
                     })}
                   </span>
@@ -201,10 +201,10 @@ export function TabBar() {
                           closeTab(tab.id);
                         }
                       }}
-                      className="-me-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-white/40 opacity-0 transition-all hover:bg-white/10 hover:text-white focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40 group-hover:opacity-100 data-[active]:opacity-100"
+                      className="-me-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-md text-white/40 opacity-0 transition-all hover:bg-white/10 hover:text-white focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40 group-hover:opacity-100 data-[active]:opacity-100"
                       data-active={isActive ? 'true' : undefined}
                     >
-                      <X className="h-3 w-3" strokeWidth={2.2} />
+                      <X className="h-2.5 w-2.5" strokeWidth={2.2} />
                     </span>
                   )}
                 </button>
@@ -214,7 +214,7 @@ export function TabBar() {
                   <motion.span
                     layoutId="tab-active-underline"
                     transition={{ type: 'spring', stiffness: 420, damping: 34 }}
-                    className="absolute inset-x-2 bottom-0 h-[2.5px] rounded-full"
+                    className="absolute inset-x-2 bottom-0 h-[2px] rounded-full"
                     style={{
                       background: `linear-gradient(90deg, transparent, ${tab.accentColor}, transparent)`,
                       boxShadow: `0 0 12px ${tab.accentColor}66`,
@@ -233,10 +233,10 @@ export function TabBar() {
           type="button"
           aria-label={t('tabs.scrollEnd')}
           onClick={() => scrollByPage(1)}
-          className="relative z-10 flex w-7 shrink-0 items-center justify-center text-white/50 transition-colors hover:text-white"
+          className="relative z-10 flex w-6 shrink-0 items-center justify-center text-white/50 transition-colors hover:text-white"
         >
           <ChevronRight
-            className={cn('h-4 w-4', direction === 'rtl' && 'rotate-180')}
+            className={cn('h-3.5 w-3.5', direction === 'rtl' && 'rotate-180')}
           />
         </button>
       )}

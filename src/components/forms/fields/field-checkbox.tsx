@@ -30,7 +30,7 @@ export function FieldCheckbox({
     <div className="flex h-6 items-center gap-2">
       <label
         htmlFor={id}
-        className="w-36 shrink-0 cursor-pointer select-none text-[12.5px] leading-6 text-white/80"
+        className="w-36 shrink-0 cursor-pointer select-none text-[12px] leading-6 text-white/80"
       >
         {label}
         {required && (

@@ -370,4 +370,5 @@ export const frDictionary: Record<string, string> = {
   'dataList.filterOpEquals': 'Égal à',
   'dataList.filterOpNotContains': 'Ne contient pas',
   'dataList.filterOpContains': 'Contient',
+  'dataList.columnResizeHint': 'Faites glisser pour redimensionner la colonne — double-cliquez pour réinitialiser',
 };

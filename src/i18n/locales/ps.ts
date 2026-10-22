@@ -339,7 +339,7 @@ export const psDictionary: Record<string, string> = {
   'dataList.selectedCount': '{count} ریکارډ غوره شوي',
   'dataList.empty': 'د نمایشولو لپاره معلومات نشته',
   'dataList.noFilterMatch': 'د فیلترونو سره سم ریکارډ نشته',
-  'dataList.filterPlaceholder': 'لید...',
+  'dataList.filterPlaceholder': 'فلټر...',
   'dataList.clearFilters': 'د فیلترونو پاکول',
   'dataList.selectAll': 'ټول غوره کړه',
   'dataList.selectRow': 'ریکارډ غوره کړه',
@@ -370,4 +370,5 @@ export const psDictionary: Record<string, string> = {
   'dataList.filterOpEquals': 'برابر دی',
   'dataList.filterOpNotContains': 'نه لري',
   'dataList.filterOpContains': 'لري',
+  'dataList.columnResizeHint': 'د ستون د عرض د بدلولو لپاره کش کړئ — د بیا تنظیم لپاره دوه ځله کلیک وکړئ',
 };

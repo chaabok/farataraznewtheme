@@ -372,4 +372,5 @@ export const zhDictionary: Record<string, string> = {
   'dataList.filterOpEquals': '等于',
   'dataList.filterOpNotContains': '不包含',
   'dataList.filterOpContains': '包含',
+  'dataList.columnResizeHint': '拖动以调整列宽 — 双击可重置',
 };

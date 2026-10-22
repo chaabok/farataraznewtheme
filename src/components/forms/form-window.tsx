@@ -857,7 +857,7 @@ function RecordsDrawer({
                 type="button"
                 onClick={() => onJump(index)}
                 className={cn(
-                  'flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-start text-[12.5px] transition-colors',
+                  'flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-start text-[12px] transition-colors',
                   isCurrent
                     ? 'bg-sky-500/15 ring-1 ring-sky-400/30'
                     : 'hover:bg-white/[0.05]',

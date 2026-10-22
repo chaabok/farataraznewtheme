@@ -1,0 +1,1351 @@
+     1→'use client';
+     2→
+     3→import {
+     4→  useCallback,
+     5→  useEffect,
+     6→  useMemo,
+     7→  useRef,
+     8→  useState,
+     9→  createElement,
+    10→  type MouseEvent,
+    11→  type ReactNode,
+    12→} from 'react';
+    13→import { AnimatePresence, motion } from 'framer-motion';
+    14→import {
+    15→  Check,
+    16→  Columns3,
+    17→  FileDown,
+    18→  FilePen,
+    19→  FilePlus2,
+    20→  FileX2,
+    21→  Filter,
+    22→  Link2,
+    23→  Loader2,
+    24→  Printer,
+    25→  RefreshCw,
+    26→  type LucideIcon,
+    27→} from 'lucide-react';
+    28→import {
+    29→  AlertDialog,
+    30→  AlertDialogAction,
+    31→  AlertDialogCancel,
+    32→  AlertDialogContent,
+    33→  AlertDialogDescription,
+    34→  AlertDialogFooter,
+    35→  AlertDialogHeader,
+    36→  AlertDialogTitle,
+    37→} from '@/components/ui/alert-dialog';
+    38→import {
+    39→  Popover,
+    40→  PopoverContent,
+    41→  PopoverTrigger,
+    42→} from '@/components/ui/popover';
+    43→import { Skeleton } from '@/components/ui/skeleton';
+    44→import { toast } from '@/hooks/use-toast';
+    45→import { useTranslation } from '@/i18n';
+    46→import { notifyRecordsChanged, RECORDS_CHANGED_EVENT } from '@/lib/app-events';
+    47→import { apiFetch, SessionExpiredError } from '@/lib/api-client';
+    48→import { useDesktopStore, type ListWindowInfo } from '@/store/desktop-store';
+    49→import type { Locale } from '@/types/desktop';
+    50→import type {
+    51→  FormDef,
+    52→  FormFieldDef,
+    53→  FormRecord,
+    54→  ListColumnFilter,
+    55→  ListFilterOp,
+    56→  LookupOption,
+    57→} from '@/types/forms';
+    58→import { cn } from '@/lib/utils';
+    59→import { FormShell } from './form-shell';
+    60→import {
+    61→  fieldLabel,
+    62→  formTitle,
+    63→  formatFieldValue,
+    64→  pickParentField,
+    65→} from './form-utils';
+    66→import { DEFAULT_FORM_ACCENT } from './form-styles';
+    67→
+    68→export interface DataListWindowProps {
+    69→  /** Tab id — `list:<formKey>` (moduleKey defaults to `settings`). */
+    70→  moduleId: string;
+    71→  /** Descriptor attached by `addListTab` in the desktop store. */
+    72→  list?: ListWindowInfo;
+    73→  /** Closes the hosting tab. */
+    74→  onClose?: () => void;
+    75→}
+    76→
+    77→/** Fallback parsing of the tab id when no descriptor is attached. */
+    78→function parseListModuleId(moduleId: string): {
+    79→  moduleKey: string | null;
+    80→  formKey: string | null;
+    81→} {
+    82→  if (!moduleId.startsWith('list:')) {
+    83→    return { moduleKey: null, formKey: null };
+    84→  }
+    85→  const formKey = moduleId.slice('list:'.length);
+    86→  return { moduleKey: formKey ? 'settings' : null, formKey: formKey || null };
+    87→}
+    88→
+    89→/** Sentinel kept in state so load errors render through the dictionaries. */
+    90→const GENERIC_LOAD_ERROR = 'dataList.loadError';
+    91→
+    92→/** Per-column filter state: operator + typed value (applied server-side). */
+    93→interface ColumnFilterState {
+    94→  op: ListFilterOp;
+    95→  value: string;
+    96→}
+    97→
+    98→/**
+    99→ * Operator menu items — order mirrors the reference screenshot:
+   100→ * تمام / دارای مقدار / بدون مقدار / شروع با / پایان با / برابر با /
+   101→ * حاوی نباشد / حاوی تایپ‌شده.
+   102→ */
+   103→const FILTER_OP_ITEMS: Array<{ op: ListFilterOp; labelKey: string }> = [
+   104→  { op: 'all', labelKey: 'dataList.filterOpAll' },
+   105→  { op: 'hasValue', labelKey: 'dataList.filterOpHasValue' },
+   106→  { op: 'noValue', labelKey: 'dataList.filterOpNoValue' },
+   107→  { op: 'startsWith', labelKey: 'dataList.filterOpStartsWith' },
+   108→  { op: 'endsWith', labelKey: 'dataList.filterOpEndsWith' },
+   109→  { op: 'equals', labelKey: 'dataList.filterOpEquals' },
+   110→  { op: 'notContains', labelKey: 'dataList.filterOpNotContains' },
+   111→  { op: 'contains', labelKey: 'dataList.filterOpContains' },
+   112→];
+   113→
+   114→/** True when a column contributes an effective server-side filter. */
+   115→function isColumnFilterActive(filter?: ColumnFilterState): boolean {
+   116→  return (
+   117→    !!filter &&
+   118→    (filter.op === 'hasValue' ||
+   119→      filter.op === 'noValue' ||
+   120→      filter.value.trim() !== '')
+   121→  );
+   122→}
+   123→
+   124→/** Lightweight table checkbox (button-based, no Radix overhead per row). */
+   125→function RowCheckbox({
+   126→  checked,
+   127→  onChange,
+   128→  label,
+   129→}: {
+   130→  checked: boolean;
+   131→  onChange: () => void;
+   132→  label: string;
+   133→}) {
+   134→  return (
+   135→    <button
+   136→      type="button"
+   137→      role="checkbox"
+   138→      aria-checked={checked}
+   139→      aria-label={label}
+   140→      title={label}
+   141→      onClick={(event) => {
+   142→        event.stopPropagation();
+   143→        onChange();
+   144→      }}
+   145→      onKeyDown={(event) => event.stopPropagation()}
+   146→      onDoubleClick={(event) => event.stopPropagation()}
+   147→      className={cn(
+   148→        'mx-auto flex h-4 w-4 items-center justify-center rounded border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/60',
+   149→        checked
+   150→          ? 'border-sky-300/70 bg-sky-500/80 text-white shadow-[0_0_8px_-2px_rgba(56,189,248,0.8)]'
+   151→          : 'border-white/25 bg-white/[0.04] hover:border-white/50',
+   152→      )}
+   153→    >
+   154→      {checked && <Check className="h-3 w-3" strokeWidth={3.2} />}
+   155→    </button>
+   156→  );
+   157→}
+   158→
+   159→/**
+   160→ * Generic, database-driven records list («فهرست …»): every form saved
+   161→ * through the unified form system automatically gets one of these windows
+   162→ * with a filterable grid, multi-select, column chooser and the ERP-style
+   163→ * footer icon strip (new / edit / delete / view / export / print /
+   164→ * refresh / columns / filter).
+   165→ */
+   166→export function DataListWindow({ moduleId, list, onClose }: DataListWindowProps) {
+   167→  const { locale, t, tf, formatNumber } = useTranslation();
+   168→  const addFormTab = useDesktopStore((s) => s.addFormTab);
+   169→
+   170→  const fallback = useMemo(() => parseListModuleId(moduleId), [moduleId]);
+   171→  const moduleKey = list?.moduleKey ?? fallback.moduleKey;
+   172→  const formKey = list?.formKey ?? fallback.formKey;
+   173→  const basePath =
+   174→    moduleKey && formKey ? `/api/modules/${moduleKey}/forms/${formKey}` : null;
+   175→  const lookupUrlBase = basePath ? `${basePath}/lookups` : '';
+   176→
+   177→  // ── Data ──
+   178→  const [def, setDef] = useState<FormDef | null>(null);
+   179→  /** Full dataset of the form (parent-title context + total count). */
+   180→  const [allRecords, setAllRecords] = useState<FormRecord[]>([]);
+   181→  /** Rows currently displayed — the server-filtered slice. */
+   182→  const [records, setRecords] = useState<FormRecord[]>([]);
+   183→  const [isLoading, setIsLoading] = useState(true);
+   184→  const [isRefreshing, setIsRefreshing] = useState(false);
+   185→  /** True while a debounced server-side filter query is in flight. */
+   186→  const [isFiltering, setIsFiltering] = useState(false);
+   187→  const [loadError, setLoadError] = useState<string | null>(null);
+   188→  /** lookupKey → (option code → label). */
+   189→  const [lookupLabels, setLookupLabels] = useState<
+   190→    Record<string, Map<string, string>>
+   191→  >({});
+   192→
+   193→  // ── View state ──
+   194→  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+   195→  const [filters, setFilters] = useState<Record<string, ColumnFilterState>>({});
+   196→  const [isFilterRowVisible, setIsFilterRowVisible] = useState(true);
+   197→  /** Open operator menu, anchored to the funnel button of one column. */
+   198→  const [filterMenu, setFilterMenu] = useState<{
+   199→    fieldKey: string;
+   200→    rect: DOMRect;
+   201→    left: number;
+   202→    openUp: boolean;
+   203→  } | null>(null);
+   204→  const [hiddenColumns, setHiddenColumns] = useState<Set<string>>(new Set());
+   205→  const [isColumnsOpen, setIsColumnsOpen] = useState(false);
+   206→  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+   207→  const [isDeleting, setIsDeleting] = useState(false);
+   208→
+   209→  /** Latest values for callbacks that must not re-create on every change. */
+   210→  const activeFiltersRef = useRef<ListColumnFilter[]>([]);
+   211→  const allRecordsRef = useRef<FormRecord[]>([]);
+   212→  const filterSeqRef = useRef(0);
+   213→  const filterMenuRef = useRef<HTMLDivElement | null>(null);
+   214→  const filterInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+   215→
+   216→  // ── Loading ──
+   217→  /** Records URL with the JSON `?filters=` payload (server-side filtering). */
+   218→  const fetchRecordsPage = useCallback(
+   219→    async (columns: ListColumnFilter[]): Promise<FormRecord[]> => {
+   220→      if (!basePath) return [];
+   221→      const params = new URLSearchParams({ locale });
+   222→      if (columns.length) {
+   223→        params.set('filters', JSON.stringify(columns));
+   224→      }
+   225→      const res = await apiFetch<{ data: FormRecord[] }>(
+   226→        `${basePath}/records?${params.toString()}`,
+   227→      );
+   228→      return res.data ?? [];
+   229→    },
+   230→    [basePath, locale],
+   231→  );
+   232→  const loadLookups = useCallback(
+   233→    async (formDef: FormDef) => {
+   234→      const keys = Array.from(
+   235→        new Set(
+   236→          formDef.fields
+   237→            .filter((field) => field.fieldType === 'lookup' && field.lookupKey)
+   238→            .map((field) => field.lookupKey as string),
+   239→        ),
+   240→      );
+   241→      if (!keys.length || !lookupUrlBase) return;
+   242→      const results = await Promise.all(
+   243→        keys.map((key) =>
+   244→          apiFetch<{ data: LookupOption[] }>(
+   245→            `${lookupUrlBase}/${encodeURIComponent(key)}?locale=${encodeURIComponent(locale)}`,
+   246→          )
+   247→            .then((payload): [string, Map<string, string>] => [
+   248→              key,
+   249→              new Map(
+   250→                (payload.data ?? []).map((option) => [
+   251→                  option.code,
+   252→                  locale === 'fa' ? option.label : (option.labelEn ?? option.label),
+   253→                ]),
+   254→              ),
+   255→            ])
+   256→            .catch((): [string, Map<string, string>] => [key, new Map()]),
+   257→        ),
+   258→      );
+   259→      setLookupLabels(Object.fromEntries(results));
+   260→    },
+   261→    [locale, lookupUrlBase],
+   262→  );
+   263→
+   264→  const load = useCallback(async () => {
+   265→    if (!basePath) {
+   266→      setLoadError(GENERIC_LOAD_ERROR);
+   267→      setIsLoading(false);
+   268→      return;
+   269→    }
+   270→    setIsLoading(true);
+   271→    setLoadError(null);
+   272→    try {
+   273→      const defRes = await apiFetch<{ data: FormDef }>(
+   274→        `${basePath}?locale=${encodeURIComponent(locale)}`,
+   275→      );
+   276→      const nextDef = defRes.data;
+   277→      setDef(nextDef);
+   278→      setSelectedIds(new Set());
+   279→
+   280→      const all = await fetchRecordsPage([]);
+   281→      setAllRecords(all);
+   282→      setRecords(all);
+   283→      void loadLookups(nextDef);
+   284→    } catch (error) {
+   285→      if (error instanceof SessionExpiredError) return;
+   286→      setLoadError(
+   287→        error instanceof Error && error.message
+   288→          ? error.message
+   289→          : GENERIC_LOAD_ERROR,
+   290→      );
+   291→    } finally {
+   292→      setIsLoading(false);
+   293→    }
+   294→  }, [basePath, fetchRecordsPage, loadLookups, locale]);
+   295→
+   296→  useEffect(() => {
+   297→    void load();
+   298→  }, [load]);
+   299→
+   300→  const refreshRecords = useCallback(async () => {
+   301→    if (!basePath) return;
+   302→    setIsRefreshing(true);
+   303→    try {
+   304→      const next = await fetchRecordsPage([]);
+   305→      setAllRecords(next);
+   306→      const columns = activeFiltersRef.current;
+   307→      // Keep the visible slice consistent with the active column filters.
+   308→      const visible = columns.length
+   309→        ? await fetchRecordsPage(columns)
+   310→        : next;
+   311→      setRecords(visible);
+   312→      setSelectedIds((prev) => {
+   313→        const nextIds = new Set(
+   314→          [...prev].filter((id) => visible.some((record) => record.id === id)),
+   315→        );
+   316→        return nextIds.size === prev.size ? prev : nextIds;
+   317→      });
+   318→    } catch (error) {
+   319→      if (error instanceof SessionExpiredError) return;
+   320→      toast({
+   321→        title: t('dataList.loadError'),
+   322→        description: error instanceof Error ? error.message : undefined,
+   323→        variant: 'destructive',
+   324→      });
+   325→    } finally {
+   326→      setIsRefreshing(false);
+   327→    }
+   328→  }, [basePath, fetchRecordsPage, t]);
+   329→
+   330→  // Auto-refresh when a form window of the same form mutates records.
+   331→  useEffect(() => {
+   332→    if (!moduleKey || !formKey) return;
+   333→    const handler = (event: Event) => {
+   334→      const detail = (
+   335→        event as CustomEvent<{ moduleKey?: string; formKey?: string }>
+   336→      ).detail;
+   337→      if (detail?.moduleKey === moduleKey && detail?.formKey === formKey) {
+   338→        void refreshRecords();
+   339→      }
+   340→    };
+   341→    window.addEventListener(RECORDS_CHANGED_EVENT, handler);
+   342→    return () => window.removeEventListener(RECORDS_CHANGED_EVENT, handler);
+   343→  }, [formKey, moduleKey, refreshRecords]);
+   344→
+   345→  // ── Derived view models ──
+   346→  const sortedFields = useMemo(
+   347→    () => (def ? [...def.fields].sort((a, b) => a.sortOrder - b.sortOrder) : []),
+   348→    [def],
+   349→  );
+   350→  const parentField = useMemo(
+   351→    () => (def?.type === 'tree' ? pickParentField(sortedFields) : null),
+   352→    [def, sortedFields],
+   353→  );
+   354→  const visibleFields = useMemo(
+   355→    () => sortedFields.filter((field) => !hiddenColumns.has(field.fieldKey)),
+   356→    [hiddenColumns, sortedFields],
+   357→  );
+   358→
+   359→  /** recordId → display title of that record (tree parent columns). */
+   360→  const parentTitles = useMemo(() => {
+   361→    const map = new Map<string, string>();
+   362→    if (!parentField) return map;
+   363→    const titleField =
+   364→      sortedFields.find(
+   365→        (field) =>
+   366→          field !== parentField && /title|name|desc/i.test(field.fieldKey),
+   367→      ) ??
+   368→      sortedFields.find((field) => field !== parentField) ??
+   369→      null;
+   370→    for (const record of allRecords) {
+   371→      const raw = titleField ? record.data[titleField.fieldKey] : null;
+   372→      map.set(
+   373→        record.id,
+   374→        raw === null || raw === undefined || raw === ''
+   375→          ? record.id
+   376→          : String(raw),
+   377→      );
+   378→    }
+   379→    return map;
+   380→  }, [parentField, allRecords, sortedFields]);
+   381→
+   382→  /** Display text of one cell (checkbox → بلی/خیر, lookup → label, …). */
+   383→  const cellText = useCallback(
+   384→    (field: FormFieldDef, record: FormRecord): string => {
+   385→      const raw = record.data[field.fieldKey];
+   386→      if (field.fieldType === 'checkbox') {
+   387→        return raw === true ? t('dataList.yes') : t('dataList.no');
+   388→      }
+   389→      // Tree parent columns resolve the parent record's title (the
+   390→      // stored value is the parent record id — must run before lookup).
+   391→      if (parentField && field.fieldKey === parentField.fieldKey) {
+   392→        if (raw === null || raw === undefined || raw === '') return '—';
+   393→        return parentTitles.get(String(raw)) ?? String(raw);
+   394→      }
+   395→      if (field.fieldType === 'lookup') {
+   396→        if (raw === null || raw === undefined || raw === '') return '—';
+   397→        const labels = field.lookupKey
+   398→          ? lookupLabels[field.lookupKey]
+   399→          : undefined;
+   400→        return labels?.get(String(raw)) ?? String(raw);
+   401→      }
+   402→      return formatFieldValue(field, raw, formatNumber);
+   403→    },
+   404→    [formatNumber, lookupLabels, parentField, parentTitles, t],
+   405→  );
+   406→
+   407→  /**
+   408→   * Effective column filters sent to the service as `?filters=` JSON —
+   409→   * the grid itself no longer filters client-side.
+   410→   */
+   411→  const activeFilters = useMemo<ListColumnFilter[]>(
+   412→    () =>
+   413→      Object.entries(filters)
+   414→        .filter(([, filter]) => isColumnFilterActive(filter))
+   415→        .map(([field, filter]) => ({
+   416→          field,
+   417→          op: filter.op,
+   418→          value: filter.value,
+   419→        })),
+   420→    [filters],
+   421→  );
+   422→
+   423→  useEffect(() => {
+   424→    activeFiltersRef.current = activeFilters;
+   425→    allRecordsRef.current = allRecords;
+   426→  }, [activeFilters, allRecords]);
+   427→
+   428→  // Server-side filtering: debounce typed values, then re-query the service.
+   429→  useEffect(() => {
+   430→    const handle = window.setTimeout(() => {
+   431→      if (!activeFilters.length) {
+   432→        setRecords(allRecordsRef.current);
+   433→        setIsFiltering(false);
+   434→        return;
+   435→      }
+   436→      const seq = ++filterSeqRef.current;
+   437→      setIsFiltering(true);
+   438→      fetchRecordsPage(activeFilters)
+   439→        .then((next) => {
+   440→          if (filterSeqRef.current !== seq) return;
+   441→          setRecords(next);
+   442→        })
+   443→        .catch((error) => {
+   444→          if (filterSeqRef.current !== seq) return;
+   445→          if (error instanceof SessionExpiredError) return;
+   446→          toast({
+   447→            title: t('dataList.loadError'),
+   448→            description: error instanceof Error ? error.message : undefined,
+   449→            variant: 'destructive',
+   450→          });
+   451→        })
+   452→        .finally(() => {
+   453→          if (filterSeqRef.current === seq) setIsFiltering(false);
+   454→        });
+   455→    }, 250);
+   456→    return () => window.clearTimeout(handle);
+   457→  }, [activeFilters, fetchRecordsPage, t]);
+   458→
+   459→  /** The displayed rows — already filtered by the service. */
+   460→  const filteredRecords = records;
+   461→
+   462→  // ── Column filter operator menu ──
+   463→  const toggleFilterMenu = useCallback(
+   464→    (fieldKey: string, button: HTMLButtonElement) => {
+   465→      setFilterMenu((prev) => {
+   466→        if (prev?.fieldKey === fieldKey) return null;
+   467→        const rect = button.getBoundingClientRect();
+   468→        const menuWidth = 184;
+   469→        const menuHeight = 290;
+   470→        return {
+   471→          fieldKey,
+   472→          rect,
+   473→          left: Math.max(
+   474→            8,
+   475→            Math.min(rect.left, window.innerWidth - menuWidth - 8),
+   476→          ),
+   477→          openUp:
+   478→            rect.bottom + menuHeight > window.innerHeight - 8 &&
+   479→            rect.top - menuHeight > 8,
+   480→        };
+   481→      });
+   482→    },
+   483→    [],
+   484→  );
+   485→
+   486→  const setFilterValue = useCallback((fieldKey: string, value: string) => {
+   487→    setFilters((prev) => {
+   488→      const current =
+   489→        prev[fieldKey] ?? { op: 'contains' as ListFilterOp, value: '' };
+   490→      return { ...prev, [fieldKey]: { ...current, value } };
+   491→    });
+   492→  }, []);
+   493→
+   494→  const applyFilterOp = useCallback((fieldKey: string, op: ListFilterOp) => {
+   495→    setFilterMenu(null);
+   496→    setFilters((prev) => {
+   497→      const next = { ...prev };
+   498→      if (op === 'all') {
+   499→        delete next[fieldKey];
+   500→        return next;
+   501→      }
+   502→      const current = prev[fieldKey];
+   503→      next[fieldKey] = {
+   504→        op,
+   505→        value:
+   506→          op === 'hasValue' || op === 'noValue' ? '' : (current?.value ?? ''),
+   507→      };
+   508→      return next;
+   509→    });
+   510→    if (op !== 'hasValue' && op !== 'noValue' && op !== 'all') {
+   511→      requestAnimationFrame(() => filterInputRefs.current[fieldKey]?.focus());
+   512→    }
+   513→  }, []);
+   514→
+   515→  // Dismiss the operator menu on outside click / Escape / scroll / resize.
+   516→  useEffect(() => {
+   517→    if (!filterMenu) return;
+   518→    const close = () => setFilterMenu(null);
+   519→    const onPointerDown = (event: PointerEvent) => {
+   520→      const target = event.target;
+   521→      if (!(target instanceof Node)) return;
+   522→      if (filterMenuRef.current?.contains(target)) return;
+   523→      if (
+   524→        target instanceof Element &&
+   525→        target.closest('[data-filter-op-button]')
+   526→      ) {
+   527→        return;
+   528→      }
+   529→      close();
+   530→    };
+   531→    const onKeyDown = (event: KeyboardEvent) => {
+   532→      if (event.key === 'Escape') close();
+   533→    };
+   534→    window.addEventListener('pointerdown', onPointerDown);
+   535→    window.addEventListener('keydown', onKeyDown);
+   536→    window.addEventListener('resize', close);
+   537→    window.addEventListener('scroll', close, true);
+   538→    return () => {
+   539→      window.removeEventListener('pointerdown', onPointerDown);
+   540→      window.removeEventListener('keydown', onKeyDown);
+   541→      window.removeEventListener('resize', close);
+   542→      window.removeEventListener('scroll', close, true);
+   543→    };
+   544→  }, [filterMenu]);
+   545→
+   546→  // ── Selection ──
+   547→  const toggleSelected = useCallback((recordId: string, additive: boolean) => {
+   548→    setSelectedIds((prev) => {
+   549→      if (!additive) return prev.has(recordId) ? new Set([recordId]) : new Set([recordId]);
+   550→      const next = new Set(prev);
+   551→      if (next.has(recordId)) next.delete(recordId);
+   552→      else next.add(recordId);
+   553→      return next;
+   554→    });
+   555→  }, []);
+   556→
+   557→  const handleRowClick = useCallback(
+   558→    (record: FormRecord, event: MouseEvent<HTMLTableRowElement>) => {
+   559→      if (event.ctrlKey || event.metaKey) {
+   560→        toggleSelected(record.id, true);
+   561→      } else {
+   562→        setSelectedIds((prev) =>
+   563→          prev.size === 1 && prev.has(record.id) ? prev : new Set([record.id]),
+   564→        );
+   565→      }
+   566→    },
+   567→    [toggleSelected],
+   568→  );
+   569→
+   570→  const allVisibleSelected =
+   571→    filteredRecords.length > 0 &&
+   572→    filteredRecords.every((record) => selectedIds.has(record.id));
+   573→
+   574→  const toggleSelectAll = useCallback(() => {
+   575→    setSelectedIds((prev) => {
+   576→      if (filteredRecords.length && filteredRecords.every((record) => prev.has(record.id))) {
+   577→        return new Set();
+   578→      }
+   579→      return new Set(filteredRecords.map((record) => record.id));
+   580→    });
+   581→  }, [filteredRecords]);
+   582→
+   583→  // ── Form integration ──
+   584→  const openForm = useCallback(
+   585→    (options?: { recordId?: string; startInNew?: boolean; nonce?: number }) => {
+   586→      if (!moduleKey || !formKey) return;
+   587→      addFormTab({
+   588→        moduleKey,
+   589→        formKey,
+   590→        name: def ? formTitle(def, locale) : (list?.name ?? formKey),
+   591→        iconKey: def?.iconKey ?? list?.iconKey ?? 'fileText',
+   592→        nonce: Date.now(),
+   593→        ...options,
+   594→      });
+   595→    },
+   596→    [addFormTab, def, formKey, list, locale, moduleKey],
+   597→  );
+   598→
+   599→  const singleSelectedId =
+   600→    selectedIds.size === 1 ? [...selectedIds][0] ?? null : null;
+   601→
+   602→  // ── Delete ──
+   603→  const requestDelete = useCallback(() => {
+   604→    if (!selectedIds.size || isDeleting || isRefreshing) return;
+   605→    setIsDeleteConfirmOpen(true);
+   606→  }, [isDeleting, isRefreshing, selectedIds.size]);
+   607→
+   608→  const confirmDelete = useCallback(async () => {
+   609→    if (!basePath || !selectedIds.size || isDeleting) {
+   610→      setIsDeleteConfirmOpen(false);
+   611→      return;
+   612→    }
+   613→    setIsDeleting(true);
+   614→    try {
+   615→      for (const id of selectedIds) {
+   616→        // DELETE answers 204 with an empty body — nothing to parse.
+   617→        await apiFetch(`${basePath}/records/${encodeURIComponent(id)}`, {
+   618→          method: 'DELETE',
+   619→        });
+   620→      }
+   621→      setIsDeleteConfirmOpen(false);
+   622→      const count = selectedIds.size;
+   623→      setSelectedIds(new Set());
+   624→      // The list listens to its own event too — one refresh for every
+   625→      // open list/form of this formKey (dispatchEvent is synchronous).
+   626→      notifyRecordsChanged({ moduleKey: moduleKey ?? '', formKey: formKey ?? '' });
+   627→      toast({
+   628→        title: tf('dataList.deleteSuccess', { count: formatNumber(count) }),
+   629→      });
+   630→    } catch (error) {
+   631→      setIsDeleteConfirmOpen(false);
+   632→      if (error instanceof SessionExpiredError) return;
+   633→      toast({
+   634→        title:
+   635→          error instanceof Error && error.message
+   636→            ? error.message
+   637→            : t('dataList.deleteError'),
+   638→        variant: 'destructive',
+   639→      });
+   640→    } finally {
+   641→      setIsDeleting(false);
+   642→    }
+   643→  }, [
+   644→    basePath,
+   645→    formatNumber,
+   646→    formKey,
+   647→    isDeleting,
+   648→    moduleKey,
+   649→    selectedIds,
+   650→    t,
+   651→    tf,
+   652→  ]);
+   653→
+   654→  // ── Export / print ──
+   655→  const handleExport = useCallback(() => {
+   656→    if (!visibleFields.length || !filteredRecords.length) {
+   657→      toast({ title: t('dataList.exportEmpty') });
+   658→      return;
+   659→    }
+   660→    const escapeCell = (value: string) => `"${value.replace(/"/g, '""')}"`;
+   661→    const header = visibleFields.map((field) =>
+   662→      escapeCell(fieldLabel(field, locale)),
+   663→    );
+   664→    const rows = filteredRecords.map((record) =>
+   665→      visibleFields.map((field) => escapeCell(cellText(field, record))),
+   666→    );
+   667→    const csv =
+   668→      '\uFEFF' + [header, ...rows].map((row) => row.join(',')).join('\r\n');
+   669→    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+   670→    const url = URL.createObjectURL(blob);
+   671→    const anchor = document.createElement('a');
+   672→    anchor.href = url;
+   673→    anchor.download = `${formKey ?? 'list'}-${new Date()
+   674→      .toISOString()
+   675→      .slice(0, 10)}.csv`;
+   676→    anchor.click();
+   677→    URL.revokeObjectURL(url);
+   678→    toast({ title: t('dataList.exportSuccess') });
+   679→  }, [cellText, records, formKey, locale, t, visibleFields]);
+   680→
+   681→  const handlePrint = useCallback(() => {
+   682→    toast({ title: t('formWindow.printToast') });
+   683→  }, [t]);
+   684→
+   685→  const toggleColumn = useCallback((fieldKey: string) => {
+   686→    setHiddenColumns((prev) => {
+   687→      const next = new Set(prev);
+   688→      if (next.has(fieldKey)) next.delete(fieldKey);
+   689→      else next.add(fieldKey);
+   690→      return next;
+   691→    });
+   692→  }, []);
+   693→
+   694→  // ── Chrome texts ──
+   695→  const listName = def
+   696→    ? formTitle(def, locale)
+   697→    : (list?.name ?? formKey ?? t('common.loading'));
+   698→  const title = tf('dataList.title', {
+   699→    name: listName,
+   700→    count: formatNumber(filteredRecords.length),
+   701→  });
+   702→  const subtitle = selectedIds.size
+   703→    ? tf('dataList.selectedCount', { count: formatNumber(selectedIds.size) })
+   704→    : tf('dataList.recordCount', { count: formatNumber(allRecords.length) });
+   705→
+   706→  const accentColor = def?.accentColor || DEFAULT_FORM_ACCENT;
+   707→  const hasActiveFilters = activeFilters.length > 0;
+   708→
+   709→  const errorText =
+   710→    loadError === GENERIC_LOAD_ERROR ? t('dataList.loadError') : loadError;
+   711→
+   712→  /** The grid (or its loading / error / empty states). */
+   713→  let content: ReactNode;
+   714→  if (!def) {
+   715→    content = (
+   716→      <div className="space-y-2 p-3">
+   717→        {Array.from({ length: 6 }).map((_, index) => (
+   718→          <Skeleton
+   719→            key={`list-skeleton-${index}`}
+   720→            className="h-8 w-full rounded-md bg-white/[0.05]"
+   721→          />
+   722→        ))}
+   723→      </div>
+   724→    );
+   725→  } else {
+   726→    content = (
+   727→      <div className="relative h-full min-h-0">
+   728→        <div
+   729→          className={cn(
+   730→            'h-full overflow-auto transition-opacity duration-200 [scrollbar-width:thin]',
+   731→            isFiltering && 'opacity-50',
+   732→          )}
+   733→        >
+   734→          <table className="w-full min-w-max border-separate border-spacing-0 text-[12px]">
+   735→            <thead>
+   736→              <tr>
+   737→                <th className="sticky top-0 z-30 h-9 w-10 border-b border-white/10 bg-[#1a1d26] px-2">
+   738→                  <RowCheckbox
+   739→                    checked={allVisibleSelected}
+   740→                    onChange={toggleSelectAll}
+   741→                    label={t('dataList.selectAll')}
+   742→                  />
+   743→                </th>
+   744→                {visibleFields.map((field) => (
+   745→                  <th
+   746→                    key={field.fieldKey}
+   747→                    scope="col"
+   748→                    className="sticky top-0 z-30 h-9 min-w-[130px] max-w-[260px] border-b border-white/10 bg-[#1a1d26] px-3 text-center align-middle text-[11.5px] font-bold leading-tight text-white/85"
+   749→                  >
+   750→                    <span className="line-clamp-1" title={fieldLabel(field, locale)}>
+   751→                      {fieldLabel(field, locale)}
+   752→                    </span>
+   753→                  </th>
+   754→                ))}
+   755→              </tr>
+   756→              {isFilterRowVisible && (
+   757→                <tr>
+   758→                  <th className="sticky top-9 z-20 h-8 border-b border-white/10 bg-[#171a22] px-2 align-middle">
+   759→                    <button
+   760→                      type="button"
+   761→                      title={t('dataList.clearFilters')}
+   762→                      aria-label={t('dataList.clearFilters')}
+   763→                      disabled={!hasActiveFilters}
+   764→                      onClick={() => setFilters({})}
+   765→                      className="mx-auto flex h-6 w-6 items-center justify-center rounded-md text-white/45 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40 disabled:pointer-events-none disabled:opacity-30"
+   766→                    >
+   767→                      <Filter className="h-3.5 w-3.5" />
+   768→                    </button>
+   769→                  </th>
+   770→                  {visibleFields.map((field) => {
+   771→                    const columnFilter = filters[field.fieldKey];
+   772→                    const isActive = isColumnFilterActive(columnFilter);
+   773→                    const valueDisabled =
+   774→                      !columnFilter ||
+   775→                      columnFilter.op === 'hasValue' ||
+   776→                      columnFilter.op === 'noValue';
+   777→                    return (
+   778→                      <th
+   779→                        key={`filter-${field.fieldKey}`}
+   780→                        className="sticky top-9 z-20 h-8 border-b border-white/10 bg-[#171a22] px-1.5 align-middle"
+   781→                      >
+   782→                        <div
+   783→                          className={cn(
+   784→                            'flex items-center gap-1 rounded-md border bg-white/[0.04] px-1.5 transition-colors',
+   785→                            isActive
+   786→                              ? 'border-sky-400/50'
+   787→                              : 'border-white/10 focus-within:border-sky-400/50',
+   788→                          )}
+   789→                        >
+   790→                          <button
+   791→                            type="button"
+   792→                            data-filter-op-button="true"
+   793→                            title={t('dataList.filterMenuAria')}
+   794→                            aria-label={t('dataList.filterMenuAria')}
+   795→                            aria-haspopup="menu"
+   796→                            aria-expanded={
+   797→                              filterMenu?.fieldKey === field.fieldKey
+   798→                            }
+   799→                            onClick={(event) =>
+   800→                              toggleFilterMenu(
+   801→                                field.fieldKey,
+   802→                                event.currentTarget,
+   803→                              )
+   804→                            }
+   805→                            className={cn(
+   806→                              'flex h-5 w-5 shrink-0 items-center justify-center rounded transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-sky-400/60',
+   807→                              isActive
+   808→                                ? 'bg-sky-500/25 text-sky-300'
+   809→                                : 'text-white/30 hover:bg-white/10 hover:text-white/80',
+   810→                            )}
+   811→                          >
+   812→                            <Filter className="h-3 w-3" />
+   813→                          </button>
+   814→                          <input
+   815→                            ref={(element) => {
+   816→                              filterInputRefs.current[field.fieldKey] = element;
+   817→                            }}
+   818→                            type="text"
+   819→                            value={columnFilter?.value ?? ''}
+   820→                            onChange={(event) =>
+   821→                              setFilterValue(field.fieldKey, event.target.value)
+   822→                            }
+   823→                            disabled={valueDisabled}
+   824→                            placeholder={t('dataList.filterPlaceholder')}
+   825→                            aria-label={fieldLabel(field, locale)}
+   826→                            className="h-6 w-full min-w-0 bg-transparent text-[11px] text-white placeholder:text-white/25 focus:outline-none disabled:cursor-default disabled:opacity-40"
+   827→                          />
+   828→                        </div>
+   829→                      </th>
+   830→                    );
+   831→                  })}
+   832→                </tr>
+   833→              )}
+   834→            </thead>
+   835→            <tbody>
+   836→              {isLoading
+   837→                ? Array.from({ length: 7 }).map((_, rowIndex) => (
+   838→                    <tr key={`list-row-skeleton-${rowIndex}`}>
+   839→                      <td className="h-8 border-b border-white/[0.05] px-2">
+   840→                        <Skeleton className="mx-auto h-3.5 w-3.5 rounded-sm bg-white/[0.07]" />
+   841→                      </td>
+   842→                      {visibleFields.map((field) => (
+   843→                        <td
+   844→                          key={field.fieldKey}
+   845→                          className="h-8 border-b border-white/[0.05] px-3"
+   846→                        >
+   847→                          <Skeleton className="mx-auto h-3.5 w-3/4 rounded-sm bg-white/[0.06]" />
+   848→                        </td>
+   849→                      ))}
+   850→                    </tr>
+   851→                  ))
+   852→                : filteredRecords.map((record) => {
+   853→                    const isSelected = selectedIds.has(record.id);
+   854→                    return (
+   855→                      <tr
+   856→                        key={record.id}
+   857→                        onClick={(event) => handleRowClick(record, event)}
+   858→                        onDoubleClick={() =>
+   859→                          openForm({ recordId: record.id, nonce: Date.now() })
+   860→                        }
+   861→                        aria-selected={isSelected}
+   862→                        className={cn(
+   863→                          'cursor-default transition-colors',
+   864→                          isSelected
+   865→                            ? 'bg-sky-500/[0.14]'
+   866→                            : 'hover:bg-white/[0.035]',
+   867→                        )}
+   868→                      >
+   869→                        <td className="h-8 border-b border-white/[0.05] px-2 text-center">
+   870→                          <RowCheckbox
+   871→                            checked={isSelected}
+   872→                            onChange={() => toggleSelected(record.id, true)}
+   873→                            label={t('dataList.selectRow')}
+   874→                          />
+   875→                        </td>
+   876→                        {visibleFields.map((field) => (
+   877→                          <td
+   878→                            key={field.fieldKey}
+   879→                            title={cellText(field, record)}
+   880→                            className="h-8 max-w-[260px] truncate border-b border-white/[0.05] px-3 text-center tabular-nums text-white/80"
+   881→                          >
+   882→                            {cellText(field, record)}
+   883→                          </td>
+   884→                        ))}
+   885→                      </tr>
+   886→                    );
+   887→                  })}
+   888→            </tbody>
+   889→          </table>
+   890→        </div>
+   891→
+   892→        {/* Empty / filter-empty states (overlay keeps the header grid visible) */}
+   893→        {!isLoading && (
+   894→          <div
+   895→            className="pointer-events-none absolute inset-0 flex items-center justify-center p-6"
+   896→            aria-live="polite"
+   897→          >
+   898→            {allRecords.length === 0 ? (
+   899→              <p className="text-[13px] text-white/45">
+   900→                {t('dataList.empty')}
+   901→              </p>
+   902→            ) : filteredRecords.length === 0 ? (
+   903→              <p className="text-[13px] text-white/45">
+   904→                {t('dataList.noFilterMatch')}
+   905→              </p>
+   906→            ) : null}
+   907→          </div>
+   908→        )}
+   909→      </div>
+   910→    );
+   911→  }
+   912→
+   913→  return (
+   914→    <>
+   915→      <FormShell
+   916→        title={title}
+   917→        subtitle={subtitle}
+   918→        iconKey={def?.iconKey ?? list?.iconKey ?? 'fileText'}
+   919→        accentColor={accentColor}
+   920→        footer={
+   921→          <DataListFooter
+   922→            isBusy={isLoading || isRefreshing || isDeleting || isFiltering}
+   923→            isRefreshing={isRefreshing}
+   924→            hasSelection={selectedIds.size > 0}
+   925→            hasSingleSelection={singleSelectedId !== null}
+   926→            isFilterRowVisible={isFilterRowVisible}
+   927→            isColumnsOpen={isColumnsOpen}
+   928→            hiddenColumnsCount={hiddenColumns.size}
+   929→            onRefresh={() => void refreshRecords()}
+   930→            onPrint={handlePrint}
+   931→            onExport={handleExport}
+   932→            onView={() => {
+   933→              if (singleSelectedId) {
+   934→                openForm({ recordId: singleSelectedId, nonce: Date.now() });
+   935→              }
+   936→            }}
+   937→            onEdit={() => {
+   938→              if (singleSelectedId) {
+   939→                openForm({ recordId: singleSelectedId, nonce: Date.now() });
+   940→              }
+   941→            }}
+   942→            onDelete={requestDelete}
+   943→            onNew={() => openForm({ startInNew: true })}
+   944→            onToggleFilter={() => setIsFilterRowVisible((visible) => !visible)}
+   945→            onToggleColumn={toggleColumn}
+   946→            onShowAllColumns={() => setHiddenColumns(new Set())}
+   947→            onColumnsOpenChange={setIsColumnsOpen}
+   948→            sortedFields={sortedFields}
+   949→            hiddenColumns={hiddenColumns}
+   950→            fieldLocale={locale}
+   951→          />
+   952→        }
+   953→      >
+   954→        {errorText && !def ? (
+   955→          <div className="flex min-h-[220px] flex-col items-center justify-center gap-3 p-6 text-center">
+   956→            <p className="max-w-sm text-sm text-red-200/90">{errorText}</p>
+   957→            <button
+   958→              type="button"
+   959→              onClick={() => void load()}
+   960→              className="flex items-center gap-2 rounded-lg bg-white/[0.07] px-4 py-2 text-[13px] text-white/80 transition-colors hover:bg-white/[0.12] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40"
+   961→            >
+   962→              <RefreshCw className="h-3.5 w-3.5" />
+   963→              {t('common.retry')}
+   964→            </button>
+   965→          </div>
+   966→        ) : (
+   967→          <>
+   968→            {errorText && def && (
+   969→              <div className="mx-3 mt-3 rounded-lg border border-red-400/30 bg-red-950/40 px-3 py-2 text-xs text-red-200/90">
+   970→                {errorText}
+   971→              </div>
+   972→            )}
+   973→            {content}
+   974→          </>
+   975→        )}
+   976→      </FormShell>
+   977→
+   978→      {/* Column filter operator menu — the funnel-click popup. */}
+   979→      <AnimatePresence>
+   980→        {filterMenu && (
+   981→          <motion.div
+   982→            ref={filterMenuRef}
+   983→            role="menu"
+   984→            aria-label={t('dataList.filterMenuAria')}
+   985→            initial={{ opacity: 0, y: -4, scale: 0.97 }}
+   986→            animate={{ opacity: 1, y: 0, scale: 1 }}
+   987→            exit={{ opacity: 0, y: -4, scale: 0.97 }}
+   988→            transition={{ duration: 0.13, ease: 'easeOut' }}
+   989→            className="fixed z-[80] min-w-[176px] overflow-hidden rounded-xl border border-white/10 bg-[#1b1e26]/[0.97] p-1 shadow-2xl shadow-black/50 backdrop-blur-xl"
+   990→            style={
+   991→              filterMenu.openUp
+   992→                ? {
+   993→                    bottom: window.innerHeight - filterMenu.rect.top + 4,
+   994→                    left: filterMenu.left,
+   995→                  }
+   996→                : {
+   997→                    top: filterMenu.rect.bottom + 4,
+   998→                    left: filterMenu.left,
+   999→                  }
+  1000→            }
+  1001→          >
+  1002→            {FILTER_OP_ITEMS.map((item) => {
+  1003→              const currentOp = filters[filterMenu.fieldKey]?.op ?? 'all';
+  1004→              const isSelected = currentOp === item.op;
+  1005→              return (
+  1006→                <button
+  1007→                  key={item.op}
+  1008→                  type="button"
+  1009→                  role="menuitemradio"
+  1010→                  aria-checked={isSelected}
+  1011→                  onClick={() => applyFilterOp(filterMenu.fieldKey, item.op)}
+  1012→                  className={cn(
+  1013→                    'flex w-full items-center gap-2 rounded-lg px-2.5 py-[7px] text-start text-[12px] transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-sky-400/50',
+  1014→                    isSelected
+  1015→                      ? 'bg-sky-500/25 text-sky-100'
+  1016→                      : 'text-white/80 hover:bg-white/[0.07]',
+  1017→                  )}
+  1018→                >
+  1019→                  <span className="min-w-0 flex-1 truncate">
+  1020→                    {t(item.labelKey)}
+  1021→                  </span>
+  1022→                  {isSelected && (
+  1023→                    <Check
+  1024→                      className="h-3.5 w-3.5 shrink-0 text-sky-300"
+  1025→                      strokeWidth={3}
+  1026→                    />
+  1027→                  )}
+  1028→                </button>
+  1029→              );
+  1030→            })}
+  1031→          </motion.div>
+  1032→        )}
+  1033→      </AnimatePresence>
+  1034→
+  1035→      {/* Delete confirmation (بلی / خیر) — same dialog as the form windows. */}
+  1036→      <AlertDialog
+  1037→        open={isDeleteConfirmOpen}
+  1038→        onOpenChange={(open) => {
+  1039→          if (!open) setIsDeleteConfirmOpen(false);
+  1040→        }}
+  1041→      >
+  1042→        <AlertDialogContent className="max-w-[calc(100vw-2rem)] rounded-2xl border border-white/15 bg-[#1e2128]/95 text-white shadow-2xl shadow-black/60 backdrop-blur-xl sm:max-w-md">
+  1043→          <AlertDialogHeader className="sm:text-start">
+  1044→            <AlertDialogTitle className="flex items-center gap-2.5 text-base text-white">
+  1045→              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-rose-500/15 text-rose-400 ring-1 ring-rose-400/30">
+  1046→                <FileX2 className="h-4 w-4" aria-hidden="true" />
+  1047→              </span>
+  1048→              {t('formWindow.deleteDialogTitle')}
+  1049→            </AlertDialogTitle>
+  1050→            <AlertDialogDescription className="text-[13px] leading-relaxed text-white/65">
+  1051→              {selectedIds.size > 1
+  1052→                ? tf('dataList.deleteDialogMessageMulti', {
+  1053→                    count: formatNumber(selectedIds.size),
+  1054→                  })
+  1055→                : t('formWindow.deleteDialogMessage')}
+  1056→            </AlertDialogDescription>
+  1057→          </AlertDialogHeader>
+  1058→          <AlertDialogFooter className="gap-2 sm:justify-start">
+  1059→            <AlertDialogCancel
+  1060→              disabled={isDeleting}
+  1061→              className="h-9 rounded-lg border-white/15 bg-white/[0.06] px-4 text-[13px] text-white/80 transition-colors hover:bg-white/[0.12] hover:text-white focus-visible:ring-white/40"
+  1062→            >
+  1063→              {t('formWindow.confirmNo')}
+  1064→            </AlertDialogCancel>
+  1065→            <AlertDialogAction
+  1066→              disabled={isDeleting}
+  1067→              onClick={(event) => {
+  1068→                // Keep the dialog open while the delete request runs.
+  1069→                event.preventDefault();
+  1070→                void confirmDelete();
+  1071→              }}
+  1072→              className="flex h-9 items-center gap-1.5 rounded-lg bg-rose-500/90 px-4 text-[13px] text-white shadow-sm shadow-rose-950/40 transition-colors hover:bg-rose-500 focus-visible:ring-rose-300/60"
+  1073→            >
+  1074→              {isDeleting ? (
+  1075→                <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+  1076→              ) : null}
+  1077→              {t('formWindow.confirmYes')}
+  1078→            </AlertDialogAction>
+  1079→          </AlertDialogFooter>
+  1080→        </AlertDialogContent>
+  1081→      </AlertDialog>
+  1082→    </>
+  1083→  );
+  1084→}
+  1085→
+  1086→// ── Footer icon strip ────────────────────────────────────────────────────
+  1087→
+  1088→type FooterTint = 'sky' | 'emerald' | 'rose' | 'slate';
+  1089→
+  1090→/** Static tint recipes — Tailwind needs literal classes to emit them. */
+  1091→const FOOTER_TINTS: Record<FooterTint, string> = {
+  1092→  sky: 'bg-sky-500/15 text-sky-400 hover:bg-sky-500/25 hover:shadow-[0_0_16px_-4px_rgba(56,189,248,0.55)]',
+  1093→  emerald:
+  1094→    'bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25 hover:shadow-[0_0_16px_-4px_rgba(52,211,153,0.55)]',
+  1095→  rose: 'bg-rose-500/15 text-rose-400 hover:bg-rose-500/25 hover:shadow-[0_0_16px_-4px_rgba(251,113,133,0.55)]',
+  1096→  slate:
+  1097→    'bg-slate-500/20 text-slate-300 hover:bg-slate-400/30 hover:shadow-[0_0_16px_-4px_rgba(148,163,184,0.5)]',
+  1098→};
+  1099→
+  1100→const FOOTER_BUTTON =
+  1101→  'relative flex h-8 w-8 items-center justify-center rounded-md ring-1 ring-white/10 transition-all duration-150 hover:brightness-110 active:scale-95 disabled:pointer-events-none disabled:opacity-35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40';
+  1102→
+  1103→interface DataListFooterProps {
+  1104→  isBusy: boolean;
+  1105→  isRefreshing: boolean;
+  1106→  hasSelection: boolean;
+  1107→  hasSingleSelection: boolean;
+  1108→  isFilterRowVisible: boolean;
+  1109→  isColumnsOpen: boolean;
+  1110→  hiddenColumnsCount: number;
+  1111→  onRefresh: () => void;
+  1112→  onPrint: () => void;
+  1113→  onExport: () => void;
+  1114→  onView: () => void;
+  1115→  onEdit: () => void;
+  1116→  onDelete: () => void;
+  1117→  onNew: () => void;
+  1118→  onToggleFilter: () => void;
+  1119→  onToggleColumn: (fieldKey: string) => void;
+  1120→  onShowAllColumns: () => void;
+  1121→  onColumnsOpenChange: (open: boolean) => void;
+  1122→  sortedFields: FormFieldDef[];
+  1123→  hiddenColumns: Set<string>;
+  1124→  fieldLocale: Locale;
+  1125→}
+  1126→
+  1127→interface FooterAction {
+  1128→  key: string;
+  1129→  tint: FooterTint;
+  1130→  icon: LucideIcon;
+  1131→  label: string;
+  1132→  onClick: () => void;
+  1133→  disabled: boolean;
+  1134→  spinning?: boolean;
+  1135→  pressed?: boolean;
+  1136→}
+  1137→
+  1138→/**
+  1139→ * The ERP-style footer of the records list — the icon strip from the
+  1140→ * reference screenshot: بازخوانی، چاپ، خروجی، مشاهده، اصلاح، حذف، جدید +
+  1141→ * انتخاب ستون‌ها و نوار فیلتر (with a subtle separator before them).
+  1142→ */
+  1143→function DataListFooter({
+  1144→  isBusy,
+  1145→  isRefreshing,
+  1146→  hasSelection,
+  1147→  hasSingleSelection,
+  1148→  isFilterRowVisible,
+  1149→  isColumnsOpen,
+  1150→  hiddenColumnsCount,
+  1151→  onRefresh,
+  1152→  onPrint,
+  1153→  onExport,
+  1154→  onView,
+  1155→  onEdit,
+  1156→  onDelete,
+  1157→  onNew,
+  1158→  onToggleFilter,
+  1159→  onToggleColumn,
+  1160→  onShowAllColumns,
+  1161→  onColumnsOpenChange,
+  1162→  sortedFields,
+  1163→  hiddenColumns,
+  1164→  fieldLocale,
+  1165→}: DataListFooterProps) {
+  1166→  const { t } = useTranslation();
+  1167→
+  1168→  const actions: FooterAction[] = [
+  1169→    {
+  1170→      key: 'refresh',
+  1171→      tint: 'sky',
+  1172→      icon: isRefreshing ? Loader2 : RefreshCw,
+  1173→      label: t('dataList.actionRefresh'),
+  1174→      onClick: onRefresh,
+  1175→      disabled: isBusy,
+  1176→      spinning: isRefreshing,
+  1177→    },
+  1178→    {
+  1179→      key: 'print',
+  1180→      tint: 'sky',
+  1181→      icon: Printer,
+  1182→      label: t('dataList.actionPrint'),
+  1183→      onClick: onPrint,
+  1184→      disabled: false,
+  1185→    },
+  1186→    {
+  1187→      key: 'export',
+  1188→      tint: 'slate',
+  1189→      icon: FileDown,
+  1190→      label: t('dataList.actionExport'),
+  1191→      onClick: onExport,
+  1192→      disabled: false,
+  1193→    },
+  1194→    {
+  1195→      key: 'view',
+  1196→      tint: 'slate',
+  1197→      icon: Link2,
+  1198→      label: t('dataList.actionView'),
+  1199→      onClick: onView,
+  1200→      disabled: !hasSingleSelection || isBusy,
+  1201→    },
+  1202→    {
+  1203→      key: 'edit',
+  1204→      tint: 'emerald',
+  1205→      icon: FilePen,
+  1206→      label: t('dataList.actionEdit'),
+  1207→      onClick: onEdit,
+  1208→      disabled: !hasSingleSelection || isBusy,
+  1209→    },
+  1210→    {
+  1211→      key: 'delete',
+  1212→      tint: 'rose',
+  1213→      icon: FileX2,
+  1214→      label: t('dataList.actionDelete'),
+  1215→      onClick: onDelete,
+  1216→      disabled: !hasSelection || isBusy,
+  1217→    },
+  1218→    {
+  1219→      key: 'new',
+  1220→      tint: 'sky',
+  1221→      icon: FilePlus2,
+  1222→      label: t('dataList.actionNew'),
+  1223→      onClick: onNew,
+  1224→      disabled: false,
+  1225→    },
+  1226→  ];
+  1227→
+  1228→  const renderButton = (action: FooterAction) => (
+  1229→    <button
+  1230→      key={action.key}
+  1231→      type="button"
+  1232→      title={action.label}
+  1233→      aria-label={action.label}
+  1234→      aria-pressed={action.pressed ? true : undefined}
+  1235→      onClick={action.onClick}
+  1236→      disabled={action.disabled}
+  1237→      className={cn(
+  1238→        FOOTER_BUTTON,
+  1239→        FOOTER_TINTS[action.tint],
+  1240→        action.pressed &&
+  1241→          'bg-slate-400/30 text-slate-100 ring-slate-300/40',
+  1242→      )}
+  1243→    >
+  1244→      {createElement(action.icon, {
+  1245→        className: cn('h-4 w-4', action.spinning && 'animate-spin'),
+  1246→        strokeWidth: 2,
+  1247→      })}
+  1248→    </button>
+  1249→  );
+  1250→
+  1251→  return (
+  1252→    <div className="flex shrink-0 items-center gap-1 border-t border-white/10 bg-white/[0.02] px-2 py-1.5">
+  1253→      {actions.map(renderButton)}
+  1254→
+  1255→      {/* Column chooser */}
+  1256→      <Popover open={isColumnsOpen} onOpenChange={onColumnsOpenChange}>
+  1257→        <PopoverTrigger asChild>
+  1258→          <button
+  1259→            type="button"
+  1260→            title={t('dataList.actionColumns')}
+  1261→            aria-label={t('dataList.actionColumns')}
+  1262→            aria-expanded={isColumnsOpen}
+  1263→            className={cn(
+  1264→              FOOTER_BUTTON,
+  1265→              FOOTER_TINTS.slate,
+  1266→              isColumnsOpen && 'bg-slate-400/30 text-slate-100 ring-slate-300/40',
+  1267→            )}
+  1268→          >
+  1269→            <Columns3 className="h-4 w-4" strokeWidth={2} />
+  1270→            {hiddenColumnsCount > 0 && (
+  1271→              <span
+  1272→                className="absolute -top-1 -end-1 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-sky-500 px-0.5 text-[9px] font-bold text-white"
+  1273→                aria-hidden="true"
+  1274→              >
+  1275→                {hiddenColumnsCount}
+  1276→              </span>
+  1277→            )}
+  1278→          </button>
+  1279→        </PopoverTrigger>
+  1280→        <PopoverContent
+  1281→          side="top"
+  1282→          align="end"
+  1283→          sideOffset={8}
+  1284→          className="w-60 overflow-hidden rounded-xl border-white/10 bg-[#1b1e26]/[0.97] p-1.5 text-white shadow-2xl shadow-black/50 backdrop-blur-xl"
+  1285→        >
+  1286→          <div className="flex items-center justify-between gap-2 px-2 pb-1.5 pt-1">
+  1287→            <span className="text-[11px] font-semibold text-white/70">
+  1288→              {t('dataList.actionColumns')}
+  1289→            </span>
+  1290→            <button
+  1291→              type="button"
+  1292→              onClick={onShowAllColumns}
+  1293→              className="rounded-md px-1.5 py-0.5 text-[10.5px] text-sky-300 transition-colors hover:bg-sky-500/15 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-sky-400/50"
+  1294→            >
+  1295→              {t('dataList.showAllColumns')}
+  1296→            </button>
+  1297→          </div>
+  1298→          <div className="max-h-56 overflow-y-auto [scrollbar-width:thin]">
+  1299→            {sortedFields.map((field) => {
+  1300→              const isHidden = hiddenColumns.has(field.fieldKey);
+  1301→              return (
+  1302→                <button
+  1303→                  key={field.fieldKey}
+  1304→                  type="button"
+  1305→                  role="menuitemcheckbox"
+  1306→                  aria-checked={!isHidden}
+  1307→                  onClick={() => onToggleColumn(field.fieldKey)}
+  1308→                  className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-start text-[12px] text-white/80 transition-colors hover:bg-white/[0.06] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/30"
+  1309→                >
+  1310→                  <span
+  1311→                    className={cn(
+  1312→                      'flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded border transition-colors',
+  1313→                      isHidden
+  1314→                        ? 'border-white/25 bg-white/[0.04]'
+  1315→                        : 'border-sky-300/70 bg-sky-500/80 text-white',
+  1316→                    )}
+  1317→                  >
+  1318→                    {!isHidden && (
+  1319→                      <Check className="h-2.5 w-2.5" strokeWidth={3.2} />
+  1320→                    )}
+  1321→                  </span>
+  1322→                  <span className="min-w-0 flex-1 truncate">
+  1323→                    {fieldLabel(field, fieldLocale)}
+  1324→                  </span>
+  1325→                </button>
+  1326→              );
+  1327→            })}
+  1328→          </div>
+  1329→        </PopoverContent>
+  1330→      </Popover>
+  1331→
+  1332→      {/* Filter row toggle */}
+  1333→      <button
+  1334→        type="button"
+  1335→        title={t('dataList.actionFilter')}
+  1336→        aria-label={t('dataList.actionFilter')}
+  1337→        aria-pressed={isFilterRowVisible}
+  1338→        onClick={onToggleFilter}
+  1339→        className={cn(
+  1340→          FOOTER_BUTTON,
+  1341→          FOOTER_TINTS.slate,
+  1342→          isFilterRowVisible && 'bg-slate-400/30 text-slate-100 ring-slate-300/40',
+  1343→        )}
+  1344→      >
+  1345→        <Filter className="h-4 w-4" strokeWidth={2} />
+  1346→      </button>
+  1347→    </div>
+  1348→  );
+  1349→}
+  1350→
+  1351→

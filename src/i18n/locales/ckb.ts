@@ -339,7 +339,7 @@ export const ckbDictionary: Record<string, string> = {
   'dataList.selectedCount': '{count} ڕیکۆرد هەڵبژێردرا',
   'dataList.empty': 'هیچ زانیارییەک بۆ پیشاندان نییە',
   'dataList.noFilterMatch': 'هیچ ڕیکۆردێک لەگەڵ فلتەرەکان نییە',
-  'dataList.filterPlaceholder': 'بینین...',
+  'dataList.filterPlaceholder': 'فلتەر...',
   'dataList.clearFilters': 'سڕینەوەی هەموو فلتەرەکان',
   'dataList.selectAll': 'هەڵبژاردنی هەموو',
   'dataList.selectRow': 'هەڵبژاردنی ڕیکۆرد',
@@ -370,4 +370,5 @@ export const ckbDictionary: Record<string, string> = {
   'dataList.filterOpEquals': 'یەکسانە بە',
   'dataList.filterOpNotContains': 'ناگرێتەوە',
   'dataList.filterOpContains': 'دەگرێتەوە',
+  'dataList.columnResizeHint': 'بۆ گۆڕینی پانی ستون ڕایبکێشە — بۆ ڕێکخستنەوە دوو جار کلیک بکە',
 };

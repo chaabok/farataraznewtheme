@@ -372,4 +372,5 @@ export const ptDictionary: Record<string, string> = {
   'dataList.filterOpEquals': 'Igual a',
   'dataList.filterOpNotContains': 'Não contém',
   'dataList.filterOpContains': 'Contém',
+  'dataList.columnResizeHint': 'Arraste para redimensionar a coluna — clique duas vezes para redefinir',
 };

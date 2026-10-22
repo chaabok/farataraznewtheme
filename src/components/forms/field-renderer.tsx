@@ -129,14 +129,14 @@ export function FieldRenderer({
     >
       <label
         htmlFor={field.fieldKey}
-        className="w-36 shrink-0 text-[12.5px] leading-6 text-white/70"
+        className="w-36 shrink-0 text-[12px] leading-6 text-white/70"
       >
         {label}
         {field.isRequired && (
           <span
             title={t('formWindow.requiredHint')}
             aria-hidden="true"
-            className="ms-1 text-[13px] leading-none text-red-400"
+            className="ms-1 text-[12px] leading-none text-red-400"
           >
             *
           </span>

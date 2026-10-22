@@ -7,7 +7,7 @@ import {
   useRef,
   useState,
   createElement,
-  type MouseEvent,
+  type MouseEvent as ReactMouseEvent,
   type ReactNode,
 } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -89,6 +89,32 @@ function parseListModuleId(moduleId: string): {
 /** Sentinel kept in state so load errors render through the dictionaries. */
 const GENERIC_LOAD_ERROR = 'dataList.loadError';
 
+// ── Resizable grid geometry (px) ──
+/** Fixed width of the leading selection column. */
+const CHECKBOX_COL_WIDTH = 40;
+/** Width used for a data column that has no measured/custom width yet. */
+const DEFAULT_COLUMN_WIDTH = 150;
+/** Drag/keyboard clamps — beyond the max the grid scrolls horizontally. */
+const MIN_COLUMN_WIDTH = 64;
+const MAX_COLUMN_WIDTH = 1200;
+
+/**
+ * Read the rendered width of every data column from its header cell.
+ * Used to freeze the whole grid the first time the user grabs a handle,
+ * so resizing one column never reflows its neighbours.
+ */
+function measureColumns(table: HTMLTableElement | null): Record<string, number> | null {
+  if (!table) return null;
+  const measured: Record<string, number> = {};
+  table
+    .querySelectorAll<HTMLTableCellElement>('th[data-col]')
+    .forEach((th) => {
+      const key = th.dataset.col;
+      if (key) measured[key] = th.getBoundingClientRect().width;
+    });
+  return Object.keys(measured).length ? measured : null;
+}
+
 /** Per-column filter state: operator + typed value (applied server-side). */
 interface ColumnFilterState {
   op: ListFilterOp;
@@ -164,7 +190,7 @@ function RowCheckbox({
  * refresh / columns / filter).
  */
 export function DataListWindow({ moduleId, list, onClose }: DataListWindowProps) {
-  const { locale, t, tf, formatNumber } = useTranslation();
+  const { locale, t, tf, formatNumber, direction } = useTranslation();
   const addFormTab = useDesktopStore((s) => s.addFormTab);
 
   const fallback = useMemo(() => parseListModuleId(moduleId), [moduleId]);
@@ -202,6 +228,14 @@ export function DataListWindow({ moduleId, list, onClose }: DataListWindowProps)
     openUp: boolean;
   } | null>(null);
   const [hiddenColumns, setHiddenColumns] = useState<Set<string>>(new Set());
+  /**
+   * Explicit px width per data column — `null` = classic auto layout that
+   * fills the window. Set on the first resize interaction (all columns are
+   * frozen at their rendered widths, then only the grabbed one moves).
+   */
+  const [columnWidths, setColumnWidths] = useState<Record<string, number> | null>(null);
+  /** Field currently being drag-resized (drives cursors + handle hint). */
+  const [resizingField, setResizingField] = useState<string | null>(null);
   const [isColumnsOpen, setIsColumnsOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -212,6 +246,7 @@ export function DataListWindow({ moduleId, list, onClose }: DataListWindowProps)
   const filterSeqRef = useRef(0);
   const filterMenuRef = useRef<HTMLDivElement | null>(null);
   const filterInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const tableRef = useRef<HTMLTableElement | null>(null);
 
   // ── Loading ──
   /** Records URL with the JSON `?filters=` payload (server-side filtering). */
@@ -485,9 +520,15 @@ export function DataListWindow({ moduleId, list, onClose }: DataListWindowProps)
 
   const setFilterValue = useCallback((fieldKey: string, value: string) => {
     setFilters((prev) => {
-      const current =
-        prev[fieldKey] ?? { op: 'contains' as ListFilterOp, value: '' };
-      return { ...prev, [fieldKey]: { ...current, value } };
+      const current = prev[fieldKey];
+      // Typing always implies value semantics: a fresh entry (and an entry
+      // whose operator carries no value — تمام / دارای مقدار / بدون مقدار)
+      // becomes «حاوی تایپ‌شده» so the input is never a dead end.
+      const op: ListFilterOp =
+        !current || current.op === 'hasValue' || current.op === 'noValue'
+          ? 'contains'
+          : current.op;
+      return { ...prev, [fieldKey]: { op, value } };
     });
   }, []);
 
@@ -543,6 +584,74 @@ export function DataListWindow({ moduleId, list, onClose }: DataListWindowProps)
     };
   }, [filterMenu]);
 
+  // ── Column resize (mouse + keyboard) ──
+  const isFixedLayout = columnWidths !== null;
+  const fixedTotalWidth = useMemo(() => {
+    if (!columnWidths) return 0;
+    const dataSum = visibleFields.reduce(
+      (sum, field) =>
+        sum + (columnWidths[field.fieldKey] ?? DEFAULT_COLUMN_WIDTH),
+      0,
+    );
+    return CHECKBOX_COL_WIDTH + dataSum;
+  }, [columnWidths, visibleFields]);
+
+  const beginColumnResize = useCallback(
+    (fieldKey: string, event: ReactMouseEvent<HTMLButtonElement>) => {
+      event.preventDefault();
+      event.stopPropagation();
+      // Freeze every column at its current rendered width so the drag
+      // changes ONLY the grabbed column (no neighbour reflow).
+      const measured = measureColumns(tableRef.current);
+      if (!measured) return;
+      const startWidth = measured[fieldKey] ?? DEFAULT_COLUMN_WIDTH;
+      setColumnWidths(measured);
+      setResizingField(fieldKey);
+      // The handle sits on the inline-end edge: in RTL that edge grows
+      // leftwards, so the clientX delta flips sign.
+      const resizeDir = direction === 'rtl' ? -1 : 1;
+      const startX = event.clientX;
+      const onMove = (moveEvent: MouseEvent) => {
+        const next = Math.round(
+          startWidth + (moveEvent.clientX - startX) * resizeDir,
+        );
+        const clamped = Math.min(
+          MAX_COLUMN_WIDTH,
+          Math.max(MIN_COLUMN_WIDTH, next),
+        );
+        setColumnWidths((prev) =>
+          prev ? { ...prev, [fieldKey]: clamped } : prev,
+        );
+      };
+      const onUp = () => {
+        window.removeEventListener('mousemove', onMove);
+        window.removeEventListener('mouseup', onUp);
+        document.body.style.userSelect = '';
+        setResizingField(null);
+      };
+      document.body.style.userSelect = 'none';
+      window.addEventListener('mousemove', onMove);
+      window.addEventListener('mouseup', onUp);
+    },
+    [direction],
+  );
+
+  /** Keyboard resize (Arrow keys) — freezes the grid on first use too. */
+  const nudgeColumnWidth = useCallback((fieldKey: string, sign: 1 | -1) => {
+    setColumnWidths((prev) => {
+      const base = prev ?? measureColumns(tableRef.current) ?? {};
+      const current = base[fieldKey] ?? DEFAULT_COLUMN_WIDTH;
+      const next = Math.min(
+        MAX_COLUMN_WIDTH,
+        Math.max(MIN_COLUMN_WIDTH, current + sign * 24),
+      );
+      return { ...base, [fieldKey]: next };
+    });
+  }, []);
+
+  /** Double-click / reset back to the auto-filling layout. */
+  const resetColumnWidths = useCallback(() => setColumnWidths(null), []);
+
   // ── Selection ──
   const toggleSelected = useCallback((recordId: string, additive: boolean) => {
     setSelectedIds((prev) => {
@@ -555,7 +664,7 @@ export function DataListWindow({ moduleId, list, onClose }: DataListWindowProps)
   }, []);
 
   const handleRowClick = useCallback(
-    (record: FormRecord, event: MouseEvent<HTMLTableRowElement>) => {
+    (record: FormRecord, event: ReactMouseEvent<HTMLTableRowElement>) => {
       if (event.ctrlKey || event.metaKey) {
         toggleSelected(record.id, true);
       } else {
@@ -729,12 +838,39 @@ export function DataListWindow({ moduleId, list, onClose }: DataListWindowProps)
           className={cn(
             'h-full overflow-auto transition-opacity duration-200 [scrollbar-width:thin]',
             isFiltering && 'opacity-50',
+            resizingField && 'cursor-col-resize select-none',
           )}
         >
-          <table className="w-full min-w-max border-separate border-spacing-0 text-[12px]">
+          <table
+            ref={tableRef}
+            className={cn(
+              'border-separate border-spacing-0 text-[12px]',
+              isFixedLayout ? 'table-fixed' : 'w-full min-w-max',
+            )}
+            style={isFixedLayout ? { width: fixedTotalWidth } : undefined}
+          >
+            {isFixedLayout && (
+              <colgroup>
+                <col style={{ width: CHECKBOX_COL_WIDTH }} />
+                {visibleFields.map((field) => (
+                  <col
+                    key={`col-${field.fieldKey}`}
+                    style={{
+                      width:
+                        columnWidths?.[field.fieldKey] ?? DEFAULT_COLUMN_WIDTH,
+                    }}
+                  />
+                ))}
+              </colgroup>
+            )}
             <thead>
               <tr>
-                <th className="sticky top-0 z-30 h-9 w-10 border-b border-white/10 bg-[#1a1d26] px-2">
+                <th
+                  className={cn(
+                    'sticky top-0 z-30 h-9 border-b border-white/10 bg-[#1a1d26] px-2',
+                    !isFixedLayout && 'w-10',
+                  )}
+                >
                   <RowCheckbox
                     checked={allVisibleSelected}
                     onChange={toggleSelectAll}
@@ -744,12 +880,48 @@ export function DataListWindow({ moduleId, list, onClose }: DataListWindowProps)
                 {visibleFields.map((field) => (
                   <th
                     key={field.fieldKey}
+                    data-col={field.fieldKey}
                     scope="col"
-                    className="sticky top-0 z-30 h-9 min-w-[130px] max-w-[260px] border-b border-white/10 bg-[#1a1d26] px-3 text-center align-middle text-[11.5px] font-bold leading-tight text-white/85"
+                    className={cn(
+                      'group/th sticky top-0 z-30 h-9 border-b border-white/10 bg-[#1a1d26] px-3 text-center align-middle text-[11.5px] font-bold leading-tight text-white/85',
+                      !isFixedLayout && 'min-w-[130px] max-w-[260px]',
+                    )}
                   >
                     <span className="line-clamp-1" title={fieldLabel(field, locale)}>
                       {fieldLabel(field, locale)}
                     </span>
+                    <button
+                      type="button"
+                      aria-label={`${t('dataList.columnResizeHint')} — ${fieldLabel(field, locale)}`}
+                      title={t('dataList.columnResizeHint')}
+                      onMouseDown={(event) =>
+                        beginColumnResize(field.fieldKey, event)
+                      }
+                      onDoubleClick={resetColumnWidths}
+                      onKeyDown={(event) => {
+                        if (
+                          event.key !== 'ArrowLeft' &&
+                          event.key !== 'ArrowRight'
+                        )
+                          return;
+                        event.preventDefault();
+                        const growsToEnd =
+                          event.key ===
+                          (direction === 'rtl' ? 'ArrowLeft' : 'ArrowRight');
+                        nudgeColumnWidth(field.fieldKey, growsToEnd ? 1 : -1);
+                      }}
+                      className="absolute inset-y-0 end-0 z-10 flex w-2 cursor-col-resize touch-none items-stretch justify-center focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-sky-400/60"
+                    >
+                      <span
+                        aria-hidden="true"
+                        className={cn(
+                          'h-full w-px transition-colors group-hover/th:bg-sky-400/60',
+                          resizingField === field.fieldKey
+                            ? 'bg-sky-400'
+                            : 'bg-white/10',
+                        )}
+                      />
+                    </button>
                   </th>
                 ))}
               </tr>
@@ -770,10 +942,6 @@ export function DataListWindow({ moduleId, list, onClose }: DataListWindowProps)
                   {visibleFields.map((field) => {
                     const columnFilter = filters[field.fieldKey];
                     const isActive = isColumnFilterActive(columnFilter);
-                    const valueDisabled =
-                      !columnFilter ||
-                      columnFilter.op === 'hasValue' ||
-                      columnFilter.op === 'noValue';
                     return (
                       <th
                         key={`filter-${field.fieldKey}`}
@@ -820,10 +988,9 @@ export function DataListWindow({ moduleId, list, onClose }: DataListWindowProps)
                             onChange={(event) =>
                               setFilterValue(field.fieldKey, event.target.value)
                             }
-                            disabled={valueDisabled}
                             placeholder={t('dataList.filterPlaceholder')}
                             aria-label={fieldLabel(field, locale)}
-                            className="h-6 w-full min-w-0 bg-transparent text-[11px] text-white placeholder:text-white/25 focus:outline-none disabled:cursor-default disabled:opacity-40"
+                            className="h-6 w-full min-w-0 bg-transparent text-[11px] text-white placeholder:text-white/25 focus:outline-none"
                           />
                         </div>
                       </th>
@@ -877,7 +1044,10 @@ export function DataListWindow({ moduleId, list, onClose }: DataListWindowProps)
                           <td
                             key={field.fieldKey}
                             title={cellText(field, record)}
-                            className="h-8 max-w-[260px] truncate border-b border-white/[0.05] px-3 text-center tabular-nums text-white/80"
+                            className={cn(
+                              'h-8 truncate border-b border-white/[0.05] px-3 text-center text-[10px] tabular-nums text-white/80',
+                              !isFixedLayout && 'max-w-[260px]',
+                            )}
                           >
                             {cellText(field, record)}
                           </td>

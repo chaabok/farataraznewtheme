@@ -353,7 +353,7 @@ const fa = {
   'dataList.selectedCount': '{count} رکورد انتخاب شده',
   'dataList.empty': 'اطلاعاتی برای نمایش وجود ندارد',
   'dataList.noFilterMatch': 'هیچ رکوردی با فیلترهای فعلی مطابقت ندارد',
-  'dataList.filterPlaceholder': 'نمای...',
+  'dataList.filterPlaceholder': 'فیلتر...',
   'dataList.clearFilters': 'پاک کردن همه فیلترها',
   'dataList.selectAll': 'انتخاب همه',
   'dataList.selectRow': 'انتخاب رکورد',
@@ -384,6 +384,7 @@ const fa = {
   'dataList.filterOpEquals': 'برابر با',
   'dataList.filterOpNotContains': 'حاوی نباشد',
   'dataList.filterOpContains': 'حاوی تایپ‌شده',
+  'dataList.columnResizeHint': 'برای تغییر عرض ستون بکشید — دوبار کلیک: بازنشانی',
 } satisfies Record<string, string>;
 
 const en: Record<string, string> = {
@@ -730,6 +731,7 @@ const en: Record<string, string> = {
   'dataList.filterOpEquals': 'Equals',
   'dataList.filterOpNotContains': 'Does not contain',
   'dataList.filterOpContains': 'Contains',
+  'dataList.columnResizeHint': 'Drag to resize the column — double-click to reset',
 };
 
 const tr: Record<string, string> = {
@@ -1076,6 +1078,7 @@ const tr: Record<string, string> = {
   'dataList.filterOpEquals': 'Eşittir',
   'dataList.filterOpNotContains': 'Şunu içermesin',
   'dataList.filterOpContains': 'Şunu içeren',
+  'dataList.columnResizeHint': 'Sütunu yeniden boyutlandırmak için sürükleyin — sıfırlamak için çift tıklayın',
 };
 
 const ar: Record<string, string> = {
@@ -1391,7 +1394,7 @@ const ar: Record<string, string> = {
   'dataList.selectedCount': 'تم تحديد {count} سجل',
   'dataList.empty': 'لا توجد معلومات للعرض',
   'dataList.noFilterMatch': 'لا توجد سجلات مطابقة للمرشحات الحالية',
-  'dataList.filterPlaceholder': 'عرض...',
+  'dataList.filterPlaceholder': 'تصفية...',
   'dataList.clearFilters': 'مسح جميع المرشحات',
   'dataList.selectAll': 'تحديد الكل',
   'dataList.selectRow': 'تحديد السجل',
@@ -1422,6 +1425,7 @@ const ar: Record<string, string> = {
   'dataList.filterOpEquals': 'يساوي',
   'dataList.filterOpNotContains': 'لا يحتوي على',
   'dataList.filterOpContains': 'يحتوي على المُدخل',
+  'dataList.columnResizeHint': 'اسحب لتغيير عرض العمود — نقرة مزدوجة لإعادة التعيين',
 };
 
 export const DICTIONARIES: Record<Locale, Record<string, string>> = {

@@ -124,7 +124,7 @@ export function FormShell({
       {subPanel}
 
       {/* ── Content area (the only scrollable region) ── */}
-      <section className="min-h-0 flex-1 overflow-y-auto [scrollbar-width:thin]">
+      <section className="min-h-0 flex-1 overflow-y-auto text-[12px] [scrollbar-width:thin]">
         {children}
       </section>
 

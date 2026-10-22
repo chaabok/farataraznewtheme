@@ -370,4 +370,5 @@ export const koDictionary: Record<string, string> = {
   'dataList.filterOpEquals': '같음',
   'dataList.filterOpNotContains': '포함하지 않음',
   'dataList.filterOpContains': '포함',
+  'dataList.columnResizeHint': '열 너비를 조정하려면 드래그하세요 — 두 번 클릭하면 초기화됩니다',
 };

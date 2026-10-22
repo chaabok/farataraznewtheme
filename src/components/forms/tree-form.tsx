@@ -537,7 +537,7 @@ export function TreeForm({
         ) : (
           <div className="flex flex-1 flex-col items-center justify-center gap-2 p-6 text-center">
             <Network className="h-6 w-6 text-white/25" aria-hidden="true" />
-            <p className="text-[12.5px] text-white/45">
+            <p className="text-[12px] text-white/45">
               {t('formWindow.treeSelectHint')}
             </p>
           </div>
@@ -563,7 +563,7 @@ export function TreeForm({
               role="menuitem"
               disabled={!parentField || isBusy}
               onClick={handleMenuNewSub}
-              className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-start text-[12.5px] text-white/85 transition-colors enabled:hover:bg-emerald-500/15 enabled:hover:text-emerald-300 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-emerald-400/50 disabled:cursor-not-allowed disabled:opacity-40"
+              className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-start text-[12px] text-white/85 transition-colors enabled:hover:bg-emerald-500/15 enabled:hover:text-emerald-300 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-emerald-400/50 disabled:cursor-not-allowed disabled:opacity-40"
             >
               <FolderPlus
                 className="h-3.5 w-3.5 shrink-0 text-emerald-400"
@@ -581,7 +581,7 @@ export function TreeForm({
               }
               disabled={menuNode.children.length > 0 || mode === 'new' || isBusy}
               onClick={handleMenuDelete}
-              className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-start text-[12.5px] text-white/85 transition-colors enabled:hover:bg-rose-500/15 enabled:hover:text-rose-300 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-rose-400/50 disabled:cursor-not-allowed disabled:opacity-40"
+              className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-start text-[12px] text-white/85 transition-colors enabled:hover:bg-rose-500/15 enabled:hover:text-rose-300 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-rose-400/50 disabled:cursor-not-allowed disabled:opacity-40"
             >
               <Trash2
                 className="h-3.5 w-3.5 shrink-0 text-rose-400"
@@ -711,7 +711,7 @@ function ParentPicker({
       {/* Label at the inline start: right side in RTL, left side in LTR. */}
       <label
         htmlFor={field.fieldKey}
-        className="w-36 shrink-0 text-[12.5px] leading-6 text-white/70"
+        className="w-36 shrink-0 text-[12px] leading-6 text-white/70"
       >
         {fieldLabel(field, locale)}
         {field.isRequired && (
@@ -801,7 +801,7 @@ function ParentPicker({
                     onClick={() => pick(node)}
                     style={{ paddingInlineStart: 12 + node.depth * 14 }}
                     className={cn(
-                      'flex w-full items-center gap-2 pe-3 py-1.5 text-start text-[12.5px] transition-colors',
+                      'flex w-full items-center gap-2 pe-3 py-1.5 text-start text-[12px] transition-colors',
                       isActive
                         ? 'bg-sky-500/15 text-white'
                         : 'text-white/80 hover:bg-white/[0.05]',

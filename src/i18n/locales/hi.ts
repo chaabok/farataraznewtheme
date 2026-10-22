@@ -372,4 +372,5 @@ export const hiDictionary: Record<string, string> = {
   'dataList.filterOpEquals': 'बराबर',
   'dataList.filterOpNotContains': 'शामिल नहीं',
   'dataList.filterOpContains': 'शामिल',
+  'dataList.columnResizeHint': 'कॉलम का आकार बदलने के लिए खींचें — रीसेट के लिए डबल-क्लिक करें',
 };
