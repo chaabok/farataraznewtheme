@@ -69,8 +69,8 @@ export function ModuleMenu() {
   const closeModuleMenu = useDesktopStore((s) => s.closeModuleMenu);
   const selectMenu = useDesktopStore((s) => s.selectMenu);
   const loadModuleMenus = useDesktopStore((s) => s.loadModuleMenus);
-  const openWindow = useDesktopStore((s) => s.openWindow);
-  const openFormWindow = useDesktopStore((s) => s.openFormWindow);
+  const addFormTab = useDesktopStore((s) => s.addFormTab);
+  const addModuleTab = useDesktopStore((s) => s.addModuleTab);
   const openSetupWindow = useSetupStore((s) => s.openSetupWindow);
   const isAuthenticated = useAuthStore((s) => Boolean(s.token));
 
@@ -88,6 +88,11 @@ export function ModuleMenu() {
   /** Slides follow the reading direction (enter from the "forward" side). */
   const slide = direction === 'rtl' ? -1 : 1;
 
+  /**
+   * Opens the picked item as a workspace tab in the tab bar. The flyout
+   * menu intentionally stays open — it is bound to the Home tab and
+   * reappears when the user switches back to it.
+   */
   const handleOpenForm = (form: ModuleFormItem) => {
     if (!openModuleKey) return;
     if (!isAuthenticated) {
@@ -101,7 +106,6 @@ export function ModuleMenu() {
       // Special form: the application installation settings window
       // (selected services → main DB, unselected → secondary DB).
       if (openModuleKey === 'settings' && form.formKey === 'installation') {
-        closeModuleMenu();
         openSetupWindow();
         toast({
           title: form.name,
@@ -109,23 +113,24 @@ export function ModuleMenu() {
         });
         return;
       }
-      // DB-driven sample form: the unified component-based form window.
+      // Database-driven form (unified component-based form system) —
+      // opens as its own keep-alive tab in the dashboard tab bar.
       if (openModuleKey === 'settings' && form.formKey === 'account-class') {
-        closeModuleMenu();
-        openFormWindow({
+        addFormTab({
           moduleKey: openModuleKey,
           formKey: form.formKey,
           name: form.name,
           iconKey: form.iconKey,
         });
-        toast({
-          title: form.name,
-          description: tf('formWindow.openedToast', { name: form.name }),
+      } else {
+        // Generic module app (stats + records) as a workspace tab.
+        addModuleTab({
+          moduleId: openModuleKey,
+          name: form.name,
+          iconKey: form.iconKey,
+          color,
         });
-        return;
       }
-      closeModuleMenu();
-      openWindow(openModuleKey);
       toast({
         title: form.name,
         description: tf('moduleMenu.formOpened', { module: moduleName }),

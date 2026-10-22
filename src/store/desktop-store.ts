@@ -48,6 +48,39 @@ export interface FormWindowInfo {
   iconKey: string;
 }
 
+/** Kind of a workspace tab shown in the dashboard tab bar. */
+export type DesktopTabKind = 'home' | 'form' | 'module';
+
+/**
+ * One browser-style workspace tab of the dashboard tab bar. The Home tab
+ * hosts the live desktop (icons + flyout menus + floating windows); every
+ * opened form/module gets its own tab and stays alive while hidden.
+ */
+export interface DesktopTab {
+  /** `home` | `form:<formKey>` | `module:<moduleId>`. */
+  id: string;
+  kind: DesktopTabKind;
+  /** Display title captured when the tab was opened (menu-provided). */
+  title: string;
+  /** Lucide icon key resolved through the shared icon registry. */
+  iconKey: string;
+  /** Accent hex used by the active-tab glow. */
+  accentColor: string;
+  /** Present for kind `form`. */
+  form?: FormWindowInfo;
+  /** Present for kind `module`. */
+  moduleId?: string;
+}
+
+/** The permanent first tab: the live desktop itself. */
+const HOME_TAB: DesktopTab = {
+  id: 'home',
+  kind: 'home',
+  title: 'home',
+  iconKey: 'monitor',
+  accentColor: '#38bdf8',
+};
+
 function persistLocaleCookie(locale: Locale): void {
   if (typeof document === 'undefined') return;
   document.cookie = `${LOCALE_COOKIE}=${locale}; path=/; max-age=31536000; samesite=lax`;
@@ -88,6 +121,12 @@ interface DesktopState {
   windows: DesktopWindow[];
   windowZCounter: number;
   windowSlotCounter: number;
+  /** Workspace tabs of the tab bar — Home first, one per opened form/module. */
+  tabs: DesktopTab[];
+  /** Id of the active tab (`home` shows the desktop). */
+  activeTabId: string;
+  /** True once the tab bar has been revealed (first module menu open). */
+  isTabBarActive: boolean;
 
   fetchIcons: () => Promise<void>;
   selectIcon: (id: string | null) => void;
@@ -109,6 +148,19 @@ interface DesktopState {
   openFormWindow: (form: FormWindowInfo) => void;
   closeWindow: (moduleId: string) => void;
   focusWindow: (moduleId: string) => void;
+  /** Opens (or focuses) a tab for a database-driven form; menu stays open. */
+  addFormTab: (form: FormWindowInfo) => void;
+  /** Opens (or focuses) a tab hosting the generic module app. */
+  addModuleTab: (info: {
+    moduleId: string;
+    name: string;
+    iconKey: string;
+    color?: string;
+  }) => void;
+  /** Switches the active workspace tab. */
+  activateTab: (id: string) => void;
+  /** Closes a tab (Home cannot be closed); activates the neighbour. */
+  closeTab: (id: string) => void;
 }
 
 export const useDesktopStore = create<DesktopState>((set, get) => ({
@@ -129,6 +181,9 @@ export const useDesktopStore = create<DesktopState>((set, get) => ({
   windows: [],
   windowZCounter: 10,
   windowSlotCounter: 0,
+  tabs: [HOME_TAB],
+  activeTabId: 'home',
+  isTabBarActive: false,
 
   fetchIcons: async () => {
     const locale = get().locale;
@@ -174,6 +229,9 @@ export const useDesktopStore = create<DesktopState>((set, get) => ({
       isLanguageMenuOpen: false,
       activeMenuId: null,
       menusError: null,
+      // The tab bar is revealed the first time a module menu opens and
+      // then stays for the rest of the session (Home tab is always there).
+      isTabBarActive: true,
     });
     void get().loadModuleMenus(moduleKey);
   },
@@ -289,6 +347,76 @@ export const useDesktopStore = create<DesktopState>((set, get) => ({
     set((state) => ({
       windows: state.windows.filter((w) => w.moduleId !== moduleId),
     })),
+
+  /** Opens (or refocuses) a tab for a database-driven form. */
+  addFormTab: (form) => {
+    const id = `form:${form.formKey}`;
+    set((state) => {
+      const exists = state.tabs.some((tab) => tab.id === id);
+      const tab: DesktopTab = {
+        id,
+        kind: 'form',
+        title: form.name,
+        iconKey: form.iconKey,
+        accentColor: '#38bdf8',
+        form,
+      };
+      return {
+        tabs: exists
+          ? state.tabs.map((candidate) =>
+              candidate.id === id ? { ...candidate, ...tab } : candidate,
+            )
+          : [...state.tabs, tab],
+        activeTabId: id,
+        isTabBarActive: true,
+        // NOTE: the module flyout menu intentionally stays open — it lives
+        // on the Home tab and reappears when the user switches back to it.
+      };
+    });
+  },
+
+  /** Opens (or refocuses) a tab hosting the generic module app. */
+  addModuleTab: ({ moduleId, name, iconKey, color }) => {
+    const id = `module:${moduleId}`;
+    set((state) => {
+      const exists = state.tabs.some((tab) => tab.id === id);
+      const tab: DesktopTab = {
+        id,
+        kind: 'module',
+        title: name,
+        iconKey,
+        accentColor: color ?? '#38bdf8',
+        moduleId,
+      };
+      return {
+        tabs: exists
+          ? state.tabs.map((candidate) =>
+              candidate.id === id ? { ...candidate, ...tab } : candidate,
+            )
+          : [...state.tabs, tab],
+        activeTabId: id,
+        isTabBarActive: true,
+      };
+    });
+  },
+
+  activateTab: (id) => set({ activeTabId: id }),
+
+  closeTab: (id) =>
+    set((state) => {
+      if (id === 'home') return state; // the desktop tab is permanent
+      const index = state.tabs.findIndex((tab) => tab.id === id);
+      if (index === -1) return state;
+      const tabs = state.tabs.filter((tab) => tab.id !== id);
+      const wasActive = state.activeTabId === id;
+      return {
+        tabs,
+        // Activate the neighbour before the closed tab (Home fallback).
+        activeTabId: wasActive
+          ? (tabs[Math.max(0, index - 1)]?.id ?? 'home')
+          : state.activeTabId,
+      };
+    }),
 
   focusWindow: (moduleId) =>
     set((state) => {
