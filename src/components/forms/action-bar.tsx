@@ -14,6 +14,7 @@ import {
   Printer,
   Save,
   Trash2,
+  X,
   type LucideIcon,
 } from 'lucide-react';
 import { useTranslation } from '@/i18n';
@@ -26,8 +27,6 @@ interface FormActionBarProps {
   isDirty: boolean;
   isSaving: boolean;
   isDeleting: boolean;
-  /** Inline delete confirmation is armed (delete button shows active). */
-  isDeleteArmed?: boolean;
   /** A saved record is loaded (enables copy/delete). */
   hasRecord: boolean;
   recordIndex: number;
@@ -35,8 +34,16 @@ interface FormActionBarProps {
   isListOpen: boolean;
   onNew: () => void;
   onSave: () => void;
+  /** Save the record, then reset the form for a fresh entry. */
+  onSaveNew: () => void;
+  /** Save the record after validation, then close the window. */
+  onSaveClose: () => void;
   onCopy: () => void;
   onDelete: () => void;
+  /** Delete the saved record after confirmation, then reset the form. */
+  onDeleteNew: () => void;
+  /** Delete the saved record after confirmation, then close the window. */
+  onDeleteClose: () => void;
   onPrint: () => void;
   onToggleList: () => void;
   onFirst: () => void;
@@ -76,6 +83,28 @@ const ACTION_BUTTON =
   'flex h-9 w-9 items-center justify-center rounded-lg ring-1 ring-white/10 transition-all duration-150 hover:brightness-110 active:scale-95 disabled:pointer-events-none disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40';
 
 /**
+ * Base icon with a tiny corner badge (＋ new · × close). Members of a
+ * family share the base glyph and tint, so "save & new" / "save & close"
+ * read as natural extensions of Save — same for the Delete family.
+ */
+function BadgeIcon({ base, badge }: { base: LucideIcon; badge: LucideIcon }) {
+  return (
+    <span className="relative inline-flex h-4 w-4 items-center justify-center">
+      {createElement(base, { className: 'h-4 w-4', strokeWidth: 2 })}
+      <span
+        aria-hidden="true"
+        className="absolute -top-1.5 -end-1.5 flex h-2.5 w-2.5 items-center justify-center rounded-full bg-current shadow-[0_0_6px_-1px_currentColor]"
+      >
+        {createElement(badge, {
+          className: 'h-[7px] w-[7px] text-[#0b0f16]',
+          strokeWidth: 4,
+        })}
+      </span>
+    </span>
+  );
+}
+
+/**
  * Sticky action bar of every form window: CRUD + list cluster on the
  * start side, record navigation on the end side (icons flip in RTL so
  * first/last stay visually correct).
@@ -85,15 +114,18 @@ export function FormActionBar({
   isDirty,
   isSaving,
   isDeleting,
-  isDeleteArmed,
   hasRecord,
   recordIndex,
   recordCount,
   isListOpen,
   onNew,
   onSave,
+  onSaveNew,
+  onSaveClose,
   onCopy,
   onDelete,
+  onDeleteNew,
+  onDeleteClose,
   onPrint,
   onToggleList,
   onFirst,
@@ -113,6 +145,8 @@ export function FormActionBar({
     key: string;
     tint: Tint;
     icon: LucideIcon;
+    /** Optional corner badge turning the base icon into a combined action. */
+    badge?: LucideIcon;
     label: string;
     onClick: () => void;
     disabled: boolean;
@@ -139,6 +173,24 @@ export function FormActionBar({
       spinning: isSaving,
     },
     {
+      key: 'saveNew',
+      tint: 'emerald',
+      icon: Save,
+      badge: Plus,
+      label: t('formWindow.actionSaveNew'),
+      onClick: onSaveNew,
+      disabled: isSaving || isDeleting,
+    },
+    {
+      key: 'saveClose',
+      tint: 'emerald',
+      icon: Save,
+      badge: X,
+      label: t('formWindow.actionSaveClose'),
+      onClick: onSaveClose,
+      disabled: isSaving || isDeleting,
+    },
+    {
       key: 'copy',
       tint: 'violet',
       icon: Copy,
@@ -153,7 +205,24 @@ export function FormActionBar({
       label: t('formWindow.actionDelete'),
       onClick: onDelete,
       disabled: mode === 'new' || !hasRecord || isSaving || isDeleting,
-      pressed: isDeleteArmed,
+    },
+    {
+      key: 'deleteNew',
+      tint: 'rose',
+      icon: Trash2,
+      badge: Plus,
+      label: t('formWindow.actionDeleteNew'),
+      onClick: onDeleteNew,
+      disabled: mode === 'new' || !hasRecord || isSaving || isDeleting,
+    },
+    {
+      key: 'deleteClose',
+      tint: 'rose',
+      icon: Trash2,
+      badge: X,
+      label: t('formWindow.actionDeleteClose'),
+      onClick: onDeleteClose,
+      disabled: mode === 'new' || !hasRecord || isSaving || isDeleting,
     },
     {
       key: 'print',
@@ -228,20 +297,24 @@ export function FormActionBar({
             : 'bg-slate-400/30 text-slate-100 ring-slate-300/40'),
       )}
     >
-      {createElement(action.icon, {
-        className: cn('h-4 w-4', action.spinning && 'animate-spin'),
-        strokeWidth: 2,
-      })}
+      {action.badge ? (
+        <BadgeIcon base={action.icon} badge={action.badge} />
+      ) : (
+        createElement(action.icon, {
+          className: cn('h-4 w-4', action.spinning && 'animate-spin'),
+          strokeWidth: 2,
+        })
+      )}
     </motion.button>
   );
 
   return (
-    <div className="flex shrink-0 items-center justify-between gap-2 border-b border-white/10 bg-white/[0.02] px-3 py-1.5">
+    <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-white/10 bg-white/[0.02] px-3 py-1.5">
       <motion.div
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="flex items-center gap-1.5"
+        className="flex flex-wrap items-center gap-1.5"
       >
         {actions.map(renderButton)}
       </motion.div>
@@ -249,7 +322,7 @@ export function FormActionBar({
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="flex items-center gap-1"
+        className="flex flex-wrap items-center gap-1"
       >
         {navActions.map(renderButton)}
       </motion.div>

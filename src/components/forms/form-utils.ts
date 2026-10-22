@@ -84,7 +84,11 @@ export function deriveTabs(def: FormDef, locale: Locale): DerivedTab[] {
     if (!group) {
       group = {
         key: field.tabKey,
-        name: field.tabName ?? translate(locale, 'formWindow.mainSection'),
+        name:
+          (locale === 'fa'
+            ? field.tabName
+            : field.tabNameEn ?? field.tabName) ??
+          translate(locale, 'formWindow.mainSection'),
         fields: [],
       };
       groups.push(group);

@@ -32,6 +32,8 @@ export interface FormFieldDef {
   tabKey: string | null;
   /** Tab display name (base locale, fa). */
   tabName: string | null;
+  /** English tab display name (fallback for en/tr/ar). */
+  tabNameEn?: string | null;
   fieldKey: string;
   /** Persian label (default locale). */
   label: string;

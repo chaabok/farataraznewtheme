@@ -45,6 +45,7 @@ export function DesktopShell() {
   const tabs = useDesktopStore((s) => s.tabs);
   const activeTabId = useDesktopStore((s) => s.activeTabId);
   const isTabBarActive = useDesktopStore((s) => s.isTabBarActive);
+  const closeTab = useDesktopStore((s) => s.closeTab);
   const { t } = useTranslation();
 
   // Load icons from the NestJS desktop-service through the Next.js gateway.
@@ -143,6 +144,7 @@ export function DesktopShell() {
                   <DataFormWindow
                     moduleId={tab.id}
                     form={tab.form}
+                    onClose={() => closeTab(tab.id)}
                   />
                 ) : tab.moduleId ? (
                   <div className="h-full overflow-y-auto p-4 sm:p-5 [scrollbar-width:thin]">

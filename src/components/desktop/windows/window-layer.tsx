@@ -17,6 +17,7 @@ const FORM_BODY_CLASS =
  */
 export function WindowLayer() {
   const windows = useDesktopStore((s) => s.windows);
+  const closeWindow = useDesktopStore((s) => s.closeWindow);
 
   return (
     <AnimatePresence>
@@ -32,7 +33,11 @@ export function WindowLayer() {
           bodyClassName={win.form ? FORM_BODY_CLASS : undefined}
         >
           {win.form ? (
-            <DataFormWindow moduleId={win.moduleId} form={win.form} />
+            <DataFormWindow
+              moduleId={win.moduleId}
+              form={win.form}
+              onClose={() => closeWindow(win.moduleId)}
+            />
           ) : (
             <ModuleWindow moduleId={win.moduleId} />
           )}

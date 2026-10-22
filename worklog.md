@@ -372,3 +372,26 @@ Stage Summary:
 - تب Home = دسکتاپ زنده؛ فرم‌ها/ماژول‌ها = تب‌های keep-alive با آیکون و بستن
 - منوی ماژول هرگز به‌خاطر باز شدن فرم بسته نمی‌شود (الزام کاربر)
 - وضعیت فرم‌ها بین تب‌ها حفظ می‌شود (unmount نمی‌شوند)
+
+---
+Task ID: 6
+Agent: Z.ai Code (main)
+Task: چهار دکمه ترکیبی جدید در اکشن‌بار فرم‌ها (ذخیره و جدید / ذخیره و بستن / حذف و جدید / حذف و بستن) + دیالوگ تأیید حذف «از حذف اطلاعات مورد نظر اطمینان دارید؟» با بلی/خیر
+
+Work Log:
+- action-bar.tsx: کامپوننت BadgeIcon (آیکون پایه + نشان دایره‌ای گوشه ＋/× با bg-current و سایه رنگی) — خانواده ذخیره هر ۳ دکمه با پایه Save و تینت زمردی، خانواده حذف هر ۳ دکمه با پایه Trash2 و تینت رزی؛ سنخیت درون‌خانوادگی با نشان متمایزکننده؛ props جدید onSaveNew/onSaveClose/onDeleteNew/onDeleteClose و حذف isDeleteArmed؛ کلاسترها flex-wrap برای موبایل
+- form-window.tsx: بازآرایی ذخیره به پایپ‌لاین مشترک performSave({keepRecord}) با خروجی 'saved'|'clean'|'invalid'|'error' — اعتبارسنجی فیلدهای الزامی مشترک بین هر ۳ عملیات ذخیره؛ handleSaveNew (ذخیره → startNew + توست saveNewSuccess)، handleSaveClose (ذخیره → onClose + توست saveCloseSuccess؛ حالت clean بستن بدون ذخیره)؛ حذف inline strip → دیالوگ واحد AlertDialog شیکا با deleteIntent ('current'|'new'|'close')، دکمه بلی با event.preventDefault تا دیالوگ حین DELETE باز بماند (Loader2 + disabled)؛ onClose prop جدید به DataFormWindowProps
+- desktop-shell.tsx: پنل تب فرم اکنون onClose={() => closeTab(tab.id)} می‌دهد (معماری تب‌محور Task 5) — «ذخیره و بستن»/«حذف و بستن» تب را می‌بندند و به تب قبلی برمی‌گردند؛ window-layer هم برای پنجره شناور legacy همان prop را با closeWindow می‌دهد
+- ui/alert-dialog.tsx: z-50 → z-[9998]/z-[9999] (z پنجره‌ها با هر فوکوس بالا می‌رود و دیالوگ همیشه رو می‌ماند)
+- باگ جانبی i18n (کشف در E2E): نام تب‌های فرم در en/tr/ar فارسی می‌ماند → types/forms.ts فیلد tabNameEn? + form-utils.deriveTabs fallback (locale==='fa' ? tabName : tabNameEn ?? tabName) + form-window درخواست def با ?locale= (سرور pickLocalized دارد) — تب‌های فرم اکنون «Main Information/Accounting Information/Goods» می‌شوند
+- dictionaries.ts: ۱۲ کلید جدید × ۴ زبان (actionSaveNew/actionSaveClose/actionDeleteNew/actionDeleteClose/deleteDialogTitle/deleteDialogMessage/confirmYes=بلی/confirmNo=خیر/ saveNewSuccess/saveCloseSuccess/deleteNewSuccess/deleteCloseSuccess)
+- E2E مرورگر کامل: بازکردن فرم از منو → ۴ دکمه جدید با نشان‌ها حاضرند (fa و en)؛ اعتبارسنجی «اثر» جلوی ذخیره و جدید را گرفت (توست destructive)؛ ذخیره و جدید → POST 201 + ریست کامل فرم + توست؛ ذخیره و بستن → POST 201 + بستن تب + توست؛ حذف و جدید → دیالوگ → «خیر» لغو سالم → «بلی» → DELETE 204 + ریست + توست؛ حذف و بستن → دیالوگ → «بلی» → DELETE 204 + بستن تب + توست؛ دکمه‌های حذف در حالت new غیرفعال
+- ریسپانسیو: 390px اکشن‌بار ۱۴ دکمه‌ای تمیز در ۳ ردیف wrap می‌شود؛ LTR انگلیسی آینه‌ای درست (نشان‌ها سمت end)؛ برگشت موفق به فارسی با ?locale=fa
+- حاشیه: سرور next وسط تست مرد (پس از reload/کامپایل مجدد) → راه‌اندازی مجدد با الگوی orphan (setsid nohup) و ادامه تست
+- lint نهایی پاس؛ کنسول مرورگر ۰ خطا؛ dev.log سالم (POST 201 / DELETE 204)
+- رکوردهای تست پاک‌سازی شدند (۱۰۳/۱۰۴ حذف شدند؛ DB به حالت seed ۱۰۱/۱۰۲ برگشت)
+
+Stage Summary:
+- ۴ عملیات ترکیبی استاندارد ERP فرم‌ها فعال است؛ هر سه مسیر ذخیره از یک پایپ‌لاین اعتبارسنجی/نوشتن/رفرش مشترک عبور می‌کنند و هر سه مسیر حذف از یک دیالوگ تأیید واحد
+- بستن فرم در معماری تب‌محور = closeTab (اتصال desktop-shell → closeTab(tab.id))
+- پیگیری جزئی برای جلسات بعد: عنوان تب Workspace هنگام ایجاد اسنپ‌شات می‌ماند و پس از تغییر زبان تا بستن/بازکردن تب قدیمی می‌ماند (نیاز به nameEn در ModuleFormItem + derive زنده در TabBar)

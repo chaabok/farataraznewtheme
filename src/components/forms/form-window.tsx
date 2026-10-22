@@ -8,7 +8,17 @@ import {
   type ReactNode,
 } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ChevronUp, List, Loader2, RefreshCw, TriangleAlert } from 'lucide-react';
+import { ChevronUp, List, Loader2, RefreshCw, Trash2 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from '@/hooks/use-toast';
 import { useTranslation } from '@/i18n';
@@ -47,7 +57,15 @@ export interface DataFormWindowProps {
   moduleId: string;
   /** Descriptor attached by `openFormWindow` in the desktop store. */
   form?: FormWindowInfo;
+  /** Closes the hosting window ("save & close" / "delete & close"). */
+  onClose?: () => void;
 }
+
+/** Which combined action a pending delete confirmation belongs to. */
+type DeleteIntent = 'current' | 'new' | 'close' | null;
+
+/** Outcome of the shared save pipeline. */
+type SaveResult = 'saved' | 'clean' | 'invalid' | 'error';
 
 /** Fallback parsing of the window id when no descriptor is attached. */
 function parseModuleId(moduleId: string): {
@@ -70,7 +88,7 @@ const GENERIC_LOAD_ERROR = 'formWindow.loadError';
  * record navigation, Ctrl+S, records drawer) through the shared form
  * component library. One implementation renders every ERP form.
  */
-export function DataFormWindow({ moduleId, form }: DataFormWindowProps) {
+export function DataFormWindow({ moduleId, form, onClose }: DataFormWindowProps) {
   const { locale, direction, t, tf, formatNumber } = useTranslation();
 
   const fallback = useMemo(() => parseModuleId(moduleId), [moduleId]);
@@ -93,8 +111,12 @@ export function DataFormWindow({ moduleId, form }: DataFormWindowProps) {
   const [baseline, setBaseline] = useState<FormDataMap>({});
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  /** Armed = inline delete confirmation strip is visible. */
-  const [isDeleteArmed, setIsDeleteArmed] = useState(false);
+  /**
+   * Pending delete request awaiting the confirm dialog — `current` =
+   * delete and stay, `new` = delete then reset for a fresh entry,
+   * `close` = delete then close the window.
+   */
+  const [deleteIntent, setDeleteIntent] = useState<DeleteIntent>(null);
   const [isListOpen, setIsListOpen] = useState(false);
   const [activeTabKey, setActiveTabKey] = useState<string | null>(null);
 
@@ -125,7 +147,9 @@ export function DataFormWindow({ moduleId, form }: DataFormWindowProps) {
     setLoadError(null);
     try {
       const [defRes, recordsRes] = await Promise.all([
-        apiFetch<{ data: FormDef }>(basePath),
+        apiFetch<{ data: FormDef }>(
+          `${basePath}?locale=${encodeURIComponent(locale)}`,
+        ),
         apiFetch<{ data: FormRecord[] }>(`${basePath}/records`),
       ]);
       const nextDef = defRes.data;
@@ -179,7 +203,6 @@ export function DataFormWindow({ moduleId, form }: DataFormWindowProps) {
     const target = list[index];
     setCurrentIndex(index);
     setMode('view');
-    setIsDeleteArmed(false);
     if (target) {
       setDraft({ ...target.data });
       setBaseline({ ...target.data });
@@ -206,7 +229,6 @@ export function DataFormWindow({ moduleId, form }: DataFormWindowProps) {
       setBaseline({ ...base });
       setMode('new');
       setCurrentIndex(-1);
-      setIsDeleteArmed(false);
     },
     [def],
   );
@@ -223,82 +245,125 @@ export function DataFormWindow({ moduleId, form }: DataFormWindowProps) {
     toast({ title: t('formWindow.copyToast') });
   }, [current, mode, startNew, t]);
 
-  const handleSave = useCallback(async () => {
-    if (!def || !basePath || isSaving || isDeleting) return;
-    if (mode === 'view' || !isDirty) return;
+  /**
+   * Shared save pipeline for every save action: validates required
+   * fields, writes the draft to the database and refreshes the record
+   * list. `keepRecord: false` skips re-selecting the saved record
+   * (used by "save & new", which resets the form right after).
+   */
+  const performSave = useCallback(
+    async (options?: { keepRecord?: boolean }): Promise<SaveResult> => {
+      if (!def || !basePath || isSaving || isDeleting) return 'error';
+      if (mode === 'view' || !isDirty) return 'clean';
 
-    const missingField = def.fields.find((field) =>
-      isEmptyRequiredValue(field, draft[field.fieldKey]),
-    );
-    if (missingField) {
-      toast({
-        title: fieldLabel(missingField, locale),
-        description: t('formWindow.requiredHint'),
-        variant: 'destructive',
-      });
+      const missingField = def.fields.find((field) =>
+        isEmptyRequiredValue(field, draft[field.fieldKey]),
+      );
+      if (missingField) {
+        toast({
+          title: fieldLabel(missingField, locale),
+          description: t('formWindow.requiredHint'),
+          variant: 'destructive',
+        });
+        return 'invalid';
+      }
+
+      setIsSaving(true);
+      try {
+        const saved =
+          mode === 'new'
+            ? (
+                await apiFetch<{ data: FormRecord }>(`${basePath}/records`, {
+                  method: 'POST',
+                  body: { data: draft },
+                })
+              ).data
+            : (
+                await apiFetch<{ data: FormRecord }>(
+                  `${basePath}/records/${encodeURIComponent(current?.id ?? '')}`,
+                  { method: 'PUT', body: { data: draft } },
+                )
+              ).data;
+
+        const list = await refreshRecords();
+        if (options?.keepRecord !== false) {
+          const index = list.findIndex((record) => record.id === saved.id);
+          if (index >= 0) {
+            applyRecord(index, list);
+          } else {
+            setMode('view');
+          }
+        }
+        return 'saved';
+      } catch (error) {
+        if (!(error instanceof SessionExpiredError)) {
+          toast({
+            title: t('formWindow.saveError'),
+            description: error instanceof Error ? error.message : undefined,
+            variant: 'destructive',
+          });
+        }
+        return 'error';
+      } finally {
+        setIsSaving(false);
+      }
+    },
+    [
+      applyRecord,
+      basePath,
+      current,
+      def,
+      draft,
+      isDeleting,
+      isDirty,
+      isSaving,
+      locale,
+      mode,
+      refreshRecords,
+      t,
+    ],
+  );
+
+  const handleSave = useCallback(async () => {
+    const result = await performSave();
+    if (result === 'saved') toast({ title: t('formWindow.saveSuccess') });
+  }, [performSave, t]);
+
+  /** Save & new: write the record, then reset the form for a fresh entry. */
+  const handleSaveNew = useCallback(async () => {
+    if (isSaving || isDeleting) return;
+    const result = await performSave({ keepRecord: false });
+    if (result === 'error' || result === 'invalid') return;
+    startNew();
+    if (result === 'saved') toast({ title: t('formWindow.saveNewSuccess') });
+  }, [isDeleting, isSaving, performSave, startNew, t]);
+
+  /** Save & close: write the record after validation, then close. */
+  const handleSaveClose = useCallback(async () => {
+    if (isSaving || isDeleting) return;
+    const result = await performSave();
+    if (result === 'error' || result === 'invalid') return;
+    if (result === 'saved') toast({ title: t('formWindow.saveCloseSuccess') });
+    onClose?.();
+  }, [isDeleting, isSaving, onClose, performSave, t]);
+
+  /** First click on any delete action opens the confirm dialog. */
+  const requestDelete = useCallback(
+    (intent: Exclude<DeleteIntent, null>) => {
+      if (!current || mode === 'new' || isSaving || isDeleting) return;
+      setDeleteIntent(intent);
+    },
+    [current, isDeleting, isSaving, mode],
+  );
+
+  /** Runs after the user presses «بلی» in the confirm dialog. */
+  const confirmDelete = useCallback(async () => {
+    if (isDeleting || !deleteIntent) return;
+    const intent = deleteIntent;
+    if (!basePath || !current) {
+      setDeleteIntent(null);
       return;
     }
-
-    setIsSaving(true);
-    try {
-      const saved =
-        mode === 'new'
-          ? (
-              await apiFetch<{ data: FormRecord }>(`${basePath}/records`, {
-                method: 'POST',
-                body: { data: draft },
-              })
-            ).data
-          : (
-              await apiFetch<{ data: FormRecord }>(
-                `${basePath}/records/${encodeURIComponent(current?.id ?? '')}`,
-                { method: 'PUT', body: { data: draft } },
-              )
-            ).data;
-
-      const list = await refreshRecords();
-      const index = list.findIndex((record) => record.id === saved.id);
-      if (index >= 0) {
-        applyRecord(index, list);
-      } else {
-        setMode('view');
-      }
-      toast({ title: t('formWindow.saveSuccess') });
-    } catch (error) {
-      if (error instanceof SessionExpiredError) return;
-      toast({
-        title: t('formWindow.saveError'),
-        description: error instanceof Error ? error.message : undefined,
-        variant: 'destructive',
-      });
-    } finally {
-      setIsSaving(false);
-    }
-  }, [
-    applyRecord,
-    basePath,
-    current,
-    def,
-    draft,
-    isDeleting,
-    isDirty,
-    isSaving,
-    locale,
-    mode,
-    refreshRecords,
-    t,
-  ]);
-
-  /** First click on delete only arms the inline confirmation strip. */
-  const handleDeleteRequest = useCallback(() => {
-    if (!current || mode === 'new' || isSaving || isDeleting) return;
-    setIsDeleteArmed(true);
-  }, [current, isDeleting, isSaving, mode]);
-
-  const handleCancelDelete = useCallback(() => setIsDeleteArmed(false), []);
-
-  const handleDelete = useCallback(async () => {
-    if (!basePath || !current || mode === 'new' || isSaving || isDeleting) return;
     setIsDeleting(true);
     try {
       // DELETE answers 204 with an empty body — nothing to parse.
@@ -308,15 +373,26 @@ export function DataFormWindow({ moduleId, form }: DataFormWindowProps) {
           method: 'DELETE',
         },
       );
+      setDeleteIntent(null);
+      if (intent === 'close') {
+        toast({ title: t('formWindow.deleteCloseSuccess') });
+        onClose?.();
+        return;
+      }
       const list = await refreshRecords();
-      if (list.length) {
+      if (intent === 'new') {
+        startNew();
+        toast({ title: t('formWindow.deleteNewSuccess') });
+      } else if (list.length) {
         applyRecord(Math.min(currentIndex, list.length - 1), list);
+        toast({ title: t('formWindow.deleteSuccess') });
       } else {
         setCurrentIndex(-1);
         startNew();
+        toast({ title: t('formWindow.deleteSuccess') });
       }
-      toast({ title: t('formWindow.deleteSuccess') });
     } catch (error) {
+      setDeleteIntent(null);
       if (error instanceof SessionExpiredError) return;
       toast({
         title: error instanceof Error && error.message
@@ -330,11 +406,11 @@ export function DataFormWindow({ moduleId, form }: DataFormWindowProps) {
   }, [
     applyRecord,
     basePath,
-    current,
     currentIndex,
+    current,
+    deleteIntent,
     isDeleting,
-    isSaving,
-    mode,
+    onClose,
     refreshRecords,
     startNew,
     t,
@@ -352,7 +428,7 @@ export function DataFormWindow({ moduleId, form }: DataFormWindowProps) {
     [],
   );
 
-  // Ctrl+S / Cmd+S saves the active draft; Escape cancels the delete ask.
+  // Ctrl+S / Cmd+S saves the active draft (Escape is handled by the dialog).
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (
@@ -363,8 +439,6 @@ export function DataFormWindow({ moduleId, form }: DataFormWindowProps) {
       ) {
         event.preventDefault();
         void handleSave();
-      } else if (event.key === 'Escape') {
-        setIsDeleteArmed(false);
       }
     };
     window.addEventListener('keydown', onKeyDown);
@@ -464,6 +538,7 @@ export function DataFormWindow({ moduleId, form }: DataFormWindowProps) {
     loadError === GENERIC_LOAD_ERROR ? t('formWindow.loadError') : loadError;
 
   return (
+    <>
     <FormShell
       title={title}
       subtitle={subtitle}
@@ -475,15 +550,18 @@ export function DataFormWindow({ moduleId, form }: DataFormWindowProps) {
           isDirty={isDirty}
           isSaving={isSaving}
           isDeleting={isDeleting}
-          isDeleteArmed={isDeleteArmed}
           hasRecord={Boolean(current)}
           recordIndex={currentIndex}
           recordCount={records.length}
           isListOpen={isListOpen}
           onNew={handleNew}
           onSave={() => void handleSave()}
+          onSaveNew={() => void handleSaveNew()}
+          onSaveClose={() => void handleSaveClose()}
           onCopy={handleCopy}
-          onDelete={handleDeleteRequest}
+          onDelete={() => requestDelete('current')}
+          onDeleteNew={() => requestDelete('new')}
+          onDeleteClose={() => requestDelete('close')}
           onPrint={handlePrint}
           onToggleList={() => setIsListOpen((open) => !open)}
           onFirst={() => navigateTo(0)}
@@ -494,14 +572,6 @@ export function DataFormWindow({ moduleId, form }: DataFormWindowProps) {
       }
       subPanel={
         <AnimatePresence initial={false}>
-          {isDeleteArmed && (
-            <DeleteConfirmStrip
-              key="delete-confirm"
-              isDeleting={isDeleting}
-              onConfirm={() => void handleDelete()}
-              onCancel={handleCancelDelete}
-            />
-          )}
           {isListOpen && (
             <RecordsDrawer
               key="records-drawer"
@@ -560,60 +630,51 @@ export function DataFormWindow({ moduleId, form }: DataFormWindowProps) {
         </>
       )}
     </FormShell>
-  );
-}
 
-interface DeleteConfirmStripProps {
-  isDeleting: boolean;
-  onConfirm: () => void;
-  onCancel: () => void;
-}
-
-/** Inline delete confirmation strip sliding open under the action bar. */
-function DeleteConfirmStrip({
-  isDeleting,
-  onConfirm,
-  onCancel,
-}: DeleteConfirmStripProps) {
-  const { t } = useTranslation();
-
-  return (
-    <motion.div
-      initial={{ height: 0, opacity: 0 }}
-      animate={{ height: 'auto', opacity: 1 }}
-      exit={{ height: 0, opacity: 0 }}
-      transition={{ duration: 0.18, ease: 'easeOut' }}
-      className="shrink-0 overflow-hidden border-b border-rose-400/20 bg-rose-950/30"
+    {/* Single delete-confirmation dialog shared by all three delete actions. */}
+    <AlertDialog
+      open={deleteIntent !== null}
+      onOpenChange={(open) => {
+        if (!open) setDeleteIntent(null);
+      }}
     >
-      <div className="flex items-center gap-2.5 px-3 py-2">
-        <TriangleAlert
-          className="h-4 w-4 shrink-0 text-rose-300"
-          aria-hidden="true"
-        />
-        <p className="min-w-0 flex-1 text-[12px] leading-snug text-rose-100/90">
-          {t('formWindow.deleteConfirm')}
-        </p>
-        <button
-          type="button"
-          onClick={onCancel}
-          disabled={isDeleting}
-          className="h-7 shrink-0 rounded-md bg-white/[0.06] px-3 text-[11.5px] text-white/75 transition-colors hover:bg-white/[0.12] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40 disabled:opacity-40"
-        >
-          {t('formWindow.deleteNo')}
-        </button>
-        <button
-          type="button"
-          onClick={onConfirm}
-          disabled={isDeleting}
-          className="flex h-7 shrink-0 items-center gap-1.5 rounded-md bg-rose-500/85 px-3 text-[11.5px] font-medium text-white shadow-sm shadow-rose-950/40 transition-colors hover:bg-rose-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-rose-300/60 disabled:opacity-60"
-        >
-          {isDeleting ? (
-            <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
-          ) : null}
-          {t('formWindow.deleteYes')}
-        </button>
-      </div>
-    </motion.div>
+      <AlertDialogContent className="max-w-[calc(100vw-2rem)] rounded-2xl border border-white/15 bg-[#1e2128]/95 text-white shadow-2xl shadow-black/60 backdrop-blur-xl sm:max-w-md">
+        <AlertDialogHeader className="sm:text-start">
+          <AlertDialogTitle className="flex items-center gap-2.5 text-base text-white">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-rose-500/15 text-rose-400 ring-1 ring-rose-400/30">
+              <Trash2 className="h-4 w-4" aria-hidden="true" />
+            </span>
+            {t('formWindow.deleteDialogTitle')}
+          </AlertDialogTitle>
+          <AlertDialogDescription className="text-[13px] leading-relaxed text-white/65">
+            {t('formWindow.deleteDialogMessage')}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter className="gap-2 sm:justify-start">
+          <AlertDialogCancel
+            disabled={isDeleting}
+            className="h-9 rounded-lg border-white/15 bg-white/[0.06] px-4 text-[13px] text-white/80 transition-colors hover:bg-white/[0.12] hover:text-white focus-visible:ring-white/40"
+          >
+            {t('formWindow.confirmNo')}
+          </AlertDialogCancel>
+          <AlertDialogAction
+            disabled={isDeleting}
+            onClick={(event) => {
+              // Keep the dialog open while the delete request runs.
+              event.preventDefault();
+              void confirmDelete();
+            }}
+            className="flex h-9 items-center gap-1.5 rounded-lg bg-rose-500/90 px-4 text-[13px] text-white shadow-sm shadow-rose-950/40 transition-colors hover:bg-rose-500 focus-visible:ring-rose-300/60"
+          >
+            {isDeleting ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+            ) : null}
+            {t('formWindow.confirmYes')}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }
 
