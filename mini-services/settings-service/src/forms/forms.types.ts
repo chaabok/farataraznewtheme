@@ -50,6 +50,22 @@ export interface FormDef {
   fields: FormFieldDef[];
 }
 
+/**
+ * Lightweight form summary for menus / data lists
+ * (no field rows — those come from the per-form definition endpoint).
+ */
+export interface FormSummary {
+  moduleKey: string;
+  formKey: string;
+  /** Name, localized per the `?locale=` query param (fa default). */
+  name: string;
+  /** English name (raw, fallback for other locales). */
+  nameEn: string | null;
+  type: 'simple' | 'tabbed' | 'tree';
+  iconKey: string;
+  accentColor: string;
+}
+
 /** One saved record of a form. */
 export interface FormRecord {
   id: string;

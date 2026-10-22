@@ -12,6 +12,7 @@ import type {
   FormDef,
   FormFieldDef,
   FormRecord,
+  FormSummary,
   LookupOption,
 } from './forms.types';
 
@@ -60,6 +61,40 @@ export class FormsService {
   constructor(
     @Inject(PrismaService) private readonly prisma: PrismaService,
   ) {}
+
+  /**
+   * GET /:moduleKey → summaries of every active form of the module
+   * (drives the «فهرست‌های اطلاعات» data-list menu on the frontend).
+   */
+  async listDefinitions(
+    moduleKey: string,
+    locale: string,
+  ): Promise<FormSummary[]> {
+    assertKey(moduleKey, 'moduleKey');
+
+    const forms = await this.prisma.formDefinition.findMany({
+      where: { isActive: true, moduleKey },
+      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+      select: {
+        moduleKey: true,
+        formKey: true,
+        name: true,
+        nameEn: true,
+        type: true,
+        iconKey: true,
+        accentColor: true,
+      },
+    });
+    return forms.map((form) => ({
+      moduleKey: form.moduleKey,
+      formKey: form.formKey,
+      name: pickLocalized(locale, form.name, form.nameEn),
+      nameEn: form.nameEn,
+      type: form.type as FormSummary['type'],
+      iconKey: form.iconKey,
+      accentColor: form.accentColor,
+    }));
+  }
 
   /** GET /:moduleKey/:formKey → localized FormDef (fields ordered by sortOrder). */
   async getDefinition(

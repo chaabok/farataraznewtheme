@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { translate } from '@/i18n';
+import { apiFetch } from '@/lib/api-client';
 import {
   DEFAULT_LOCALE,
   DIR_BY_LOCALE,
@@ -46,10 +47,28 @@ export interface FormWindowInfo {
   name: string;
   /** Lucide icon key for the window chrome. */
   iconKey: string;
+  /** Preselect this record after load (opened from a data list). */
+  recordId?: string;
+  /** Start in "new record" mode (opened from a data list). */
+  startInNew?: boolean;
+  /** Changes on every list-driven open → forces the form to reload. */
+  nonce?: number;
+}
+
+/** Descriptor of a data-list tab browsing the records of one form. */
+export interface ListWindowInfo {
+  /** Owning module key, e.g. `settings` — used to build the API path. */
+  moduleKey: string;
+  /** Form definition key, e.g. `account-class` (without the list: prefix). */
+  formKey: string;
+  /** Display name (localized by the menu that opened the list). */
+  name: string;
+  /** Lucide icon key for the window chrome. */
+  iconKey: string;
 }
 
 /** Kind of a workspace tab shown in the dashboard tab bar. */
-export type DesktopTabKind = 'home' | 'form' | 'module';
+export type DesktopTabKind = 'home' | 'form' | 'list' | 'module';
 
 /**
  * One browser-style workspace tab of the dashboard tab bar. The Home tab
@@ -68,6 +87,8 @@ export interface DesktopTab {
   accentColor: string;
   /** Present for kind `form`. */
   form?: FormWindowInfo;
+  /** Present for kind `list` — records browser of one form. */
+  list?: ListWindowInfo;
   /** Present for kind `module`. */
   moduleId?: string;
 }
@@ -150,6 +171,8 @@ interface DesktopState {
   focusWindow: (moduleId: string) => void;
   /** Opens (or focuses) a tab for a database-driven form; menu stays open. */
   addFormTab: (form: FormWindowInfo) => void;
+  /** Opens (or focuses) the records list tab of a database-driven form. */
+  addListTab: (list: ListWindowInfo) => void;
   /** Opens (or focuses) a tab hosting the generic module app. */
   addModuleTab: (info: {
     moduleId: string;
@@ -251,14 +274,11 @@ export const useDesktopStore = create<DesktopState>((set, get) => ({
     }
     set({ isMenusLoading: true, menusError: null });
     try {
-      const res = await fetch(
+      // apiFetch attaches the user JWT so the gateway can forward it to
+      // the module services when enriching with the data-lists menu.
+      const payload = await apiFetch<{ data: ModuleMenusPayload }>(
         `/api/desktop/menus/${encodeURIComponent(moduleKey)}?locale=${locale}`,
-        { cache: 'no-store' },
       );
-      if (!res.ok) {
-        throw new Error(translate(locale, 'moduleMenu.loadError'));
-      }
-      const payload = (await res.json()) as { data: ModuleMenusPayload };
       const menus = payload.data?.menus ?? [];
       set((state) => ({
         menusCache: { ...state.menusCache, [cacheKey]: menus },
@@ -371,6 +391,31 @@ export const useDesktopStore = create<DesktopState>((set, get) => ({
         isTabBarActive: true,
         // NOTE: the module flyout menu intentionally stays open — it lives
         // on the Home tab and reappears when the user switches back to it.
+      };
+    });
+  },
+
+  /** Opens (or refocuses) the records list tab of a database-driven form. */
+  addListTab: (list) => {
+    const id = `list:${list.formKey}`;
+    set((state) => {
+      const exists = state.tabs.some((tab) => tab.id === id);
+      const tab: DesktopTab = {
+        id,
+        kind: 'list',
+        title: list.name,
+        iconKey: list.iconKey,
+        accentColor: '#38bdf8',
+        list,
+      };
+      return {
+        tabs: exists
+          ? state.tabs.map((candidate) =>
+              candidate.id === id ? { ...candidate, ...tab } : candidate,
+            )
+          : [...state.tabs, tab],
+        activeTabId: id,
+        isTabBarActive: true,
       };
     });
   },

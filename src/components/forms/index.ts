@@ -5,6 +5,8 @@
  */
 export { DataFormWindow } from './form-window';
 export type { DataFormWindowProps } from './form-window';
+export { DataListWindow } from './data-list-window';
+export type { DataListWindowProps } from './data-list-window';
 export { FormShell } from './form-shell';
 export { FormActionBar, type FormMode } from './action-bar';
 export { FormTabs, type FormTabItem } from './form-tabs';

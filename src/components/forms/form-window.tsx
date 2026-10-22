@@ -23,6 +23,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from '@/hooks/use-toast';
 import { useTranslation } from '@/i18n';
 import { apiFetch, SessionExpiredError } from '@/lib/api-client';
+import { notifyRecordsChanged } from '@/lib/app-events';
 import type { FormWindowInfo } from '@/store/desktop-store';
 import type {
   FormDataMap,
@@ -98,6 +99,12 @@ export function DataFormWindow({ moduleId, form, onClose }: DataFormWindowProps)
     moduleKey && formKey ? `/api/modules/${moduleKey}/forms/${formKey}` : null;
   const lookupUrlBase = basePath ? `${basePath}/lookups` : '';
 
+  /** Record preselection / start-mode requested by a data list (if any). */
+  const wantedRecordId = form?.recordId ?? null;
+  const wantsStartInNew = form?.startInNew ?? false;
+  /** Changes on every list-driven open → forces a fresh load. */
+  const formNonce = form?.nonce;
+
   // ── Data ──
   const [def, setDef] = useState<FormDef | null>(null);
   const [records, setRecords] = useState<FormRecord[]>([]);
@@ -159,12 +166,27 @@ export function DataFormWindow({ moduleId, form, onClose }: DataFormWindowProps)
       setDef(nextDef);
       setRecords(nextRecords);
 
-      if (nextRecords.length) {
-        const lastIndex = nextRecords.length - 1;
-        const last = nextRecords[lastIndex];
-        setCurrentIndex(lastIndex);
-        setDraft({ ...last.data });
-        setBaseline({ ...last.data });
+      if (wantsStartInNew) {
+        // Opened from a data list in "new record" mode.
+        const defaults = buildDefaults(nextDef.fields);
+        setCurrentIndex(-1);
+        setDraft({ ...defaults });
+        setBaseline({ ...defaults });
+        setMode('new');
+      } else if (nextRecords.length) {
+        // Default: the last record. When opened from a data list, the
+        // requested record (wantedRecordId) is selected instead.
+        let index = nextRecords.length - 1;
+        if (wantedRecordId) {
+          const found = nextRecords.findIndex(
+            (record) => record.id === wantedRecordId,
+          );
+          if (found >= 0) index = found;
+        }
+        const target = nextRecords[index];
+        setCurrentIndex(index);
+        setDraft({ ...target.data });
+        setBaseline({ ...target.data });
         setMode('view');
       } else {
         const defaults = buildDefaults(nextDef.fields);
@@ -189,7 +211,7 @@ export function DataFormWindow({ moduleId, form, onClose }: DataFormWindowProps)
     } finally {
       setIsLoading(false);
     }
-  }, [basePath, locale]);
+  }, [basePath, formNonce, locale, wantedRecordId, wantsStartInNew]);
 
   useEffect(() => {
     void load();
@@ -299,6 +321,10 @@ export function DataFormWindow({ moduleId, form, onClose }: DataFormWindowProps)
             setMode('view');
           }
         }
+        // Open records lists of this form refresh themselves.
+        if (moduleKey && formKey) {
+          notifyRecordsChanged({ moduleKey, formKey });
+        }
         return 'saved';
       } catch (error) {
         if (!(error instanceof SessionExpiredError)) {
@@ -319,11 +345,13 @@ export function DataFormWindow({ moduleId, form, onClose }: DataFormWindowProps)
       current,
       def,
       draft,
+      formKey,
       isDeleting,
       isDirty,
       isSaving,
       locale,
       mode,
+      moduleKey,
       refreshRecords,
       t,
     ],
@@ -395,6 +423,10 @@ export function DataFormWindow({ moduleId, form, onClose }: DataFormWindowProps)
         },
       );
       cancelDelete();
+      // Open records lists of this form refresh themselves.
+      if (moduleKey && formKey) {
+        notifyRecordsChanged({ moduleKey, formKey });
+      }
       if (intent === 'close') {
         toast({ title: t('formWindow.deleteCloseSuccess') });
         onClose?.();

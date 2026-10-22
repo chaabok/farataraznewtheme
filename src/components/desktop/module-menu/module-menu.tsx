@@ -70,6 +70,7 @@ export function ModuleMenu() {
   const selectMenu = useDesktopStore((s) => s.selectMenu);
   const loadModuleMenus = useDesktopStore((s) => s.loadModuleMenus);
   const addFormTab = useDesktopStore((s) => s.addFormTab);
+  const addListTab = useDesktopStore((s) => s.addListTab);
   const addModuleTab = useDesktopStore((s) => s.addModuleTab);
   const openSetupWindow = useSetupStore((s) => s.openSetupWindow);
   const isAuthenticated = useAuthStore((s) => Boolean(s.token));
@@ -116,7 +117,16 @@ export function ModuleMenu() {
       // Database-driven form (unified component-based form system) —
       // every menu entry with a formKey opens as its own keep-alive tab
       // in the dashboard tab bar (simple / tabbed / tree forms alike).
-      if (form.formKey) {
+      // Entries from the synthetic «فهرست‌های اطلاعات» menu use the
+      // `list:<formKey>` convention and open the records list instead.
+      if (form.formKey.startsWith('list:')) {
+        addListTab({
+          moduleKey: openModuleKey,
+          formKey: form.formKey.slice('list:'.length),
+          name: form.name,
+          iconKey: form.iconKey,
+        });
+      } else if (form.formKey) {
         addFormTab({
           moduleKey: openModuleKey,
           formKey: form.formKey,

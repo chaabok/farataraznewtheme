@@ -72,6 +72,20 @@ export interface FormTab {
   fields: FormFieldDef[];
 }
 
+/**
+ * Lightweight form summary (no fields) — `GET /api/modules/:module/forms`
+ * (module-root listing used by the «فهرست‌های اطلاعات» data-list menu).
+ */
+export interface FormSummary {
+  moduleKey: string;
+  formKey: string;
+  name: string;
+  nameEn: string | null;
+  type: FormType;
+  iconKey: string;
+  accentColor: string;
+}
+
 /** One saved record of a form. */
 export interface FormRecord {
   id: string;
@@ -91,6 +105,7 @@ export interface LookupOption {
 }
 
 /** `GET /api/modules/:module/forms/:formKey` → `{ data: FormDef }`. */
+/** `GET /api/modules/:module/forms` → `{ data: FormSummary[] }`. */
 /** `GET /api/modules/:module/forms/:formKey/records` → `{ data: FormRecord[] }`. */
 /** `POST /api/modules/:module/forms/:formKey/records` body `{ data: FormDataMap }` → 201 `{ data: FormRecord }`. */
 /** `PUT /api/modules/:module/forms/:formKey/records/:recordId` body `{ data: FormDataMap }` → `{ data: FormRecord }`. */

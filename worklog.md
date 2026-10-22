@@ -564,3 +564,28 @@ Stage Summary:
 - چیدمان فیلدهای هر دو فرم (ساده/تب‌دی و درختی) حالا افقی و direction-محور است: برچسب همیشه در سمت راست (RTL) یا چپ (LTR) و ورودی در سمت مقابلِ برچسب — با کلاس‌های منطقی و بدون کد مخصوص جهت
 - عرض ستون برچسب w-36 ثابت است تا ورودی‌های هر دو ستون گرید ۲تایی تراز بمانند؛ برچسب‌های بلند در همان ستون می‌شکنند
 - فایل‌ها: field-renderer.tsx، fields/field-checkbox.tsx، tree-form.tsx (ParentPicker) — form-window.tsx خودکار از طریق FieldRenderer تغییر کرد
+
+---
+Task ID: 9
+Agent: main (Z.ai Code)
+Task: کامپوننت جدید «فهرست اطلاعات ثبت‌شده» (DataListWindow) — لیست رکوردهای ذخیره‌شده هر فرم، منوی «فهرست‌های اطلاعات» در منوی ماژول‌ها، و نوار آیکون‌های فوتر مطابق تصویر مرجع
+
+Work Log:
+- settings-service: endpoint جدید `GET /api/forms/:moduleKey` (listDefinitions) — خلاصه فرم‌های فعال ماژول با نام localized (forms.types.ts: FormSummary؛ controller/service به‌روزرسانی شد؛ با curl و JWT تست شد)
+- BFF مسیر `/api/desktop/menus/[moduleKey]`: تابع withDataListsMenu که پس از دریافت منوهای desktop-service، فرم‌های فعال ماژول را از سرویس خود ماژول (با ارسال x-api-key + JWT کاربر) می‌گیرد و منوی مجازی «فهرست‌های اطلاعات» (id=virtual:data-lists، icon=clipboardList) را با یک آیتم «فهرست {نام فرم}» به ازای هر فرم و formKey قراردادی `list:<formKey>` به انتهای منوها اضافه می‌کند؛ در نبود سرویس فرم/خطا، منوی اصلی دست‌نخورده برمی‌گردد (graceful)
+- BFF مسیر جدید `/api/modules/[module]/forms/route.ts` — پروکسی لیست فرم‌های ماژول (مستند در قرارداد types/forms.ts)
+- desktop-store: ListWindowInfo، kind جدید `'list'` برای تب‌ها، اکشن `addListTab` (id=`list:<formKey>`)، و فیلدهای اختیاری recordId/startInNew/nonce روی FormWindowInfo
+- کامپوننت جدید `src/components/forms/data-list-window.tsx` (~1080 خط): جدول کامل فیلدهای فرم + ستون چک‌باکس، هدر sticky، اسکرول افقی، ردیف فیلتر با placeholder «نمای...» و قیف هر ستون + قیف پاک‌کردن همه فیلترها، فیلتر زنده با نرمال‌سازی (ی/ک عربی↔فارسی، ارقام فارسی/عربی→لاتین)، انتخاب رکورد (کلیک/ctrl+کلیک/چک‌باکس/انتخاب همه)، عنوان «فهرست {name} (N)» با شمارش زنده، حالت خالی «اطلاعاتی برای نمایش وجود ندارد»
+- فوتر آیکونی مطابق تصویر مرجع (راست در RTL، چپ در LTR): بازخوانی، چاپ، خروجی اکسل (CSV با BOM)، مشاهده، اصلاح، حذف، جدید + جداکننده + انتخاب ستون‌ها (Popover نمایش/پنهان ستون‌ها با badge تعداد) و نوار فیلتر (toggle)؛ رنگ‌بندی sky/emerald/rose/slate مثل اکشن‌بار فرم‌ها
+- حذف با دیالوگ «تأیید حذف» بلی/خیر (هم‌سو با فرم‌ها) و پشتیبانی حذف چند رکورد
+- هماهنگی فرم↔لیست: دبل‌کلیک ردیف → تب فرم با recordId همان رکورد (رکورد N از M)؛ «جدید» → تب فرم در حالت جدید؛ رفرش خودکار لیست پس از ذخیره/حذف در فرم از طریق CustomEvent `erp:records-changed` (src/lib/app-events.ts)؛ form-window.tsx به recordId/startInNew/nonce در load و dispatch رویداد مجهز شد
+- module-menu.tsx: مسیریابی formKeyهای با پیشوند `list:` به addListTab
+- desktop-shell.tsx: رندر DataListWindow برای تب‌های kind=list
+- i18n: ۲۸ کلید جدید `dataList.*` به fa/en/tr/ar (داخل dictionaries.ts) و hi/ps/ckb/pt/ko/fr/zh اضافه شد
+- باگ‌فیکس در حین E2E: ۱) loadModuleMenus از fetch ساده به apiFetch (ارسال JWT برای enrich شدن منو) ۲) ترتیب شاخه‌های cellText — ستون والد فرم‌های درختی (parentId با fieldType=lookup) قبل از شاخه lookup پردازش شود تا به‌جای UUID عنوان رکورد والد نمایش یابد
+
+Stage Summary:
+- هر فرم DB-driven به‌صورت خودکار یک «فهرست» دارد: منوی مجازی «فهرست‌های اطلاعات» در منوی هر ماژول (فعلاً settings با ۲ فرم) بدون نیاز به seed
+- DataListWindow عمومی و direction-محور: RTL/LTR آینه‌ای، ۱۱ زبان، جدول/فیلتر/انتخاب/حذف/خروجی CSV/انتخاب ستون/بازخوانی
+- فایل‌های جدید: data-list-window.tsx، app-events.ts، api/modules/[module]/forms/route.ts — فایل‌های تغییر یافته: forms.service/controller/types (settings-service)، menus/[moduleKey]/route.ts، desktop-store.ts، form-window.tsx، module-menu.tsx، desktop-shell.tsx، index.ts (forms barrel)، dictionaries.ts + ۷ فایل locale
+- E2E با agent-browser تأیید شد: fa/RTL و en/LTR، فیلتر زنده، حذف با بلی/خیر، دبل‌کلیک→فرم با رکورد درست، جدید→حالت جدید، انتخاب ستون، بازخوانی، موبایل — بدون خطای کنسول؛ lint و tsc (src) پاک

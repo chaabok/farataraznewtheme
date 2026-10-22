@@ -25,6 +25,18 @@ export class FormsController {
     @Inject(FormsService) private readonly formsService: FormsService,
   ) {}
 
+  @Get(':moduleKey')
+  async listDefinitions(
+    @Param('moduleKey') moduleKey: string,
+    @Query('locale') locale?: string,
+  ) {
+    const data = await this.formsService.listDefinitions(
+      moduleKey,
+      locale ?? 'fa',
+    );
+    return { data };
+  }
+
   @Get(':moduleKey/:formKey')
   async getDefinition(
     @Param('moduleKey') moduleKey: string,

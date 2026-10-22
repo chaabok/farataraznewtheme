@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import { useEffect } from 'react';
 import { cn } from '@/lib/utils';
-import { DataFormWindow } from '@/components/forms';
+import { DataFormWindow, DataListWindow } from '@/components/forms';
 import { useTranslation } from '@/i18n';
 import { useDesktopStore } from '@/store/desktop-store';
 import { useSetupStore } from '@/store/setup-store';
@@ -144,6 +144,12 @@ export function DesktopShell() {
                   <DataFormWindow
                     moduleId={tab.id}
                     form={tab.form}
+                    onClose={() => closeTab(tab.id)}
+                  />
+                ) : tab.kind === 'list' && tab.list ? (
+                  <DataListWindow
+                    moduleId={tab.id}
+                    list={tab.list}
                     onClose={() => closeTab(tab.id)}
                   />
                 ) : tab.moduleId ? (
