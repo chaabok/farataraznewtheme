@@ -3,6 +3,7 @@
 import type { ReactNode } from 'react';
 import { useTranslation } from '@/i18n';
 import type { FormFieldDef, FormFieldValue } from '@/types/forms';
+import { cn } from '@/lib/utils';
 import { fieldLabel } from './form-utils';
 import { FieldCheckbox } from './fields/field-checkbox';
 import { FieldDate } from './fields/field-date';
@@ -21,9 +22,11 @@ interface FieldRendererProps {
 }
 
 /**
- * Maps a `FormFieldDef` to the right control and wraps it in a labeled
- * row (label at the start, required marker as a red asterisk). The
- * surrounding `sm:grid-cols-2` grid is owned by the parent; span-2
+ * Maps a `FormFieldDef` to the right control and wraps it in a horizontal
+ * labeled row: the label sits at the inline start (right side in RTL,
+ * left side in LTR) and the input fills the rest of the row — so the
+ * input is always on the opposite side of the label in both directions.
+ * The surrounding `sm:grid-cols-2` grid is owned by the parent; span-2
  * fields claim the full row with `col-span-full`.
  */
 export function FieldRenderer({
@@ -114,26 +117,32 @@ export function FieldRenderer({
     );
   }
 
+  // Horizontal field row: label first = inline start (right in RTL,
+  // left in LTR), control second = the opposite side. `leading-6` keeps
+  // the label's first line exactly as tall as the h-6 control.
   return (
-    <div className={field.span === 2 ? 'col-span-full' : undefined}>
-      <div className="mb-1 flex items-baseline gap-1">
-        <label
-          htmlFor={field.fieldKey}
-          className="text-[13px] leading-none text-white/70"
-        >
-          {label}
-        </label>
+    <div
+      className={cn(
+        'flex items-start gap-2',
+        field.span === 2 && 'col-span-full',
+      )}
+    >
+      <label
+        htmlFor={field.fieldKey}
+        className="w-36 shrink-0 text-[12.5px] leading-6 text-white/70"
+      >
+        {label}
         {field.isRequired && (
           <span
             title={t('formWindow.requiredHint')}
             aria-hidden="true"
-            className="text-[13px] leading-none text-red-400"
+            className="ms-1 text-[13px] leading-none text-red-400"
           >
             *
           </span>
         )}
-      </div>
-      {control}
+      </label>
+      <div className="min-w-0 flex-1">{control}</div>
     </div>
   );
 }

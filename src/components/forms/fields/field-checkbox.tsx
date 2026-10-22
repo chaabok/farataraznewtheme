@@ -14,7 +14,9 @@ interface FieldCheckboxProps {
   disabled?: boolean;
 }
 
-/** Boolean control: shadcn checkbox with an inline clickable label. */
+/** Boolean control: label at the inline start (right in RTL, left in
+ * LTR) with the clickable checkbox after it — the same horizontal row
+ * every other field type uses. */
 export function FieldCheckbox({
   id,
   label,
@@ -25,29 +27,29 @@ export function FieldCheckbox({
   disabled,
 }: FieldCheckboxProps) {
   return (
-    <div className="flex h-6 items-center">
+    <div className="flex h-6 items-center gap-2">
       <label
         htmlFor={id}
-        className="flex cursor-pointer select-none items-center gap-2.5"
+        className="w-36 shrink-0 cursor-pointer select-none text-[12.5px] leading-6 text-white/80"
       >
-        <Checkbox
-          id={id}
-          checked={value}
-          disabled={disabled}
-          onCheckedChange={(checked) => onChange(checked === true)}
-          className="h-4 w-4 border-white/20 bg-white/[0.04] data-[state=checked]:border-sky-400/70 data-[state=checked]:bg-sky-500/80"
-        />
-        <span className="text-[12px] text-white/80">{label}</span>
+        {label}
         {required && (
           <span
             title={requiredHint}
             aria-hidden="true"
-            className="text-[13px] leading-none text-red-400"
+            className="ms-1 text-[13px] leading-none text-red-400"
           >
             *
           </span>
         )}
       </label>
+      <Checkbox
+        id={id}
+        checked={value}
+        disabled={disabled}
+        onCheckedChange={(checked) => onChange(checked === true)}
+        className="h-4 w-4 shrink-0 border-white/20 bg-white/[0.04] data-[state=checked]:border-sky-400/70 data-[state=checked]:bg-sky-500/80"
+      />
     </div>
   );
 }

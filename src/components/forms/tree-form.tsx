@@ -701,55 +701,58 @@ function ParentPicker({
 
   return (
     <div
-      className={cn('relative', field.span === 2 && 'col-span-full')}
+      className={cn(
+        'flex items-start gap-2',
+        field.span === 2 && 'col-span-full',
+      )}
       ref={rootRef}
       onKeyDown={onKeyDown}
     >
-      <div className="mb-1 flex items-baseline gap-1">
-        <label
-          htmlFor={field.fieldKey}
-          className="text-[13px] leading-none text-white/70"
-        >
-          {fieldLabel(field, locale)}
-        </label>
+      {/* Label at the inline start: right side in RTL, left side in LTR. */}
+      <label
+        htmlFor={field.fieldKey}
+        className="w-36 shrink-0 text-[12.5px] leading-6 text-white/70"
+      >
+        {fieldLabel(field, locale)}
         {field.isRequired && (
           <span
             title={t('formWindow.requiredHint')}
             aria-hidden="true"
-            className="text-[13px] leading-none text-red-400"
+            className="ms-1 text-[13px] leading-none text-red-400"
           >
             *
           </span>
         )}
-      </div>
-      <div className="flex items-center gap-1.5">
-        <button
-          type="button"
-          id={field.fieldKey}
-          role="combobox"
-          aria-expanded={open}
-          aria-controls={listboxId}
-          aria-haspopup="listbox"
-          disabled={disabled}
-          onClick={() => (open ? setOpen(false) : openPanel())}
-          className={cn(
-            controlClasses,
-            'flex items-center justify-between gap-2 pe-2 text-start',
-          )}
-        >
-          <span
+      </label>
+      <div className="relative min-w-0 flex-1">
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            id={field.fieldKey}
+            role="combobox"
+            aria-expanded={open}
+            aria-controls={listboxId}
+            aria-haspopup="listbox"
+            disabled={disabled}
+            onClick={() => (open ? setOpen(false) : openPanel())}
             className={cn(
-              'min-w-0 flex-1 truncate',
-              selectedNode ? 'text-white' : 'text-white/30',
+              controlClasses,
+              'flex items-center justify-between gap-2 pe-2 text-start',
             )}
           >
-            {selectedNode
-              ? labelOf(selectedNode)
-              : t('formWindow.selectPlaceholder')}
-          </span>
-          <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 text-white/35" />
-        </button>
-      </div>
+            <span
+              className={cn(
+                'min-w-0 flex-1 truncate',
+                selectedNode ? 'text-white' : 'text-white/30',
+              )}
+            >
+              {selectedNode
+                ? labelOf(selectedNode)
+                : t('formWindow.selectPlaceholder')}
+            </span>
+            <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 text-white/35" />
+          </button>
+        </div>
 
       <AnimatePresence>
         {open && (
@@ -832,7 +835,8 @@ function ParentPicker({
             )}
           </motion.div>
         )}
-      </AnimatePresence>
+        </AnimatePresence>
+      </div>
     </div>
   );
 }

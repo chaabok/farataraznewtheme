@@ -546,3 +546,21 @@ Stage Summary:
 - منوی راست‌کلیک نودها: «زیرشاخه جدید» همیشه فعال، «حذف شاخه» مشروط به برگ‌بودن (بدون زیرشاخه) — نما به همان دیالوگ تأیید حذف مشترک وصل است
 - deleteTargetId در DataFormWindow امکان حذف رکورد هدف مستقل از رکورد جاری را می‌دهد (بدون شکستن مسیرهای action-bar)
 - فایل‌ها: tree-form.tsx، form-window.tsx، dictionaries.ts، locales/{hi,ps,ckb,pt,ko,fr,zh}.ts
+
+---
+Task ID: 9
+Agent: main (Z.ai Code)
+Task: چیدمان افقی فیلدها در tree-form.tsx و form-window.tsx — برچسب در سمت راست و فیلد ورودی در سمت چپِ برچسب (RTL)؛ در زبان‌های LTR آینه‌ای (برچسب چپ، ورودی راستِ برچسب)
+
+Work Log:
+- تست تجربی RTL flex در مرورر: اولین فرزند DOM در flex-row با dir=rtl در «راست» رندر می‌شود → راه‌حل بدون هیچ rtl: override: DOM [label, control] در یک flex row، جهت‌ها خودکار آینه می‌شوند
+- field-renderer.tsx (پوشش همه انواع فیلد در هر دو فایل هدف): ردیف عمودی «برچسب-بالا/ورودی-پایین» به ردیف افقی تبدیل شد — label با عرض ثابت w-36 shrink-0 (راست در RTL / چپ در LTR)، ستون کنترل min-w-0 flex-1، items-start + leading-6 برای تراز بودن خط اول برچسب با کنترل h-6؛ ستاره اجباری داخل label با ms-1
+- fields/field-checkbox.tsx: چیدمان معکوس قبلی (باکس اول) به الگوی یکسان تبدیل شد — برچسب w-36 در سمت شروع (راست در RTL)، Checkbox بعد از آن (چپِ برچسب در RTL) — دقیقاً مطابق نمونه ERP کاربر
+- tree-form.tsx / ParentPicker: برچسب به سمت شروع رفت و کمبوباکس + دراپ‌داون (AnimatePresence) داخل ستون کنترل نسبی (relative min-w-0 flex-1) قرار گرفت تا پنل با عرض خود کامبوباکس تراز بماند
+- FieldDate: راهنمای تقویم زیر ورودی داخل ستون کنترل می‌ماند؛ FieldTextarea و LookupField بدون تغییر کد، خودکار با ردیف افقی هم‌راستا شدند
+- E2E با agent-browser در دو جهت: fa/RTL (فرم طبقه حساب معین + گروه کالا-خدمت): برچسب راست / ورودی چپ برای همه انواع (text/lookup/checkbox/parent-picker/date) ✓؛ en/LTR: برچسب چپ / ورودی راست ✓؛ لود تازه: بدون هیچ خطای کنسول؛ lint پاس؛ سرور یک‌بار OOM/kill شد و با الگوی setsid nohup دوباره بالا آمد
+
+Stage Summary:
+- چیدمان فیلدهای هر دو فرم (ساده/تب‌دی و درختی) حالا افقی و direction-محور است: برچسب همیشه در سمت راست (RTL) یا چپ (LTR) و ورودی در سمت مقابلِ برچسب — با کلاس‌های منطقی و بدون کد مخصوص جهت
+- عرض ستون برچسب w-36 ثابت است تا ورودی‌های هر دو ستون گرید ۲تایی تراز بمانند؛ برچسب‌های بلند در همان ستون می‌شکنند
+- فایل‌ها: field-renderer.tsx، fields/field-checkbox.tsx، tree-form.tsx (ParentPicker) — form-window.tsx خودکار از طریق FieldRenderer تغییر کرد
