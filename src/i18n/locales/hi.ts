@@ -318,6 +318,12 @@ export const hiDictionary: Record<string, string> = {
   'formWindow.titleColumn': 'शीर्षक',
   'formWindow.deleteYes': 'हटाएँ',
   'formWindow.deleteNo': 'रद्द करें',
+  'formWindow.treePanel': 'वृक्ष',
+  'formWindow.treeSearch': 'वृक्ष में खोजें…',
+  'formWindow.nodeNew': 'नया',
+  'formWindow.nodeEdit': 'संपादित करें',
+  'formWindow.nodeDelete': 'हटाएँ',
+  'formWindow.treeSelectHint': 'विवरण देखने के लिए वृक्ष से एक आइटम चुनें',
 
   // ── Calendar hints (new keys for Task 7) ─────────────────────
   'formWindow.hintJalali': 'सौर हिजरी (जलाली) कैलेंडर — जैसे ۱۴۰۵/۰۷/۳۰',

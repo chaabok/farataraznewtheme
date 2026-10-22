@@ -318,6 +318,12 @@ export const ptDictionary: Record<string, string> = {
   'formWindow.titleColumn': 'Título',
   'formWindow.deleteYes': 'Excluir',
   'formWindow.deleteNo': 'Cancelar',
+  'formWindow.treePanel': 'Árvore',
+  'formWindow.treeSearch': 'Pesquisar na árvore…',
+  'formWindow.nodeNew': 'Novo',
+  'formWindow.nodeEdit': 'Editar',
+  'formWindow.nodeDelete': 'Excluir',
+  'formWindow.treeSelectHint': 'Selecione um item da árvore para ver os detalhes',
 
   // ── Calendar hints (new keys) ──────────────────────────────────
   'formWindow.hintJalali': 'Calendário solar hejir (jalali) — ex.: ۱۴۰۵/۰۷/۳۰',

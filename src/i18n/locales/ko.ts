@@ -322,4 +322,10 @@ export const koDictionary: Record<string, string> = {
   'formWindow.titleColumn': '제목',
   'formWindow.deleteYes': '삭제',
   'formWindow.deleteNo': '취소',
+  'formWindow.treePanel': '트리',
+  'formWindow.treeSearch': '트리에서 검색…',
+  'formWindow.nodeNew': '새로 만들기',
+  'formWindow.nodeEdit': '편집',
+  'formWindow.nodeDelete': '삭제',
+  'formWindow.treeSelectHint': '세부 정보를 보려면 트리에서 항목을 선택하세요',
 };

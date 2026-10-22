@@ -500,3 +500,28 @@ Work Log:
 
 Stage Summary:
 - src/i18n/locales/ckb.ts written, 273 keys
+
+---
+Task ID: 5
+Agent: main (Z.ai Code)
+Task: ساخت کامپوننت فرم درختی (Tree Form) بر اساس تصویر مرجع — فرمی با دو باکس: یک باکس درختواره و یک باکس فیلدهای ورودی — به‌صورت کامپوننت قابل‌استفاده‌ی مجدد در پوشه forms
+
+Work Log:
+- بررسی وضعیت کد: تسک‌های قبلی (۴ آیکون اکشن‌بار، هدر/بدنه فرم، تب‌بار + هدر داشبورد) قبلاً پیاده‌سازی شده بودند؛ TreePanel قدیمی فقط یک پیش‌نمایش read-only بود
+- ساخت کامپوننت جدید `TreeForm` در `src/components/forms/tree-form.tsx` با چیدمان دو-باکسی مطابق تصویر مرجع:
+  - باکس درختواره: عنوان «درختواره» + شمارنده، تولبار «جدید / تغییر / حذف»، جستجوی زنده در درخت (فیلتر خود-یا-فرزندان + حفظ اجداد)، درخت باز/بسته‌شونده با chevron راست‌به‌چپ، آیکون پوشه/فایل برای والد/برگ، badge کد، آیکون کپی روی هر نود، انتخاب با هایلایت آبی
+  - باکس جزئیات: فیلدهای اصلی (tabKey=null) + تب‌های بدنه از تعریف فرم (کالاهای مرتبط / فیلدهای اضافی) با همان FieldRenderer/FormTabs مشترک
+  - ParentPicker جدید برای فیلد «تودرتوها»: دراپ‌داون خود-ارجاع که رکوردهای خود فرم را سلسله‌مراتبی (با تورفتگی) لیست می‌کند، خود نود و descendants را حذف می‌کند (جلوگیری از حلقه)، جستجو + پاک‌کردن دارد و مقدار parentId رکورد والد را ذخیره می‌کند
+- helper جدید `pickParentField` در form-utils.ts (تشخیص فیلد والد با fieldKey=parentId یا lookup با کلید parent)
+- اتصال به DataFormWindow: شاخه‌ی type==='tree' حالا TreeForm را رندر می‌کند (TreePanel قدیمی حذف شد)؛ کل ماشین وضعیت CRUD (ذخیره/حذف/کپی/تأیید حذف/فوتر/اکشن‌بار) مشترک باقی ماند؛ دکمه‌های پیمایش خطی first/prev/next/last برای فرم‌های درختی با prop جدید `hideNav` در FormActionBar مخفی می‌شوند
+- تب‌بار ماژول: شرط هاردکد `formKey === 'account-class'` حذف شد — حالا هر آیتم منو با formKey به‌عنوان تب فرمِ مستقل باز می‌شود (باگ «باز شدن تب فرم به‌صورت پنجره ماژول» رفع شد)
+- i18n: ۶ کلید جدید (treePanel/treeSearch/nodeNew/nodeEdit/nodeDelete/treeSelectHint) به هر ۱۱ زبان (fa/en/tr/ar + hi/fr/ps/ckb/pt/ko/zh) اضافه شد
+- Seed «گروه کالا-خدمت» در settings-service (`scripts/seed-tree-form.ts`): FormDefinition با type='tree'، ۱۱ فیلد (هدر: کد/کد نمایشی/عنوان/عنوان(۲)/تودرتوها/فعال + دو تب) و ۶ نود نمونه مطابق تصویر (کالا ۱۰ → مواد اولیه ۱۰۰۱ → ۱۰۰۱۰۱/۱۰۰۱۰۲، خدمت ۲۰ → مشاوره ۲۰۰۱) با لینک parentId واقعی بین رکوردها
+- Seed منو در desktop-service (`scripts/seed-product-service-group-menu.ts`): آیتم منو با ترجمه fa/en/tr/ar در منوی «عمومی» ماژول تنظیمات
+- اعتبارسنجی E2E با agent-browser: ورود → تنظیمات → گروه کالا-خدمت؛ انتخاب نود، جستجو، «جدید» (پیش‌فرض والد)، ذخیره (نود جدید زیر کالا)، حذف با دیالوگ تأیید «از حذف اطلاعات مورد نظر اطمینان دارید؟ / بلی / خیر»، تغییر والد از طریق ParentPicker با ذخیره و بازسازی درخت، فهرست رکوردها، رگرسیون فرم تب‌دی account-class، لایه‌بندی موبایل (390px) و حالت LTR انگلیسی — همه موفق؛ dev.log بدون خطا، lint پاس
+
+Stage Summary:
+- کامپوننت `TreeForm` (src/components/forms/tree-form.tsx) آماده استفاده‌ی مجدد است: هر FormDef با type='tree' به‌طور خودکار از طریق DataFormWindow با همین کامپوننت رندر می‌شود؛ سلسله‌مراتب از data.parentId رکوردها ساخته می‌شود
+- معماری: TreeForm صرفاً presentation است و ماشین وضعیت CRUD را از DataFormWindow به ارث می‌برد؛ بنابراین اکشن‌بار، دیالوگ تأیید حذف، فوتر وضعیت و Ctrl+S بدون تکرار کد در فرم درختی هم کار می‌کنند
+- فرم نمونه «گروه کالا-خدمت» با داده درختواره‌ای در منوی عمومی تنظیمات در دسترس است (formKey=product-service-group)
+- فایل‌های کلیدی: tree-form.tsx (جدید)، form-window.tsx، action-bar.tsx (hideNav)، form-utils.ts (pickParentField)، module-menu.tsx (رفع باگ تب فرم)، dictionaries.ts + ۷ locale (۶ کلید ×۱۱ زبان)، seed-tree-form.ts، seed-product-service-group-menu.ts

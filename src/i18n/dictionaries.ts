@@ -336,6 +336,12 @@ const fa = {
   'formWindow.titleColumn': 'عنوان',
   'formWindow.deleteYes': 'حذف',
   'formWindow.deleteNo': 'انصراف',
+  'formWindow.treePanel': 'درختواره',
+  'formWindow.treeSearch': 'جستجو در درختواره…',
+  'formWindow.nodeNew': 'جدید',
+  'formWindow.nodeEdit': 'تغییر',
+  'formWindow.nodeDelete': 'حذف',
+  'formWindow.treeSelectHint': 'برای نمایش جزئیات، یک مورد را از درختواره انتخاب کنید',
 } satisfies Record<string, string>;
 
 const en: Record<string, string> = {
@@ -635,6 +641,12 @@ const en: Record<string, string> = {
   'formWindow.titleColumn': 'Title',
   'formWindow.deleteYes': 'Delete',
   'formWindow.deleteNo': 'Cancel',
+  'formWindow.treePanel': 'Tree',
+  'formWindow.treeSearch': 'Search in tree…',
+  'formWindow.nodeNew': 'New',
+  'formWindow.nodeEdit': 'Edit',
+  'formWindow.nodeDelete': 'Delete',
+  'formWindow.treeSelectHint': 'Select an item in the tree to see its details',
 };
 
 const tr: Record<string, string> = {
@@ -934,6 +946,12 @@ const tr: Record<string, string> = {
   'formWindow.titleColumn': 'Başlık',
   'formWindow.deleteYes': 'Sil',
   'formWindow.deleteNo': 'İptal',
+  'formWindow.treePanel': 'Ağaç',
+  'formWindow.treeSearch': 'Ağaçta ara…',
+  'formWindow.nodeNew': 'Yeni',
+  'formWindow.nodeEdit': 'Düzenle',
+  'formWindow.nodeDelete': 'Sil',
+  'formWindow.treeSelectHint': 'Ayrıntıları görmek için ağaçtan bir öğe seçin',
 };
 
 const ar: Record<string, string> = {
@@ -1233,6 +1251,12 @@ const ar: Record<string, string> = {
   'formWindow.titleColumn': 'العنوان',
   'formWindow.deleteYes': 'حذف',
   'formWindow.deleteNo': 'إلغاء',
+  'formWindow.treePanel': 'الشجرة',
+  'formWindow.treeSearch': 'ابحث في الشجرة…',
+  'formWindow.nodeNew': 'جديد',
+  'formWindow.nodeEdit': 'تعديل',
+  'formWindow.nodeDelete': 'حذف',
+  'formWindow.treeSelectHint': 'اختر عنصراً من الشجرة لعرض تفاصيله',
 };
 
 export const DICTIONARIES: Record<Locale, Record<string, string>> = {

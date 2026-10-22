@@ -322,4 +322,10 @@ export const ckbDictionary: Record<string, string> = {
   'formWindow.titleColumn': 'ناونیشان',
   'formWindow.deleteYes': 'سڕینەوە',
   'formWindow.deleteNo': 'پاشگەزبوونەوە',
+  'formWindow.treePanel': 'دار',
+  'formWindow.treeSearch': 'گەڕان لە دارەکە…',
+  'formWindow.nodeNew': 'نوێ',
+  'formWindow.nodeEdit': 'دەستکاری',
+  'formWindow.nodeDelete': 'سڕینەوە',
+  'formWindow.treeSelectHint': 'بۆ بینینی وردەکارییەکان، دانەیەک لە دارەکە هەڵبژێرە',
 };

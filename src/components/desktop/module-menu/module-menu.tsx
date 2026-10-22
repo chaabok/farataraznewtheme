@@ -114,8 +114,9 @@ export function ModuleMenu() {
         return;
       }
       // Database-driven form (unified component-based form system) —
-      // opens as its own keep-alive tab in the dashboard tab bar.
-      if (openModuleKey === 'settings' && form.formKey === 'account-class') {
+      // every menu entry with a formKey opens as its own keep-alive tab
+      // in the dashboard tab bar (simple / tabbed / tree forms alike).
+      if (form.formKey) {
         addFormTab({
           moduleKey: openModuleKey,
           formKey: form.formKey,

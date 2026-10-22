@@ -50,7 +50,7 @@ import {
   formatFieldValue,
   pickListColumns,
 } from './form-utils';
-import { TreePanel } from './tree-panel';
+import { TreeForm } from './tree-form';
 
 export interface DataFormWindowProps {
   /** Window id — `form:<formKey>` (moduleKey defaults to `settings`). */
@@ -520,10 +520,36 @@ export function DataFormWindow({ moduleId, form, onClose }: DataFormWindowProps)
     );
   } else if (def.type === 'tree') {
     content = (
-      <TreePanel
+      <TreeForm
         records={records}
         fields={sortedFields}
+        draft={draft}
+        mode={mode}
+        selectedId={current?.id ?? null}
+        isBusy={isSaving || isDeleting}
+        accentColor={accentColor}
         lookupUrlBase={lookupUrlBase}
+        onSelect={(recordId) => {
+          const index = records.findIndex((record) => record.id === recordId);
+          if (index >= 0) navigateTo(index);
+        }}
+        onFieldChange={handleFieldChange}
+        onNewChild={(preset) => startNew(preset)}
+        onEditNode={() =>
+          setMode((prev) => (prev === 'view' && current ? 'edit' : prev))
+        }
+        onDeleteNode={() => requestDelete('current')}
+        onCopyNode={(record) => {
+          if (
+            mode !== 'view' &&
+            isDirty &&
+            !window.confirm(t('formWindow.navDiscardConfirm'))
+          ) {
+            return;
+          }
+          startNew({ ...record.data });
+          toast({ title: t('formWindow.copyToast') });
+        }}
       />
     );
   } else if (isTabbed && headerTab) {
@@ -596,6 +622,7 @@ export function DataFormWindow({ moduleId, form, onClose }: DataFormWindowProps)
           onPrev={() => navigateTo(Math.max(0, currentIndex - 1))}
           onNext={() => navigateTo(Math.min(records.length - 1, currentIndex + 1))}
           onLast={() => navigateTo(records.length - 1)}
+          hideNav={def?.type === 'tree'}
         />
       }
       subPanel={

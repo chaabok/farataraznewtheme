@@ -50,6 +50,8 @@ interface FormActionBarProps {
   onPrev: () => void;
   onNext: () => void;
   onLast: () => void;
+  /** Hides the linear navigation cluster (tree forms select nodes instead). */
+  hideNav?: boolean;
 }
 
 /** Staggered entrance of the action buttons. */
@@ -132,6 +134,7 @@ export function FormActionBar({
   onPrev,
   onNext,
   onLast,
+  hideNav = false,
 }: FormActionBarProps) {
   const { direction, t } = useTranslation();
   const rtl = direction === 'rtl';
@@ -318,14 +321,16 @@ export function FormActionBar({
       >
         {actions.map(renderButton)}
       </motion.div>
-      <motion.div
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-        className="flex flex-wrap items-center gap-1"
-      >
-        {navActions.map(renderButton)}
-      </motion.div>
+      {!hideNav && (
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          className="flex flex-wrap items-center gap-1"
+        >
+          {navActions.map(renderButton)}
+        </motion.div>
+      )}
     </div>
   );
 }

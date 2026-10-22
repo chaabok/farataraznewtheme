@@ -99,6 +99,22 @@ export function deriveTabs(def: FormDef, locale: Locale): DerivedTab[] {
 }
 
 /**
+ * Detects the self-referencing parent field of tree forms: either the
+ * canonical `parentId` key or a lookup whose key mentions "parent".
+ * The value stored in a record is the id of the parent record.
+ */
+export function pickParentField(fields: FormFieldDef[]): FormFieldDef | null {
+  const sorted = [...fields].sort((a, b) => a.sortOrder - b.sortOrder);
+  return (
+    sorted.find(
+      (field) =>
+        field.fieldKey === 'parentId' ||
+        (field.fieldType === 'lookup' && /parent/i.test(field.fieldKey)),
+    ) ?? null
+  );
+}
+
+/**
  * Picks the two columns shown in the records list and the tree labels:
  * a `code`-like field and a `title/name`-like one (first-field fallbacks).
  */

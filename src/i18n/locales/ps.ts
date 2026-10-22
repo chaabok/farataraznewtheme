@@ -322,4 +322,10 @@ export const psDictionary: Record<string, string> = {
   'formWindow.titleColumn': 'عنوان',
   'formWindow.deleteYes': 'ړنګول',
   'formWindow.deleteNo': 'بېرته ګرځېدل',
+  'formWindow.treePanel': 'درخت',
+  'formWindow.treeSearch': 'په درخت کې لټون…',
+  'formWindow.nodeNew': 'نوی',
+  'formWindow.nodeEdit': 'بدلون',
+  'formWindow.nodeDelete': 'ړنګول',
+  'formWindow.treeSelectHint': 'د جزئیاتو لپاره له درخت څخه یو توکی وټاکه',
 };

@@ -9,7 +9,7 @@ export { FormShell } from './form-shell';
 export { FormActionBar, type FormMode } from './action-bar';
 export { FormTabs, type FormTabItem } from './form-tabs';
 export { FieldRenderer } from './field-renderer';
-export { TreePanel } from './tree-panel';
+export { TreeForm } from './tree-form';
 export { FormFooter, type FormStatus } from './form-footer';
 export { FieldText } from './fields/field-text';
 export { FieldNumber } from './fields/field-number';
