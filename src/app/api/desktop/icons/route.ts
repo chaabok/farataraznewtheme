@@ -1,20 +1,29 @@
 import { NextResponse } from 'next/server';
+import { DESKTOP_SERVICE } from '@/lib/services-registry';
 
 /**
  * BFF gateway: forwards the desktop icons request to the NestJS
  * `desktop-service` microservice (port 3001).
  *
  * The browser only ever talks to this relative route; the internal
- * service URL stays on the server side.
+ * service URL and API key stay on the server side.
  */
-const DESKTOP_SERVICE_URL =
-  process.env.DESKTOP_SERVICE_URL ?? 'http://127.0.0.1:3001';
-
 export async function GET() {
+  if (!DESKTOP_SERVICE.apiKey) {
+    console.error('[gateway] DESKTOP_SERVICE_API_KEY missing');
+    return NextResponse.json(
+      { message: 'سرویس دسکتاپ پیکربندی نشده است' },
+      { status: 503 },
+    );
+  }
+
   try {
-    const response = await fetch(`${DESKTOP_SERVICE_URL}/api/icons`, {
+    const response = await fetch(`${DESKTOP_SERVICE.baseUrl}/api/icons`, {
       cache: 'no-store',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': DESKTOP_SERVICE.apiKey,
+      },
     });
 
     if (!response.ok) {

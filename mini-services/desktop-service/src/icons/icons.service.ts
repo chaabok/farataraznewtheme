@@ -1,5 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { Inject } from '@nestjs/common';
+import { Injectable, Logger } from '@erp/shared';
+import { Inject } from '@erp/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateIconDto } from './dto/create-icon.dto';
 import type { DesktopIcon } from '@prisma/client';

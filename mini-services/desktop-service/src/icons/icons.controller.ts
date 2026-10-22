@@ -8,7 +8,8 @@ import {
   NotFoundException,
   Param,
   Post,
-} from '@nestjs/common';
+} from '@erp/shared';
+import { PublicJwt } from '@erp/shared';
 import { IconsService } from './icons.service';
 import { CreateIconDto } from './dto/create-icon.dto';
 
@@ -18,13 +19,20 @@ export class IconsController {
     @Inject(IconsService) private readonly iconsService: IconsService,
   ) {}
 
+  /**
+   * Reading the icon list requires the internal API key (injected by the
+   * gateway) but works without a user JWT (the login screen renders before
+   * authentication). Mutations require a full JWT + API key.
+   */
   @Get()
+  @PublicJwt()
   async findAll() {
     const icons = await this.iconsService.findAll();
     return { data: icons };
   }
 
   @Get(':id')
+  @PublicJwt()
   async findOne(@Param('id') id: string) {
     const icon = await this.iconsService.findOne(id);
     if (!icon) {

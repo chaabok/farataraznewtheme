@@ -4,7 +4,9 @@ import { createElement } from 'react';
 import { getIcon } from './icon-registry';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { getModuleMeta } from '@/lib/modules-registry';
 import { useDesktopStore } from '@/store/desktop-store';
+import { useAuthStore } from '@/store/auth-store';
 import type { DesktopIconItem } from '@/types/desktop';
 
 interface DesktopIconProps {
@@ -14,12 +16,14 @@ interface DesktopIconProps {
 /**
  * A single icon on the desktop.
  * - Single click selects it (Windows style highlight).
- * - Double click shows a placeholder toast until future orders
- *   wire up real window/app behaviour.
+ * - Double click opens the module window (each module = its own
+ *   microservice behind the BFF gateway).
  */
 export function DesktopIcon({ icon }: DesktopIconProps) {
   const selectedIconId = useDesktopStore((s) => s.selectedIconId);
   const selectIcon = useDesktopStore((s) => s.selectIcon);
+  const openWindow = useDesktopStore((s) => s.openWindow);
+  const isAuthenticated = useAuthStore((s) => Boolean(s.token));
 
   const isSelected = selectedIconId === icon.id;
 
@@ -33,10 +37,21 @@ export function DesktopIcon({ icon }: DesktopIconProps) {
       }}
       onDoubleClick={(event) => {
         event.stopPropagation();
-        toast({
-          title: icon.name,
-          description: 'این بخش در سفارش‌های بعدی فعال خواهد شد.',
-        });
+        if (!isAuthenticated) {
+          toast({
+            title: 'ابتدا وارد شوید',
+            description: 'برای باز کردن ماژول‌ها باید احراز هویت کنید.',
+          });
+          return;
+        }
+        if (getModuleMeta(icon.iconKey)) {
+          openWindow(icon.iconKey);
+        } else {
+          toast({
+            title: icon.name,
+            description: 'این بخش در سفارش‌های بعدی فعال خواهد شد.',
+          });
+        }
       }}
       className={cn(
         'flex h-[92px] w-[88px] select-none flex-col items-center gap-1.5 rounded-md border px-1 pb-1 pt-2.5 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-sky-300/70',

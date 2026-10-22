@@ -9,8 +9,9 @@ import { TaskbarButton } from './taskbar-button';
 import { WindowsLogo } from './windows-logo';
 
 /**
- * Center of the taskbar (Windows 11 style): Start, Search, Task View
- * and the pinned apps — absolutely centered regardless of tray width.
+ * Center of the taskbar (Windows 11 style): Start, Search, Task View,
+ * pinned apps and the running module windows — absolutely centered
+ * regardless of tray width.
  */
 export function TaskbarCenter() {
   const pinnedApps = useDesktopStore((s) => s.pinnedApps);
@@ -18,6 +19,8 @@ export function TaskbarCenter() {
   const toggleStartMenu = useDesktopStore((s) => s.toggleStartMenu);
   const activeTaskbarAppId = useDesktopStore((s) => s.activeTaskbarAppId);
   const setActiveTaskbarApp = useDesktopStore((s) => s.setActiveTaskbarApp);
+  const windows = useDesktopStore((s) => s.windows);
+  const focusWindow = useDesktopStore((s) => s.focusWindow);
 
   const notify = (title: string) =>
     toast({ title, description: 'این بخش در سفارش‌های بعدی فعال خواهد شد.' });
@@ -54,6 +57,29 @@ export function TaskbarCenter() {
 
       <span className="mx-1 hidden h-6 w-px bg-white/15 sm:block" aria-hidden="true" />
 
+      {/* Running module windows */}
+      {windows.map((win) => {
+        const Icon = getIcon(win.moduleId);
+        return (
+          <TaskbarButton
+            key={`win-${win.moduleId}`}
+            label={win.moduleId}
+            isActive
+            onClick={() => focusWindow(win.moduleId)}
+          >
+            <Icon className="h-[18px] w-[18px] text-sky-300" strokeWidth={1.9} />
+          </TaskbarButton>
+        );
+      })}
+
+      {windows.length > 0 && (
+        <span
+          className="mx-1 hidden h-6 w-px bg-white/15 sm:block"
+          aria-hidden="true"
+        />
+      )}
+
+      {/* Pinned apps */}
       {pinnedApps.map((app, index) => {
         const Icon = getIcon(app.iconKey);
         return (

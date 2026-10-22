@@ -3,12 +3,15 @@
 import Image from 'next/image';
 import { useEffect } from 'react';
 import { DesktopIcons } from './desktop-icons';
+import { LoginOverlay } from './login-overlay';
+import { WindowLayer } from './windows/window-layer';
 import { Taskbar } from './taskbar/taskbar';
 import { useDesktopStore } from '@/store/desktop-store';
 
 /**
- * Root shell of the dashboard: wallpaper + desktop icon grid on top,
- * Windows 11 style taskbar (sticky footer) at the bottom.
+ * Root shell of the dashboard: wallpaper + desktop icon grid + module
+ * windows on top, Windows 11 style taskbar (sticky footer) at the bottom,
+ * and the lock screen until the user authenticates.
  */
 export function DesktopShell() {
   const fetchIcons = useDesktopStore((s) => s.fetchIcons);
@@ -53,9 +56,11 @@ export function DesktopShell() {
         <div className="absolute inset-0 bg-black/10" aria-hidden="true" />
 
         <DesktopIcons />
+        <WindowLayer />
       </main>
 
       <Taskbar />
+      <LoginOverlay />
     </div>
   );
 }

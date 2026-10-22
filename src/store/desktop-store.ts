@@ -8,11 +8,17 @@ import type { DesktopIconItem, TaskbarApp } from '@/types/desktop';
 const PINNED_APPS: TaskbarApp[] = [
   { id: 'explorer', label: 'فایل‌های من', iconKey: 'folder', color: '#f59e0b' },
   { id: 'browser', label: 'مرورگر', iconKey: 'globe', color: '#ef4444' },
-  { id: 'messenger', label: 'پیام‌رسان', iconKey: 'send', color: '#0ea5e9' },
   { id: 'terminal', label: 'ترمینال', iconKey: 'terminal', color: '#e2e8f0' },
-  { id: 'analytics', label: 'تحلیل داده', iconKey: 'barChart', color: '#a78bfa' },
-  { id: 'settings', label: 'تنظیمات', iconKey: 'settings', color: '#94a3b8' },
 ];
+
+/** One open module window on the desktop. */
+export interface DesktopWindow {
+  moduleId: string;
+  /** Stacking order (higher = on top). */
+  z: number;
+  /** Cascade position slot when the window was opened. */
+  slot: number;
+}
 
 interface DesktopState {
   /** Icons fetched from the desktop-service (NestJS microservice). */
@@ -25,13 +31,17 @@ interface DesktopState {
   isStartMenuOpen: boolean;
   /** Apps pinned to the taskbar. */
   pinnedApps: TaskbarApp[];
-  /** Id of the "running" taskbar app used for the underline indicator. */
-  activeTaskbarAppId: string | null;
+  /** Open module windows with stacking order. */
+  windows: DesktopWindow[];
+  windowZCounter: number;
+  windowSlotCounter: number;
 
   fetchIcons: () => Promise<void>;
   selectIcon: (id: string | null) => void;
   toggleStartMenu: (open?: boolean) => void;
-  setActiveTaskbarApp: (id: string | null) => void;
+  openWindow: (moduleId: string) => void;
+  closeWindow: (moduleId: string) => void;
+  focusWindow: (moduleId: string) => void;
 }
 
 export const useDesktopStore = create<DesktopState>((set) => ({
@@ -41,7 +51,9 @@ export const useDesktopStore = create<DesktopState>((set) => ({
   selectedIconId: null,
   isStartMenuOpen: false,
   pinnedApps: PINNED_APPS,
-  activeTaskbarAppId: null,
+  windows: [],
+  windowZCounter: 10,
+  windowSlotCounter: 0,
 
   fetchIcons: async () => {
     set({ isLoading: true, error: null });
@@ -68,5 +80,48 @@ export const useDesktopStore = create<DesktopState>((set) => ({
   toggleStartMenu: (open) =>
     set((state) => ({ isStartMenuOpen: open ?? !state.isStartMenuOpen })),
 
-  setActiveTaskbarApp: (id) => set({ activeTaskbarAppId: id }),
+  openWindow: (moduleId) =>
+    set((state) => {
+      const nextZ = state.windowZCounter + 1;
+      const existing = state.windows.find((w) => w.moduleId === moduleId);
+      if (existing) {
+        return {
+          windows: state.windows.map((w) =>
+            w.moduleId === moduleId ? { ...w, z: nextZ } : w,
+          ),
+          windowZCounter: nextZ,
+          isStartMenuOpen: false,
+        };
+      }
+      return {
+        windows: [
+          ...state.windows,
+          { moduleId, z: nextZ, slot: state.windowSlotCounter },
+        ],
+        windowZCounter: nextZ,
+        windowSlotCounter: state.windowSlotCounter + 1,
+        isStartMenuOpen: false,
+        selectedIconId: null,
+      };
+    }),
+
+  closeWindow: (moduleId) =>
+    set((state) => ({
+      windows: state.windows.filter((w) => w.moduleId !== moduleId),
+    })),
+
+  focusWindow: (moduleId) =>
+    set((state) => {
+      const nextZ = state.windowZCounter + 1;
+      const target = state.windows.find((w) => w.moduleId === moduleId);
+      if (!target || target.z === state.windowZCounter) {
+        return state;
+      }
+      return {
+        windows: state.windows.map((w) =>
+          w.moduleId === moduleId ? { ...w, z: nextZ } : w,
+        ),
+        windowZCounter: nextZ,
+      };
+    }),
 }));

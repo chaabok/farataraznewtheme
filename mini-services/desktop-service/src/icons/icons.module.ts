@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module } from '@erp/shared';
 import { IconsController } from './icons.controller';
 import { IconsService } from './icons.service';
 

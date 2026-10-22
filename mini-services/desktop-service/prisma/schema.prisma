@@ -1,7 +1,8 @@
-// Desktop Service - Prisma schema
-// NOTE: This schema is intentionally written with PostgreSQL-compatible types
-// (String/Int/DateTime, uuid ids, no SQLite-specific features) so that moving
-// to PostgreSQL in production only requires changing `provider` + DATABASE_URL.
+// Desktop service - Prisma schema (PostgreSQL-ready)
+//
+// MIGRATION TO POSTGRESQL:
+//   1. provider = "postgresql"
+//   2. url      = env("DATABASE_URL")
 
 generator client {
   provider = "prisma-client-js"
@@ -9,7 +10,7 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = env("DATABASE_URL")
+  url      = "file:/home/z/my-project/db/desktop.db"
 }
 
 /// Icons displayed on the desktop grid
