@@ -2,12 +2,8 @@
 
 import { createElement } from 'react';
 import { getIcon } from './icon-registry';
-import { toast } from '@/hooks/use-toast';
-import { useTranslation } from '@/i18n';
 import { cn } from '@/lib/utils';
-import { getModuleMeta } from '@/lib/modules-registry';
 import { useDesktopStore } from '@/store/desktop-store';
-import { useAuthStore } from '@/store/auth-store';
 import type { DesktopIconItem } from '@/types/desktop';
 
 interface DesktopIconProps {
@@ -16,16 +12,14 @@ interface DesktopIconProps {
 
 /**
  * A single icon on the desktop.
- * - Single click selects it (Windows style highlight).
- * - Double click opens the module window (each module = its own
- *   microservice behind the BFF gateway).
+ * Clicking it opens the module flyout menu — the creative Windows 11 style
+ * launcher that lists the module's menus and forms (fetched from the
+ * desktop-service microservice, localized for the active language).
  */
 export function DesktopIcon({ icon }: DesktopIconProps) {
   const selectedIconId = useDesktopStore((s) => s.selectedIconId);
   const selectIcon = useDesktopStore((s) => s.selectIcon);
-  const openWindow = useDesktopStore((s) => s.openWindow);
-  const isAuthenticated = useAuthStore((s) => Boolean(s.token));
-  const { t } = useTranslation();
+  const openModuleMenu = useDesktopStore((s) => s.openModuleMenu);
 
   const isSelected = selectedIconId === icon.id;
 
@@ -33,27 +27,11 @@ export function DesktopIcon({ icon }: DesktopIconProps) {
     <button
       type="button"
       aria-label={icon.name}
+      aria-haspopup="dialog"
       onClick={(event) => {
         event.stopPropagation();
         selectIcon(icon.id);
-      }}
-      onDoubleClick={(event) => {
-        event.stopPropagation();
-        if (!isAuthenticated) {
-          toast({
-            title: t('toast.loginRequired.title'),
-            description: t('toast.loginRequired.desc'),
-          });
-          return;
-        }
-        if (getModuleMeta(icon.iconKey)) {
-          openWindow(icon.iconKey);
-        } else {
-          toast({
-            title: icon.name,
-            description: t('toast.comingSoon'),
-          });
-        }
+        openModuleMenu(icon.iconKey);
       }}
       className={cn(
         'flex h-[92px] w-[88px] select-none flex-col items-center gap-1.5 rounded-md border px-1 pb-1 pt-2.5 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-sky-300/70',

@@ -50,6 +50,15 @@ const fa = {
   'startMenu.account': 'حساب کاربری',
   'startMenu.logoutTitle': 'خروج از حساب',
 
+  // ── Module flyout menu ──────────────────────────────
+  'moduleMenu.aria': 'منوی ماژول',
+  'moduleMenu.stats': '{forms} فرم در {menus} منو',
+  'moduleMenu.formCount': '{count} فرم',
+  'moduleMenu.empty': 'فرمی در این منو ثبت نشده است.',
+  'moduleMenu.loadError': 'بارگیری منوهای ماژول ناموفق بود.',
+  'moduleMenu.closeHint': 'برای بستن Escape را بزنید یا بیرون منو کلیک کنید',
+  'moduleMenu.formOpened': 'پنجره ماژول «{module}» برای فرم انتخاب‌شده باز شد.',
+
   // ── Taskbar / tray ──────────────────────────────────────────────
   'taskbar.start': 'شروع',
   'taskbar.search': 'جستجو',
@@ -257,6 +266,14 @@ const en: Record<string, string> = {
   'startMenu.account': 'User account',
   'startMenu.logoutTitle': 'Sign out',
 
+  'moduleMenu.aria': 'Module menu',
+  'moduleMenu.stats': '{forms} forms in {menus} menus',
+  'moduleMenu.formCount': '{count} forms',
+  'moduleMenu.empty': 'No forms have been added to this menu yet.',
+  'moduleMenu.loadError': 'Failed to load the module menus.',
+  'moduleMenu.closeHint': 'Press Escape or click outside to close',
+  'moduleMenu.formOpened': 'The "{module}" module window opened for the selected form.',
+
   'taskbar.start': 'Start',
   'taskbar.search': 'Search',
   'taskbar.taskView': 'Task view',
@@ -449,6 +466,14 @@ const tr: Record<string, string> = {
   'startMenu.account': 'Kullanıcı hesabı',
   'startMenu.logoutTitle': 'Çıkış yap',
 
+  'moduleMenu.aria': 'Modül menüsü',
+  'moduleMenu.stats': '{menus} menüde {forms} form',
+  'moduleMenu.formCount': '{count} form',
+  'moduleMenu.empty': 'Bu menüye henüz form eklenmedi.',
+  'moduleMenu.loadError': 'Modül menüleri yüklenemedi.',
+  'moduleMenu.closeHint': 'Kapatmak için Escape\'a basın veya dışarı tıklayın',
+  'moduleMenu.formOpened': 'Seçilen form için "{module}" modül penceresi açıldı.',
+
   'taskbar.start': 'Başlat',
   'taskbar.search': 'Ara',
   'taskbar.taskView': 'Görev görünümü',
@@ -640,6 +665,14 @@ const ar: Record<string, string> = {
   'startMenu.guest': 'مستخدم ضيف',
   'startMenu.account': 'حساب المستخدم',
   'startMenu.logoutTitle': 'تسجيل الخروج',
+
+  'moduleMenu.aria': 'قائمة الوحدة',
+  'moduleMenu.stats': '{forms} نماذج في {menus} قوائم',
+  'moduleMenu.formCount': '{count} نماذج',
+  'moduleMenu.empty': 'لم تُضف نماذج إلى هذه القائمة بعد.',
+  'moduleMenu.loadError': 'فشل تحميل قوائم الوحدة.',
+  'moduleMenu.closeHint': 'اضغط Escape أو انقر خارج القائمة للإغلاق',
+  'moduleMenu.formOpened': 'تم فتح نافذة الوحدة «{module}» للنموذج المحدد.',
 
   'taskbar.start': 'ابدأ',
   'taskbar.search': 'بحث',

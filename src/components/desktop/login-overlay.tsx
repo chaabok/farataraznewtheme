@@ -47,7 +47,7 @@ export function LoginOverlay() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
-      className="fixed inset-0 z-40 flex items-center justify-center"
+      className="fixed inset-0 z-[600] flex items-center justify-center"
       role="dialog"
       aria-label={t('login.aria')}
     >

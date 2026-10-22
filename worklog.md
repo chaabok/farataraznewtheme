@@ -169,3 +169,43 @@ Stage Summary:
 - هر ۴ زبان (fa/en/tr/ar) قابل انتخاب از سینی تسک‌بار و صفحه قفل؛ جهت چیدمان آیکون‌ها خودکار: fa/ar → راست‌به‌چپ، en/tr → چپ‌به‌راست
 - زبان در کوکی erp.locale ذخیره می‌شود و سمت سرور در اولین paint اعمال می‌شود (بدون فلش جهت)؛ آیکون‌ها و کل UI و اعداد/تاریخ‌ها locale-aware
 - افزودن زبان جدید: entry در src/i18n/config.ts + بلوک دیکشنری — بدون تغییر کامپوننت‌ها
+
+---
+Task ID: 4
+Agent: main (Z.ai Code)
+Task: منوی شیشه‌ای ماژول (Module Flyout Menu) — با کلیک روی هر آیکون دسکتاپ، منوی زیبا و خلاقانه هماهنگ با تم ویندوز ۱۱ باز شود؛ کاربر از میان منوها و فرم‌های هر ماژول فرم مورد نظر خود را انتخاب کند (داده‌محور از میکروسرویس + بومی‌سازی ۴ زبانه)
+
+Work Log:
+- بک‌اند (desktop-service، پورت 3001):
+  - prisma/schema.prisma: ۴ مدل جدید ModuleMenu / ModuleMenuTranslation / ModuleMenuForm / ModuleMenuFormTranslation (moduleKey + iconKey + sortOrder، ستون name پایه = فارسی، ترجمه fa/en/tr/ar با @@unique([*,locale]) و onDelete: Cascade — بدون فیچر خاص SQLite، سازگار PostgreSQL) + db:push
+  - scripts/seed.ts: سید ساختار یافته ۳۰ منو / ۸۸ فرم برای ۱۰ ماژول (هر منو ۲-۴ فرم) × ۴ زبان = ۴۷۲ ردیف ترجمه؛ helper های n()/m()/f() برای خوانایی؛ بازنشانی امن با deleteMany و nested create
+  - src/menus/: MenusService (findByModule با include تو در تو و همان زنجیره fallback آیکون‌ها: requested → fa → en → اولین → پایه)، MenusController (GET /api/menus/:moduleKey — whitelist ماژول با regex ^[a-z][a-zA-Z0-9]{0,49}$ → 400، ماژول ناشناس → 404، @PublicJwt مثل GET /icons)، MenusModule ثبت در app.module
+  - ری‌استارت سرویس (setsid nohup bun run dev → logs-desktop-service.log)
+- تست‌های curl مستقیم سرویس: بدون key=401، key غلط=401، ماژول خطرناک (..%2Fetc)=400، ماژول ناشناس=404، fa/en نام‌های صحیح ✓
+- گیت‌وی BFF جدید src/app/api/desktop/menus/[moduleKey]/route.ts: whitelist دوسطحی moduleKey (ضد SSRF/traversal) + locale (fa|en|tr|ar)، تزریق x-api-key سمت سرور، نگاشت 404/خطاها با پیام فارسی؛ تست: traversal=400، unknown=404، sales?locale=fa و inventory?locale=en ✓
+- فرانت‌اند:
+  - types/desktop.ts: ModuleFormItem / ModuleMenuItem / ModuleMenusPayload
+  - desktop-store.ts: openMenuModuleKey، menusCache (کلید `${locale}:${moduleKey}`)، isMenusLoading، menusError، activeMenuId + اکشن‌های openModuleMenu/closeModuleMenu/selectMenu/loadModuleMenus؛ toggleStartMenu(true) و openWindow حالا منوی ماژول را می‌بندند (mutual exclusion)
+  - dictionaries.ts: ۷ کلید جدید moduleMenu.* در هر ۴ زبان (aria/stats/formCount/empty/loadError/closeHint/formOpened)
+  - icon-registry.ts: ۲۳ آیکون جدید برای منوها و فرم‌ها (cog, shield, database, fileText, bookOpen, barChart, banknote, send, landmark, package, boxes, receipt, users, trendingUp, trendingDown, clipboardList, clipboardCheck, pieChart, calculator, building, calendar, lock, arrowLeftRight, fileSpreadsheet)
+  - module-menu/module-menu.tsx (جدید): فلایاوت مرکزی Windows 11 — بک‌دراپ مات (فقط دسکتاپ؛ تسک‌بار روشن و تعاملی می‌ماند)، پنل شیشه‌ای تیره با هاله رنگ ماژول (boxShadow رنگی)، هدر با کاشی گرادیانی آیکون + «N فرم در M منو» + دکمه بستن، بدن master-detail (ریل منوها با نشانگر رنگی start-0 + شمارنده فرم + شِوران جهت‌دار / گرید کارت‌های فرم با انیمیشن stagger و آیکون رنگ ماژول + فلش جهت‌آگاه rtl/ltr)، فوتر راهنمای Escape؛ حالت‌های skeleton/error+retry/empty؛ فریم‌ورک انیمیشن spring + AnimatePresence + اسلاید منوها مطابق direction
+  - desktop-icon.tsx: کلیک تکی حالا selectIcon + openModuleMenu (منو جایگزین رفتار قبلی دبل‌کلیک شد) + aria-haspopup=dialog
+  - desktop-shell.tsx: رندر ModuleMenu داخل main + Escape و کلیک روی دسکتاپ آن را می‌بندد
+  - login-overlay.tsx: z-40 → z-[600] تا صفحه قفل همیشه بالاتر از منو باشد؛ منو z-[500] بالاتر از پنجره‌ها و پایین‌تر از تسک‌بار (z-20 در کانتکست خودش) قرار می‌گیرد
+- تست مرورگری (Agent Browser، 1440×900):
+  - لاگین admin → کلیک «حسابداری» → منوی شیشه‌ای با هاله سبز: «۹ فرم در ۳ منو»، ریل RTL سمت راست، کارت‌های فرم (ثبت سند جدید/فهرست اسناد/سند افتتاحیه) ✓
+  - تعویض منو → «گزارش‌های مالی» با اسلاید و نشانگر رنگی ✓
+  - کلیک «سود و زیان» → منو بسته، پنجره ماژول با آمار زنده باز + توست «سود و زیان — پنجره ماژول «حسابداری» برای فرم انتخاب‌شده باز شد» ✓
+  - Escape بستن + منوی فروش روی پنجره باز (z صحیح) ✓
+  - سوییچ به English: منوی Sales کاملاً LTR با نام‌های انگلیسی از بک‌اند (Sales Documents/Customers/Sales Reports — Proforma Invoice/Sales Invoice/Sales Return)، انتخاب فرم → پنجره Sales انگلیسی با آمار و توست صحیح ✓
+  - موبایل 390px: پنل 94vw، ریل منوها به چیپ‌های افقی اسکرول‌شو، فرم‌ها تک‌ستونه ✓
+  - بازگشت به فارسی → منوی سفارشات با هاله آبی ✓؛ کنسول بدون خطا؛ dev.log همه 200
+- رفع در حین تست: عرض ریل 236px → 252px (truncate عنوان‌های بلند انگلیسی مثل "Sales Docu...")
+- حوادث عملیاتی: OOM سندباکس (4GB) یک‌بار next-server و یک‌بار desktop-service را کشت → هر دو با setsid nohup دوباره بالا آمدند؛ در پایان هر ۱۳ پورت (3000-3012) فعال
+
+Stage Summary:
+- هر ۱۰ ماژول حالا «منوی راه‌انداز» دارد: کلیک آیکون → فلایاوت شیشه‌ای هماهنگ با تم (شیشه تیره تسک‌بار + رنگ اختصاصی ماژول) → انتخاب منو → انتخاب فرم → پنجره ماژول باز می‌شود
+- ساختار منو/فرم ۱۰۰٪ داده‌محور از میکروسرویس است: افزودن منو/فرم جدید بدون تغییر فرانت = INSERT در ModuleMenu/ModuleMenuForm (+ ترجمه‌های ۴گانه)؛ آیکون‌ها با iconKey از رجیستری
+- امنیت همان لایه‌های قبلی: API key داخلی + JWT برای mutations + whitelist دوگانه moduleKey/locale در گیت‌وی (تست 401/400/404 پاس)
+- بومی‌سازی کامل: نام منوها/فرم‌ها از دیتابیس با fallback، متن‌های UI از دیکشنری، چیدمان و جهت انیمیشن با dir هماهنگ (fa/ar=RTL، en/tr=LTR)
+- فاز بعدی (پیشنهاد): اتصال formKey های انتخابی به فرم‌های واقعی اختصاصی (به‌جای پنجره عمومی ماژول) — بستر آن (formKey در DB + استور) آماده است

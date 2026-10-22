@@ -6,7 +6,14 @@ import {
   LOCALE_COOKIE,
   isLocale,
 } from '@/i18n/config';
-import type { DesktopIconItem, Direction, Locale, TaskbarApp } from '@/types/desktop';
+import type {
+  DesktopIconItem,
+  Direction,
+  Locale,
+  ModuleMenuItem,
+  ModuleMenusPayload,
+  TaskbarApp,
+} from '@/types/desktop';
 
 /**
  * Pinned apps shown in the center of the taskbar (Windows 11 style).
@@ -49,6 +56,14 @@ interface DesktopState {
   isStartMenuOpen: boolean;
   /** Language picker popup visibility (taskbar tray). */
   isLanguageMenuOpen: boolean;
+  /** Module flyout menu: which module's menu is open (null = closed). */
+  openMenuModuleKey: string | null;
+  /** Menus + forms per `${locale}:${moduleKey}` (session cache). */
+  menusCache: Record<string, ModuleMenuItem[]>;
+  isMenusLoading: boolean;
+  menusError: string | null;
+  /** Id of the active menu inside the open module flyout. */
+  activeMenuId: string | null;
   /** Active interface language — drives RTL/LTR + all translations. */
   locale: Locale;
   /** Text/layout direction derived from `locale`. */
@@ -64,6 +79,13 @@ interface DesktopState {
   selectIcon: (id: string | null) => void;
   toggleStartMenu: (open?: boolean) => void;
   toggleLanguageMenu: (open?: boolean) => void;
+  /** Opens the flyout menu of a module and loads its menus/forms. */
+  openModuleMenu: (moduleKey: string) => void;
+  closeModuleMenu: () => void;
+  /** Switches the active menu inside the open module flyout. */
+  selectMenu: (menuId: string) => void;
+  /** Loads (or reads from cache) the menus of a module for the active locale. */
+  loadModuleMenus: (moduleKey: string) => Promise<void>;
   /** Switch language: updates state, cookie, <html> attrs and refetches icons. */
   setLocale: (locale: Locale) => void;
   /** Syncs the store with the locale already rendered by the server (cookie). */
@@ -80,6 +102,11 @@ export const useDesktopStore = create<DesktopState>((set, get) => ({
   selectedIconId: null,
   isStartMenuOpen: false,
   isLanguageMenuOpen: false,
+  openMenuModuleKey: null,
+  menusCache: {},
+  isMenusLoading: false,
+  menusError: null,
+  activeMenuId: null,
   locale: DEFAULT_LOCALE,
   direction: DIR_BY_LOCALE[DEFAULT_LOCALE],
   pinnedApps: PINNED_APPS,
@@ -113,10 +140,70 @@ export const useDesktopStore = create<DesktopState>((set, get) => ({
   selectIcon: (id) => set({ selectedIconId: id }),
 
   toggleStartMenu: (open) =>
-    set((state) => ({ isStartMenuOpen: open ?? !state.isStartMenuOpen })),
+    set((state) => {
+      const next = open ?? !state.isStartMenuOpen;
+      // The start menu and the module flyout are mutually exclusive.
+      return next
+        ? { isStartMenuOpen: true, openMenuModuleKey: null, activeMenuId: null }
+        : { isStartMenuOpen: false };
+    }),
 
   toggleLanguageMenu: (open) =>
     set((state) => ({ isLanguageMenuOpen: open ?? !state.isLanguageMenuOpen })),
+
+  openModuleMenu: (moduleKey) => {
+    set({
+      openMenuModuleKey: moduleKey,
+      isStartMenuOpen: false,
+      isLanguageMenuOpen: false,
+      activeMenuId: null,
+      menusError: null,
+    });
+    void get().loadModuleMenus(moduleKey);
+  },
+
+  closeModuleMenu: () =>
+    set({ openMenuModuleKey: null, activeMenuId: null }),
+
+  selectMenu: (menuId) => set({ activeMenuId: menuId }),
+
+  loadModuleMenus: async (moduleKey) => {
+    const { locale, menusCache } = get();
+    const cacheKey = `${locale}:${moduleKey}`;
+    const cached = menusCache[cacheKey];
+    if (cached) {
+      set({ activeMenuId: cached[0]?.id ?? null });
+      return;
+    }
+    set({ isMenusLoading: true, menusError: null });
+    try {
+      const res = await fetch(
+        `/api/desktop/menus/${encodeURIComponent(moduleKey)}?locale=${locale}`,
+        { cache: 'no-store' },
+      );
+      if (!res.ok) {
+        throw new Error(translate(locale, 'moduleMenu.loadError'));
+      }
+      const payload = (await res.json()) as { data: ModuleMenusPayload };
+      const menus = payload.data?.menus ?? [];
+      set((state) => ({
+        menusCache: { ...state.menusCache, [cacheKey]: menus },
+        isMenusLoading: false,
+        activeMenuId:
+          state.openMenuModuleKey === moduleKey
+            ? (menus[0]?.id ?? null)
+            : state.activeMenuId,
+      }));
+    } catch (error) {
+      set({
+        isMenusLoading: false,
+        menusError:
+          error instanceof Error
+            ? error.message
+            : translate(locale, 'common.serviceError'),
+      });
+    }
+  },
 
   setLocale: (locale) => {
     const direction = DIR_BY_LOCALE[locale];
@@ -149,6 +236,8 @@ export const useDesktopStore = create<DesktopState>((set, get) => ({
           ),
           windowZCounter: nextZ,
           isStartMenuOpen: false,
+          openMenuModuleKey: null,
+          activeMenuId: null,
         };
       }
       return {
@@ -159,6 +248,8 @@ export const useDesktopStore = create<DesktopState>((set, get) => ({
         windowZCounter: nextZ,
         windowSlotCounter: state.windowSlotCounter + 1,
         isStartMenuOpen: false,
+        openMenuModuleKey: null,
+        activeMenuId: null,
         selectedIconId: null,
       };
     }),

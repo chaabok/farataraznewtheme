@@ -26,3 +26,27 @@ export interface TaskbarApp {
   /** Whether the app shows the "running" underline indicator. */
   isActive?: boolean;
 }
+
+/** A form entry inside a module menu (from desktop-service). */
+export interface ModuleFormItem {
+  id: string;
+  formKey: string;
+  iconKey: string;
+  name: string;
+  sortOrder: number;
+}
+
+/** A menu (section) of a module inside the module flyout menu. */
+export interface ModuleMenuItem {
+  id: string;
+  iconKey: string;
+  name: string;
+  sortOrder: number;
+  forms: ModuleFormItem[];
+}
+
+/** Payload of `GET /api/desktop/menus/[moduleKey]`. */
+export interface ModuleMenusPayload {
+  moduleKey: string;
+  menus: ModuleMenuItem[];
+}
