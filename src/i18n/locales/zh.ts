@@ -363,4 +363,13 @@ export const zhDictionary: Record<string, string> = {
   'dataList.showAllColumns': '显示全部',
   'dataList.yes': '是',
   'dataList.no': '否',
+  'dataList.filterMenuAria': '列筛选运算符',
+  'dataList.filterOpAll': '全部',
+  'dataList.filterOpHasValue': '有值',
+  'dataList.filterOpNoValue': '无值',
+  'dataList.filterOpStartsWith': '开头为',
+  'dataList.filterOpEndsWith': '结尾为',
+  'dataList.filterOpEquals': '等于',
+  'dataList.filterOpNotContains': '不包含',
+  'dataList.filterOpContains': '包含',
 };

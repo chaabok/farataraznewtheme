@@ -361,4 +361,13 @@ export const frDictionary: Record<string, string> = {
   'dataList.showAllColumns': 'Tout afficher',
   'dataList.yes': 'Oui',
   'dataList.no': 'Non',
+  'dataList.filterMenuAria': 'Opérateur de filtre de colonne',
+  'dataList.filterOpAll': 'Tout',
+  'dataList.filterOpHasValue': 'Avec valeur',
+  'dataList.filterOpNoValue': 'Sans valeur',
+  'dataList.filterOpStartsWith': 'Commence par',
+  'dataList.filterOpEndsWith': 'Se termine par',
+  'dataList.filterOpEquals': 'Égal à',
+  'dataList.filterOpNotContains': 'Ne contient pas',
+  'dataList.filterOpContains': 'Contient',
 };

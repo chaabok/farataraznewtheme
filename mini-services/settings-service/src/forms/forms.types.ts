@@ -85,3 +85,25 @@ export interface LookupOption {
   parentId: string | null;
   sortOrder: number;
 }
+
+/**
+ * Server-side filter operators of the data-list windows
+ * (`?filters=[…]` query param on the records endpoint — evaluated here,
+ * inside the owning service, on the normalized *display text* of cells).
+ */
+export type ListFilterOp =
+  | 'all'
+  | 'hasValue'
+  | 'noValue'
+  | 'contains'
+  | 'notContains'
+  | 'startsWith'
+  | 'endsWith'
+  | 'equals';
+
+/** One column filter entry of the `?filters=` JSON query param. */
+export interface ListColumnFilter {
+  field: string;
+  op: ListFilterOp;
+  value?: string;
+}

@@ -11,13 +11,111 @@ import type {
   FormDataMap,
   FormDef,
   FormFieldDef,
+  FormFieldValue,
   FormRecord,
   FormSummary,
+  ListColumnFilter,
+  ListFilterOp,
   LookupOption,
 } from './forms.types';
 
 /** All route keys (moduleKey / formKey / lookupKey) share this whitelist. */
 const KEY_PATTERN = /^[a-z][a-zA-Z0-9-]{0,49}$/;
+
+/** Whitelist of the operator values accepted in `?filters=`. */
+const FILTER_OPS: ReadonlySet<string> = new Set<ListFilterOp>([
+  'all',
+  'hasValue',
+  'noValue',
+  'contains',
+  'notContains',
+  'startsWith',
+  'endsWith',
+  'equals',
+]);
+
+const PERSIAN_DIGITS = '۰۱۲۳۴۵۶۷۸۹';
+const ARABIC_DIGITS = '٠١٢٣٤٥٦٧٨٩';
+
+/**
+ * Same normalization as the frontend grid used to apply client-side:
+ * lowercase, Persian/Arabic yeh & kaf folding and digit conversion so a
+ * typed filter matches the stored data regardless of the keyboard used.
+ * (Mirror of `normalizeSearchText` in data-list-window.tsx.)
+ */
+function normalizeSearchText(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[۰-۹]/g, (digit) => String(PERSIAN_DIGITS.indexOf(digit)))
+    .replace(/[٠-٩]/g, (digit) => String(ARABIC_DIGITS.indexOf(digit)))
+    .replace(/ي/g, 'ی')
+    .replace(/ك/g, 'ک')
+    .replace(/\u200c/g, ' ')
+    .trim();
+}
+
+/**
+ * Parses + validates the `?filters=` JSON query param of the records
+ * endpoint. Everything unknown / malformed is dropped (never throws) so
+ * a stale client cannot break the list; a fully-invalid payload simply
+ * returns no filters (unfiltered response).
+ */
+function parseColumnFilters(raw: unknown): ListColumnFilter[] {
+  let parsed: unknown;
+  try {
+    parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+  } catch {
+    return [];
+  }
+  if (!Array.isArray(parsed)) return [];
+
+  const filters: ListColumnFilter[] = [];
+  for (const entry of parsed.slice(0, 8)) {
+    if (typeof entry !== 'object' || entry === null) continue;
+    const candidate = entry as Record<string, unknown>;
+    const field = typeof candidate.field === 'string' ? candidate.field : '';
+    const op = typeof candidate.op === 'string' ? candidate.op : '';
+    if (!KEY_PATTERN.test(field) || !FILTER_OPS.has(op)) continue;
+    if (op === 'all') continue; // cleared client-side, nothing to apply
+    const value =
+      typeof candidate.value === 'string' ? candidate.value.slice(0, 200) : '';
+    const needsValue = op !== 'hasValue' && op !== 'noValue';
+    if (needsValue && value.trim() === '') continue;
+    filters.push({ field, op: op as ListFilterOp, value });
+  }
+  return filters;
+}
+
+/**
+ * Operator semantics of one `?filters=` entry against one cell. The
+ * display text (already normalized) drives the text operators so filtering
+ * matches what the user sees in the grid.
+ */
+function matchesFilter(
+  raw: FormFieldValue,
+  filter: ListColumnFilter,
+  displayText: string,
+): boolean {
+  const needle = normalizeSearchText(filter.value ?? '');
+  switch (filter.op) {
+    case 'hasValue':
+      return raw !== null && raw !== undefined && String(raw).trim() !== '';
+    case 'noValue':
+      return raw === null || raw === undefined || String(raw).trim() === '';
+    case 'contains':
+      return displayText.includes(needle);
+    case 'notContains':
+      return !displayText.includes(needle);
+    case 'startsWith':
+      return displayText.startsWith(needle);
+    case 'endsWith':
+      return displayText.endsWith(needle);
+    case 'equals':
+      return displayText === needle;
+    default:
+      return true;
+  }
+}
 
 function assertKey(value: string, label: string): void {
   if (!KEY_PATTERN.test(value)) {
@@ -128,8 +226,18 @@ export class FormsService {
     };
   }
 
-  /** GET /:moduleKey/:formKey/records → saved records, oldest first. */
-  async listRecords(moduleKey: string, formKey: string): Promise<FormRecord[]> {
+  /**
+   * GET /:moduleKey/:formKey/records → saved records, oldest first.
+   * `?filters=` (JSON ListColumnFilter[]) is evaluated SERVER-SIDE on the
+   * normalized display text of each cell (lookup labels, tree parent
+   * titles and checkbox labels resolved exactly like the frontend grid).
+   */
+  async listRecords(
+    moduleKey: string,
+    formKey: string,
+    locale = 'fa',
+    filtersParam?: string,
+  ): Promise<FormRecord[]> {
     assertKey(moduleKey, 'moduleKey');
     assertKey(formKey, 'formKey');
 
@@ -138,8 +246,28 @@ export class FormsService {
       where: { formId: form.id },
       orderBy: { createdAt: 'asc' },
     });
-    return rows.map((row) =>
+    const records = rows.map((row) =>
       toFormRecord(row.id, row.dataJson, row.createdAt, row.updatedAt),
+    );
+
+    const filters = parseColumnFilters(filtersParam);
+    if (!filters.length) return records;
+
+    const fields = await this.prisma.formFieldDefinition.findMany({
+      where: { formId: form.id, isActive: true },
+      orderBy: { sortOrder: 'asc' },
+    });
+    const searchText = await this.buildSearchTextResolver(
+      form.id,
+      fields,
+      records,
+      locale,
+    );
+
+    return records.filter((record) =>
+      filters.every((filter) =>
+        matchesFilter(record.data[filter.field], filter, searchText(filter.field, record)),
+      ),
     );
   }
 
@@ -243,6 +371,91 @@ export class FormsService {
       throw new NotFoundException('فرم درخواستی یافت نشد');
     }
     return form;
+  }
+
+  /**
+   * Builds a `(fieldKey, record) → normalized display text` resolver that
+   * mirrors the frontend `cellText`: tree-parent columns show the parent
+   * record's title, lookup columns the localized option label and checkbox
+   * cells their بلی/خیر (plus Yes/No + raw for cross-locale matching).
+   */
+  private async buildSearchTextResolver(
+    formId: string,
+    fields: FormFieldDefinition[],
+    records: FormRecord[],
+    locale: string,
+  ): Promise<(fieldKey: string, record: FormRecord) => string> {
+    const byKey = new Map(fields.map((field) => [field.fieldKey, field]));
+
+    // Tree parent column: stored value = parent record id → title.
+    const parentField =
+      fields.find(
+        (field) =>
+          field.fieldKey === 'parentId' ||
+          (field.fieldType === 'lookup' && /parent/i.test(field.fieldKey)),
+      ) ?? null;
+    const titleField =
+      fields.find(
+        (field) =>
+          field !== parentField && /title|name|desc/i.test(field.fieldKey),
+      ) ??
+      fields.find((field) => field !== parentField) ??
+      null;
+    const parentTitles = new Map<string, string>();
+    if (parentField) {
+      for (const record of records) {
+        const raw = titleField ? record.data[titleField.fieldKey] : null;
+        parentTitles.set(
+          record.id,
+          raw === null || raw === undefined || raw === ''
+            ? record.id
+            : String(raw),
+        );
+      }
+    }
+
+    // Lookup columns: stored value = option code → localized label.
+    const lookupKeys = [
+      ...new Set(
+        fields
+          .filter((field) => field.fieldType === 'lookup' && field.lookupKey)
+          .map((field) => field.lookupKey as string),
+      ),
+    ];
+    const lookupLabels = new Map<string, Map<string, string>>();
+    for (const key of lookupKeys) {
+      const options = await this.prisma.formLookupOption.findMany({
+        where: { lookupKey: key },
+      });
+      lookupLabels.set(
+        key,
+        new Map(
+          options.map((option) => [
+            option.code,
+            pickLocalized(locale, option.label, option.labelEn),
+          ]),
+        ),
+      );
+    }
+
+    return (fieldKey, record) => {
+      const field = byKey.get(fieldKey);
+      const raw = record.data[fieldKey];
+      if (!field || raw === null || raw === undefined || raw === '') return '';
+      if (field.fieldType === 'checkbox') {
+        return normalizeSearchText(
+          `${raw === true ? 'بلی Yes' : 'خیر No'} ${String(raw)}`,
+        );
+      }
+      if (parentField && fieldKey === parentField.fieldKey) {
+        return normalizeSearchText(parentTitles.get(String(raw)) ?? String(raw));
+      }
+      if (field.fieldType === 'lookup' && field.lookupKey) {
+        const labels = lookupLabels.get(field.lookupKey);
+        return normalizeSearchText(labels?.get(String(raw)) ?? String(raw));
+      }
+      return normalizeSearchText(String(raw));
+    };
   }
 
   /** Keep only known active fieldKeys of the form, then serialize. */

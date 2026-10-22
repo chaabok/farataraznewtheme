@@ -55,8 +55,15 @@ export class FormsController {
   async listRecords(
     @Param('moduleKey') moduleKey: string,
     @Param('formKey') formKey: string,
+    @Query('locale') locale?: string,
+    @Query('filters') filters?: string,
   ) {
-    const data = await this.formsService.listRecords(moduleKey, formKey);
+    const data = await this.formsService.listRecords(
+      moduleKey,
+      formKey,
+      locale ?? 'fa',
+      filters,
+    );
     return { data };
   }
 

@@ -361,4 +361,13 @@ export const koDictionary: Record<string, string> = {
   'dataList.showAllColumns': '모두 표시',
   'dataList.yes': '예',
   'dataList.no': '아니요',
+  'dataList.filterMenuAria': '열 필터 연산자',
+  'dataList.filterOpAll': '모두',
+  'dataList.filterOpHasValue': '값 있음',
+  'dataList.filterOpNoValue': '값 없음',
+  'dataList.filterOpStartsWith': '시작하는',
+  'dataList.filterOpEndsWith': '끝나는',
+  'dataList.filterOpEquals': '같음',
+  'dataList.filterOpNotContains': '포함하지 않음',
+  'dataList.filterOpContains': '포함',
 };

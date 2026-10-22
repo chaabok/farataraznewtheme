@@ -361,4 +361,13 @@ export const psDictionary: Record<string, string> = {
   'dataList.showAllColumns': 'ټول ښودل',
   'dataList.yes': 'هو',
   'dataList.no': 'نه',
+  'dataList.filterMenuAria': 'د ستون فلټر عملیه',
+  'dataList.filterOpAll': 'ټول',
+  'dataList.filterOpHasValue': 'ارزښت لري',
+  'dataList.filterOpNoValue': 'ارزښت نه لري',
+  'dataList.filterOpStartsWith': 'په ... پیلېږي',
+  'dataList.filterOpEndsWith': 'په ... پای ته رسي',
+  'dataList.filterOpEquals': 'برابر دی',
+  'dataList.filterOpNotContains': 'نه لري',
+  'dataList.filterOpContains': 'لري',
 };

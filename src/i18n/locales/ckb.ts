@@ -361,4 +361,13 @@ export const ckbDictionary: Record<string, string> = {
   'dataList.showAllColumns': 'پیشاندانی هەموو',
   'dataList.yes': 'بەڵێ',
   'dataList.no': 'نەخێر',
+  'dataList.filterMenuAria': 'فلتەری ستوون',
+  'dataList.filterOpAll': 'هەموو',
+  'dataList.filterOpHasValue': 'بەهای هەیە',
+  'dataList.filterOpNoValue': 'بەهای نییە',
+  'dataList.filterOpStartsWith': 'دەست پێدەکات بە',
+  'dataList.filterOpEndsWith': 'کۆتایی دێت بە',
+  'dataList.filterOpEquals': 'یەکسانە بە',
+  'dataList.filterOpNotContains': 'ناگرێتەوە',
+  'dataList.filterOpContains': 'دەگرێتەوە',
 };

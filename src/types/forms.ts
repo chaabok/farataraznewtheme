@@ -104,6 +104,31 @@ export interface LookupOption {
   sortOrder: number;
 }
 
+/**
+ * Server-side filter operators of the data-list windows
+ * (`GET .../records?filters=[…]` — evaluated inside the owning service).
+ * `all` clears the column filter; `hasValue` / `noValue` need no value;
+ * the rest compare the normalized display text of the cell.
+ */
+export type ListFilterOp =
+  | 'all'
+  | 'hasValue'
+  | 'noValue'
+  | 'contains'
+  | 'notContains'
+  | 'startsWith'
+  | 'endsWith'
+  | 'equals';
+
+/** One column filter entry of the `?filters=` JSON query param. */
+export interface ListColumnFilter {
+  /** Active fieldKey of the form. */
+  field: string;
+  op: ListFilterOp;
+  /** Ignored for `all` / `hasValue` / `noValue`. */
+  value?: string;
+}
+
 /** `GET /api/modules/:module/forms/:formKey` → `{ data: FormDef }`. */
 /** `GET /api/modules/:module/forms` → `{ data: FormSummary[] }`. */
 /** `GET /api/modules/:module/forms/:formKey/records` → `{ data: FormRecord[] }`. */

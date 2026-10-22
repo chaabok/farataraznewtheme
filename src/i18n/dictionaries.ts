@@ -375,6 +375,15 @@ const fa = {
   'dataList.showAllColumns': 'نمایش همه',
   'dataList.yes': 'بلی',
   'dataList.no': 'خیر',
+  'dataList.filterMenuAria': 'عملیات فیلتر ستون',
+  'dataList.filterOpAll': 'تمام',
+  'dataList.filterOpHasValue': 'دارای مقدار',
+  'dataList.filterOpNoValue': 'بدون مقدار',
+  'dataList.filterOpStartsWith': 'شروع با',
+  'dataList.filterOpEndsWith': 'پایان با',
+  'dataList.filterOpEquals': 'برابر با',
+  'dataList.filterOpNotContains': 'حاوی نباشد',
+  'dataList.filterOpContains': 'حاوی تایپ‌شده',
 } satisfies Record<string, string>;
 
 const en: Record<string, string> = {
@@ -712,6 +721,15 @@ const en: Record<string, string> = {
   'dataList.showAllColumns': 'Show all',
   'dataList.yes': 'Yes',
   'dataList.no': 'No',
+  'dataList.filterMenuAria': 'Column filter operator',
+  'dataList.filterOpAll': 'All',
+  'dataList.filterOpHasValue': 'Has value',
+  'dataList.filterOpNoValue': 'No value',
+  'dataList.filterOpStartsWith': 'Starts with',
+  'dataList.filterOpEndsWith': 'Ends with',
+  'dataList.filterOpEquals': 'Equals',
+  'dataList.filterOpNotContains': 'Does not contain',
+  'dataList.filterOpContains': 'Contains',
 };
 
 const tr: Record<string, string> = {
@@ -1049,6 +1067,15 @@ const tr: Record<string, string> = {
   'dataList.showAllColumns': 'Tümünü göster',
   'dataList.yes': 'Evet',
   'dataList.no': 'Hayır',
+  'dataList.filterMenuAria': 'Sütun filtre işlemi',
+  'dataList.filterOpAll': 'Tümü',
+  'dataList.filterOpHasValue': 'Değeri olan',
+  'dataList.filterOpNoValue': 'Değeri olmayan',
+  'dataList.filterOpStartsWith': 'Şununla başlar',
+  'dataList.filterOpEndsWith': 'Şununla biter',
+  'dataList.filterOpEquals': 'Eşittir',
+  'dataList.filterOpNotContains': 'Şunu içermesin',
+  'dataList.filterOpContains': 'Şunu içeren',
 };
 
 const ar: Record<string, string> = {
@@ -1386,6 +1413,15 @@ const ar: Record<string, string> = {
   'dataList.showAllColumns': 'إظهار الكل',
   'dataList.yes': 'نعم',
   'dataList.no': 'لا',
+  'dataList.filterMenuAria': 'عملية تصفية العمود',
+  'dataList.filterOpAll': 'الكل',
+  'dataList.filterOpHasValue': 'له قيمة',
+  'dataList.filterOpNoValue': 'بلا قيمة',
+  'dataList.filterOpStartsWith': 'يبدأ بـ',
+  'dataList.filterOpEndsWith': 'ينتهي بـ',
+  'dataList.filterOpEquals': 'يساوي',
+  'dataList.filterOpNotContains': 'لا يحتوي على',
+  'dataList.filterOpContains': 'يحتوي على المُدخل',
 };
 
 export const DICTIONARIES: Record<Locale, Record<string, string>> = {

@@ -363,4 +363,13 @@ export const hiDictionary: Record<string, string> = {
   'dataList.showAllColumns': 'सभी दिखाएँ',
   'dataList.yes': 'हाँ',
   'dataList.no': 'नहीं',
+  'dataList.filterMenuAria': 'कॉलम फ़िल्टर ऑपरेटर',
+  'dataList.filterOpAll': 'सभी',
+  'dataList.filterOpHasValue': 'मान है',
+  'dataList.filterOpNoValue': 'मान नहीं',
+  'dataList.filterOpStartsWith': 'से शुरू होता है',
+  'dataList.filterOpEndsWith': 'से समाप्त होता है',
+  'dataList.filterOpEquals': 'बराबर',
+  'dataList.filterOpNotContains': 'शामिल नहीं',
+  'dataList.filterOpContains': 'शामिल',
 };

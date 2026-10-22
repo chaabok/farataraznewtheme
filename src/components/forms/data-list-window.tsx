@@ -4,11 +4,13 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
   createElement,
   type MouseEvent,
   type ReactNode,
 } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
   Check,
   Columns3,
@@ -49,6 +51,8 @@ import type {
   FormDef,
   FormFieldDef,
   FormRecord,
+  ListColumnFilter,
+  ListFilterOp,
   LookupOption,
 } from '@/types/forms';
 import { cn } from '@/lib/utils';
@@ -85,23 +89,36 @@ function parseListModuleId(moduleId: string): {
 /** Sentinel kept in state so load errors render through the dictionaries. */
 const GENERIC_LOAD_ERROR = 'dataList.loadError';
 
-const PERSIAN_DIGITS = '۰۱۲۳۴۵۶۷۸۹';
-const ARABIC_DIGITS = '٠١٢٣٤٥٦٧٨٩';
+/** Per-column filter state: operator + typed value (applied server-side). */
+interface ColumnFilterState {
+  op: ListFilterOp;
+  value: string;
+}
 
 /**
- * Search normalization: lowercase, fold Persian/Arabic yeh & kaf variants
- * and convert Persian/Arabic digits to Latin so typed filters match the
- * stored data regardless of the keyboard used.
+ * Operator menu items — order mirrors the reference screenshot:
+ * تمام / دارای مقدار / بدون مقدار / شروع با / پایان با / برابر با /
+ * حاوی نباشد / حاوی تایپ‌شده.
  */
-function normalizeSearchText(value: string): string {
-  return value
-    .toLowerCase()
-    .replace(/[۰-۹]/g, (digit) => String(PERSIAN_DIGITS.indexOf(digit)))
-    .replace(/[٠-٩]/g, (digit) => String(ARABIC_DIGITS.indexOf(digit)))
-    .replace(/ي/g, 'ی')
-    .replace(/ك/g, 'ک')
-    .replace(/\u200c/g, ' ')
-    .trim();
+const FILTER_OP_ITEMS: Array<{ op: ListFilterOp; labelKey: string }> = [
+  { op: 'all', labelKey: 'dataList.filterOpAll' },
+  { op: 'hasValue', labelKey: 'dataList.filterOpHasValue' },
+  { op: 'noValue', labelKey: 'dataList.filterOpNoValue' },
+  { op: 'startsWith', labelKey: 'dataList.filterOpStartsWith' },
+  { op: 'endsWith', labelKey: 'dataList.filterOpEndsWith' },
+  { op: 'equals', labelKey: 'dataList.filterOpEquals' },
+  { op: 'notContains', labelKey: 'dataList.filterOpNotContains' },
+  { op: 'contains', labelKey: 'dataList.filterOpContains' },
+];
+
+/** True when a column contributes an effective server-side filter. */
+function isColumnFilterActive(filter?: ColumnFilterState): boolean {
+  return (
+    !!filter &&
+    (filter.op === 'hasValue' ||
+      filter.op === 'noValue' ||
+      filter.value.trim() !== '')
+  );
 }
 
 /** Lightweight table checkbox (button-based, no Radix overhead per row). */
@@ -159,9 +176,14 @@ export function DataListWindow({ moduleId, list, onClose }: DataListWindowProps)
 
   // ── Data ──
   const [def, setDef] = useState<FormDef | null>(null);
+  /** Full dataset of the form (parent-title context + total count). */
+  const [allRecords, setAllRecords] = useState<FormRecord[]>([]);
+  /** Rows currently displayed — the server-filtered slice. */
   const [records, setRecords] = useState<FormRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  /** True while a debounced server-side filter query is in flight. */
+  const [isFiltering, setIsFiltering] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   /** lookupKey → (option code → label). */
   const [lookupLabels, setLookupLabels] = useState<
@@ -170,14 +192,43 @@ export function DataListWindow({ moduleId, list, onClose }: DataListWindowProps)
 
   // ── View state ──
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [filters, setFilters] = useState<Record<string, string>>({});
+  const [filters, setFilters] = useState<Record<string, ColumnFilterState>>({});
   const [isFilterRowVisible, setIsFilterRowVisible] = useState(true);
+  /** Open operator menu, anchored to the funnel button of one column. */
+  const [filterMenu, setFilterMenu] = useState<{
+    fieldKey: string;
+    rect: DOMRect;
+    left: number;
+    openUp: boolean;
+  } | null>(null);
   const [hiddenColumns, setHiddenColumns] = useState<Set<string>>(new Set());
   const [isColumnsOpen, setIsColumnsOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  /** Latest values for callbacks that must not re-create on every change. */
+  const activeFiltersRef = useRef<ListColumnFilter[]>([]);
+  const allRecordsRef = useRef<FormRecord[]>([]);
+  const filterSeqRef = useRef(0);
+  const filterMenuRef = useRef<HTMLDivElement | null>(null);
+  const filterInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+
   // ── Loading ──
+  /** Records URL with the JSON `?filters=` payload (server-side filtering). */
+  const fetchRecordsPage = useCallback(
+    async (columns: ListColumnFilter[]): Promise<FormRecord[]> => {
+      if (!basePath) return [];
+      const params = new URLSearchParams({ locale });
+      if (columns.length) {
+        params.set('filters', JSON.stringify(columns));
+      }
+      const res = await apiFetch<{ data: FormRecord[] }>(
+        `${basePath}/records?${params.toString()}`,
+      );
+      return res.data ?? [];
+    },
+    [basePath, locale],
+  );
   const loadLookups = useCallback(
     async (formDef: FormDef) => {
       const keys = Array.from(
@@ -226,10 +277,9 @@ export function DataListWindow({ moduleId, list, onClose }: DataListWindowProps)
       setDef(nextDef);
       setSelectedIds(new Set());
 
-      const recordsRes = await apiFetch<{ data: FormRecord[] }>(
-        `${basePath}/records`,
-      );
-      setRecords(recordsRes.data ?? []);
+      const all = await fetchRecordsPage([]);
+      setAllRecords(all);
+      setRecords(all);
       void loadLookups(nextDef);
     } catch (error) {
       if (error instanceof SessionExpiredError) return;
@@ -241,7 +291,7 @@ export function DataListWindow({ moduleId, list, onClose }: DataListWindowProps)
     } finally {
       setIsLoading(false);
     }
-  }, [basePath, loadLookups, locale]);
+  }, [basePath, fetchRecordsPage, loadLookups, locale]);
 
   useEffect(() => {
     void load();
@@ -251,12 +301,17 @@ export function DataListWindow({ moduleId, list, onClose }: DataListWindowProps)
     if (!basePath) return;
     setIsRefreshing(true);
     try {
-      const res = await apiFetch<{ data: FormRecord[] }>(`${basePath}/records`);
-      const next = res.data ?? [];
-      setRecords(next);
+      const next = await fetchRecordsPage([]);
+      setAllRecords(next);
+      const columns = activeFiltersRef.current;
+      // Keep the visible slice consistent with the active column filters.
+      const visible = columns.length
+        ? await fetchRecordsPage(columns)
+        : next;
+      setRecords(visible);
       setSelectedIds((prev) => {
         const nextIds = new Set(
-          [...prev].filter((id) => next.some((record) => record.id === id)),
+          [...prev].filter((id) => visible.some((record) => record.id === id)),
         );
         return nextIds.size === prev.size ? prev : nextIds;
       });
@@ -270,7 +325,7 @@ export function DataListWindow({ moduleId, list, onClose }: DataListWindowProps)
     } finally {
       setIsRefreshing(false);
     }
-  }, [basePath, t]);
+  }, [basePath, fetchRecordsPage, t]);
 
   // Auto-refresh when a form window of the same form mutates records.
   useEffect(() => {
@@ -300,10 +355,6 @@ export function DataListWindow({ moduleId, list, onClose }: DataListWindowProps)
     () => sortedFields.filter((field) => !hiddenColumns.has(field.fieldKey)),
     [hiddenColumns, sortedFields],
   );
-  const fieldByKey = useMemo(
-    () => new Map(sortedFields.map((field) => [field.fieldKey, field])),
-    [sortedFields],
-  );
 
   /** recordId → display title of that record (tree parent columns). */
   const parentTitles = useMemo(() => {
@@ -316,7 +367,7 @@ export function DataListWindow({ moduleId, list, onClose }: DataListWindowProps)
       ) ??
       sortedFields.find((field) => field !== parentField) ??
       null;
-    for (const record of records) {
+    for (const record of allRecords) {
       const raw = titleField ? record.data[titleField.fieldKey] : null;
       map.set(
         record.id,
@@ -326,7 +377,7 @@ export function DataListWindow({ moduleId, list, onClose }: DataListWindowProps)
       );
     }
     return map;
-  }, [parentField, records, sortedFields]);
+  }, [parentField, allRecords, sortedFields]);
 
   /** Display text of one cell (checkbox → بلی/خیر, lookup → label, …). */
   const cellText = useCallback(
@@ -353,23 +404,144 @@ export function DataListWindow({ moduleId, list, onClose }: DataListWindowProps)
     [formatNumber, lookupLabels, parentField, parentTitles, t],
   );
 
-  const filteredRecords = useMemo(() => {
-    const active = Object.entries(filters).filter(
-      ([, value]) => value.trim() !== '',
-    );
-    if (!active.length) return records;
-    const needles: Array<{ field: FormFieldDef; needle: string }> = [];
-    for (const [key, value] of active) {
-      const field = fieldByKey.get(key);
-      if (field) needles.push({ field, needle: normalizeSearchText(value) });
+  /**
+   * Effective column filters sent to the service as `?filters=` JSON —
+   * the grid itself no longer filters client-side.
+   */
+  const activeFilters = useMemo<ListColumnFilter[]>(
+    () =>
+      Object.entries(filters)
+        .filter(([, filter]) => isColumnFilterActive(filter))
+        .map(([field, filter]) => ({
+          field,
+          op: filter.op,
+          value: filter.value,
+        })),
+    [filters],
+  );
+
+  useEffect(() => {
+    activeFiltersRef.current = activeFilters;
+    allRecordsRef.current = allRecords;
+  }, [activeFilters, allRecords]);
+
+  // Server-side filtering: debounce typed values, then re-query the service.
+  useEffect(() => {
+    const handle = window.setTimeout(() => {
+      if (!activeFilters.length) {
+        setRecords(allRecordsRef.current);
+        setIsFiltering(false);
+        return;
+      }
+      const seq = ++filterSeqRef.current;
+      setIsFiltering(true);
+      fetchRecordsPage(activeFilters)
+        .then((next) => {
+          if (filterSeqRef.current !== seq) return;
+          setRecords(next);
+        })
+        .catch((error) => {
+          if (filterSeqRef.current !== seq) return;
+          if (error instanceof SessionExpiredError) return;
+          toast({
+            title: t('dataList.loadError'),
+            description: error instanceof Error ? error.message : undefined,
+            variant: 'destructive',
+          });
+        })
+        .finally(() => {
+          if (filterSeqRef.current === seq) setIsFiltering(false);
+        });
+    }, 250);
+    return () => window.clearTimeout(handle);
+  }, [activeFilters, fetchRecordsPage, t]);
+
+  /** The displayed rows — already filtered by the service. */
+  const filteredRecords = records;
+
+  // ── Column filter operator menu ──
+  const toggleFilterMenu = useCallback(
+    (fieldKey: string, button: HTMLButtonElement) => {
+      setFilterMenu((prev) => {
+        if (prev?.fieldKey === fieldKey) return null;
+        const rect = button.getBoundingClientRect();
+        const menuWidth = 184;
+        const menuHeight = 290;
+        return {
+          fieldKey,
+          rect,
+          left: Math.max(
+            8,
+            Math.min(rect.left, window.innerWidth - menuWidth - 8),
+          ),
+          openUp:
+            rect.bottom + menuHeight > window.innerHeight - 8 &&
+            rect.top - menuHeight > 8,
+        };
+      });
+    },
+    [],
+  );
+
+  const setFilterValue = useCallback((fieldKey: string, value: string) => {
+    setFilters((prev) => {
+      const current =
+        prev[fieldKey] ?? { op: 'contains' as ListFilterOp, value: '' };
+      return { ...prev, [fieldKey]: { ...current, value } };
+    });
+  }, []);
+
+  const applyFilterOp = useCallback((fieldKey: string, op: ListFilterOp) => {
+    setFilterMenu(null);
+    setFilters((prev) => {
+      const next = { ...prev };
+      if (op === 'all') {
+        delete next[fieldKey];
+        return next;
+      }
+      const current = prev[fieldKey];
+      next[fieldKey] = {
+        op,
+        value:
+          op === 'hasValue' || op === 'noValue' ? '' : (current?.value ?? ''),
+      };
+      return next;
+    });
+    if (op !== 'hasValue' && op !== 'noValue' && op !== 'all') {
+      requestAnimationFrame(() => filterInputRefs.current[fieldKey]?.focus());
     }
-    if (!needles.length) return records;
-    return records.filter((record) =>
-      needles.every(({ field, needle }) =>
-        normalizeSearchText(cellText(field, record)).includes(needle),
-      ),
-    );
-  }, [cellText, fieldByKey, filters, records]);
+  }, []);
+
+  // Dismiss the operator menu on outside click / Escape / scroll / resize.
+  useEffect(() => {
+    if (!filterMenu) return;
+    const close = () => setFilterMenu(null);
+    const onPointerDown = (event: PointerEvent) => {
+      const target = event.target;
+      if (!(target instanceof Node)) return;
+      if (filterMenuRef.current?.contains(target)) return;
+      if (
+        target instanceof Element &&
+        target.closest('[data-filter-op-button]')
+      ) {
+        return;
+      }
+      close();
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') close();
+    };
+    window.addEventListener('pointerdown', onPointerDown);
+    window.addEventListener('keydown', onKeyDown);
+    window.addEventListener('resize', close);
+    window.addEventListener('scroll', close, true);
+    return () => {
+      window.removeEventListener('pointerdown', onPointerDown);
+      window.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('resize', close);
+      window.removeEventListener('scroll', close, true);
+    };
+  }, [filterMenu]);
 
   // ── Selection ──
   const toggleSelected = useCallback((recordId: string, additive: boolean) => {
@@ -504,7 +676,7 @@ export function DataListWindow({ moduleId, list, onClose }: DataListWindowProps)
     anchor.click();
     URL.revokeObjectURL(url);
     toast({ title: t('dataList.exportSuccess') });
-  }, [cellText, filteredRecords, formKey, locale, t, visibleFields]);
+  }, [cellText, records, formKey, locale, t, visibleFields]);
 
   const handlePrint = useCallback(() => {
     toast({ title: t('formWindow.printToast') });
@@ -529,12 +701,10 @@ export function DataListWindow({ moduleId, list, onClose }: DataListWindowProps)
   });
   const subtitle = selectedIds.size
     ? tf('dataList.selectedCount', { count: formatNumber(selectedIds.size) })
-    : tf('dataList.recordCount', { count: formatNumber(records.length) });
+    : tf('dataList.recordCount', { count: formatNumber(allRecords.length) });
 
   const accentColor = def?.accentColor || DEFAULT_FORM_ACCENT;
-  const hasActiveFilters = Object.values(filters).some(
-    (value) => value.trim() !== '',
-  );
+  const hasActiveFilters = activeFilters.length > 0;
 
   const errorText =
     loadError === GENERIC_LOAD_ERROR ? t('dataList.loadError') : loadError;
@@ -555,7 +725,12 @@ export function DataListWindow({ moduleId, list, onClose }: DataListWindowProps)
   } else {
     content = (
       <div className="relative h-full min-h-0">
-        <div className="h-full overflow-auto [scrollbar-width:thin]">
+        <div
+          className={cn(
+            'h-full overflow-auto transition-opacity duration-200 [scrollbar-width:thin]',
+            isFiltering && 'opacity-50',
+          )}
+        >
           <table className="w-full min-w-max border-separate border-spacing-0 text-[12px]">
             <thead>
               <tr>
@@ -592,32 +767,68 @@ export function DataListWindow({ moduleId, list, onClose }: DataListWindowProps)
                       <Filter className="h-3.5 w-3.5" />
                     </button>
                   </th>
-                  {visibleFields.map((field) => (
-                    <th
-                      key={`filter-${field.fieldKey}`}
-                      className="sticky top-9 z-20 h-8 border-b border-white/10 bg-[#171a22] px-1.5 align-middle"
-                    >
-                      <div className="flex items-center gap-1 rounded-md border border-white/10 bg-white/[0.04] px-1.5 transition-colors focus-within:border-sky-400/50">
-                        <Filter
-                          className="h-3 w-3 shrink-0 text-white/30"
-                          aria-hidden="true"
-                        />
-                        <input
-                          type="text"
-                          value={filters[field.fieldKey] ?? ''}
-                          onChange={(event) =>
-                            setFilters((prev) => ({
-                              ...prev,
-                              [field.fieldKey]: event.target.value,
-                            }))
-                          }
-                          placeholder={t('dataList.filterPlaceholder')}
-                          aria-label={fieldLabel(field, locale)}
-                          className="h-6 w-full min-w-0 bg-transparent text-[11px] text-white placeholder:text-white/25 focus:outline-none"
-                        />
-                      </div>
-                    </th>
-                  ))}
+                  {visibleFields.map((field) => {
+                    const columnFilter = filters[field.fieldKey];
+                    const isActive = isColumnFilterActive(columnFilter);
+                    const valueDisabled =
+                      !columnFilter ||
+                      columnFilter.op === 'hasValue' ||
+                      columnFilter.op === 'noValue';
+                    return (
+                      <th
+                        key={`filter-${field.fieldKey}`}
+                        className="sticky top-9 z-20 h-8 border-b border-white/10 bg-[#171a22] px-1.5 align-middle"
+                      >
+                        <div
+                          className={cn(
+                            'flex items-center gap-1 rounded-md border bg-white/[0.04] px-1.5 transition-colors',
+                            isActive
+                              ? 'border-sky-400/50'
+                              : 'border-white/10 focus-within:border-sky-400/50',
+                          )}
+                        >
+                          <button
+                            type="button"
+                            data-filter-op-button="true"
+                            title={t('dataList.filterMenuAria')}
+                            aria-label={t('dataList.filterMenuAria')}
+                            aria-haspopup="menu"
+                            aria-expanded={
+                              filterMenu?.fieldKey === field.fieldKey
+                            }
+                            onClick={(event) =>
+                              toggleFilterMenu(
+                                field.fieldKey,
+                                event.currentTarget,
+                              )
+                            }
+                            className={cn(
+                              'flex h-5 w-5 shrink-0 items-center justify-center rounded transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-sky-400/60',
+                              isActive
+                                ? 'bg-sky-500/25 text-sky-300'
+                                : 'text-white/30 hover:bg-white/10 hover:text-white/80',
+                            )}
+                          >
+                            <Filter className="h-3 w-3" />
+                          </button>
+                          <input
+                            ref={(element) => {
+                              filterInputRefs.current[field.fieldKey] = element;
+                            }}
+                            type="text"
+                            value={columnFilter?.value ?? ''}
+                            onChange={(event) =>
+                              setFilterValue(field.fieldKey, event.target.value)
+                            }
+                            disabled={valueDisabled}
+                            placeholder={t('dataList.filterPlaceholder')}
+                            aria-label={fieldLabel(field, locale)}
+                            className="h-6 w-full min-w-0 bg-transparent text-[11px] text-white placeholder:text-white/25 focus:outline-none disabled:cursor-default disabled:opacity-40"
+                          />
+                        </div>
+                      </th>
+                    );
+                  })}
                 </tr>
               )}
             </thead>
@@ -684,7 +895,7 @@ export function DataListWindow({ moduleId, list, onClose }: DataListWindowProps)
             className="pointer-events-none absolute inset-0 flex items-center justify-center p-6"
             aria-live="polite"
           >
-            {records.length === 0 ? (
+            {allRecords.length === 0 ? (
               <p className="text-[13px] text-white/45">
                 {t('dataList.empty')}
               </p>
@@ -708,7 +919,7 @@ export function DataListWindow({ moduleId, list, onClose }: DataListWindowProps)
         accentColor={accentColor}
         footer={
           <DataListFooter
-            isBusy={isLoading || isRefreshing || isDeleting}
+            isBusy={isLoading || isRefreshing || isDeleting || isFiltering}
             isRefreshing={isRefreshing}
             hasSelection={selectedIds.size > 0}
             hasSingleSelection={singleSelectedId !== null}
@@ -763,6 +974,63 @@ export function DataListWindow({ moduleId, list, onClose }: DataListWindowProps)
           </>
         )}
       </FormShell>
+
+      {/* Column filter operator menu — the funnel-click popup. */}
+      <AnimatePresence>
+        {filterMenu && (
+          <motion.div
+            ref={filterMenuRef}
+            role="menu"
+            aria-label={t('dataList.filterMenuAria')}
+            initial={{ opacity: 0, y: -4, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -4, scale: 0.97 }}
+            transition={{ duration: 0.13, ease: 'easeOut' }}
+            className="fixed z-[80] min-w-[176px] overflow-hidden rounded-xl border border-white/10 bg-[#1b1e26]/[0.97] p-1 shadow-2xl shadow-black/50 backdrop-blur-xl"
+            style={
+              filterMenu.openUp
+                ? {
+                    bottom: window.innerHeight - filterMenu.rect.top + 4,
+                    left: filterMenu.left,
+                  }
+                : {
+                    top: filterMenu.rect.bottom + 4,
+                    left: filterMenu.left,
+                  }
+            }
+          >
+            {FILTER_OP_ITEMS.map((item) => {
+              const currentOp = filters[filterMenu.fieldKey]?.op ?? 'all';
+              const isSelected = currentOp === item.op;
+              return (
+                <button
+                  key={item.op}
+                  type="button"
+                  role="menuitemradio"
+                  aria-checked={isSelected}
+                  onClick={() => applyFilterOp(filterMenu.fieldKey, item.op)}
+                  className={cn(
+                    'flex w-full items-center gap-2 rounded-lg px-2.5 py-[7px] text-start text-[12px] transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-sky-400/50',
+                    isSelected
+                      ? 'bg-sky-500/25 text-sky-100'
+                      : 'text-white/80 hover:bg-white/[0.07]',
+                  )}
+                >
+                  <span className="min-w-0 flex-1 truncate">
+                    {t(item.labelKey)}
+                  </span>
+                  {isSelected && (
+                    <Check
+                      className="h-3.5 w-3.5 shrink-0 text-sky-300"
+                      strokeWidth={3}
+                    />
+                  )}
+                </button>
+              );
+            })}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Delete confirmation (بلی / خیر) — same dialog as the form windows. */}
       <AlertDialog

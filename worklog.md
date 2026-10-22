@@ -608,3 +608,23 @@ Stage Summary:
 - قانون‌نامه هوش مصنوعی فعال شد: AGENTS.md (مرجع اصلی، فارسی + خلاصه انگلیسی §9) + CLAUDE.md (اشاره‌گر)
 - مکانیزم اجرا: ابزارهای سازگار با AGENTS.md خودکار آن را می‌خوانند؛ در این محیط، عامل موظف است قبل از هر تغییر آن + worklog را بخواند، قوانین مرتبط را با شناسه § اعلام کند و «انجام‌شده» را فقط با چک‌لیست §7 اعلام کند
 - مالک می‌تواند AGENTS.md را مستقیم ویرایش کند؛ قوانین قفل‌شده فنی: §5 (قراردادها)، §3 (سندباکس)، §2 (استک)
+
+---
+Task ID: 11
+Agent: main (Z.ai Code)
+Task: فیلتر ستونی سرورساید در DataListWindow — با کلیک روی قیف هر ستون، منوی زیبای عملگرها (تمام/دارای مقدار/بدون مقدار/شروع با/پایان با/برابر با/حاوی نباشد/حاوی تایپ‌شده مطابق تصویر مرجع) باز شود و فیلتر بر اساس عملگر انتخابی در سرویس مالک داده (settings-service) اجرا شود
+
+Work Log:
+- قرارداد (§5.1 سازگار با گذشته): ListFilterOp (8 عملگر) و ListColumnFilter به src/types/forms.ts و آینه آن در mini-services/settings-service/src/forms/forms.types.ts اضافه شد
+- settings-service: forms.service.ts — parseColumnFilters (JSON ?filters= با whitelist فیلد KEY_PATTERN + عملگر + سقف ۸ فیلتر + مقدار ≤200 کاراکتر؛ payload خراب هرگز 500 نمی‌شود)، normalizeSearchText (آینه کلاینت: ی/ک عربی↔فارسی، ارقام فارسی/عربی→لاتین، ZWNJ، lowercase)، matchesFilter (معناشناسی ۷ عملگر روی متن نمایشی نرمال‌شده)، buildSearchTextResolver (resolve متن نمایشی سمت سرویس: ستون والد درخت = عنوان رکورد والد، lookup = لیبل localized گزینه از FormLookupOption، checkbox = بلی/خیر + Yes/No + raw) — سازگار PostgreSQL (فیلتر در JS، نه SQL خاص SQLite)
+- forms.controller.ts: listRecords حالا locale و filters را از @Query می‌گیرد؛ BFF catch-all از قبل query string را forward می‌کرد (بدون تغییر)
+- data-list-window.tsx: فیلتر کلاینت‌ساید حذف شد؛ حالت جدید ColumnFilterState {op,value} به‌ازای هر ستون + allRecords (مجموعه کامل برای عنوان والد/شمارش کل) و records (برش سرور-فیلترشده)؛ debounce 250ms روی تغییر فیلترها با گارد seq برای ریسپانس‌های کهنه؛ refreshRecords و رویداد erp:records-changed هم برش فیلترشده را نگه می‌دارند؛ قیف هر ستون به دکمه بازکننده منو تبدیل شد (active=آبی sky) + اینپوت برای عملگرهای بدون مقدار disabled؛ منوی عملگرها fixed-position با framer-motion AnimatePresence، clamp داخل viewport (باز شدن رو به بالا در نبود جا)، بستن با Escape/کلیک بیرون/scroll/resize، آیتم انتخابی با highlight آبی + Check، role=menu/menuitemradio + aria-checked؛ هشدار لود فیلتر با toast؛ dim کردن جدول حین fetch (isFiltering)؛ شمارش عنوان = رکوردهای فیلترشده و subtitle = کل رکوردها
+- i18n: ۹ کلید جدید dataList.filterMenuAria + dataList.filterOp{All,HasValue,NoValue,StartsWith,EndsWith,Equals,NotContains,Contains} به هر ۱۱ زبان (dictionaries.ts: fa/en/tr/ar + locales/: hi/ps/ckb/pt/ko/fr/zh)
+- تست سرورساید با curl (از طریق BFF با JWT): startsWith/equals/hasValue/noValue/notContains دقیق، عملگر نامعتبر نادیده گرفته شد (بدون 500) — همه پاس
+- E2E با agent-browser: fa/RTL — منوی ۸ گزینه‌ای مطابق تصویر (تمام انتخاب‌شده با تیک)؛ شروع با «مشتر» روی عنوان → درخواست GET records?filters=[{field:title,op:startsWith,value:مشتر}] 200 و فقط ۱ رکورد؛ دارای مقدار روی عنوان(۲) → اینپوت disabled و AND دو فیلتر؛ پاک‌کردن همه → بازگشت به کل؛ فهرست درختی گروه کالا-خدمت: شروع با «مواد» روی ستون تودرتوها → filters=[{field:parentId,...}] 200 → فقط ۱۰۰۱۰۱ (والد سمت سرویس به عنوان والد resolve شد)؛ en/LTR — لیبل‌های انگلیسی منو و آینه‌سازی؛ Contains "Pack" + شروع با «مواد» هم‌زمان → ۱ رکورد؛ موبایل 390px — منو clamp داخل viewport؛ بدون خطای کنسول/صفحه، dev.log پاک، lint پاس، tsc (src و forms.* سرویس) پاک
+
+Stage Summary:
+- فیلتر ستونی فهرست‌های اطلاعات حالا سرورساید است: عملگر انتخابی کاربر در settings-service روی متن نمایشیِ نرمال‌شده سلول‌ها اجرا می‌شود (لیبل lookup، عنوان والد درخت و بلی/خیر چک‌باکس سمت سرویس resolve می‌شوند تا فیلتر با آنچه کاربر می‌بیند یکی باشد)
+- منوی عملگرها مطابق تصویر مرجع: تمام / دارای مقدار / بدون مقدار / شروع با / پایان با / برابر با / حاوی نباشد / حاوی تایپ‌شده — در هر ۱۱ زبان و RTL/LTR آینه‌ای
+- قرارداد جدید: GET /api/modules/:module/forms/:formKey/records?filters=[{field,op,value}] (JSON) — بدون فیلتر رفتار قبلی
+- فایل‌ها: types/forms.ts، forms.types/service/controller (settings-service)، data-list-window.tsx، dictionaries.ts + ۷ locale

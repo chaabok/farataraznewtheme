@@ -363,4 +363,13 @@ export const ptDictionary: Record<string, string> = {
   'dataList.showAllColumns': 'Mostrar tudo',
   'dataList.yes': 'Sim',
   'dataList.no': 'Não',
+  'dataList.filterMenuAria': 'Operador de filtro da coluna',
+  'dataList.filterOpAll': 'Tudo',
+  'dataList.filterOpHasValue': 'Com valor',
+  'dataList.filterOpNoValue': 'Sem valor',
+  'dataList.filterOpStartsWith': 'Começa com',
+  'dataList.filterOpEndsWith': 'Termina com',
+  'dataList.filterOpEquals': 'Igual a',
+  'dataList.filterOpNotContains': 'Não contém',
+  'dataList.filterOpContains': 'Contém',
 };
