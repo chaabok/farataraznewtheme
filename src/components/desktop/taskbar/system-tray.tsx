@@ -1,6 +1,6 @@
 'use client';
 
-import { BatteryMedium, ChevronUp, Volume2, Wifi } from 'lucide-react';
+import { ChevronUp } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useTranslation } from '@/i18n';
 import { LOCALE_SHORT } from '@/i18n/config';
@@ -10,8 +10,8 @@ import { TaskbarClock } from './taskbar-clock';
 
 /**
  * End side of the taskbar (system tray): hidden-icons chevron,
- * language picker, network / sound / battery, and the live clock —
- * exactly like the Windows 11 tray in the reference screenshot.
+ * language picker and the live clock — network / sound / battery
+ * icons were removed per user request (marked with red arrows).
  */
 export function SystemTray() {
   const locale = useDesktopStore((s) => s.locale);
@@ -45,36 +45,6 @@ export function SystemTray() {
         className="hidden h-9 items-center justify-center rounded-md px-1.5 text-[13px] font-semibold transition-colors hover:bg-white/10 sm:flex sm:h-11"
       >
         {LOCALE_SHORT[locale]}
-      </button>
-
-      <button
-        type="button"
-        title={t('taskbar.network')}
-        aria-label={t('taskbar.network')}
-        onClick={() => showPlaceholder(t('taskbar.networkSettings'))}
-        className="flex h-9 w-8 items-center justify-center rounded-md transition-colors hover:bg-white/10 sm:h-11"
-      >
-        <Wifi className="h-4 w-4" strokeWidth={1.9} />
-      </button>
-
-      <button
-        type="button"
-        title={t('taskbar.sound')}
-        aria-label={t('taskbar.sound')}
-        onClick={() => showPlaceholder(t('taskbar.soundSettings'))}
-        className="flex h-9 w-8 items-center justify-center rounded-md transition-colors hover:bg-white/10 sm:h-11"
-      >
-        <Volume2 className="h-4 w-4" strokeWidth={1.9} />
-      </button>
-
-      <button
-        type="button"
-        title={t('taskbar.battery')}
-        aria-label={t('taskbar.battery')}
-        onClick={() => showPlaceholder(t('taskbar.batteryStatus'))}
-        className="flex h-9 w-8 items-center justify-center rounded-md transition-colors hover:bg-white/10 sm:h-11"
-      >
-        <BatteryMedium className="h-5 w-5" strokeWidth={1.9} />
       </button>
 
       <TaskbarClock />

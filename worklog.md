@@ -209,3 +209,21 @@ Stage Summary:
 - امنیت همان لایه‌های قبلی: API key داخلی + JWT برای mutations + whitelist دوگانه moduleKey/locale در گیت‌وی (تست 401/400/404 پاس)
 - بومی‌سازی کامل: نام منوها/فرم‌ها از دیتابیس با fallback، متن‌های UI از دیکشنری، چیدمان و جهت انیمیشن با dir هماهنگ (fa/ar=RTL، en/tr=LTR)
 - فاز بعدی (پیشنهاد): اتصال formKey های انتخابی به فرم‌های واقعی اختصاصی (به‌جای پنجره عمومی ماژول) — بستر آن (formKey در DB + استور) آماده است
+
+---
+Task ID: 2
+Agent: Z.ai Code (main)
+Task: حذف کامل آیکون‌های باطری / صدا / وای‌فای از سینی سیستم تسک‌بار (مطابق فلش‌های قرمز تصویر کاربر)
+
+Work Log:
+- فایل src/components/desktop/taskbar/system-tray.tsx خوانده شد
+- سه دکمه Wifi / Volume2 / BatteryMedium حذف شدند
+- import بلااستفاده lucide-react پاک‌سازی شد (فقط ChevronUp باقی ماند)
+- Comment مستند کامپوننت به‌روزرسانی شد
+- bun run lint → بدون خطا
+- تأیید با Agent Browser (login admin → دسکتاپ): سینی سیستم اکنون فقط شامل فلش آیکون‌های مخفی، نشانگر زبان «فا» و ساعت زنده است؛ بدون خطای کنسول؛ GET / 200 و POST /api/auth/login 200
+
+Stage Summary:
+- آیکون‌های network / sound / battery به‌طور کامل از SystemTray حذف شدند
+- عناصر باقی‌مانده سینی: ChevronUp (آیکون‌های مخفی)، LanguageMenu + نشانگر زبان، TaskbarClock
+- هیچ تغییر دیگری در تسک‌بار یا دسکتاپ اعمال نشد
