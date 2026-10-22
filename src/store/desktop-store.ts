@@ -32,6 +32,20 @@ export interface DesktopWindow {
   z: number;
   /** Cascade position slot when the window was opened. */
   slot: number;
+  /** Present only for database-driven form windows (`form:<formKey>`). */
+  form?: FormWindowInfo;
+}
+
+/** Descriptor of a DB-driven form opened as its own desktop window. */
+export interface FormWindowInfo {
+  /** Owning module key, e.g. `settings` — used to build the API path. */
+  moduleKey: string;
+  /** Form definition key, e.g. `account-class`. */
+  formKey: string;
+  /** Display name (localized by the menu that opened the form). */
+  name: string;
+  /** Lucide icon key for the window chrome. */
+  iconKey: string;
 }
 
 function persistLocaleCookie(locale: Locale): void {
@@ -91,6 +105,8 @@ interface DesktopState {
   /** Syncs the store with the locale already rendered by the server (cookie). */
   initLocaleFromDocument: () => void;
   openWindow: (moduleId: string) => void;
+  /** Opens (or focuses) a database-driven form window (`form:<formKey>`). */
+  openFormWindow: (form: FormWindowInfo) => void;
   closeWindow: (moduleId: string) => void;
   focusWindow: (moduleId: string) => void;
 }
@@ -253,6 +269,21 @@ export const useDesktopStore = create<DesktopState>((set, get) => ({
         selectedIconId: null,
       };
     }),
+
+  /**
+   * Opens a form window reusing the generic openWindow slot/z logic,
+   * then attaches the form descriptor so the window layer can render
+   * the generic DataFormWindow instead of a module window.
+   */
+  openFormWindow: (form) => {
+    const moduleId = `form:${form.formKey}`;
+    get().openWindow(moduleId);
+    set((state) => ({
+      windows: state.windows.map((w) =>
+        w.moduleId === moduleId ? { ...w, form } : w,
+      ),
+    }));
+  },
 
   closeWindow: (moduleId) =>
     set((state) => ({

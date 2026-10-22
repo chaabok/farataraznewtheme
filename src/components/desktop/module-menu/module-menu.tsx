@@ -70,6 +70,7 @@ export function ModuleMenu() {
   const selectMenu = useDesktopStore((s) => s.selectMenu);
   const loadModuleMenus = useDesktopStore((s) => s.loadModuleMenus);
   const openWindow = useDesktopStore((s) => s.openWindow);
+  const openFormWindow = useDesktopStore((s) => s.openFormWindow);
   const openSetupWindow = useSetupStore((s) => s.openSetupWindow);
   const isAuthenticated = useAuthStore((s) => Boolean(s.token));
 
@@ -105,6 +106,21 @@ export function ModuleMenu() {
         toast({
           title: form.name,
           description: t('setup.openedToast'),
+        });
+        return;
+      }
+      // DB-driven sample form: the unified component-based form window.
+      if (openModuleKey === 'settings' && form.formKey === 'account-class') {
+        closeModuleMenu();
+        openFormWindow({
+          moduleKey: openModuleKey,
+          formKey: form.formKey,
+          name: form.name,
+          iconKey: form.iconKey,
+        });
+        toast({
+          title: form.name,
+          description: tf('formWindow.openedToast', { name: form.name }),
         });
         return;
       }

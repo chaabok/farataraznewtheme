@@ -98,6 +98,7 @@ export {
   IsBoolean,
   IsArray,
   IsEnum,
+  IsObject,
   Min,
   Max,
   MinLength,

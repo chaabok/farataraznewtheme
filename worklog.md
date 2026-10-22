@@ -285,3 +285,70 @@ Stage Summary:
 - الگوی استاندارد جدید برای اجرای همیشگی پروسه‌ها در این سندباکس: subshell `( setsid nohup <cmd> & )` — ثبت شد تا در جلسات بعدی استفاده شود
 - وضعیت نهایی: پورت 3000 LISTEN (pid 24485)، ۱۳ میکروسرویس (3001-3013) سالم، حافظه 2.0GB/4.1GB، بدون خطای کنسول
 - تصاویر راستی‌آزمایی: upload/verify-1-initial.png (لاگین)، verify-3-after-login.png (دسکتاپ)، verify-4-icon-menu.png (منوی ماژول)
+
+---
+Task ID: 4-a
+Agent: general-purpose (backend)
+Task: سیستم فرم داده‌محور بک‌اند — ۴ مدل Prisma (FormDefinition/FormFieldDefinition/FormLookupOption/FormDataRecord) + ماژول forms در settings-service + گیت‌وی Next.js + فرم نمونه «طبقه حساب معین جدید» (formKey=account-class)
+
+Work Log:
+- shared/src/index.ts: افزودن re-export کلاس‌ولیدیتور IsObject (برای DTO ثبت رکورد — قاعده «فقط از @erp/shared» حفظ شد)
+- settings-service/prisma/schema.prisma: ۴ مدل جدید دقیقاً طبق اسپک (SQLite بدون Json → String برای dataJson؛ unique/moduleKey+formKey و formId+fieldKey؛ cascade حذف فیلدها/رکوردها با فرم) + `bunx prisma db push` + `prisma generate`
+- ماژول src/forms/ (الگوی items): forms.module.ts / forms.controller.ts (@Controller('forms')، @Inject() در همه DIها) / forms.service.ts / dto/save-record.dto.ts (@IsObject) / forms.types.ts (آینه قرارداد قفل‌شده src/types/forms.ts چون میکروسرویس از درخت src جدا است) + ثبت FormsModule در app.module
+- روت‌ها: GET :moduleKey/:formKey?locale= (تعریف + فیلدهای sortOrder-مرتب + بومی‌سازی name/label/tabName با fallback به fa)، GET/POST records، PUT/DELETE records/:recordId (مالکیت رکورد→404)، GET lookups/:lookupKey؛ whitelist regex /^[a-z][a-zA-Z0-9-]{0,49}$/ روی هر سه کلید→400؛ بررسی isActive فرم در همه روت‌ها→404؛ فیلتر کلیدهای ناشناس data قبل از stringify؛ رکوردها createdAt-صعودی
+- scripts/seed-forms.ts (idempotent): upsert فرم (settings/account-class، tabbed، layers، #0ea5e9، sortOrder 10)؛ حذف+بازسازی ۱۵ فیلد در ۳ سکشن (null/اطلاعات اصلی، accounting-info/اطلاعات حسابداری، goods-info/کالا)؛ ۹ گروه lookup (account-effect، account-parent درختی ۹ گزینه‌ای با parentId، ۶ گروه معین، unit)؛ ۲ رکورد نمونه فقط وقتی رکوردی وجود ندارد — اجرا و re-run موفق (رکوردها حفظ شدند)
+- desktop-service/scripts/seed-account-class-menu.ts: upsert idempotent یک ModuleMenuForm (formKey=account-class، iconKey=layers، sortOrder=3) زیر اولین منوی settings («عمومی»، کمترین sortOrder=۱ در دیتابیس) + ۴ ترجمه fa/en/tr/ar؛ بدون حذف هیچ منو/آیکونی — اجرا و re-run (update) موفق
+- گیت‌وی: src/app/api/modules/[module]/forms/[...path]/route.ts — پروکسی GET/POST/PUT/DELETE به <service>/api/forms/<module>/<...path> با getModuleService، فوروارد Authorization + تزریق x-api-key، cache no-store، whitelist مسیر (400)، 404 ماژول ناشناس، 503 غیرقابل‌دسترس (سبک [module]/route.ts)
+- باگ حین تست: DELETE → 503 «Response constructor: Invalid response status code 204» چون new Response('', {status:204}) در runtime مجاز نیست → بازگشت new Response(null) برای 204/304 در گیت‌وی؛ پس از آن DELETE=204
+- ری‌استارت سرویس با الگوی subshell: پیدا کردن pid با cwd (12008/12023 قدیمی kill) → `( cd settings-service && setsid nohup bun --hot src/main.ts > /tmp/settings-service.log ... & )` → همه روت‌های forms در لاگ مپ شدند
+- راستی‌آزمایی از مسیر گیت‌وی 3000 با JWT (لاگین admin): GET تعریف=200 (۱۵ فیلد، ۳ سکشن)، ?locale=en → نام/برچسب/تب انگلیسی، records=200 (۲ رکورد)، lookups/account-parent=200 (۹ گزینه درختی با parentId)، lookups/account-effect?locale=en، POST=201 (کلید ناشناس داخل data فیلتر شد)، PUT=200 (جایگزینی کامل data)، DELETE=204، DELETE دوباره=404، بدون توکن=401، ماژول ناشناس=404، formKey با حرف بزرگ=400 (whitelist)، formKey ناشناس=404، POST بدون data=400 (پیام کلاس-ولیدیتور)، فراخوانی مستقیم 3003 بدون key=401، ماژول accounting از همان گیت‌وی=404 تمیز (سرویس فاقد forms)، traversal --path-as-is=404 کنترل‌شده
+- منو: GET /api/desktop/menus/settings?locale=en → فرم "New Subsidiary Account Class" در منوی General (iconKey layers، sortOrder 3) ✓
+- lint کل پروژه (`bun run lint`) = پاس؛ tsc سرویس: صفر خطا در کدهای خودم (۲ خطای قدیمی و بی‌ربط در ../shared bootstrap/rate-limit — pre-existing)؛ tsc اپ: بدون خطا در فایل گیت‌وی جدید؛ رکورد نهایی: ۲ (نمونه‌ها دست‌نخورده)
+
+Stage Summary:
+- تمام اجزای فرم (تعریف + فیلدها + آپشن‌های lookup + رکوردهای ذخیره‌شده) اکنون ۱۰۰٪ دیتابیسی‌اند؛ افزودن فرم جدید فقط INSERT در ۴ مدل settings-service است، بدون تغییر فرانت یا بک‌اند
+- API پایدار برای فرانت (قرارداد src/types/forms.ts): { data: FormDef | FormRecord[] | FormRecord | LookupOption[] }؛ DELETE=204 بدون بدنه؛ 404 فرم/رکورد ناموجود یا غیرفعال؛ 400 کلید نامعتبر؛ بومی‌سازی با ?locale= روی تعریف و lookupها (labelEn خام همیشه در پاسخ برای fallback سمت کلاینت)
+- نکته برای فرانت: «tabName» در پاسخ بومی‌شده است (قرارداد فیلد tabNameEn ندارد)؛ account-parent ۹ گزینه دارد (بلوک «۸ گزینه» متن تسک با داده اسپک ۹تایی نمی‌خواند؛ داده اسپک مبنا بود)؛ منو زیر اولین منوی settings قرار گرفت که در desktop.db sortOrder=۱ دارد (نه 0)
+- Deviation جزء: افزودن یک خط export IsObject به shared/src/index.ts (لازم برای DTO با قاعده import فقط از @erp/shared)
+
+---
+Task ID: 4-b
+Agent: general-purpose (frontend)
+Task: فریم‌ورک کامپوننت‌بیس فرم‌های دیتابیسی در src/components/forms + پنجره فرم نمونه «طبقه حساب معین جدید» از منوی تنظیمات (ادامه/تکمیل اجرای قبلیِ نیمه‌کاره + اکشن حذف با تأیید درون‌خطی طبق اسپک)
+
+Work Log:
+- حال‌ موجودی: فایل‌های src/components/forms و اتصال‌های store/layer/frame/menu/dictionary از اجرای قبلی (بدون رکورد worklog) روی دیسک بود؛ کل کد سطر‌به‌سطر بازخوانی و با قرارداد src/types/forms.ts و اسپک تسک تطبیق داده شد
+- خواندن قرارداد و بک‌اند زنده: FormDef (۱۵ فیلد، ۳ سکشن null/accounting-info/goods-info، tabbed، layers، #0ea5e9)، رکوردها (۲ نمونه؛ مقادیر lookup = code گزینه)، lookupها (account-effect و …) — همه از مسیر گیت‌وی 3000 با JWT
+- تکمیل ناقصه اسپک: «Delete: inline confirm» قبلاً با window.confirm بود → حذف اکنون دومرحله‌ای درون‌خطی است: کلیک Trash2 فقط نوار تأیید شیشه‌ای رزگلوه (TriangleAlert + پیام deleteConfirm + دکمه «حذف/انصراف») را زیر اکشن‌بار با انیمیشن height باز می‌کند؛ Loader2 حین DELETE؛ disarm خودکار با هر جابه‌جایی رکورد/رکورد جدید/Escape؛ دکمه حذف در حالت مسلح pressed رزگلوه
+- dictionary: افزودن formWindow.deleteYes/deleteNo × ۴ زبان (fa/en/tr/ar) — مجموع کلیدهای formWindow اکنون ۵۲ × ۴
+- راستی‌آزمایی API با curl (بدون مرورگر): login→200، def/records/lookups=200، چرخه کامل CRUD: POST=201، PUT=200، DELETE=204 با size_download=0 (بدون parse)، شمارش نهایی رکوردها = ۲ (رکورد تست حذف شد)، منو: settings→عمومی→«طبقه حساب معین جدید» (iconKey layers) حاضر است، GET / = 200
+- lint نهایی `bun run lint` = پاس (صفر خطا/هشدار)؛ tsc -p tsconfig.json: صفر خطا در src/** (خطاهای decorator در mini-services/examples قدیمی و خارج از scope این تسک است — همان وضعیت ثبت‌شده در 4-a)
+- رعایت قواعد lint: آیکون‌های داینامیک با createElement(getIcon(key), {...})، هیچ setState مستقیم در بدنه useEffect (disarm در callbackهای applyRecord/startNew)، کلاس‌های منطقی ms/me/ps/pe/start/end در همه اجزای جدید
+
+Stage Summary:
+- فریم‌ورک فرم کامپوننت‌بیس کامل و بارگذاری‌شده از تعریف DB: form-window (ماشین حالت view/new/edit + dirty + CRUD + ناوبری + Ctrl+S + drawer رکوردها)، form-shell (هدر گرادیانی accent + چیپ آیکون + پاپ‌اور راهنما)، action-bar (دو کلاستر justify-between با ورود پله‌ای و تینت‌های رنگی)، form-tabs (layoutId pill + اسلاید جهت‌آگاه)، field-renderer + ۶ فیلد (text/number با جداکننده هزارگان/date شمسی بدون کتابخانه/checkbox/textarea/lookup با پاپ‌اور جستجو + کش ماژول‌سطح + کیبورد)، tree-panel (برای type=tree)، form-footer (pill وضعیت + موقعیت + updatedAt + hint) و barrel
+- اتصال‌ها: DesktopWindow.form + openFormWindow (بازاستفاده منطق slot/z از openWindow)، window-layer → DataFormWindow برای win.form، window-frame با fallback title/iconKey/accentColor برای فرم‌های بدون meta، module-menu → case settings+account-class → openFormWindow + توست، icon-registry.layers موجود
+- نقشه کلیدهای دیکشنری نسبت به اسپک: saveFailed→saveError، copyHint→copyToast، helpToast→helpTitle (پاپ‌اور راهنما با hintهای واقعی به‌جای توست)، retry→common.retry (بازاستفاده) — بقیه ۱:۱
+- فرض قرارداد: مقدار lookup ذخیره‌شده در رکورد = code گزینه (با داده seed منطبق است؛ lookup با id||code هم resolve می‌کند)؛ locale ?locale= را بک‌اند برای def/lookup بومی‌سازی می‌کند و فرانت fallback labelEn/nameEn را هم دارد
+- تست E2E مرورگری به اپراتور یکپارچه‌ساز واگذار شد (طبق دستور مرورگر باز نشد)
+
+---
+Task ID: 4
+Agent: Z.ai Code (main, integration + E2E)
+Task: یکپارچه‌سازی و راستی‌آزمایی E2E سیستم فرم‌ساز کامپوننت-بیس + رفع دو باگ
+
+Work Log:
+- قرارداد API در src/types/forms.ts قفل شد؛ دو ساب‌ایجنت موازی اجرا شدند (4-a بک‌اند، 4-b فرانت‌اند) و هر دو گزارش/ورک‌لاگ دادند
+- راستی‌آزمایی E2E با Agent Browser: لاگین → آیکون تنظیمات → منوی ماژول → فرم «طبقه حساب معین جدید» باز شد
+- باگ ۱ (فرانت): isEmptyRequiredValue در form-utils.ts فیلد isRequired را چک نمی‌کرد → هر فیلد خالی خطای الزامی می‌داد؛ با گارد field.isRequired رفع شد
+- باگ ۲ (فرانت): URLهای رکورد در form-window.tsx سگمنت /records را نداشتند (POST/PUT/DELETE به /forms/account-class/<id>) → گیت‌وی 400 می‌داد؛ هر سه مسیر به /records/... اصلاح شد
+- کشف باگ‌ها با هوک fetch در مرورگر (بدنه و URL واقعی درخواست PUT استخراج شد)
+- تست کامل: ویرایش+ذخیره (PUT 200)، رکورد جدید (POST 201)، اعتبارسنجی فیلد الزامی «اثر»، حذف با تأیید درون‌خطی (DELETE 204)، پنل فهرست رکوردها، ناوبری اول/قبلی/بعدی/آخرین با غیرفعال‌سازی مرزی، لوکاپ با جستجو
+- ریسپانسیو: بازکردن فرم در ویوپورت 390px تایید شد (چیدمان تک‌ستونه)
+- lint پاس؛ کنسول مرورگر 0 خطا؛ dev.log بدون خطای غیرمنتظره
+
+Stage Summary:
+- سیستم فرم دیتابیس‌محور کامل است: تعریف فرم/فیلدها/گزینه‌های لوکاپ/رکوردها همگی در DB (settings-service) و رندر از طریق کامپوننت‌های عمومی src/components/forms/
+- افزودن فرم جدید = فقط رکورد در DB (بدون تغییر کد)
+- سه نوع فرم پشتیبانی می‌شود: simple / tabbed / tree (نمونه tabbed سرو شد)
+- برای جلسات بعدی: URL رکوردها حتماً با سگمنت /records باشد؛ اعتبارسنجی فقط فیلدهای isRequired

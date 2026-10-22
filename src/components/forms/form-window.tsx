@@ -1,0 +1,726 @@
+'use client';
+
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { ChevronUp, List, Loader2, RefreshCw, TriangleAlert } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { toast } from '@/hooks/use-toast';
+import { useTranslation } from '@/i18n';
+import { apiFetch, SessionExpiredError } from '@/lib/api-client';
+import type { FormWindowInfo } from '@/store/desktop-store';
+import type {
+  FormDataMap,
+  FormDef,
+  FormFieldValue,
+  FormRecord,
+} from '@/types/forms';
+import { cn } from '@/lib/utils';
+import { FormActionBar, type FormMode } from './action-bar';
+import { FieldRenderer } from './field-renderer';
+import {
+  DEFAULT_FORM_ACCENT,
+  fieldsGridClasses,
+} from './form-styles';
+import { FormFooter, type FormStatus } from './form-footer';
+import { FormShell } from './form-shell';
+import { FormTabs } from './form-tabs';
+import {
+  buildDefaults,
+  deriveTabs,
+  fieldLabel,
+  formTitle,
+  isEmptyRequiredValue,
+  isChangedValue,
+  formatFieldValue,
+  pickListColumns,
+} from './form-utils';
+import { TreePanel } from './tree-panel';
+
+export interface DataFormWindowProps {
+  /** Window id — `form:<formKey>` (moduleKey defaults to `settings`). */
+  moduleId: string;
+  /** Descriptor attached by `openFormWindow` in the desktop store. */
+  form?: FormWindowInfo;
+}
+
+/** Fallback parsing of the window id when no descriptor is attached. */
+function parseModuleId(moduleId: string): {
+  moduleKey: string | null;
+  formKey: string | null;
+} {
+  if (!moduleId.startsWith('form:')) {
+    return { moduleKey: null, formKey: null };
+  }
+  const formKey = moduleId.slice('form:'.length);
+  return { moduleKey: formKey ? 'settings' : null, formKey: formKey || null };
+}
+
+/** Sentinel kept in state so load errors render through the dictionaries. */
+const GENERIC_LOAD_ERROR = 'formWindow.loadError';
+
+/**
+ * Generic, database-driven form window: loads a FormDef + its records and
+ * drives the whole view/new/edit state machine (dirty tracking, CRUD,
+ * record navigation, Ctrl+S, records drawer) through the shared form
+ * component library. One implementation renders every ERP form.
+ */
+export function DataFormWindow({ moduleId, form }: DataFormWindowProps) {
+  const { locale, direction, t, tf, formatNumber } = useTranslation();
+
+  const fallback = useMemo(() => parseModuleId(moduleId), [moduleId]);
+  const moduleKey = form?.moduleKey ?? fallback.moduleKey;
+  const formKey = form?.formKey ?? fallback.formKey;
+  const basePath =
+    moduleKey && formKey ? `/api/modules/${moduleKey}/forms/${formKey}` : null;
+  const lookupUrlBase = basePath ? `${basePath}/lookups` : '';
+
+  // ── Data ──
+  const [def, setDef] = useState<FormDef | null>(null);
+  const [records, setRecords] = useState<FormRecord[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  // ── Record state machine ──
+  const [mode, setMode] = useState<FormMode>('view');
+  const [currentIndex, setCurrentIndex] = useState(-1);
+  const [draft, setDraft] = useState<FormDataMap>({});
+  const [baseline, setBaseline] = useState<FormDataMap>({});
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  /** Armed = inline delete confirmation strip is visible. */
+  const [isDeleteArmed, setIsDeleteArmed] = useState(false);
+  const [isListOpen, setIsListOpen] = useState(false);
+  const [activeTabKey, setActiveTabKey] = useState<string | null>(null);
+
+  const current =
+    currentIndex >= 0 && currentIndex < records.length
+      ? records[currentIndex]
+      : null;
+
+  const isDirty = useMemo(() => {
+    const keys = new Set([...Object.keys(baseline), ...Object.keys(draft)]);
+    for (const key of keys) {
+      if (isChangedValue(baseline[key], draft[key])) return true;
+    }
+    return false;
+  }, [baseline, draft]);
+
+  const status: FormStatus =
+    mode === 'new' ? (isDirty ? 'unsaved' : 'new') : isDirty ? 'unsaved' : 'saved';
+
+  // ── Loading ──
+  const load = useCallback(async () => {
+    if (!basePath) {
+      setLoadError(GENERIC_LOAD_ERROR);
+      setIsLoading(false);
+      return;
+    }
+    setIsLoading(true);
+    setLoadError(null);
+    try {
+      const [defRes, recordsRes] = await Promise.all([
+        apiFetch<{ data: FormDef }>(basePath),
+        apiFetch<{ data: FormRecord[] }>(`${basePath}/records`),
+      ]);
+      const nextDef = defRes.data;
+      const nextRecords = recordsRes.data ?? [];
+      setDef(nextDef);
+      setRecords(nextRecords);
+
+      if (nextRecords.length) {
+        const lastIndex = nextRecords.length - 1;
+        const last = nextRecords[lastIndex];
+        setCurrentIndex(lastIndex);
+        setDraft({ ...last.data });
+        setBaseline({ ...last.data });
+        setMode('view');
+      } else {
+        const defaults = buildDefaults(nextDef.fields);
+        setCurrentIndex(-1);
+        setDraft({ ...defaults });
+        setBaseline({ ...defaults });
+        setMode('new');
+      }
+
+      const firstTab = deriveTabs(nextDef, locale)[0] ?? null;
+      setActiveTabKey(firstTab ? firstTab.key : null);
+    } catch (error) {
+      if (error instanceof SessionExpiredError) return;
+      setLoadError(
+        error instanceof Error && error.message
+          ? error.message
+          : GENERIC_LOAD_ERROR,
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  }, [basePath, locale]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  const refreshRecords = useCallback(async (): Promise<FormRecord[]> => {
+    if (!basePath) return [];
+    const res = await apiFetch<{ data: FormRecord[] }>(`${basePath}/records`);
+    const list = res.data ?? [];
+    setRecords(list);
+    return list;
+  }, [basePath]);
+
+  // ── Record transitions ──
+  const applyRecord = useCallback((index: number, list: FormRecord[]) => {
+    const target = list[index];
+    setCurrentIndex(index);
+    setMode('view');
+    setIsDeleteArmed(false);
+    if (target) {
+      setDraft({ ...target.data });
+      setBaseline({ ...target.data });
+    }
+  }, []);
+
+  const navigateTo = useCallback(
+    (index: number) => {
+      if (isSaving || isDeleting) return;
+      if (index < 0 || index >= records.length) return;
+      if (mode !== 'view' && isDirty && !window.confirm(t('formWindow.navDiscardConfirm'))) {
+        return;
+      }
+      applyRecord(index, records);
+    },
+    [applyRecord, isDeleting, isDirty, isSaving, mode, records, t],
+  );
+
+  const startNew = useCallback(
+    (preset?: FormDataMap) => {
+      if (!def) return;
+      const base = { ...buildDefaults(def.fields), ...(preset ?? {}) };
+      setDraft(base);
+      setBaseline({ ...base });
+      setMode('new');
+      setCurrentIndex(-1);
+      setIsDeleteArmed(false);
+    },
+    [def],
+  );
+
+  const handleNew = useCallback(() => {
+    if (mode === 'new') return;
+    if (isDirty && !window.confirm(t('formWindow.navDiscardConfirm'))) return;
+    startNew();
+  }, [isDirty, mode, startNew, t]);
+
+  const handleCopy = useCallback(() => {
+    if (mode !== 'view' || !current) return;
+    startNew({ ...current.data });
+    toast({ title: t('formWindow.copyToast') });
+  }, [current, mode, startNew, t]);
+
+  const handleSave = useCallback(async () => {
+    if (!def || !basePath || isSaving || isDeleting) return;
+    if (mode === 'view' || !isDirty) return;
+
+    const missingField = def.fields.find((field) =>
+      isEmptyRequiredValue(field, draft[field.fieldKey]),
+    );
+    if (missingField) {
+      toast({
+        title: fieldLabel(missingField, locale),
+        description: t('formWindow.requiredHint'),
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const saved =
+        mode === 'new'
+          ? (
+              await apiFetch<{ data: FormRecord }>(`${basePath}/records`, {
+                method: 'POST',
+                body: { data: draft },
+              })
+            ).data
+          : (
+              await apiFetch<{ data: FormRecord }>(
+                `${basePath}/records/${encodeURIComponent(current?.id ?? '')}`,
+                { method: 'PUT', body: { data: draft } },
+              )
+            ).data;
+
+      const list = await refreshRecords();
+      const index = list.findIndex((record) => record.id === saved.id);
+      if (index >= 0) {
+        applyRecord(index, list);
+      } else {
+        setMode('view');
+      }
+      toast({ title: t('formWindow.saveSuccess') });
+    } catch (error) {
+      if (error instanceof SessionExpiredError) return;
+      toast({
+        title: t('formWindow.saveError'),
+        description: error instanceof Error ? error.message : undefined,
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  }, [
+    applyRecord,
+    basePath,
+    current,
+    def,
+    draft,
+    isDeleting,
+    isDirty,
+    isSaving,
+    locale,
+    mode,
+    refreshRecords,
+    t,
+  ]);
+
+  /** First click on delete only arms the inline confirmation strip. */
+  const handleDeleteRequest = useCallback(() => {
+    if (!current || mode === 'new' || isSaving || isDeleting) return;
+    setIsDeleteArmed(true);
+  }, [current, isDeleting, isSaving, mode]);
+
+  const handleCancelDelete = useCallback(() => setIsDeleteArmed(false), []);
+
+  const handleDelete = useCallback(async () => {
+    if (!basePath || !current || mode === 'new' || isSaving || isDeleting) return;
+    setIsDeleting(true);
+    try {
+      // DELETE answers 204 with an empty body — nothing to parse.
+      await apiFetch(
+        `${basePath}/records/${encodeURIComponent(current.id)}`,
+        {
+          method: 'DELETE',
+        },
+      );
+      const list = await refreshRecords();
+      if (list.length) {
+        applyRecord(Math.min(currentIndex, list.length - 1), list);
+      } else {
+        setCurrentIndex(-1);
+        startNew();
+      }
+      toast({ title: t('formWindow.deleteSuccess') });
+    } catch (error) {
+      if (error instanceof SessionExpiredError) return;
+      toast({
+        title: error instanceof Error && error.message
+          ? error.message
+          : t('formWindow.loadError'),
+        variant: 'destructive',
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  }, [
+    applyRecord,
+    basePath,
+    current,
+    currentIndex,
+    isDeleting,
+    isSaving,
+    mode,
+    refreshRecords,
+    startNew,
+    t,
+  ]);
+
+  const handlePrint = useCallback(() => {
+    toast({ title: t('formWindow.printToast') });
+  }, [t]);
+
+  const handleFieldChange = useCallback(
+    (fieldKey: string, value: FormFieldValue) => {
+      setDraft((prev) => ({ ...prev, [fieldKey]: value }));
+      setMode((prev) => (prev === 'view' ? 'edit' : prev));
+    },
+    [],
+  );
+
+  // Ctrl+S / Cmd+S saves the active draft; Escape cancels the delete ask.
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (
+        (event.ctrlKey || event.metaKey) &&
+        !event.shiftKey &&
+        !event.altKey &&
+        event.key.toLowerCase() === 's'
+      ) {
+        event.preventDefault();
+        void handleSave();
+      } else if (event.key === 'Escape') {
+        setIsDeleteArmed(false);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [handleSave]);
+
+  // ── Derived view models ──
+  const sortedFields = useMemo(
+    () => (def ? [...def.fields].sort((a, b) => a.sortOrder - b.sortOrder) : []),
+    [def],
+  );
+
+  const tabs = useMemo(() => (def ? deriveTabs(def, locale) : []), [def, locale]);
+  const activeTab =
+    tabs.find((tab) => (tab.key ?? null) === (activeTabKey ?? null)) ??
+    tabs[0] ??
+    null;
+
+  const listColumns = useMemo(
+    () => pickListColumns(sortedFields),
+    [sortedFields],
+  );
+
+  const title = def
+    ? formTitle(def, locale)
+    : form?.name ?? t('common.loading');
+  const subtitle =
+    mode === 'new'
+      ? t('formWindow.newMode')
+      : current
+        ? tf('formWindow.recordOf', {
+            n: formatNumber(currentIndex + 1),
+            total: formatNumber(records.length),
+          })
+        : undefined;
+
+  const accentColor = def?.accentColor || DEFAULT_FORM_ACCENT;
+
+  /** The fields grid shared by simple forms and the active tab. */
+  const renderFields = (fields: typeof sortedFields): ReactNode => (
+    <div className={fieldsGridClasses}>
+      {fields.map((field) => (
+        <FieldRenderer
+          key={field.fieldKey}
+          field={field}
+          value={draft[field.fieldKey] ?? null}
+          onChange={(value) => handleFieldChange(field.fieldKey, value)}
+          disabled={isSaving || isDeleting}
+          lookupUrlBase={lookupUrlBase}
+        />
+      ))}
+    </div>
+  );
+
+  let content: ReactNode;
+  if (!def) {
+    // Loading skeleton (error handled below).
+    content = (
+      <div className={fieldsGridClasses}>
+        {Array.from({ length: 6 }).map((_, index) => (
+          <div key={`form-skeleton-${index}`} className="space-y-1.5">
+            <Skeleton className="h-3 w-24 bg-white/[0.08]" />
+            <Skeleton className="h-10 w-full rounded-lg bg-white/[0.05]" />
+          </div>
+        ))}
+      </div>
+    );
+  } else if (def.type === 'tree') {
+    content = (
+      <TreePanel
+        records={records}
+        fields={sortedFields}
+        lookupUrlBase={lookupUrlBase}
+      />
+    );
+  } else if (def.type === 'tabbed' && tabs.length > 0) {
+    content = (
+      <FormTabs
+        tabs={tabs.map((tab) => ({
+          key: tab.key,
+          name: tab.name,
+          count: tab.fields.length,
+        }))}
+        active={activeTab?.key ?? null}
+        onChange={setActiveTabKey}
+        accentColor={accentColor}
+        direction={direction}
+      >
+        {renderFields(activeTab?.fields ?? [])}
+      </FormTabs>
+    );
+  } else {
+    content = renderFields(sortedFields);
+  }
+
+  const errorText =
+    loadError === GENERIC_LOAD_ERROR ? t('formWindow.loadError') : loadError;
+
+  return (
+    <FormShell
+      title={title}
+      subtitle={subtitle}
+      iconKey={def?.iconKey ?? form?.iconKey ?? 'fileText'}
+      accentColor={accentColor}
+      actionBar={
+        <FormActionBar
+          mode={mode}
+          isDirty={isDirty}
+          isSaving={isSaving}
+          isDeleting={isDeleting}
+          isDeleteArmed={isDeleteArmed}
+          hasRecord={Boolean(current)}
+          recordIndex={currentIndex}
+          recordCount={records.length}
+          isListOpen={isListOpen}
+          onNew={handleNew}
+          onSave={() => void handleSave()}
+          onCopy={handleCopy}
+          onDelete={handleDeleteRequest}
+          onPrint={handlePrint}
+          onToggleList={() => setIsListOpen((open) => !open)}
+          onFirst={() => navigateTo(0)}
+          onPrev={() => navigateTo(Math.max(0, currentIndex - 1))}
+          onNext={() => navigateTo(Math.min(records.length - 1, currentIndex + 1))}
+          onLast={() => navigateTo(records.length - 1)}
+        />
+      }
+      subPanel={
+        <AnimatePresence initial={false}>
+          {isDeleteArmed && (
+            <DeleteConfirmStrip
+              key="delete-confirm"
+              isDeleting={isDeleting}
+              onConfirm={() => void handleDelete()}
+              onCancel={handleCancelDelete}
+            />
+          )}
+          {isListOpen && (
+            <RecordsDrawer
+              key="records-drawer"
+              records={records}
+              currentIndex={currentIndex}
+              codeField={listColumns.codeField}
+              titleField={listColumns.titleField}
+              onJump={navigateTo}
+              onClose={() => setIsListOpen(false)}
+            />
+          )}
+        </AnimatePresence>
+      }
+      footer={
+        <FormFooter
+          status={status}
+          position={
+            current && mode !== 'new'
+              ? { n: currentIndex + 1, total: records.length }
+              : null
+          }
+          updatedAt={current?.updatedAt ?? null}
+        />
+      }
+    >
+      {errorText && !def ? (
+        <div className="flex min-h-[220px] flex-col items-center justify-center gap-3 p-6 text-center">
+          <p className="max-w-sm text-sm text-red-200/90">{errorText}</p>
+          <button
+            type="button"
+            onClick={() => void load()}
+            className="flex items-center gap-2 rounded-lg bg-white/[0.07] px-4 py-2 text-[13px] text-white/80 transition-colors hover:bg-white/[0.12] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40"
+          >
+            <RefreshCw className="h-3.5 w-3.5" />
+            {t('common.retry')}
+          </button>
+        </div>
+      ) : (
+        <>
+          {errorText && def && (
+            <div className="mx-4 mt-4 rounded-lg border border-red-400/30 bg-red-950/40 px-3 py-2 text-xs text-red-200/90">
+              {errorText}
+            </div>
+          )}
+          {records.length === 0 && def && def.type !== 'tree' ? (
+            <div className="px-4 pb-2 pt-6 text-center">
+              <p className="text-[13px] text-white/55">
+                {t('formWindow.emptyRecords')}
+              </p>
+              <p className="mt-1 text-[11px] text-white/35">
+                {t('formWindow.emptyRecordsHint')}
+              </p>
+            </div>
+          ) : null}
+          {content}
+        </>
+      )}
+    </FormShell>
+  );
+}
+
+interface DeleteConfirmStripProps {
+  isDeleting: boolean;
+  onConfirm: () => void;
+  onCancel: () => void;
+}
+
+/** Inline delete confirmation strip sliding open under the action bar. */
+function DeleteConfirmStrip({
+  isDeleting,
+  onConfirm,
+  onCancel,
+}: DeleteConfirmStripProps) {
+  const { t } = useTranslation();
+
+  return (
+    <motion.div
+      initial={{ height: 0, opacity: 0 }}
+      animate={{ height: 'auto', opacity: 1 }}
+      exit={{ height: 0, opacity: 0 }}
+      transition={{ duration: 0.18, ease: 'easeOut' }}
+      className="shrink-0 overflow-hidden border-b border-rose-400/20 bg-rose-950/30"
+    >
+      <div className="flex items-center gap-2.5 px-3 py-2">
+        <TriangleAlert
+          className="h-4 w-4 shrink-0 text-rose-300"
+          aria-hidden="true"
+        />
+        <p className="min-w-0 flex-1 text-[12px] leading-snug text-rose-100/90">
+          {t('formWindow.deleteConfirm')}
+        </p>
+        <button
+          type="button"
+          onClick={onCancel}
+          disabled={isDeleting}
+          className="h-7 shrink-0 rounded-md bg-white/[0.06] px-3 text-[11.5px] text-white/75 transition-colors hover:bg-white/[0.12] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40 disabled:opacity-40"
+        >
+          {t('formWindow.deleteNo')}
+        </button>
+        <button
+          type="button"
+          onClick={onConfirm}
+          disabled={isDeleting}
+          className="flex h-7 shrink-0 items-center gap-1.5 rounded-md bg-rose-500/85 px-3 text-[11.5px] font-medium text-white shadow-sm shadow-rose-950/40 transition-colors hover:bg-rose-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-rose-300/60 disabled:opacity-60"
+        >
+          {isDeleting ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+          ) : null}
+          {t('formWindow.deleteYes')}
+        </button>
+      </div>
+    </motion.div>
+  );
+}
+
+interface RecordsDrawerProps {
+  records: FormRecord[];
+  currentIndex: number;
+  codeField: ReturnType<typeof pickListColumns>['codeField'];
+  titleField: ReturnType<typeof pickListColumns>['titleField'];
+  onJump: (index: number) => void;
+  onClose: () => void;
+}
+
+/** Collapsible records panel below the action bar (code + title columns). */
+function RecordsDrawer({
+  records,
+  currentIndex,
+  codeField,
+  titleField,
+  onJump,
+  onClose,
+}: RecordsDrawerProps) {
+  const { t, formatNumber } = useTranslation();
+
+  return (
+    <motion.div
+      initial={{ height: 0, opacity: 0 }}
+      animate={{ height: 'auto', opacity: 1 }}
+      exit={{ height: 0, opacity: 0 }}
+      transition={{ duration: 0.2, ease: 'easeOut' }}
+      className="shrink-0 overflow-hidden border-b border-white/10 bg-[#15171e]/70"
+    >
+      <div className="flex items-center justify-between px-3 pb-1 pt-2">
+        <span className="flex items-center gap-1.5 text-[11px] font-semibold text-white/70">
+          <List className="h-3.5 w-3.5 text-slate-300/80" aria-hidden="true" />
+          {t('formWindow.recordsPanel')}
+          <span className="rounded bg-white/[0.07] px-1.5 py-px text-[10px] tabular-nums text-white/45">
+            {formatNumber(records.length)}
+          </span>
+        </span>
+        <button
+          type="button"
+          title={t('formWindow.closeList')}
+          aria-label={t('formWindow.closeList')}
+          onClick={onClose}
+          className="flex h-6 w-6 items-center justify-center rounded-md text-white/45 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40"
+        >
+          <ChevronUp className="h-3.5 w-3.5" />
+        </button>
+      </div>
+
+      <div className="max-h-64 overflow-y-auto px-2 pb-2 [scrollbar-width:thin]">
+        {records.length === 0 ? (
+          <div className="px-3 py-6 text-center">
+            <p className="text-[13px] text-white/60">
+              {t('formWindow.emptyRecords')}
+            </p>
+            <p className="mt-1 text-[11px] text-white/35">
+              {t('formWindow.emptyRecordsHint')}
+            </p>
+          </div>
+        ) : (
+          records.map((record, index) => {
+            const isCurrent = index === currentIndex;
+            return (
+              <button
+                key={record.id}
+                type="button"
+                onClick={() => onJump(index)}
+                className={cn(
+                  'flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-start text-[12.5px] transition-colors',
+                  isCurrent
+                    ? 'bg-sky-500/15 ring-1 ring-sky-400/30'
+                    : 'hover:bg-white/[0.05]',
+                )}
+              >
+                <span className="w-6 shrink-0 text-end text-white/35 tabular-nums">
+                  {formatNumber(index + 1)}
+                </span>
+                <span className="shrink-0 rounded bg-white/[0.07] px-1.5 py-0.5 font-mono text-[10.5px] text-white/60">
+                  {codeField
+                    ? formatFieldValue(
+                        codeField,
+                        record.data[codeField.fieldKey],
+                        formatNumber,
+                      )
+                    : '—'}
+                </span>
+                <span className="min-w-0 flex-1 truncate text-white/85">
+                  {titleField
+                    ? formatFieldValue(
+                        titleField,
+                        record.data[titleField.fieldKey],
+                        formatNumber,
+                      )
+                    : record.id}
+                </span>
+                {isCurrent && (
+                  <span
+                    className="h-1.5 w-1.5 shrink-0 rounded-full bg-sky-400"
+                    aria-hidden="true"
+                  />
+                )}
+              </button>
+            );
+          })
+        )}
+      </div>
+    </motion.div>
+  );
+}

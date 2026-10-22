@@ -2,12 +2,18 @@
 
 import { AnimatePresence } from 'framer-motion';
 import { useDesktopStore } from '@/store/desktop-store';
+import { DataFormWindow } from '@/components/forms';
 import { WindowFrame } from './window-frame';
 import { ModuleWindow } from './module-window';
 
+/** Taller, flush window body used by form windows (their own chrome). */
+const FORM_BODY_CLASS =
+  'flex max-h-[min(80vh,760px)] flex-col overflow-hidden';
+
 /**
  * Renders all open module windows above the desktop, inside the desktop
- * area (windows never overlap the taskbar's stacking context).
+ * area (windows never overlap the taskbar's stacking context). Form
+ * windows (`form:<formKey>`) render the generic DataFormWindow instead.
  */
 export function WindowLayer() {
   const windows = useDesktopStore((s) => s.windows);
@@ -20,8 +26,16 @@ export function WindowLayer() {
           moduleId={win.moduleId}
           z={win.z}
           slot={win.slot}
+          title={win.form?.name}
+          iconKey={win.form?.iconKey}
+          accentColor={win.form ? '#38bdf8' : undefined}
+          bodyClassName={win.form ? FORM_BODY_CLASS : undefined}
         >
-          <ModuleWindow moduleId={win.moduleId} />
+          {win.form ? (
+            <DataFormWindow moduleId={win.moduleId} form={win.form} />
+          ) : (
+            <ModuleWindow moduleId={win.moduleId} />
+          )}
         </WindowFrame>
       ))}
     </AnimatePresence>

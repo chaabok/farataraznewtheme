@@ -21,3 +21,73 @@ model Setting {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+/// A database-defined ERP form (simple | tabbed | tree), owned by a module.
+model FormDefinition {
+  id          String   @id @default(uuid())
+  moduleKey   String
+  formKey     String
+  name        String   // fa base name
+  nameEn      String?
+  type        String   @default("tabbed") // simple | tabbed | tree
+  iconKey     String   @default("fileText")
+  accentColor String   @default("#0ea5e9")
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  fields      FormFieldDefinition[]
+  records     FormDataRecord[]
+  @@unique([moduleKey, formKey])
+  @@index([moduleKey])
+}
+
+/// One field of a FormDefinition (ordered, tabbed, typed).
+model FormFieldDefinition {
+  id           String   @id @default(uuid())
+  formId       String
+  tabKey       String?  // null = main section
+  tabName      String?  // fa tab label
+  tabNameEn    String?
+  fieldKey     String
+  label        String   // fa
+  labelEn      String?
+  fieldType    String   @default("text") // text|number|date|checkbox|lookup|textarea
+  isRequired   Boolean  @default(false)
+  span         Int      @default(1) // 1 half, 2 full
+  lookupKey    String?
+  defaultValue String?
+  sortOrder    Int      @default(0)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  form         FormDefinition @relation(fields: [formId], references: [id], onDelete: Cascade)
+  @@unique([formId, fieldKey])
+  @@index([formId, sortOrder])
+}
+
+/// Options for lookup fields (flat or tree via parentId), grouped by lookupKey.
+model FormLookupOption {
+  id        String   @id @default(uuid())
+  lookupKey String
+  code      String
+  label     String   // fa
+  labelEn   String?
+  parentId  String?
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([lookupKey, sortOrder])
+}
+
+/// One saved record of a form: dataJson = JSON.stringify({fieldKey: value}).
+model FormDataRecord {
+  id        String   @id @default(uuid())
+  formId    String
+  dataJson  String   // JSON.stringify({fieldKey: value})
+  createdBy String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  form      FormDefinition @relation(fields: [formId], references: [id], onDelete: Cascade)
+  @@index([formId, createdAt])
+}
