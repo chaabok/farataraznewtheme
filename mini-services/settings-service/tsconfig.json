@@ -1,17 +1,41 @@
 {
   "compilerOptions": {
+    "module": "commonjs",
     "target": "ES2022",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "experimentalDecorators": true,
+    "lib": [
+      "ES2022"
+    ],
+    "declaration": false,
+    "removeComments": true,
     "emitDecoratorMetadata": true,
-    "strict": true,
-    "esModuleInterop": true,
+    "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "sourceMap": false,
+    "outDir": "./dist",
+    "baseUrl": "./",
+    "incremental": true,
     "skipLibCheck": true,
-    "noEmit": true,
-    "types": ["bun-types"]
+    "strict": true,
+    "strictPropertyInitialization": false,
+    "forceConsistentCasingInFileNames": true,
+    "paths": {
+      "@nestjs/*": [
+        "node_modules/@nestjs/*"
+      ],
+      "rxjs": [
+        "node_modules/rxjs"
+      ],
+      "reflect-metadata": [
+        "node_modules/reflect-metadata"
+      ]
+    }
   },
-  "include": ["src/**/*", "scripts/**/*"],
-  "exclude": ["node_modules"]
+  "include": [
+    "src/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
 }

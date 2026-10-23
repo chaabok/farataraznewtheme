@@ -1,0 +1,649 @@
+"use client";
+
+/* Task 32 — BusinessStructureWindow refactored onto the SimpleTreeForm shell
+   (owner request): the chromeless gradient header (Task 28 caption contract),
+   the Task-20 FormActionBar and the Task-25 aligned field grid replace the
+   former custom two-pane card layout (TreeForm + BsDetail). Every Task-17
+   behavior is preserved: load/CRUD against the settings-service via the BFF,
+   parent-driven type rules (allowedChildTypes), guarded delete, the
+   save / save-new / save-close semantics and the erp:records-changed event
+   (§5.6). */
+
+import * as React from "react";
+import { AlertTriangle, Network } from "lucide-react";
+import { toast } from "sonner";
+import { useT } from "@/stores/settings-store";
+import { useDesktop } from "@/stores/desktop-store";
+import { api, ApiError } from "@/lib/api";
+import {
+  SimpleTreeForm,
+  type SimpleTreeFormNode,
+} from "@/components/forms/simple-tree-form";
+import type { SimpleFormField } from "@/components/forms/simple-form-two-row-tabbed";
+import {
+  ConfirmDeleteDialog,
+  type ActionBarListItem,
+} from "@/components/forms/action-bar";
+import { useWindowChrome } from "@/components/desktop/app-window";
+import { Badge } from "@/components/ui/badge";
+import { BsLogoUploader, BsTypeIcon, parseTypes } from "./bs-detail";
+import {
+  allowedChildTypes,
+  ROOT_ALLOWED_TYPES,
+  type BsListResponse,
+  type BsNode,
+  type BsSavePayload,
+} from "@/types/business-structure";
+
+type Mode = "idle" | "view" | "create";
+
+interface BsFormState {
+  title: string;
+  titleEn: string;
+  type: string; // "" unset
+  manager: string;
+  logoUrl: string | null;
+  isActive: boolean;
+  isBasicInfoShared: boolean;
+  activeStructureTypes: number[];
+}
+
+const EMPTY: BsFormState = {
+  title: "",
+  titleEn: "",
+  type: "",
+  manager: "",
+  logoUrl: null,
+  isActive: true,
+  isBasicInfoShared: false,
+  activeStructureTypes: [],
+};
+
+function formFromNode(node: BsNode): BsFormState {
+  return {
+    title: node.title ?? "",
+    titleEn: node.titleEn ?? "",
+    type: node.businessStructureType != null ? String(node.businessStructureType) : "",
+    manager: node.manager ?? "",
+    logoUrl: node.logoUrl,
+    isActive: node.isActive,
+    isBasicInfoShared: node.isBasicInfoShared,
+    activeStructureTypes: parseTypes(node.activeStructureTypes),
+  };
+}
+
+/* Task 35 — BusinessStructureWindow can now run EMBEDDED inside the Settings
+   window as a sub-page (owner request: the form moved from the desktop into
+   Settings). Embedded mode: no window chrome on the form header (the Settings
+   window owns the caption buttons) and «بستن»/save-close navigates back via
+   onEmbeddedClose instead of closing a standalone window. */
+interface BusinessStructureWindowProps {
+  embedded?: boolean;
+  onEmbeddedClose?: () => void;
+}
+
+export function BusinessStructureWindow({
+  embedded = false,
+  onEmbeddedClose,
+}: BusinessStructureWindowProps) {
+  const t = useT();
+
+  /* Task 28 contract — chromeless host: the green form header hosts the
+     caption buttons and drags the window; maximized state subscribes reactively.
+     Embedded (Task 35): the Settings window owns the chrome, so the header
+     handlers are intentionally undefined (caption buttons hide, opt-in shell). */
+  const chrome = useWindowChrome();
+  const chromeApi = embedded ? null : chrome;
+  const headerMaximized = useDesktop(
+    (s) =>
+      embedded
+        ? false
+        : s.windows.find((w) => w.kind === "business-structure")?.maximized ?? false,
+  );
+  const closeThisWindow = React.useCallback(() => {
+    if (embedded) {
+      onEmbeddedClose?.();
+      return;
+    }
+    const win = useDesktop.getState().windows.find((w) => w.kind === "business-structure");
+    if (win) useDesktop.getState().closeWindow(win.id);
+  }, [embedded, onEmbeddedClose]);
+
+  const [items, setItems] = React.useState<BsNode[]>([]);
+  const [definedTypes, setDefinedTypes] = React.useState<number[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [saving, setSaving] = React.useState(false);
+  const [selectedId, setSelectedId] = React.useState<string | null>(null);
+  const [mode, setMode] = React.useState<Mode>("idle");
+  const [createParentId, setCreateParentId] = React.useState<string | null>(null);
+  const [form, setForm] = React.useState<BsFormState>(EMPTY);
+  /* marks the erp:records-changed events this window dispatches itself, so the
+     §5.6 listener ignores them (no double refetch after save/delete) */
+  const selfEventRef = React.useRef(false);
+  /* Task 33 — node picked via the tree right-click flyout for deletion;
+     the confirm step is the SAME ConfirmDeleteDialog the ActionBar
+     delete-family tiles use (single confirmation, Task-32 decision). */
+  const [contextDeleteId, setContextDeleteId] = React.useState<string | null>(null);
+
+  const load = React.useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await api.get<BsListResponse>("business-structure");
+      setItems(res.items);
+      setDefinedTypes(res.definedTypes);
+    } catch (e) {
+      toast.error(t("bs.msg.loadError"), {
+        description: e instanceof Error ? e.message : undefined,
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [t]);
+
+  React.useEffect(() => {
+    void Promise.resolve().then(load);
+  }, [load]);
+
+  /* §5.6 — refetch when another surface changes business-structure records */
+  React.useEffect(() => {
+    const onChanged = (e: Event) => {
+      if (selfEventRef.current) {
+        selfEventRef.current = false;
+        return;
+      }
+      const detail = (e as CustomEvent).detail as { entity?: string } | undefined;
+      if (detail?.entity === "business-structure") void load();
+    };
+    window.addEventListener("erp:records-changed", onChanged);
+    return () => window.removeEventListener("erp:records-changed", onChanged);
+  }, [load]);
+
+  /* ---- tree helpers ---- */
+  const byId = React.useMemo(() => {
+    const m = new Map<string, BsNode>();
+    for (const n of items) m.set(String(n.id), n);
+    return m;
+  }, [items]);
+
+  /* nested tree for the shell pane — items order preserved, every branch
+     expanded by default (shell behavior); icons keep the Task-17 type colors */
+  const treeNodes = React.useMemo<SimpleTreeFormNode[]>(() => {
+    const map = new Map<string, SimpleTreeFormNode>();
+    for (const n of items) {
+      map.set(String(n.id), {
+        id: String(n.id),
+        label: n.title,
+        icon: <BsTypeIcon type={n.businessStructureType} className="h-4 w-4" />,
+        children: [],
+      });
+    }
+    const roots: SimpleTreeFormNode[] = [];
+    for (const n of items) {
+      const me = map.get(String(n.id));
+      if (!me) continue;
+      const parent =
+        n.parentRef && n.parentRef !== 0 ? map.get(String(n.parentRef)) : undefined;
+      if (parent?.children) parent.children.push(me);
+      else roots.push(me);
+    }
+    return roots;
+  }, [items]);
+
+  const selectedNode: BsNode | null = selectedId ? byId.get(selectedId) ?? null : null;
+  const createParent: BsNode | null =
+    createParentId ? byId.get(createParentId) ?? null : null;
+  const parentNodeOfSelected: BsNode | null =
+    selectedNode && selectedNode.parentRef
+      ? byId.get(String(selectedNode.parentRef)) ?? null
+      : null;
+  const isRoot = mode === "view" && selectedNode?.id === 1;
+
+  /* ---- form state — derive-and-reset during render (React-recommended
+     "adjusting state on prop change" pattern, carried over from BsDetail) ---- */
+  const formKey = `${mode}:${mode === "create" ? createParentId ?? "root" : selectedId ?? "-"}:${selectedNode?.version ?? "-"}`;
+  const [renderedKey, setRenderedKey] = React.useState(formKey);
+  if (renderedKey !== formKey) {
+    setRenderedKey(formKey);
+    setForm(mode === "create" ? { ...EMPTY } : selectedNode ? formFromNode(selectedNode) : EMPTY);
+  }
+
+  /* ---- navigation ---- */
+  const startCreate = React.useCallback((parentId: string | null) => {
+    setCreateParentId(parentId);
+    setSelectedId(parentId);
+    setMode("create");
+  }, []);
+
+  const handleSelect = React.useCallback((id: string) => {
+    /* selecting a tree row abandons an in-progress create (Task-17 behavior) */
+    setMode("view");
+    setSelectedId(id);
+  }, []);
+
+  const bsCanDelete = (node: BsNode) =>
+    node.id !== 1 && !node.isSystem && node.childCount === 0;
+
+  /* Task 34 — Store (type 5) is a leaf on the server (CHILD_TYPE_RULES[5]=[]);
+     the tree flyout only offers «افزودن زیرشاخه» on nodes whose type may host
+     children — the same rule the server enforces (§5.1 additive gating). */
+  const bsCanHostChild = (node: BsNode) =>
+    allowedChildTypes(node.businessStructureType ?? null).length > 0;
+
+  /* ---- actions (Task-17 semantics preserved) ----
+     Task 32 — no window.confirm here: the FormActionBar delete-family tiles
+     already own confirmation (ConfirmDeleteDialog); the old Task-17 inline
+     delete button (single window.confirm) no longer exists on the shell. */
+  const handleDelete = async (node: BsNode): Promise<boolean> => {
+    try {
+      await api.del(`business-structure/${node.id}`);
+      toast.success(t("bs.msg.deleted"));
+      if (selectedId === String(node.id)) {
+        setSelectedId(null);
+        setMode("idle");
+      }
+      await load();
+      selfEventRef.current = true;
+      window.dispatchEvent(
+        new CustomEvent("erp:records-changed", { detail: { entity: "business-structure" } }),
+      );
+      return true;
+    } catch (e) {
+      if (e instanceof ApiError) {
+        const key = (e.messageKey ?? "bs.msg.saveError") as Parameters<typeof t>[0];
+        const known = ["bs.msg.deleteBlockedChildren", "bs.msg.deleteBlockedRoot", "bs.msg.deleteBlockedSystem"];
+        toast.error(known.includes(key) ? t(key) : t("common.error"), {
+          description: e.message,
+        });
+      } else {
+        toast.error(t("common.error"));
+      }
+      return false;
+    }
+  };
+
+  const handleSave = async (payload: BsSavePayload, after: "reload" | "new" | "close") => {
+    setSaving(true);
+    try {
+      if (mode === "create") {
+        const res = await api.post<{ item: BsNode }>("business-structure", payload);
+        toast.success(t("bs.msg.saved"));
+        await load();
+        if (after === "new") {
+          startCreate(createParentId);
+        } else {
+          setSelectedId(String(res.item.id));
+          setMode("view");
+        }
+      } else if (mode === "view" && selectedNode) {
+        await api.put<{ item: BsNode }>(`business-structure/${selectedNode.id}`, payload);
+        toast.success(t("bs.msg.saved"));
+        await load();
+        /* Task 35 — save-close: standalone closes the window, embedded
+           returns to the settings home (same closeThisWindow funnel) */
+        if (after === "close") closeThisWindow();
+      }
+      selfEventRef.current = true;
+      window.dispatchEvent(
+        new CustomEvent("erp:records-changed", { detail: { entity: "business-structure" } }),
+      );
+    } catch (e) {
+      const msg = e instanceof ApiError ? e.message : t("bs.msg.saveError");
+      toast.error(t("bs.msg.saveError"), { description: msg });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  /* ---- validation + payload (carried over from BsDetail) ---- */
+  const validate = (): string[] => {
+    const errs: string[] = [];
+    if (!isRoot) {
+      if (!form.title.trim()) errs.push(t("bs.val.titleRequired"));
+      if (!form.titleEn.trim()) errs.push(t("bs.val.titleEnRequired"));
+      if (!form.type) errs.push(t("bs.val.typeRequired"));
+    }
+    return errs;
+  };
+
+  const buildPayload = (): BsSavePayload => {
+    if (isRoot) {
+      return {
+        isBasicInfoShared: form.isBasicInfoShared,
+        activeStructureTypes: form.activeStructureTypes,
+        isActive: form.isActive,
+      };
+    }
+    if (mode === "create") {
+      return {
+        parentRef: createParent ? createParent.id : 1,
+        title: form.title.trim(),
+        titleEn: form.titleEn.trim(),
+        businessStructureType: Number(form.type),
+        manager: form.manager.trim() || null,
+        logoUrl: form.logoUrl,
+        isActive: form.isActive,
+      };
+    }
+    return {
+      title: form.title.trim(),
+      titleEn: form.titleEn.trim(),
+      businessStructureType: Number(form.type),
+      manager: form.manager.trim() || null,
+      logoUrl: form.logoUrl,
+      isActive: form.isActive,
+    };
+  };
+
+  const doValidateAndSave = async (after: "reload" | "new" | "close"): Promise<boolean> => {
+    if (saving) return false;
+    const errs = validate();
+    if (errs.length > 0) {
+      toast.error(t("bs.msg.saveError"), { description: errs.join(" — ") });
+      return false;
+    }
+    await handleSave(buildPayload(), after);
+    return true;
+  };
+
+  /* ---- FormActionBar handlers (Task-20 contract) ----
+     «+» (reset tile, legacy "new entry"): view/idle → create a child under
+     the selected node (or the first root); create → abandon the entry. */
+  const actionReset = () => {
+    if (mode === "create") setMode("idle");
+    else {
+      /* Task 34 — a leaf node (e.g. Store) cannot host a new child: fall back
+         to the first root branch, like the nothing-selected case (Task-17
+         «...or the root» semantics). */
+      const sel = selectedId ? byId.get(selectedId) : null;
+      startCreate(sel && bsCanHostChild(sel) ? selectedId : (treeNodes[0]?.id ?? null));
+    }
+  };
+  const actionSave = () => {
+    void doValidateAndSave("reload");
+  };
+  const actionSaveNew = async () => {
+    if (mode === "create") {
+      await doValidateAndSave("new");
+      return;
+    }
+    /* view mode: save, then open a blank entry under the same parent */
+    const parentKey =
+      selectedNode?.parentRef && selectedNode.parentRef !== 0
+        ? String(selectedNode.parentRef)
+        : null;
+    const ok = await doValidateAndSave("reload");
+    if (ok) startCreate(parentKey ?? treeNodes[0]?.id ?? null);
+  };
+  const actionSaveClose = () => {
+    void doValidateAndSave("close");
+  };
+  const actionDelete = () => {
+    if (selectedNode) void handleDelete(selectedNode);
+  };
+  /* explicit async compositions (auto-composed sequence() would fire the
+     second step while the delete confirm dialog is still open) */
+  const actionDeleteNew = async () => {
+    if (!selectedNode) return;
+    const ok = await handleDelete(selectedNode);
+    if (ok) startCreate(treeNodes[0]?.id ?? null);
+  };
+  const actionDeleteClose = async () => {
+    if (!selectedNode) return;
+    const ok = await handleDelete(selectedNode);
+    if (ok) closeThisWindow();
+  };
+
+  /* ---- records list (Task-20 action 10) — every tree node opens on click ---- */
+  const listItems = React.useMemo<ActionBarListItem[]>(
+    () => items.map((n) => ({ id: String(n.id), title: n.title, subtitle: n.code })),
+    [items],
+  );
+
+  /* ---- detail fields (shell contract) ---- */
+  const typeOptions = (() => {
+    if (isRoot) return [] as number[];
+    const parentType =
+      mode === "create"
+        ? createParent?.businessStructureType ?? null
+        : parentNodeOfSelected?.businessStructureType ?? null;
+    const base = allowedChildTypes(parentType);
+    const cur =
+      mode === "view" && selectedNode?.businessStructureType != null
+        ? [selectedNode.businessStructureType]
+        : [];
+    return [...new Set([...base, ...cur])].sort((a, b) => a - b);
+  })();
+
+  const typeSelectOptions = typeOptions.map((v) => ({
+    value: String(v),
+    label: t(`bs.type.${v}` as never),
+  }));
+
+  const unionTypes = React.useMemo(() => {
+    if (!isRoot) return [] as number[];
+    const set = new Set<number>(definedTypes);
+    for (const v of form.activeStructureTypes) set.add(v);
+    return [...set].sort((a, b) => a - b);
+  }, [isRoot, definedTypes, form.activeStructureTypes]);
+
+  const fields: SimpleFormField[] = (() => {
+    if (mode === "create") {
+      return [
+        { id: "title", label: t("bs.field.title"), required: true, value: form.title },
+        {
+          id: "titleEn",
+          label: t("bs.field.titleEn"),
+          required: true,
+          value: form.titleEn,
+          ltr: true,
+          placeholder: t("bs.hint.latinTitle"),
+        },
+        {
+          id: "type",
+          label: t("bs.field.type"),
+          required: true,
+          type: "select" as const,
+          value: form.type,
+          options: typeSelectOptions,
+        },
+        { id: "manager", label: t("bs.field.manager"), value: form.manager },
+        {
+          id: "isActive",
+          label: t("bs.field.isActive"),
+          type: "checkbox" as const,
+          checked: form.isActive,
+        },
+      ];
+    }
+    if (isRoot && selectedNode) {
+      return [
+        { id: "code", label: t("bs.field.code"), value: selectedNode.code, readOnly: true },
+        { id: "hqTitle", label: t("bs.field.title"), value: selectedNode.title, readOnly: true },
+        {
+          id: "isBasicInfoShared",
+          label: t("bs.field.shareHeadquarterData"),
+          type: "checkbox" as const,
+          checked: form.isBasicInfoShared,
+        },
+        ...ROOT_ALLOWED_TYPES.map(
+          (v): SimpleFormField => ({
+            id: `activeType${v}`,
+            label: t(`bs.type.${v}` as never),
+            type: "checkbox" as const,
+            checked: form.activeStructureTypes.includes(v),
+          }),
+        ),
+        {
+          id: "isActive",
+          label: t("bs.field.isActive"),
+          type: "checkbox" as const,
+          checked: form.isActive,
+        },
+      ];
+    }
+    if (selectedNode) {
+      return [
+        { id: "title", label: t("bs.field.title"), required: true, value: form.title },
+        {
+          id: "titleEn",
+          label: t("bs.field.titleEn"),
+          required: true,
+          value: form.titleEn,
+          ltr: true,
+          placeholder: t("bs.hint.latinTitle"),
+        },
+        {
+          id: "type",
+          label: t("bs.field.type"),
+          required: true,
+          type: "select" as const,
+          value: form.type,
+          options: typeSelectOptions,
+          disabled: Boolean(selectedNode.isSystem),
+        },
+        { id: "manager", label: t("bs.field.manager"), value: form.manager },
+        {
+          id: "isActive",
+          label: t("bs.field.isActive"),
+          type: "checkbox" as const,
+          checked: form.isActive,
+        },
+      ];
+    }
+    return [];
+  })();
+
+  const onFieldChange = (id: string, value: string | boolean) => {
+    /* root «activeStructureTypes» chips became four checkboxes on the shell */
+    if (id.startsWith("activeType")) {
+      const v = Number(id.slice("activeType".length));
+      setForm((f) => ({
+        ...f,
+        activeStructureTypes:
+          value === true
+            ? [...f.activeStructureTypes, v].sort((a, b) => a - b)
+            : f.activeStructureTypes.filter((x) => x !== v),
+      }));
+      return;
+    }
+    setForm((f) => ({ ...f, [id]: value }));
+  };
+
+  const detailExtra = (() => {
+    if (mode === "create") {
+      return (
+        <BsLogoUploader
+          logoUrl={form.logoUrl}
+          onChange={(v) => setForm((f) => ({ ...f, logoUrl: v }))}
+        />
+      );
+    }
+    if (isRoot) {
+      if (unionTypes.length === 0) return null;
+      return (
+        <div className="mt-3 flex items-start gap-2 rounded-lg bg-amber-500/10 p-2.5 text-amber-700 dark:text-amber-400">
+          <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
+          <div className="text-xs">
+            <p className="font-semibold">{t("bs.root.unionWarning")}</p>
+            <div className="mt-1 flex flex-wrap gap-1">
+              {unionTypes.map((v) => (
+                <Badge key={v} variant="secondary" className="text-[10px]">
+                  {t(`bs.type.${v}` as never)}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    }
+    return (
+      <>
+        <BsLogoUploader
+          logoUrl={form.logoUrl}
+          onChange={(v) => setForm((f) => ({ ...f, logoUrl: v }))}
+        />
+        <p className="mt-2 text-[11px] text-muted-foreground">{t("bs.hint.codeAuto")}</p>
+      </>
+    );
+  })();
+
+  const detailTitleOverride =
+    mode === "create"
+      ? `${t("bs.action.new")} — ${t("bs.field.parent")}: ${
+          createParent ? `${createParent.title} (${createParent.code})` : t("bs.type.hq")
+        }`
+      : null;
+
+  const badge = mode === "create" ? t("bs.action.new") : selectedNode?.code || undefined;
+
+  return (
+    <>
+      <SimpleTreeForm
+        treeTitle={t("bs.treeTitle")}
+        nodes={treeNodes}
+        selectedId={selectedId}
+        onSelect={(node) => {
+          if (node) handleSelect(node.id);
+        }}
+        badge={badge}
+        icon={<Network className="h-3.5 w-3.5" aria-hidden />}
+        detailTitleOverride={detailTitleOverride}
+        emptyText={t("bs.selectNode")}
+        treeEmptyText={loading ? t("bs.loadingTree") : t("bs.emptyTree")}
+        fields={fields}
+        onFieldChange={onFieldChange}
+        detailExtra={detailExtra}
+        /* Task 33 — right-click flyout: «افزودن زیرشاخه» opens the create
+           form under the right-clicked node (parent-driven type rules then
+           apply inside the form); «حذف شاخه» is gated by the SAME rules as
+           the ActionBar delete tile (root/system/has-children excluded). */
+        onAddBranch={(parent) => startCreate(parent.id)}
+        canAddBranch={(node) => {
+          const bs = byId.get(node.id);
+          return bs ? bsCanHostChild(bs) : false;
+        }}
+        onDeleteBranch={(node) => setContextDeleteId(node.id)}
+        canDeleteBranch={(node) => {
+          const bs = byId.get(node.id);
+          return bs ? bsCanDelete(bs) : false;
+        }}
+        onReset={actionReset}
+        onSave={actionSave}
+        onSaveNew={actionSaveNew}
+        onSaveClose={actionSaveClose}
+        onDelete={actionDelete}
+        onDeleteNew={actionDeleteNew}
+        onDeleteClose={actionDeleteClose}
+        onClose={closeThisWindow}
+        canSave={mode !== "idle"}
+        canCopy={false}
+        canDelete={Boolean(selectedNode && bsCanDelete(selectedNode))}
+        canPrint={false}
+        listItems={listItems}
+        listLoading={loading}
+        onOpenListItem={(item) => handleSelect(item.id)}
+        /* Task 35 — embedded mode: no caption buttons / drag on the form
+           header (the Settings window owns the chrome); standalone keeps the
+           Task-28 chromeless contract verbatim. */
+        onHeaderClose={embedded ? undefined : closeThisWindow}
+        onHeaderMinimize={chromeApi?.onMinimize}
+        onHeaderMaximize={chromeApi?.onToggleMaximize}
+        headerMaximized={headerMaximized}
+        onHeaderDragStart={chromeApi?.onDragStart}
+        onHeaderDragMove={chromeApi?.onDragMove}
+        onHeaderDragEnd={chromeApi?.onDragEnd}
+        onHeaderDoubleClick={chromeApi?.onDoubleClick}
+      />
+      <ConfirmDeleteDialog
+        open={contextDeleteId !== null}
+        onOpenChange={(o) => {
+          if (!o) setContextDeleteId(null);
+        }}
+        onConfirm={async () => {
+          const bs = contextDeleteId ? byId.get(contextDeleteId) : null;
+          if (bs) await handleDelete(bs);
+        }}
+      />
+    </>
+  );
+}

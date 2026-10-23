@@ -1,0 +1,46 @@
+"use client";
+
+import * as React from "react";
+import { Trash2 } from "lucide-react";
+import { useT } from "@/stores/settings-store";
+import { ActionIconButton } from "./action-icon-button";
+import { ConfirmDeleteDialog } from "./confirm-delete-dialog";
+import { useActionRun } from "./use-action-run";
+import type { ActionBarButtonProps } from "./types";
+
+/**
+ * Action 7 — «حذف و جدید»: deletes the entered data (after user confirmation)
+ * and then resets the fields. When the composer receives only onDelete +
+ * onReset, it builds this handler automatically (delete → reset).
+ */
+export function DeleteNewButton({
+  onClick,
+  disabled,
+  label,
+  confirmTitle,
+  confirmBody,
+}: ActionBarButtonProps & { confirmTitle?: string; confirmBody?: string }) {
+  const t = useT();
+  const { busy, run } = useActionRun();
+  const [confirmOpen, setConfirmOpen] = React.useState(false);
+  return (
+    <>
+      <ActionIconButton
+        label={label ?? t("abar.deleteNew")}
+        tint="from-rose-500 to-rose-600"
+        busy={busy}
+        disabled={disabled}
+        onClick={() => setConfirmOpen(true)}
+        badge="plus"
+        icon={<Trash2 className="h-[18px] w-[18px]" aria-hidden />}
+      />
+      <ConfirmDeleteDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title={confirmTitle ?? t("abar.confirmDeleteTitle")}
+        body={confirmBody ?? t("abar.confirmDeleteBody")}
+        onConfirm={() => run(onClick)}
+      />
+    </>
+  );
+}

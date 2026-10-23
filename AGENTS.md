@@ -1,129 +1,97 @@
-# AGENTS.md — قانون‌نامه پروژه برای هوش مصنوعی
-# AI Governance Rules — this file is MANDATORY for every AI assistant (Claude Code, Cursor, Codex, Gemini CLI, Z.ai Code, ...)
+# AGENTS.md — قانون اساسی بازسازی ERP (نسخهٔ ۲)
 
-> **برای مالک پروژه:** این فایل «قانون اساسی» پروژه است. هر هوش مصنوعی باید **قبل از هر تغییر کد** این فایل را بخواند، قوانین مرتبط را رعایت کند و در پاسخ‌هایش به شناسه قوانین (مثل §2.1) استناد کند.
-> این فایل را آزادانه ویرایش کنید؛ هر تغییر در همین فایل بلافاصله برای همه عامل‌ها الزام‌آور می‌شود.
-> **For AI agents:** English quick-reference is at the end (§8). When in doubt, the Persian text is the source of truth.
+> این سند مرجع حاکم بر همهٔ ایجنت‌ها و توسعه‌دهندگان این مخزن است.
+> نسخهٔ قبلی در ریست sandbox از دست رفت؛ این نسخه با حفظ بند‌های کلیدی (§0–§7) بازنویسی شده است.
 
----
+## §0 پروتکل اجباری ایجنت‌ها
+- **§0.1** پیش از هر تغییر کد: خواندن این سند + `worklog.md` و اعلام بندهای مرتبط در پاسخ.
+- **§0.5** ممنوعیت‌های مطلق:
+  - شکستن قراردادهای قفل‌شدهٔ §5؛
+  - حذف یا تضعیف قابلیت‌های موجود بدون تأیید مالک؛
+  - نوشتن کد تست؛
+  - اجرای `bun run build`؛
+  - استفاده از رنگ‌های indigo/blue به‌عنوان رنگ تأکیدی (مگر با مشخصات صریح مالک).
+- **§0.6** هر فرضِ تفسیری باید صریحاً اعلام شود.
 
-## §0 — پروتکل اجباری «قبل از تغییر، قانون را چک کن»
+## §1 چندزبانه و راست‌چینی
+- **§1.3** یازده زبان اجباری و هم‌گام: `fa, en, tr, ar, hi, ps, ckb, pt, ko, fr, zh`
+  — هر کلید جدید باید در **هر ۱۱ دیکشنری** (`src/i18n/dictionaries.ts`) اضافه شود.
+- **§1.4** RTL/LTR فقط با کلاس‌های منطقی (`ps-`, `pe-`, `text-start`)؛ جهت از `DIR_BY_LOCALE`.
 
-این بخش هسته قانون‌نامه است و تخطی از آن ممنوع است.
+## §2 داده و مهاجرت
+- **§2.3** اسکیمای Prisma فقط با سازه‌های ۱۰۰٪ سازگار با PostgreSQL
+  (بدون array/enum/json نوع‌خاص SQLite). نام جدول‌ها/ستون‌ها با `@@map/@map` به PascalCase میراث.
+- **§2.4** هیچ جدول عملیاتی autoincrement ندارد — همهٔ PKها دستی از `IdGenerationService`
+  (قرارداد IDGeneration: یک ردیف شمارنده per-table با `TableName UNIQUE`؛ قفل/تراکنش کوتاه مستقل؛
+  فرمول خود-ترمیم `max(LastID+1, maxDbId+1)` برای ردیف تازه/`strictSelfHeal`؛ رزرو بلوکی
+  `generateNextIdBlock`؛ catch فقط P2002/23505؛ ریشهٔ BusinessStructure در ID=1 رزرو سیستمی؛
+  `TABLE_REGISTRY` دیکشنری-محور؛ IDGeneration هرگز از فرانت/API عمومی قابل دسترس نیست؛
+  gap پذیرفته‌شده است؛ PKها `BigInt` با گارد 2^53).
+- **§2.5** (الحاق Task 23) هر جدول — موجود و آینده — باید ستون `Version` داشته باشد:
+  `Int @default(1) @map("Version")` (معنای rowversion میراث؛ هر تغییر ردیف قابل ردیابی است).
+  `PrismaService` یک میان‌افزار سراسری دارد که هر `update/updateMany` و `upsert` با payload
+  غیر-تهیِ هر مدلی که `version` دارد را خودکار ‎+1‎ می‌کند؛ نوشتن دستی
+  `version: {increment:1}` در سرویس‌ها ممنوع است (دوبامپ)؛ syncهای همگام no-op
+  (`update: {}`) نباید Version را جلو بزنند.
+- **§2.6** (الحاق Task 23) SQLite اسکیما ندارد؛ اسکیمای میراث فقط با کامنت ثبت می‌شود:
+  جدول‌های دامنهٔ Gnr (سرویس عمومی/settings-service) با نام PascalCase `@@map` می‌شوند و
+  کامنت `legacy "Gnr"."…"` می‌گیرند (موقع مهاجرت به PostgreSQL/SQL Server در اسکیمای Gnr
+  ساخته می‌شوند). `Systems` (legacy "Gnr"."Systems") رجیستری master همهٔ نرم‌افزارهاست:
+  PK دستی از IdGenerationService، همگام boot از `APP_CATALOG` (§4.1)، و `IsActive`
+  رکوردهای موجود هرگز توسط sync بازنویسی نمی‌شود (فلسفهٔ §4.5).
 
-- **§0.1 قبل از هر تغییر کد:** فایل‌های `AGENTS.md` (همین فایل) و `worklog.md` را بخوان تا با قراردادهای پروژه و کار عامل‌های قبلی هم‌رواست.
-- **§0.2 اعلام تطبیق:** برای هر مأموریت غیرجزئی، در ابتدای پاسخ به زبان کاربر بگو کدام قوانین این فایل بر کار جاری تأثیر دارند (مثال: «طبق §2.2 و §3.4...»).
-- **§0.3 برنامه‌ریزی:** کارهای ۳ مرحله‌ای و بیشتر با TodoWrite مدیریت شوند؛ برای هر زیرعامل (subagent) یک **Task ID** سراسری تعیین شود و هم worklog و هم قوانین به او ارجاع داده شود.
-- **§0.4 اولویت‌بندی:** درخواست صریح کاربر > این قانون‌نامه > برداشت شخصی عامل. اگر درخواست کاربر با قوانین تعارض دارد، **ابتدا تعارض را اعلام و تأیید کاربر را بگیر** (مگر اینکه خود کاربر صریحاً همان قانون را override کند).
-- **§0.5 ممنوعیت‌های مطلق بدون تأیید کاربر:**
-  - شکستن قراردادهای قفل‌شده §5
-  - حذف یا بازنویسی فیچرهای موجود که کاربر درخواستش را نداده (تغییرها باید حداقلی و هدفمند باشند؛ Edit نه Rewrite)
-  - نوشتن کد تست (test code) — کاربر تست نمی‌خواهد
-  - اجرای `bun run build` یا افزودن وابستگی سنگین جدید
-  - استفاده از رنگ indigo/blue در UI (مگر درخواست صریح کاربر)
-- **§0.6 اطلاعات گم‌شده:** اگر ارجاع کاربر به تصویر/فایل/مشخصه‌ای ناموجود یا مبهم است، **هرگز حدس بحرانی نزن**؛ فرض معقول خود را پیاده و در پاسخ صریح اعلام کن که چطور قابل اصلاح است.
-- **§0.7 بعد از هر تغییر کد:** طبق §7 (تعریف «انجام‌شده») تأیید کن و طبق §6 در worklog ثبت کن.
+## §3 محیط اجرا
+- **§3.3** dev فرانت: پورت ۳۰۰۰ (`bun run dev`، لاگ در `dev.log`)؛ build ممنوع؛
+  درخواست‌های فرانت فقط مسیر نسبی `/api/...` (BFF به سرویس‌ها پروکسی می‌کند)؛
+  mini-services پروژه‌های مستقل bun با پورت ثابت‌اند و با `bun run dev` در پس‌زمینه اجرا می‌شوند
+  (لاگ‌ها: `settings-service.log`، `apps-service.log`).
+- **§3.5** از همهٔ قابلیت‌های درخواستی، اول کارایی صحت قرارداد، بعد زیبایی؛
+  اما «زیبایی» فقط با شادکن/UI و الگوهای Fluent/Windows-11.
 
-## §1 — زبان، ارتباط و چندزبانی
+## §4 مش سرویس‌ها، امنیت API داخلی و راهبرد پایگاه‌داده (Task 18 — قفل‌شده)
+- **§4.1** کاتالوگ واحد: `mini-services/_shared/app-catalog.ts` تنها منبع حقیقت ۲۷ نرم‌افزار است؛
+  آینهٔ فرانت (`src/lib/app-catalog.ts`)، رجیستری DB (`AppRegistry` در settings-service) و
+  میزبان `apps-service` از آن seed/همگام می‌شوند. شماره‌گذاری مالک عمداً بدون ۱۳ است (۲۷ برنامه).
+- **§4.2** امضای داخلی v1: هر تماس BFF→سرویس و سرویس→سرویس باید سرآیندهای
+  `x-internal-key` / `x-internal-timestamp` / `x-internal-signature` را داشته باشد؛
+  رشتهٔ کانونی `${METHOD}:${PATH}:${TIMESTAMP}` (PATH بدون query و بدون اسلش پایانی)؛
+  HMAC-SHA256 با `INTERNAL_API_KEY`؛ انحراف ساعت مجاز ±۵ دقیقه؛ گارد NestJS
+  `InternalAuthGuard` سراسری است و فقط `@PublicInternal()` (health) مستثناست.
+  unsigned → 401. نسخهٔ v1 فقط loopback (127.0.0.1) است؛ هش بدنه در v2 (خروج از loopback).
+- **§4.3** مسیر مرورگر همیشه: مرورگر → BFF نسبی `/api/{appKey}/**` → امضا → سرویس؛
+  راز داخلی هرگز به مرورگر نمی‌رسد.
+- **§4.4** پایگاه‌داده: پیش‌فرض همهٔ نرم‌افزارها اشتراکی (`dbMode:"shared"`)؛ آنهایی که سند
+  تحلیلشان جدایی بخواهد با `dbMode:"dedicated"` + اسکیمای Prisma مستقل + `DATABASE_URL`
+  اختصاصی جدا می‌شوند (مسیر ارتقا: ورود خود‌توصیف کاتالوگ → سرویس مستقل با پورت خود).
+  یکپارچگی بین‌نرم‌افزاری: قرارداد §2.4 (IDGeneration) + ارجاع بین‌سرویتی با snapshot
+  (id + code تغییرناپذیر) + دامنهٔ شرکت/شعبه (x-company-id در فاز بعدی).
+- **§4.5** `AppRegistry` فرادادهٔ پلتفرم است (PK رشته‌ای، دامنهٔ D5)؛ flipهای runtime
+  `dbMode/isEnabled` در DB بر کد اولویت دارند و seed بازنویسی‌شان نمی‌کند.
+- **§4.6** نرم‌افزارهای کاتالوگ تا رسیدن سند تحلیل: بدون فرم/فیلد (پنجرهٔ placeholder)،
+  بدون جدول عملیاتی و بدون Prisma؛ هر سند تحلیل جدید قبل از پیاده‌سازی در worklog ثبت شود.
 
-- **§1.1 پاسخ‌ها همیشه به زبان کاربر داده شود (فعلاً فارسی).** برچسب‌ها و پیام‌های داخل برنامه از دیکشنری i18n می‌آیند، نه از عامل.
-- **§1.2 پروژه ۱۱ زبان دارد:** fa / en / tr / ar / hi / ps / ckb / pt / ko / fr / zh
-  - RTL: `fa`, `ar`, `ps`, `ckb` — LTR: بقیه (مرجع: `src/i18n/config.ts` → `DIR_BY_LOCALE`)
-- **§1.3 هر رشته کاربر-مواجه جدید باید در همان مأموریت به هر ۱۱ دیکشنری اضافه شود:** ۴ زبان اصلی در `src/i18n/dictionaries.ts` و ۷ زبان دیگر در `src/i18n/locales/{hi,ps,ckb,pt,ko,fr,zh}.ts`. رشته هاردکد‌شده UI ممنوع است — از `useTranslation()` استفاده کن.
-- **§1.4 برای هر چیزی که جهت دارد (padding، margin، text-align، ترتیب flex) فقط کلاس‌های منطقی Tailwind استفاده شود:** `ps-/pe-/ms-/me-/start-/end-/text-start/text-end` — استفاده از `pl-/pr-/left-/right-` برای مقاصد جهت‌دار ممنوع.
-- **§1.5 منطقه زمانی کاربر:** Asia/Tehran (تاریخ/ساعت از `src/i18n/calendar.ts` و Intl استفاده کنند).
+## §5 قرارداد فرم‌ها (قفل‌شده)
+- **§5.1** هر توسعهٔ `FormDef/FormFieldDef` فقط افزودنی و backward-compatible است.
+- **§5.4** فرم‌های جدید DB-driven (FormDefinition)؛ استثنا: فرم‌های TreeForm-domain
+  که با موافقت مالک مستقیماً به سرویس متصل می‌شوند.
+- **§5.6** پس از ذخیرهٔ موفق: رویداد `erp:records-changed` + refetch + انتخاب مجدد گره.
 
-## §2 — استک فناوری (غیرقابل مذاکره)
+## §6 کارنام
+- همهٔ ایجنت‌ها پیش از کار `worklog.md` را می‌خوانند و پس از پایان، بخشی با الگوی
+  `--- / Task ID / Agent / Task / Work Log / Stage Summary` به آن **اضافه** می‌کنند (بدون بازنویسی).
 
-- **§2.1** Next.js 16 App Router + TypeScript 5 strict. تغییر فریم‌ورک ممنوع.
-- **§2.2** Tailwind CSS 4 + shadcn/ui (سبک New York) + آیکون‌های Lucide. قبل از ساخت کامپوننت جدید، حتماً `src/components/ui/` را چک کن — همه اجزای استاندارد از قبل موجودند.
-- **§2.3** Prisma ORM روی SQLite؛ هر schema باید **۱۰۰٪ سازگار PostgreSQL** باشد (برای مهاجرت آینده فقط `provider` و `DATABASE_URL` عوض شود). `List` primitive در Prisma ممنوع — از relation استفاده کن.
-- **§2.4** State: Zustand برای state کلاینت، TanStack Query برای state سرور.
-- **§2.5** بک‌اند: میکروسرویس‌های NestJS با bun در `mini-services/<name>-service/` (هر کدام package.json، prisma و دیتابیس مجزا). ۱۳ سرویس روی پورت‌های 3001–3013.
-- **§2.6** `z-ai-web-dev-sdk` فقط در کد بک‌اند؛ ایمپورت در کد کلاینت ممنوع.
+## §7 تعریف «تمام‌شده» (DoD)
+1. `bun run lint` بدون خطا؛
+2. `dev.log` و لاگ سرویس‌ها بدون خطای runtime؛
+3. آزمون E2E با Agent Browser روی `/`؛
+4. RTL و LTR هر دو درست؛
+5. چیدمان موبایل سالم؛
+6. ۱۱ زبان هم‌گام؛
+7. sticky/fixed بودن نوار پایین (taskbar) و عدم همپوشانی؛
+8. ثبت در `worklog.md`.
 
-## §3 — قواعد اجرا در سندباکس
-
-- **§3.1** سرور توسعه فقط پورت 3000 (`bun run dev` در پس‌زمینه، لاگ: `/home/z/my-project/dev.log`). **هرگز `bun run build` اجرا نشود.**
-- **§3.2** میکروسرویس‌ها باید «یتیم» (orphan) اجرا شوند وگرنه با پایان دستور کشته می‌شوند:
-  `( cd <service-dir> && setsid nohup bun --hot src/main.ts > <log-file> 2>&1 < /dev/null & )`
-- **§3.3** گیت‌وی فقط یک پورت بیرونی دارد. درخواست‌های API به سرویس‌های دیگر **فقط مسیر نسبی + `?XTransformPort=<port>`**؛ URL مطلق (`http://localhost:...`) و نوشتن پورت در مسیر/وب‌سوکت ممنوع. socket.io همیشه: `io("/?XTransformPort={port}")` با path `/`.
-- **§3.4** بک‌اند Next فقط با **API Route** کار شود؛ Server Action ممنوع.
-- **§3.5** مسیر عمومی قابل مشاهده فقط `src/app/page.tsx` است (پارادایم دسکتاپ). روت عمومی جدید ممنوع — فیچر جدید = پنجره/کامپوننت داخل دسکتاپ.
-- **§3.6** فقط یک پورت بیرونی قابل expose است؛ سرویس‌های اضافی (مثل websocket) داخل `mini-services/` با پورت خودشان اجرا شوند.
-
-## §4 — دیتابیس
-
-- **§4.1** schema در `prisma/` هر سرویس، فایل دیتابیس در `db/`. اعمال تغییرات: `bun run db:push`.
-- **§4.2** کلاینت دیتابیس Next: `import { db } from '@/lib/db'`.
-- **§4.3** الگوی معماری: database-per-service؛ سرویس‌ها مستقل‌اند و کلاینت فقط از طریق گیت‌وی BFF به آن‌ها وصل می‌شود.
-- **§4.4** `orderBy` فقط روی فیلدهای موجود (قرارداد جاری پروژه: `createdAt`).
-
-## §5 — قراردادهای قفل‌شده (Break ممنوع؛ فقط توسعه سازگار با گذشته)
-
-- **§5.1** `src/types/forms.ts`: شکل `FormDef` و `FormFieldDef` فریز است. توسعه فقط به‌صورت backward-compatible (فیلد اختیاری جدید) مجاز است.
-- **§5.2** مسیرهای BFF ثابت‌اند: `/api/auth/*`، `/api/desktop/*`، `/api/modules/[module]`، `/api/modules/[module]/stats`، `/api/modules/[module]/forms/*` (+ `/api/setup/*`). پروکسی ماژول‌ها whitelist ماژول دارند (ضد SSRF) — ماژول جدید باید به whitelist اضافه شود.
-- **§5.3** امنیت میکروسرویس‌ها از کیت `mini-services/shared/` (`@erp/shared`) می‌آید. سرویس‌ها **هرگز مستقیم `@nestjs/*` یا `class-validator` import نکنند** — فقط از re-export کیت (جلوگیری از باگ dual-instance). گاردها: JWT کاربر + `x-api-key` سمت سرور (کلیدها در root `.env`).
-- **§5.4** سیستم فرم DB-driven است: هر فرم از `FormDef` رندر می‌شود (`form-window.tsx` برای simple/tabbed، `tree-form.tsx` برای type='tree'، `data-list-window.tsx` برای فهرست رکوردها). فرم سخت‌کد جدید ممنوع — فرم جدید = seed در `settings-service`.
-- **§5.5** چیدمان فیلدهای فرم افقی و قفل است: ردیف flex با label با عرض ثابت `w-36 shrink-0` + ستون کنترل `min-w-0 flex-1`؛ آینه‌سازی RTL/LTR خودکار با کلاس‌های منطقی (§1.4).
-- **§5.6** ارتباط فرم↔فهرست از طریق رویداد `erp:records-changed` (`src/lib/app-events.ts`) است؛ تب‌ها دو نوع دارند: `form` و `list` (پیشوند formKey: `list:<formKey>`).
-- **§5.7** قالب ثبت worklog (§6) و خود `worklog.md` قابل rewrite نیست — فقط append.
-- **§5.8** الگوی رندر آیکون داینامیک از `icon-registry.ts`؛ برای رندر شرطی کامپوننت‌ها از createElement استفاده شود (قانون lint پروژه).
-
-## §6 — پروتکل worklog
-
-مسیر: `/home/z/my-project/worklog.md` — قبل از کار بخوان (§0.1)، بعد از کار append کن (هرگز overwrite نکن):
-
-```markdown
----
-Task ID: <شماره سراسری بعدی>
-Agent: <نام عامل>
-Task: <خلاصه مأموریت>
-
-Work Log:
-- <گام مشخص ۱>
-- <گام مشخص ۲>
-
-Stage Summary:
-- <نتایج / تصمیم‌ها / فایل‌های تولیدی>
-```
-
-شماره Task ID سراسری و صعودی است؛ تسک‌های موازی پسوند دارند (مثل `2-a`, `2-b`).
-
-## §7 — تعریف «انجام‌شده» (Definition of Done)
-
-یک تسک کد فقط وقتی «تمام» است که همه موارد برقرار باشد — «کامپایل می‌شود» یا «سرور بالا آمده» هرگز کافی نیست:
-
-- [ ] `bun run lint` پاس است
-- [ ] `/home/z/my-project/dev.log` (بخش جدید) بدون خطای runtime
-- [ ] با Agent Browser صفحه واقعاً رندر می‌شود (نه صفحه سفید/خطای hydration)
-- [ ] مسیر طلایی کاربر end-to-end در مرورگر تست شده (کلیک، فرم، دیتای واقعی بک‌اند نمایش داده شود، نه اسکلتون معلق)
-- [ ] هم RTL (fa) و هم LTR (en) چک شده و آینه‌ای درست است
-- [ ] responsive (دسکتاپ + ~390px موبایل) و فوتر sticky برقرار است
-- [ ] رشته‌های جدید در هر ۱۱ زبان اضافه شده‌اند (§1.3)
-- [ ] worklog.md به‌روز شده
-
-## §8 — قوانین UI/UX
-
-- **§8.1** فوتر (تسک‌بار) با الگوی sticky: ریشه `min-h-screen flex flex-col` و فوتر `mt-auto` — در صفحات کوتاه به ته viewport بچسبد و در صفحات بلند به‌طور طبیعی پایین برود، هرگز روی محتوا نیفتد.
-- **§8.2** لیست‌های بلند: `max-h-96 overflow-y-auto` + اسکرول‌بار سفارشی.
-- **§8.3** طراحی mobile-first با بریک‌پوینت‌های استاندارد (`sm:/md:/lg:/xl:`)؛ حداقل هدف لمسی 44px.
-- **§8.4** هر عمل async باید حالت loading، پیام خطای actionable و toast feedback داشته باشد.
-- **§8.5** HTML معنایی (`main/header/nav/section`) + ARIA + alt برای همه تصاویر؛ ناوبری با کیبورد کار کند.
-- **§8.6** انیمیشن‌ها ظریف (framer-motion)؛ رنگ‌بندی از متغیرهای پروژه (`bg-primary`، `text-primary-foreground`، ...)؛ پالت اکشن‌بار جاری: sky/emerald/rose/slate.
-- **§8.7** پس‌زمینه رندر سفید است؛ اگر رنگ پس‌زمینه دیگری لازم است با wrapper داشته باش.
-
----
-
-# §9 — English Quick Reference (for any AI tool)
-
-1. **Before ANY change:** read `AGENTS.md` + `worklog.md`; state which rules (§id) apply; get user approval when a request conflicts with rules.
-2. **Never** break locked contracts: `src/types/forms.ts` (FormDef/FormFieldDef), BFF paths, `@erp/shared` re-export pattern, worklog append-only format.
-3. **Never** hardcode UI strings — all 11 locales (fa/en/tr/ar/hi/ps/ckb/pt/ko/fr/zh) must be updated in the same task. RTL = fa/ar/ps/ckb; use logical Tailwind classes only (`ps/pe/ms/me/start/end/text-start`).
-4. **Stack is frozen:** Next.js 16 App Router, TypeScript 5, Tailwind 4, shadcn/ui, Prisma+SQLite (PostgreSQL-compatible, no List primitives), Zustand, NestJS mini-services on ports 3001–3013.
-5. **Sandbox:** never `bun run build`; dev server = port 3000; orphan-start services with `( cd dir && setsid nohup bun --hot src/main.ts > log 2>&1 < /dev/null & )`; API calls = relative URLs only with `?XTransformPort=<port>`; no ports/absolute URLs anywhere in the frontend.
-6. **Backend:** API Routes (never Server Actions); `z-ai-web-dev-sdk` backend-only; single visible route `src/app/page.tsx`; forms are DB-driven (new form = seed in settings-service, never hardcode).
-7. **Database:** schema in `prisma/`, db file in `db/`, sync with `bun run db:push`, client via `@/lib/db`.
-8. **UI laws:** sticky footer (`min-h-screen flex flex-col` + `mt-auto`), no indigo/blue, horizontal form field layout (label `w-36` + control `flex-1`), long lists `max-h-96 overflow-y-auto`, responsive mobile-first, loading/error/toast on every async action.
-9. **Done = lint pass + clean dev.log + Agent Browser E2E (render + golden path + RTL & LTR + mobile) + worklog updated.** A build passing alone is never "done".
-10. **After finishing:** append the standard section to `worklog.md` (Task ID / Agent / Task / Work Log / Stage Summary). Missing info → state your assumption explicitly instead of silently guessing.
+## پورت سرویس‌ها
+| سرویس | پورت |
+|-------|------|
+| settings-service (سرویس عمومی) | 3001 |
+| apps-service (میزبان مرکب ۲۶ نرم‌افزار کاتالوگ) | 3002 |

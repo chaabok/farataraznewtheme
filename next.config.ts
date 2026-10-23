@@ -1,13 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: "standalone",
-  /* config options here */
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-  reactStrictMode: false,
-  devIndicators: false,
+  allowedDevOrigins: ["127.0.0.1", "localhost"],
+  serverExternalPackages: [],
 };
 
 export default nextConfig;

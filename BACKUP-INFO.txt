@@ -1,0 +1,17 @@
+FaraTaraz / Unified Commerce ERP — Full Backup
+Created: 2026-10-23 23:29 (Asia/Tehran)
+
+Contents:
+- Source: Next.js 16 app (src/, config), mini-services
+  (settings-service :3001, apps-service :3002, _shared app-catalog),
+  prisma schema, AGENTS.md, worklog.md, download/ & upload/ user files.
+- Database: db/custom.db  (SQLite, Prisma; both settings-service and
+  apps-service point here: DATABASE_URL="file:/home/z/my-project/db/custom.db")
+
+Excluded (by design): node_modules/, .next/, .git/ (history, 530MB),
+skills/ (external toolchain, 61MB), *.log
+
+Restore:
+1) bun install   (root + each mini-service)
+2) keep db/custom.db in place (or set DATABASE_URL accordingly)
+3) bun run dev   (front :3000)  |  mini-services: bun run dev each

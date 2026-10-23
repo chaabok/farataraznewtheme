@@ -1,8 +1,6 @@
-// settings-service - Prisma schema (PostgreSQL-ready)
-//
-// MIGRATION TO POSTGRESQL:
-//   1. provider = "postgresql"
-//   2. url      = env("DATABASE_URL")
+// settings-service — سرویس عمومی (Gnr domain in the legacy system)
+// §2.3: 100% PostgreSQL-compatible constructs only (no arrays/enums/JSON types).
+// §16 contract: NO autoincrement anywhere — every operational PK is manual via IdGenerationService.
 
 generator client {
   provider = "prisma-client-js"
@@ -10,119 +8,105 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = "file:/home/z/my-project/db/settings.db"
+  url      = env("DATABASE_URL")
 }
 
+/// IDGeneration — central per-table counters (legacy "Gnr"."IDGeneration").
+/// IDGenerationID itself is manual = MAX(IDGenerationID)+1 inside the same transaction (spec §2).
+model IDGeneration {
+  idGenerationId BigInt @id @map("IDGenerationID")
+  tableName      String @unique @map("TableName")
+  lastId         BigInt @default(0) @map("LastID")
+  version        Int    @default(1) @map("Version") // §2.5 auto-rowversion (bumps when the counter moves)
+
+  @@map("IDGeneration")
+}
+
+/// Generic namespaced settings (bs.shareHeadquarterData, bs.activeStructureTypes, ...)
 model Setting {
-  id        String   @id @default(uuid())
-  key String @unique
-  value String
-  category String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  key     String @id @map("Key")
+  value   String @map("Value")
+  version Int    @default(1) @map("Version") // §2.5 auto-rowversion
+
+  @@map("Setting")
 }
 
-/// Multi-company backbone: the hierarchical business-structure tree
-/// (system root → headquarter → company → branch → agency) that feeds
-/// the future `x-company-id` tenant header of the whole ERP.
-/// Structure types: 0=System root (reserved) · 1=Headquarter/Holding ·
-/// 2=Company · 3=Branch · 4=Agency (clean greenfield enum — legacy
-/// "Department" mismatch intentionally not carried over).
+/// BusinessStructure — tree table (legacy "Gnr"."BusinessStructure").
+/// Root node is system-reserved at ID=1 (spec: counter must never reproduce it).
 model BusinessStructure {
-  id            String   @id @default(uuid())
-  /// Parent node id — the virtual root uses the literal "0".
-  parentRef     String   @default("0")
-  /// Hierarchical code («01», «01-01», …) generated server-side inside a
-  /// transaction; unique per parent to allow the same suffix under siblings.
-  code          String
-  title         String
-  titleEn       String?
-  structureType Int      @default(2)
-  manager       String?
-  /// Logo as a data URL (sandbox scale) — swapped for an upload URL later.
-  logoUrl       String?
-  isActive      Boolean  @default(true)
-  /// The single reserved system root («ساختار سیستم») — immutable identity,
-  /// never deletable, never seeded with default data.
-  isSystem      Boolean  @default(false)
-  /// Optimistic-locking counter (consumed by hardening phase).
-  version       Int      @default(1)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id                    BigInt   @id @map("ID")
+  parentRef             BigInt             @map("ParentRef") // 0 = root
+  code                  String             @map("Code")
+  title                 String             @map("Title")
+  titleEn               String?            @map("Title_En")
+  businessStructureType Int?               @map("BusinessStructure") // 1=Holding 2=Company 3=Branch 4=Agency 5=Store (Task 34)
+  manager               String?            @map("Manager")
+  logoUrl               String?            @map("LogoUrl")
+  isBasicInfoShared     Boolean  @default(false) @map("IsBasicInfoShared")
+  activeStructureTypes  String?            @map("ActiveStructureTypes") // JSON "[1,3]"
+  isActive              Boolean  @default(true)  @map("IsActive")
+  isSystem              Boolean  @default(false) @map("IsSystem")
+  version               Int      @default(1)     @map("Version")
+  createdAt             DateTime @default(now()) @map("CreatedAt")
+  updatedAt             DateTime @updatedAt      @map("UpdatedAt")
 
   @@unique([parentRef, code])
-  @@index([parentRef])
-  @@index([structureType])
+  @@map("BusinessStructure")
 }
 
-/// A database-defined ERP form (simple | tabbed | tree), owned by a module.
-model FormDefinition {
-  id          String   @id @default(uuid())
-  moduleKey   String
-  formKey     String
-  name        String   // fa base name
-  nameEn      String?
-  type        String   @default("tabbed") // simple | tabbed | tree
-  iconKey     String   @default("fileText")
-  accentColor String   @default("#0ea5e9")
-  sortOrder   Int      @default(0)
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  fields      FormFieldDefinition[]
-  records     FormDataRecord[]
-  @@unique([moduleKey, formKey])
-  @@index([moduleKey])
+/// IAM users authorized per business-structure node (Task 19 will wire auth-service).
+model BusinessStructureUser {
+  id                 BigInt   @id @map("ID")
+  businessStructureId BigInt            @map("BusinessStructureID")
+  userId             String             @map("UserID")
+  version            Int      @default(1)     @map("Version") // §2.5 auto-rowversion
+  createdAt          DateTime @default(now()) @map("CreatedAt")
+
+  @@unique([businessStructureId, userId])
+  @@map("BusinessStructureUser")
 }
 
-/// One field of a FormDefinition (ordered, tabbed, typed).
-model FormFieldDefinition {
-  id           String   @id @default(uuid())
-  formId       String
-  tabKey       String?  // null = main section
-  tabName      String?  // fa tab label
-  tabNameEn    String?
-  fieldKey     String
-  label        String   // fa
-  labelEn      String?
-  fieldType    String   @default("text") // text|number|date|checkbox|lookup|textarea
-  isRequired   Boolean  @default(false)
-  span         Int      @default(1) // 1 half, 2 full
-  lookupKey    String?
-  defaultValue String?
-  sortOrder    Int      @default(0)
-  /// Column-filter dropdown mode of the data-list window (null = multi)
-  filterMode   String?  // single | multi
-  isActive     Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  form         FormDefinition @relation(fields: [formId], references: [id], onDelete: Cascade)
-  @@unique([formId, fieldKey])
-  @@index([formId, sortOrder])
+/// AppRegistry — platform metadata for the ERP app mesh (Task 18).
+/// NOT business data: meta/framework table with string PK (D5 scope, like Setting/FormDefinition).
+/// Idempotently synced on boot from mini-services/_shared/app-catalog.ts (single source of truth).
+/// dbMode: "shared" (default, one DB for all apps) | "dedicated" (app runs on its own DB).
+model AppRegistry {
+  appKey    String   @id @map("AppKey")
+  titleFa   String   @map("TitleFa")
+  titleKey  String   @map("TitleKey")
+  iconKey   String   @map("IconKey")
+  appGroup  String   @map("AppGroup")
+  order     Int      @map("Order")
+  port      Int      @map("Port")
+  dbMode    String   @default("shared") @map("DbMode")
+  host      String   @default("apps-service") @map("Host")
+  isEnabled Boolean  @default(true) @map("IsEnabled")
+  version   Int      @default(1) @map("Version") // §2.5 auto-rowversion
+  createdAt DateTime @default(now()) @map("CreatedAt")
+  updatedAt DateTime @updatedAt @map("UpdatedAt")
+
+  @@map("AppRegistry")
 }
 
-/// Options for lookup fields (flat or tree via parentId), grouped by lookupKey.
-model FormLookupOption {
-  id        String   @id @default(uuid())
-  lookupKey String
-  code      String
-  label     String   // fa
-  labelEn   String?
-  parentId  String?
-  sortOrder Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  @@index([lookupKey, sortOrder])
-}
+/// Systems — master registry of ALL ERP software (legacy "Gnr"."Systems", §2.6).
+/// Gnr-domain business master data: BigInt manual PK via IdGenerationService (§2.4,
+/// never autoincrement), registered in TABLE_REGISTRY as "Systems"/"ID".
+/// Idempotently boot-synced from mini-services/_shared/app-catalog.ts (§4.1 single
+/// source): missing rows are created, catalog-driven fields updated ONLY on real
+/// drift (§2.5 — Version must reflect genuine change), IsActive never overwritten
+/// (§4.5 philosophy). i18n of titles via TitleKey → dictionaries.ts (11 locales).
+model Systems {
+  id        BigInt   @id @map("ID")
+  code      String   @unique @map("Code")
+  titleFa   String   @map("TitleFa")
+  titleKey  String?  @map("TitleKey") // i18n dictionary key; null for future non-catalog software
+  iconKey   String   @map("IconKey")
+  appGroup  String   @map("AppGroup")
+  sortOrder Int      @map("SortOrder")
+  isActive  Boolean  @default(true) @map("IsActive")
+  version   Int      @default(1) @map("Version") // §2.5 auto-rowversion
+  createdAt DateTime @default(now()) @map("CreatedAt")
+  updatedAt DateTime @updatedAt @map("UpdatedAt")
 
-/// One saved record of a form: dataJson = JSON.stringify({fieldKey: value}).
-model FormDataRecord {
-  id        String   @id @default(uuid())
-  formId    String
-  dataJson  String   // JSON.stringify({fieldKey: value})
-  createdBy String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  form      FormDefinition @relation(fields: [formId], references: [id], onDelete: Cascade)
-  @@index([formId, createdAt])
+  @@map("Systems")
 }

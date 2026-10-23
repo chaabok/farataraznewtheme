@@ -1,351 +1,278 @@
-import {
-  BadRequestException,
-  ConflictException,
-  Inject,
-  Injectable,
-  NotFoundException,
-} from '@erp/shared';
-import type { BusinessStructure } from '@prisma/client';
-import { PrismaService } from '../prisma/prisma.service';
-import { RootSettingsDto, SaveNodeDto } from './dto/save-node.dto';
-import type { BsRootSettings } from './business-structure.types';
+import { Injectable, HttpException, Logger } from "@nestjs/common";
+import { Prisma } from "@prisma/client";
+import { PrismaService } from "../prisma/prisma.service";
+import { IdGenerationService } from "../id-generation/id-generation.service";
+import { CreateBsDto, UpdateBsDto } from "./business-structure.dto";
 
 /**
- * Structure types — the clean greenfield enum (legacy "Department = 4"
- * naming mismatch intentionally not carried over):
- * 0 = reserved system root · 1 = Headquarter/Holding · 2 = Company ·
- * 3 = Branch · 4 = Agency.
+ * Parent-driven level rules (spec §1-4; Task 34 adds type 5 Store as the
+ * retail leaf level) — single source of truth on the server:
+ *   root (Headquarters, type=null) → [1,2,3,4,5]
+ *   1 Holding → [2,3,4,5]   2 Company → [2,3,4,5]
+ *   3 Branch → [4,5]        4 Agency → [4,5]   5 Store → leaf (no children)
+ * Max depth: 5 levels below the root (Task 34: 4 → 5 for the Store level).
  */
-const TYPE_SYSTEM = 0;
-const TYPE_HEADQUARTER = 1;
-
-/** Parent-type → allowed child-types (validated SERVER-side, never UI-only). */
-const ALLOWED_CHILD_TYPES: Readonly<Record<number, readonly number[]>> = {
-  0: [1], // system root → headquarter only
-  1: [2, 3, 4], // headquarter → company / branch / agency
-  2: [2, 3, 4], // company → company / branch / agency
-  3: [4], // branch → agency only
-  4: [4], // agency → agency only (branch under agency is forbidden)
+const CHILD_TYPE_RULES: Record<number, number[]> = {
+  1: [2, 3, 4, 5],
+  2: [2, 3, 4, 5],
+  3: [4, 5],
+  4: [4, 5],
+  5: [],
 };
+const ROOT_ALLOWED = [1, 2, 3, 4, 5];
+const MAX_DEPTH = 5;
+const ROOT_ID = 1;
 
-/** Maximum business depth below the system root (root itself = level 0). */
-const MAX_LEVEL = 4;
+function allowedChildTypes(parentType: number | null): number[] {
+  if (parentType == null) return ROOT_ALLOWED;
+  return CHILD_TYPE_RULES[parentType] ?? [];
+}
 
-/** Namespaced Setting keys — the single source of truth (no dual-write). */
-const SETTING_SHARE = 'bs.shareHeadquarterData';
-const SETTING_ACTIVE = 'bs.activeStructureTypes';
-const DEFAULT_ACTIVE_TYPES = [1, 2, 3, 4];
-
-/** Persian system messages (domain-level errors, mirrored by UI toasts). */
-const MSG = {
-  parentRequired: 'گره والد مشخص نشده است.',
-  parentNotFound: 'گره والد یافت نشد.',
-  typeNotAllowed: 'این نوع ساختار زیر والد انتخاب‌شده مجاز نیست.',
-  typeInactive: 'این نوع ساختار در تنظیمات ریشه غیرفعال است.',
-  maxLevel: 'حداکثر ۴ سطح ساختار مجاز است.',
-  systemImmutable: 'ریشه سیستمی از این فرم قابل ویرایش نیست.',
-  systemDelete: 'ریشه سیستمی قابل حذف نیست.',
-  hasChildren: 'ابتدا زیرشاخه‌های این گره را حذف کنید.',
-  notFound: 'گره مورد نظر یافت نشد.',
-  duplicateCode: 'کد ساختار تکراری است؛ دوباره تلاش کنید.',
-  typeInUse: 'انواع ساختارهایی که از قبل در سیستم ثبت شده‌اند، غیرقابل غیرفعال‌سازی هستند.',
-} as const;
+function fail(status: number, message: string, messageKey?: string): never {
+  throw new HttpException({ statusCode: status, message, messageKey }, status);
+}
 
 @Injectable()
 export class BusinessStructureService {
-  constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
+  private readonly logger = new Logger(BusinessStructureService.name);
 
-  /** Memoized per-process bootstrap of the reserved system records. */
-  private bootstrapPromise: Promise<void> | null = null;
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly idGen: IdGenerationService,
+  ) {}
 
-  /**
-   * Idempotent bootstrap (§ natural-key check, never blind INSERT):
-   * the reserved system root «ساختار سیستم» (isSystem) with the seeded
-   * «دفتر مرکزی» (01) and «شرکت نمونه یک» (01-01) beneath it — the same
-   * bootstrap contract as the legacy system, keyed on uuid + isSystem.
-   */
-  private ensureBootstrap(): Promise<void> {
-    this.bootstrapPromise ??= (async () => {
-      const root = await this.prisma.businessStructure.findFirst({
-        where: { isSystem: true },
-      });
-      if (root) return;
+  /* ------------------------------- mapping ------------------------------ */
 
-      const systemRoot = await this.prisma.businessStructure
-        .create({
-          data: {
-            parentRef: '0',
-            code: '00',
-            title: 'ساختار سیستم',
-            titleEn: 'System Structure',
-            structureType: TYPE_SYSTEM,
-            isSystem: true,
-            isActive: true,
-          },
-        })
-        .catch((error) => {
-          // A parallel boot won the unique (parentRef, code) race — fine.
-          if (typeof error === 'object' && error !== null && (error as { code?: string }).code === 'P2002') {
-            return null;
-          }
-          throw error;
-        });
-      if (!systemRoot) return;
-
-      // Headquarter (01) directly under the system root; the sample
-      // company (01-01) beneath it — hierarchical code semantics AND the
-      // parent-driven rules both require company under headquarter.
-      const headquarter = await this.prisma.businessStructure
-        .create({
-          data: {
-            parentRef: systemRoot.id,
-            code: '01',
-            title: 'دفتر مرکزی',
-            titleEn: 'Headquarters',
-            structureType: TYPE_HEADQUARTER,
-            isActive: true,
-          },
-        })
-        .catch((error) => {
-          if (typeof error === 'object' && error !== null && (error as { code?: string }).code === 'P2002') {
-            return null;
-          }
-          throw error;
-        });
-      if (!headquarter) return;
-
-      await this.prisma.businessStructure.create({
-        data: {
-          parentRef: headquarter.id,
-          code: '01-01',
-          title: 'شرکت نمونه یک',
-          titleEn: 'Sample Company One',
-          structureType: 2,
-          isActive: true,
-        },
-      });
-    })().catch((error) => {
-      // Allow a later request to retry a failed bootstrap.
-      this.bootstrapPromise = null;
-      throw error;
-    });
-    return this.bootstrapPromise;
-  }
-
-  /** Flat list (client builds the tree); code order == hierarchical order. */
-  async list(): Promise<BusinessStructure[]> {
-    await this.ensureBootstrap();
-    return this.prisma.businessStructure.findMany({
-      orderBy: [{ code: 'asc' }],
-    });
-  }
-
-  /** The two root-only options (defaults when never saved). */
-  async getSettings(): Promise<BsRootSettings> {
-    const rows = await this.prisma.setting.findMany({
-      where: { key: { in: [SETTING_SHARE, SETTING_ACTIVE] } },
-    });
-    const share = rows.find((row) => row.key === SETTING_SHARE)?.value;
-    const active = rows.find((row) => row.key === SETTING_ACTIVE)?.value;
-    const parsedActive = active
-      ? active
-          .split(',')
-          .map((part) => Number.parseInt(part, 10))
-          .filter((value) => Number.isInteger(value) && value >= 1 && value <= 4)
-      : [];
+  private toDto(n: {
+    id: bigint;
+    parentRef: bigint;
+    code: string;
+    title: string;
+    titleEn: string | null;
+    businessStructureType: number | null;
+    manager: string | null;
+    logoUrl: string | null;
+    isBasicInfoShared: boolean;
+    activeStructureTypes: string | null;
+    isActive: boolean;
+    isSystem: boolean;
+    version: number;
+  }) {
     return {
-      shareHeadquarterData: share === 'true',
-      activeStructureTypes: parsedActive.length
-        ? Array.from(new Set(parsedActive)).sort((a, b) => a - b)
-        : [...DEFAULT_ACTIVE_TYPES],
+      id: Number(n.id),
+      parentRef: Number(n.parentRef),
+      code: n.code,
+      title: n.title,
+      titleEn: n.titleEn,
+      businessStructureType: n.businessStructureType,
+      manager: n.manager,
+      logoUrl: n.logoUrl,
+      isBasicInfoShared: n.isBasicInfoShared,
+      activeStructureTypes: n.activeStructureTypes,
+      isActive: n.isActive,
+      isSystem: n.isSystem,
+      version: n.version,
+      childCount: 0,
     };
   }
 
-  /**
-   * Saves the two root-only options atomically. Types already present in
-   * the tree can never be deactivated (union contract of the legacy form).
-   */
-  async updateRootSettings(dto: RootSettingsDto): Promise<BsRootSettings> {
-    const used = await this.prisma.businessStructure.findMany({
-      where: { isSystem: false },
-      select: { structureType: true },
-    });
-    const usedTypes = new Set(used.map((row) => row.structureType));
-    for (const type of usedTypes) {
-      if (!dto.activeStructureTypes.includes(type)) {
-        throw new BadRequestException(MSG.typeInUse);
-      }
-    }
+  /* --------------------------------- read -------------------------------- */
 
-    const requested = Array.from(new Set(dto.activeStructureTypes)).sort(
-      (a, b) => a - b,
-    );
-    await this.prisma.$transaction([
-      this.prisma.setting.upsert({
-        where: { key: SETTING_SHARE },
-        update: { value: String(dto.shareHeadquarterData) },
-        create: { key: SETTING_SHARE, value: String(dto.shareHeadquarterData) },
-      }),
-      this.prisma.setting.upsert({
-        where: { key: SETTING_ACTIVE },
-        update: { value: requested.join(',') },
-        create: { key: SETTING_ACTIVE, value: requested.join(',') },
-      }),
+  async list() {
+    const [items, childGroups] = await Promise.all([
+      this.prisma.businessStructure.findMany({ orderBy: { code: "asc" } }),
+      this.prisma.businessStructure.groupBy({ by: ["parentRef"], _count: { parentRef: true } }),
     ]);
-    return { shareHeadquarterData: dto.shareHeadquarterData, activeStructureTypes: requested };
+    const counts = new Map<number, number>();
+    for (const g of childGroups) counts.set(Number(g.parentRef), g._count.parentRef);
+
+    const definedTypes = [
+      ...new Set(
+        items.map((i) => i.businessStructureType).filter((t): t is number => t != null),
+      ),
+    ].sort((a, b) => a - b);
+
+    return {
+      items: items.map((n) => ({ ...this.toDto(n), childCount: counts.get(Number(n.id)) ?? 0 })),
+      definedTypes,
+    };
   }
 
-  /** Creates a node — hierarchy rules, depth, active types and code are SERVER-side. */
-  async create(dto: SaveNodeDto): Promise<BusinessStructure> {
-    if (!dto.parentRef) throw new BadRequestException(MSG.parentRequired);
+  /* -------------------------------- create ------------------------------- */
+
+  async create(dto: CreateBsDto) {
     const parent = await this.prisma.businessStructure.findUnique({
-      where: { id: dto.parentRef },
+      where: { id: BigInt(dto.parentRef) },
     });
-    if (!parent) throw new BadRequestException(MSG.parentNotFound);
+    if (!parent) fail(404, "گرهٔ والد یافت نشد", "bs.msg.loadError");
 
-    await this.assertChildType(parent, dto.structureType);
-    const parentLevel = await this.levelOf(parent);
-    if (parentLevel + 1 > MAX_LEVEL) throw new BadRequestException(MSG.maxLevel);
+    const parentType = parent.id === BigInt(ROOT_ID) ? null : parent.businessStructureType;
+    const allowed = allowedChildTypes(parentType ?? null);
+    if (!allowed.includes(dto.businessStructureType)) {
+      fail(422, `نوع مجاز برای این والد: ${allowed.join(", ")}`, "bs.val.typeRequired");
+    }
 
-    try {
-      return await this.prisma.$transaction(async (tx) => {
-        const siblings = await tx.businessStructure.findMany({
-          where: { parentRef: parent.id },
-          select: { code: true },
-        });
-        const code = this.nextCode(parent, siblings.map((s) => s.code));
-        return tx.businessStructure.create({
+    const depth = await this.depthOf(parent);
+    if (depth + 1 > MAX_DEPTH) {
+      fail(422, "حداکثر عمق ساختار (۵ سطح) تکمیل است");
+    }
+
+    // id generation runs in its own short transaction (spec §6; gaps accepted)
+    const newId = await this.idGen.generateNextId("BusinessStructure");
+
+    const created = await this.prisma.$transaction(async (tx) => {
+      const code = await this.nextChildCode(tx, parent);
+      try {
+        return await tx.businessStructure.create({
           data: {
-            parentRef: parent.id,
+            id: BigInt(newId),
+            parentRef: BigInt(dto.parentRef),
             code,
-            title: dto.title,
-            titleEn: dto.titleEn ?? null,
-            structureType: dto.structureType,
-            manager: dto.manager ?? null,
+            title: dto.title.trim(),
+            titleEn: dto.titleEn.trim(),
+            businessStructureType: dto.businessStructureType,
+            manager: dto.manager?.trim() || null,
             logoUrl: dto.logoUrl ?? null,
             isActive: dto.isActive ?? true,
           },
         });
-      });
-    } catch (error) {
-      if (
-        typeof error === 'object' &&
-        error !== null &&
-        (error as { code?: string }).code === 'P2002'
-      ) {
-        throw new ConflictException(MSG.duplicateCode);
+      } catch (e) {
+        if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
+          fail(409, "کد تکراری است — دوباره تلاش کنید");
+        }
+        throw e;
       }
-      throw error;
-    }
+    });
+
+    return { item: this.toDto(created) };
   }
 
-  /** Updates the editable fields; identity (code/parent/isSystem) is immutable. */
-  async update(id: string, dto: SaveNodeDto): Promise<BusinessStructure> {
-    const node = await this.prisma.businessStructure.findUnique({ where: { id } });
-    if (!node) throw new NotFoundException(MSG.notFound);
-    if (node.isSystem) throw new BadRequestException(MSG.systemImmutable);
+  /* -------------------------------- update ------------------------------- */
 
+  async update(id: number, dto: UpdateBsDto) {
+    const node = await this.prisma.businessStructure.findUnique({ where: { id: BigInt(id) } });
+    if (!node) fail(404, "گره یافت نشد", "bs.msg.loadError");
+
+    if (node.id === BigInt(ROOT_ID)) {
+      /* ---- ROOT MODE: single-endpoint transaction (entity + Setting mirror) ---- */
+      const updated = await this.prisma.$transaction(async (tx) => {
+        const row = await tx.businessStructure.update({
+          where: { id: BigInt(ROOT_ID) },
+          data: {
+            isBasicInfoShared: dto.isBasicInfoShared ?? node.isBasicInfoShared,
+            activeStructureTypes:
+              dto.activeStructureTypes !== undefined
+                ? JSON.stringify(dto.activeStructureTypes)
+                : node.activeStructureTypes,
+            isActive: dto.isActive ?? node.isActive,
+            // §2.5: Version is auto-bumped by the global PrismaService middleware
+          },
+        });
+        const kv: Array<[string, string]> = [
+          ["bs.shareHeadquarterData", String(row.isBasicInfoShared)],
+          ["bs.activeStructureTypes", row.activeStructureTypes ?? "[]"],
+        ];
+        for (const [key, value] of kv) {
+          await tx.setting.upsert({ where: { key }, create: { key, value }, update: { value } });
+        }
+        return row;
+      });
+      return { item: this.toDto(updated) };
+    }
+
+    /* ---- NON-ROOT MODE ---- */
     const parent = await this.prisma.businessStructure.findUnique({
       where: { id: node.parentRef },
     });
-    if (!parent) throw new BadRequestException(MSG.parentNotFound);
 
-    await this.assertChildType(parent, dto.structureType);
-    if (dto.structureType !== node.structureType) {
-      // Changing the type must keep every existing child legal.
-      const children = await this.prisma.businessStructure.findMany({
+    if (dto.title !== undefined && !dto.title.trim()) fail(422, "عنوان الزامی است", "bs.val.titleRequired");
+    if (dto.titleEn !== undefined && !dto.titleEn.trim())
+      fail(422, "عنوان لاتین الزامی است", "bs.val.titleEnRequired");
+
+    if (dto.businessStructureType !== undefined && dto.businessStructureType !== node.businessStructureType) {
+      const parentType = parent && parent.id === BigInt(ROOT_ID) ? null : (parent?.businessStructureType ?? null);
+      if (!allowedChildTypes(parentType).includes(dto.businessStructureType)) {
+        fail(422, "نوع انتخابی با قواعد سطح والد سازگار نیست", "bs.val.typeRequired");
+      }
+      // children of this node must remain legal under the new type
+      const childTypes = await this.prisma.businessStructure.findMany({
         where: { parentRef: node.id },
-        select: { structureType: true },
+        select: { businessStructureType: true },
       });
-      const allowed = ALLOWED_CHILD_TYPES[dto.structureType] ?? [];
-      for (const child of children) {
-        if (!allowed.includes(child.structureType)) {
-          throw new BadRequestException(MSG.typeNotAllowed);
+      for (const c of childTypes) {
+        if (c.businessStructureType != null &&
+            !allowedChildTypes(dto.businessStructureType).includes(c.businessStructureType)) {
+          fail(422, "تغییر نوع به دلیل ناسازگاری با زیرشاخه‌های موجود مجاز نیست");
         }
       }
     }
 
-    return this.prisma.businessStructure.update({
-      where: { id },
+    const updated = await this.prisma.businessStructure.update({
+      where: { id: BigInt(id) },
       data: {
-        title: dto.title,
-        titleEn: dto.titleEn ?? null,
-        structureType: dto.structureType,
-        manager: dto.manager ?? null,
-        logoUrl: dto.logoUrl ?? null,
-        isActive: dto.isActive ?? true,
-        version: { increment: 1 },
+        title: dto.title !== undefined ? dto.title.trim() : undefined,
+        titleEn: dto.titleEn !== undefined ? dto.titleEn.trim() : undefined,
+        businessStructureType: dto.businessStructureType,
+        manager: dto.manager !== undefined ? dto.manager?.trim() || null : undefined,
+        logoUrl: dto.logoUrl !== undefined ? dto.logoUrl : undefined,
+        isActive: dto.isActive,
+        // §2.5: Version is auto-bumped by the global PrismaService middleware
       },
     });
+    return { item: this.toDto(updated) };
   }
 
-  /** Delete protections: never the system root, never a node with children. */
-  async remove(id: string): Promise<void> {
-    const node = await this.prisma.businessStructure.findUnique({ where: { id } });
-    if (!node) throw new NotFoundException(MSG.notFound);
-    if (node.isSystem) throw new BadRequestException(MSG.systemDelete);
-    const children = await this.prisma.businessStructure.count({
-      where: { parentRef: id },
-    });
-    if (children > 0) throw new BadRequestException(MSG.hasChildren);
-    // Seed/Unseed integration arrives with the defaults engine (phase 18);
-    // nothing default-seeded exists yet, so a plain delete is safe today.
-    await this.prisma.businessStructure.delete({ where: { id } });
-  }
+  /* -------------------------------- delete ------------------------------- */
 
-  // ── Private helpers ────────────────────────────────────────────────
+  async remove(id: number) {
+    if (id === ROOT_ID) fail(409, "دفتر مرکزی قابل حذف نیست", "bs.msg.deleteBlockedRoot");
 
-  /** Parent-type rule + root-level active-types filter (server-side). */
-  private async assertChildType(
-    parent: BusinessStructure,
-    structureType: number,
-  ): Promise<void> {
-    const allowed = ALLOWED_CHILD_TYPES[parent.structureType] ?? [];
-    if (!allowed.includes(structureType)) {
-      throw new BadRequestException(MSG.typeNotAllowed);
+    const node = await this.prisma.businessStructure.findUnique({ where: { id: BigInt(id) } });
+    if (!node) fail(404, "گره یافت نشد", "bs.msg.loadError");
+    if (node.isSystem) fail(409, "رکورد سیستمی قابل حذف نیست", "bs.msg.deleteBlockedSystem");
+
+    const children = await this.prisma.businessStructure.count({ where: { parentRef: BigInt(id) } });
+    if (children > 0) {
+      fail(409, "این شاخه دارای زیرشاخه است و حذف نمی‌شود", "bs.msg.deleteBlockedChildren");
     }
-    if (structureType !== TYPE_SYSTEM) {
-      const { activeStructureTypes } = await this.getSettings();
-      if (!activeStructureTypes.includes(structureType)) {
-        throw new BadRequestException(MSG.typeInactive);
-      }
-    }
+
+    await this.prisma.businessStructure.delete({ where: { id: BigInt(id) } });
+    return { ok: true };
   }
 
-  /** Level below the virtual root: system root = 0, its children = 1 … */
-  private async levelOf(node: BusinessStructure): Promise<number> {
-    let level = 0;
-    let cursor = node;
+  /* ------------------------------- helpers ------------------------------- */
+
+  private async depthOf(node: { id: bigint; parentRef: bigint }): Promise<number> {
+    let depth = 0;
+    let cur = node.parentRef;
     const guard = new Set<string>();
-    while (cursor.parentRef !== '0') {
-      if (guard.has(cursor.id)) break; // cycle safety net
-      guard.add(cursor.id);
-      const parent = await this.prisma.businessStructure.findUnique({
-        where: { id: cursor.parentRef },
-      });
-      if (!parent) break;
-      cursor = parent;
-      level += 1;
-      if (level > MAX_LEVEL + 2) break; // defensive cap
+    while (cur && cur !== 0n && !guard.has(cur.toString())) {
+      guard.add(cur.toString());
+      const p = await this.prisma.businessStructure.findUnique({ where: { id: cur } });
+      if (!p) break;
+      depth += 1;
+      if (depth > MAX_DEPTH + 1) break;
+      cur = p.parentRef;
     }
-    return level;
+    return depth;
   }
 
-  /** Server-side hierarchical code: «02» on level 1, «01-03» deeper. */
-  private nextCode(parent: BusinessStructure, siblingCodes: string[]): string {
-    if (parent.parentRef === '0') {
-      const max = siblingCodes.reduce(
-        (acc, code) => Math.max(acc, Number.parseInt(code, 10) || 0),
-        0,
-      );
-      return String(max + 1).padStart(2, '0');
-    }
+  /** code = parentCode-NN where NN = max sibling suffix + 1 (zero-padded). */
+  private async nextChildCode(
+    tx: Prisma.TransactionClient,
+    parent: { id: bigint; code: string },
+  ): Promise<string> {
+    const siblings = await tx.businessStructure.findMany({
+      where: { parentRef: parent.id },
+      select: { code: true },
+    });
+    let maxSuffix = 0;
     const prefix = `${parent.code}-`;
-    const max = siblingCodes.reduce((acc, code) => {
-      if (!code.startsWith(prefix)) return acc;
-      const suffix = Number.parseInt(code.slice(prefix.length), 10);
-      return Number.isFinite(suffix) ? Math.max(acc, suffix) : acc;
-    }, 0);
-    return `${prefix}${String(max + 1).padStart(2, '0')}`;
+    for (const s of siblings) {
+      const tail = s.code.startsWith(prefix) ? s.code.slice(prefix.length) : "";
+      const n = Number(tail);
+      if (Number.isFinite(n)) maxSuffix = Math.max(maxSuffix, n);
+    }
+    return `${prefix}${String(maxSuffix + 1).padStart(2, "0")}`;
   }
 }

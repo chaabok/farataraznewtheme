@@ -1,0 +1,16 @@
+[auth-service] Installing dependencies...
+bun install v1.3.14 (0d9b296a)
+
++ @types/bcryptjs@2.4.6
++ bun-types@1.4.3
++ prisma@6.19.3
++ @erp/shared@../shared
++ @prisma/client@6.19.3
++ bcryptjs@2.4.3
++ reflect-metadata@0.2.2
+
+145 packages installed [57.18s]
+[auth-service] Running bun run dev...
+$ bun --hot src/main.ts
+error: Cannot find module '@nestjs/core' from '/home/z/my-project/mini-services/shared/src/index.ts'
+error: script "dev" was terminated by signal SIGTERM (Polite quit request)

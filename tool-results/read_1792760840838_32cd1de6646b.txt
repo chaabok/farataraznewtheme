@@ -1,0 +1,750 @@
+     1→"use client";
+     2→
+     3→import * as React from "react";
+     4→import {
+     5→  ChevronFirst,
+     6→  ChevronLast,
+     7→  ChevronLeft,
+     8→  ChevronRight,
+     9→  Copy,
+    10→  Inbox,
+    11→  Minus,
+    12→  Plus,
+    13→  Save,
+    14→  Square,
+    15→  X,
+    16→} from "lucide-react";
+    17→import { cn } from "@/lib/utils";
+    18→import { useT } from "@/stores/settings-store";
+    19→import { Input } from "@/components/ui/input";
+    20→import { Checkbox } from "@/components/ui/checkbox";
+    21→import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+    22→import {
+    23→  Select,
+    24→  SelectContent,
+    25→  SelectItem,
+    26→  SelectTrigger,
+    27→  SelectValue,
+    28→} from "@/components/ui/select";
+    29→import {
+    30→  FormActionBar,
+    31→  type ActionBarListItem,
+    32→  type FormAction,
+    33→} from "@/components/forms/action-bar";
+    34→import { useAlignedLabels, type AlignedLabelsScope } from "@/components/forms/use-aligned-labels";
+    35→
+    36→/* ------------------------------------------------------------------ */
+    37→/* Public API — SimpleFormTwoRowTabbed (Task 24)                        */
+    38→/* ------------------------------------------------------------------ */
+    39→
+    40→export type SimpleFormFieldType = "text" | "number" | "select" | "lookup" | "checkbox";
+    41→
+    42→export interface SimpleFormFieldOption {
+    43→  value: string;
+    44→  label: string;
+    45→}
+    46→
+    47→export interface SimpleFormField {
+    48→  id: string;
+    49→  label: string;
+    50→  type?: SimpleFormFieldType;
+    51→  required?: boolean;
+    52→  /** controlled value for text/number/select/lookup */
+    53→  value?: string;
+    54→  /** controlled value for checkbox */
+    55→  checked?: boolean;
+    56→  placeholder?: string;
+    57→  options?: SimpleFormFieldOption[];
+    58→  /** small end-side badge inside the input (e.g. «بدهکار») */
+    59→  suffixChip?: string;
+    60→  /** renders the legacy [+] lookup button when provided */
+    61→  onLookup?: () => void;
+    62→  disabled?: boolean;
+    63→  readOnly?: boolean;
+    64→}
+    65→
+    66→export interface SimpleFormGridColumn {
+    67→  id: string;
+    68→  label: string;
+    69→  required?: boolean;
+    70→  /** tailwind min-width hint for the column, e.g. "min-w-40" */
+    71→  minWidth?: string;
+    72→}
+    73→
+    74→/** OPTIONAL detail tab below the two-row fields (owner: tabs must be optional). */
+    75→export interface SimpleFormTab {
+    76→  id: string;
+    77→  label: string;
+    78→  columns: SimpleFormGridColumn[];
+    79→  /** initial rows; afterwards the grid rows are owned internally —
+    80→      mirror every change through onTabRowsChange if the caller needs them. */
+    81→  rows?: Record<string, string>[];
+    82→}
+    83→
+    84→export interface SimpleFormTwoRowTabbedProps {
+    85→  /** form header title (e.g. «مشتری جدید») */
+    86→  title: string;
+    87→  /** small pill after the title (e.g. «نمونه») */
+    88→  badge?: string;
+    89→  /** glyph inside the gradient header tile */
+    90→  icon?: React.ReactNode;
+    91→
+    92→  /** the field rows — flows into a responsive 3-column grid (canonical two rows) */
+    93→  fields: SimpleFormField[];
+    94→  onFieldChange?: (id: string, value: string | boolean) => void;
+    95→  /** label alignment scope (Task 25.1): "container" (default) = ONE shared
+    96→      label width for the whole grid, so inputs align vertically through every
+    97→      column (legacy ERP look); "row" = each visual row aligns to its own
+    98→      widest label */
+    99→  labelScope?: AlignedLabelsScope;
+   100→
+   101→  /* ----- OPTIONAL tabbed detail grids ----- */
+   102→  tabs?: SimpleFormTab[];
+   103→  defaultTabId?: string;
+   104→  onTabRowsChange?: (tabId: string, rows: Record<string, string>[]) => void;
+   105→  /** renders the footer save icon when provided */
+   106→  onSaveRows?: (tabId: string, rows: Record<string, string>[]) => void;
+   107→
+   108→  /* ----- legacy record navigation «|< < > >|» ----- */
+   109→  onFirst?: () => void;
+   110→  onPrev?: () => void;
+   111→  onNext?: () => void;
+   112→  onLast?: () => void;
+   113→
+   114→  /* ----- Task-20 legacy action bar pass-through (composed) ----- */
+   115→  onReset?: FormAction;
+   116→  onSave?: FormAction;
+   117→  onSaveNew?: FormAction;
+   118→  onSaveClose?: FormAction;
+   119→  onCopy?: FormAction;
+   120→  onDelete?: FormAction;
+   121→  onDeleteNew?: FormAction;
+   122→  onDeleteClose?: FormAction;
+   123→  onPrint?: FormAction;
+   124→  /** composed into «ذخیره و بستن» / «حذف و بستن» by FormActionBar */
+   125→  onClose?: FormAction;
+   126→  /** Task 28 — help moved out of the header: rendered as the redesigned
+   127→      gradient tile at the end of the action-bar cluster */
+   128→  onHelp?: FormAction;
+   129→  listItems?: ActionBarListItem[];
+   130→  listLoading?: boolean;
+   131→  onOpenListItem?: (item: ActionBarListItem) => void;
+   132→  canSave?: boolean;
+   133→  canCopy?: boolean;
+   134→  canDelete?: boolean;
+   135→  canPrint?: boolean;
+   136→
+   137→  /* ----- OPTIONAL chromeless-window header controls (Task 28) -----
+   138→     When hosted by a chromeless window (no light title bar) the green
+   139→     header strip becomes the drag handle and hosts the caption buttons. */
+   140→  /** taskbar-style minimize of the hosting window */
+   141→  onHeaderMinimize?: () => void;
+   142→  /** reflects the host window's maximized state (icon switches to restore) */
+   143→  headerMaximized?: boolean;
+   144→  /** window-drag pass-throughs attached to the header strip */
+   145→  onHeaderDragStart?: (e: React.PointerEvent) => void;
+   146→  onHeaderDragMove?: (e: React.PointerEvent) => void;
+   147→  onHeaderDragEnd?: (e: React.PointerEvent) => void;
+   148→  /** double-click on the strip toggles maximize (Windows caption rule) */
+   149→  onHeaderDoubleClick?: () => void;
+   150→
+   151→  /* ----- OPTIONAL form-header controls (rendered only when provided) ----- */
+   152→  onHeaderClose?: () => void;
+   153→  onHeaderMaximize?: () => void;
+   154→
+   155→  className?: string;
+   156→}
+   157→
+   158→/* ------------------------------------------------------------------ */
+   159→/* Internals                                                            */
+   160→/* ------------------------------------------------------------------ */
+   161→
+   162→function HeaderButton({
+   163→  onClick,
+   164→  label,
+   165→  children,
+   166→}: {
+   167→  onClick?: () => void;
+   168→  label: string;
+   169→  children: React.ReactNode;
+   170→}) {
+   171→  return (
+   172→    <button
+   173→      type="button"
+   174→      /* window-caption contract: the host drag handler never starts a drag
+   175→         from these buttons (closest("[data-window-btn]") guard) */
+   176→      data-window-btn
+   177→      aria-label={label}
+   178→      title={label}
+   179→      onClick={onClick}
+   180→      className="flex h-7 w-7 items-center justify-center rounded-lg text-white/85 transition-colors hover:bg-white/20 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 cursor-pointer"
+   181→    >
+   182→      {children}
+   183→    </button>
+   184→  );
+   185→}
+   186→
+   187→function NavButton({
+   188→  icon,
+   189→  label,
+   190→  onClick,
+   191→}: {
+   192→  icon: React.ReactNode;
+   193→  label: string;
+   194→  onClick?: () => void;
+   195→}) {
+   196→  return (
+   197→    <button
+   198→      type="button"
+   199→      aria-label={label}
+   200→      title={label}
+   201→      disabled={!onClick}
+   202→      onClick={onClick}
+   203→      className={cn(
+   204→        "flex h-7 w-7 items-center justify-center rounded-md text-foreground/70 transition-colors rtl:-scale-x-100",
+   205→        onClick ? "hover:bg-foreground/10 hover:text-foreground cursor-pointer" : "opacity-40",
+   206→      )}
+   207→    >
+   208→      {icon}
+   209→    </button>
+   210→  );
+   211→}
+   212→
+   213→function MiniRowButton({
+   214→  icon,
+   215→  label,
+   216→  tintClass,
+   217→  onClick,
+   218→  disabled,
+   219→}: {
+   220→  icon: React.ReactNode;
+   221→  label: string;
+   222→  tintClass: string;
+   223→  onClick?: () => void;
+   224→  disabled?: boolean;
+   225→}) {
+   226→  return (
+   227→    <button
+   228→      type="button"
+   229→      aria-label={label}
+   230→      title={label}
+   231→      disabled={disabled}
+   232→      onClick={onClick}
+   233→      className={cn(
+   234→        "flex h-7 w-7 items-center justify-center rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+   235→        tintClass,
+   236→        disabled && "pointer-events-none opacity-35",
+   237→      )}
+   238→    >
+   239→      {icon}
+   240→    </button>
+   241→  );
+   242→}
+   243→
+   244→function FieldCell({
+   245→  field,
+   246→  onChange,
+   247→}: {
+   248→  field: SimpleFormField;
+   249→  onChange?: (id: string, value: string | boolean) => void;
+   250→}) {
+   251→  const type = field.type ?? "text";
+   252→  /* Task 27 — compact vertical metrics: field height 32px → 22px (−31%) so
+   253→     the tabs section and the form footer gain room. Horizontal metrics
+   254→     (label alignment, --label-w, gaps) are untouched. */
+   255→  const inputBase = "h-5.5 min-w-0 text-xs";
+   256→
+   257→  /* checkbox — inline toggle pushed to the row end (legacy «فعال» placement) */
+   258→  if (type === "checkbox") {
+   259→    const cid = `sft-chk-${field.id}`;
+   260→    return (
+   261→      <label
+   262→        htmlFor={cid}
+   263→        className="flex cursor-pointer items-center justify-end gap-2 text-xs text-foreground/90"
+   264→      >
+   265→        <Checkbox
+   266→          id={cid}
+   267→          checked={field.checked === true}
+   268→          onCheckedChange={(v) => onChange?.(field.id, v === true)}
+   269→          disabled={field.disabled}
+   270→          aria-label={field.label}
+   271→        />
+   272→        <span className="whitespace-nowrap">{field.label}</span>
+   273→      </label>
+   274→    );
+   275→  }
+   276→
+   277→  return (
+   278→    <div data-form-cell className="flex min-w-0 items-center gap-2">
+   279→      {/* label unit: [text-box (var width)][colon][asterisk slot] — the tail is
+   280→          uniform (asterisk always occupies space) so every input of the form
+   281→          starts on one shared edge — column-continuous vertical alignment
+   282→          (Task 25.1, useAlignedLabels) */}
+   283→      <span
+   284→        data-form-label
+   285→        className="flex shrink-0 items-center gap-0.5 whitespace-nowrap text-xs text-muted-foreground"
+   286→      >
+   287→        <span className="w-[var(--label-w,auto)] shrink-0 text-end">
+   288→          <span data-form-label-text className="inline-block whitespace-nowrap">
+   289→            {field.label}
+   290→          </span>
+   291→        </span>
+   292→        <span className="opacity-70" aria-hidden>
+   293→          :
+   294→        </span>
+   295→        <span
+   296→          aria-hidden
+   297→          className={cn("text-rose-500", !field.required && "invisible")}
+   298→        >
+   299→          *
+   300→        </span>
+   301→      </span>
+   302→
+   303→      {type === "select" ? (
+   304→        <Select
+   305→          value={field.value}
+   306→          onValueChange={(v) => onChange?.(field.id, v)}
+   307→          disabled={field.disabled}
+   308→        >
+   309→          <SelectTrigger aria-label={field.label} className={cn(inputBase, "flex-1")}>
+   310→            <SelectValue placeholder={field.placeholder} />
+   311→          </SelectTrigger>
+   312→          <SelectContent>
+   313→            {(field.options ?? []).map((o) => (
+   314→              <SelectItem key={o.value} value={o.value} className="text-xs">
+   315→                {o.label}
+   316→              </SelectItem>
+   317→            ))}
+   318→          </SelectContent>
+   319→        </Select>
+   320→      ) : type === "lookup" ? (
+   321→        <div className="flex min-w-0 flex-1 items-center gap-1.5">
+   322→          <Input
+   323→            value={field.value ?? ""}
+   324→            placeholder={field.placeholder}
+   325→            readOnly={field.readOnly}
+   326→            disabled={field.disabled}
+   327→            aria-label={field.label}
+   328→            onChange={(e) => onChange?.(field.id, e.target.value)}
+   329→            className={inputBase}
+   330→          />
+   331→          {field.onLookup && (
+   332→            <button
+   333→              type="button"
+   334→              aria-label={`${field.label} — +`}
+   335→              onClick={field.onLookup}
+   336→              className="flex h-5.5 w-5.5 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-teal-500 to-emerald-600 text-white shadow-md transition-all hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
+   337→            >
+   338→              <Plus className="h-3.5 w-3.5" aria-hidden />
+   339→            </button>
+   340→          )}
+   341→        </div>
+   342→      ) : (
+   343→        <div className="relative min-w-0 flex-1">
+   344→          <Input
+   345→            value={field.value ?? ""}
+   346→            inputMode={type === "number" ? "decimal" : undefined}
+   347→            placeholder={field.placeholder}
+   348→            readOnly={field.readOnly}
+   349→            disabled={field.disabled}
+   350→            aria-label={field.label}
+   351→            onChange={(e) => onChange?.(field.id, e.target.value)}
+   352→            className={cn(inputBase, field.suffixChip && "pe-16")}
+   353→          />
+   354→          {field.suffixChip && (
+   355→            <span className="pointer-events-none absolute end-1 top-1/2 flex h-4 -translate-y-1/2 items-center rounded-md bg-rose-500/15 px-1.5 text-[10px] font-semibold text-rose-600 dark:text-rose-400">
+   356→              {field.suffixChip}
+   357→            </span>
+   358→          )}
+   359→        </div>
+   360→      )}
+   361→    </div>
+   362→  );
+   363→}
+   364→
+   365→/**
+   366→ * SimpleFormTwoRowTabbed (Task 24) — the legacy «فرم سادهٔ دو ردیفه» shell:
+   367→ * gradient form header (title + Task-28 window caption: minimize / maximize /
+   368→ * close — the strip doubles as the drag handle of a chromeless host window),
+   369→ * the Task-20 legacy action bar (plus the Task-28 redesigned help tile) and
+   370→ * record navigation, a two-row field grid (with Task-25 automatic label
+   371→ * alignment via useAlignedLabels — default scope "container": straight
+   372→ * vertical input columns; opt-in labelScope="row" for per-row alignment),
+   373→ * and OPTIONAL tabbed detail grids with an empty state and a footer
+   374→ * row-actions strip (+ / × / copy / save). All action-bar handlers are
+   375→ * pass-throughs — the caller owns persistence and toasts.
+   376→ */
+   377→export function SimpleFormTwoRowTabbed({
+   378→  title,
+   379→  badge,
+   380→  icon,
+   381→  fields,
+   382→  onFieldChange,
+   383→  labelScope = "container",
+   384→  tabs,
+   385→  defaultTabId,
+   386→  onTabRowsChange,
+   387→  onSaveRows,
+   388→  onFirst,
+   389→  onPrev,
+   390→  onNext,
+   391→  onLast,
+   392→  onReset,
+   393→  onSave,
+   394→  onSaveNew,
+   395→  onSaveClose,
+   396→  onCopy,
+   397→  onDelete,
+   398→  onDeleteNew,
+   399→  onDeleteClose,
+   400→  onPrint,
+   401→  onClose,
+   402→  onHelp,
+   403→  listItems,
+   404→  listLoading,
+   405→  onOpenListItem,
+   406→  canSave = true,
+   407→  canCopy = true,
+   408→  canDelete = true,
+   409→  canPrint = true,
+   410→  onHeaderClose,
+   411→  onHeaderMaximize,
+   412→  onHeaderMinimize,
+   413→  headerMaximized,
+   414→  onHeaderDragStart,
+   415→  onHeaderDragMove,
+   416→  onHeaderDragEnd,
+   417→  onHeaderDoubleClick,
+   418→  className,
+   419→}: SimpleFormTwoRowTabbedProps) {
+   420→  const t = useT();
+   421→  const tabsProp = React.useMemo(() => tabs ?? [], [tabs]);
+   422→
+   423→  /* Task 25.1 — automatic label alignment for the field grid. Default scope
+   424→     "container": one shared label width ⇒ every input starts on the same
+   425→     edge within its cell AND the edges stack into straight vertical columns
+   426→     across rows (the owner's expectation). Pass labelScope="row" for
+   427→     per-row alignment. */
+   428→  const fieldsGridRef = React.useRef<HTMLDivElement | null>(null);
+   429→  useAlignedLabels(fieldsGridRef, { scope: labelScope });
+   430→
+   431→  /* detail-grid rows: initialized once per mount from the tabs prop */
+   432→  const [rowsByTab, setRowsByTab] = React.useState<Record<string, Record<string, string>[]>>(
+   433→    () =>
+   434→      Object.fromEntries(
+   435→        tabsProp.map((tb) => [tb.id, (tb.rows ?? []).map((r) => ({ ...r }))]),
+   436→      ),
+   437→  );
+   438→  const [activeTab, setActiveTab] = React.useState(
+   439→    () => defaultTabId ?? tabsProp[0]?.id ?? "",
+   440→  );
+   441→  const [selected, setSelected] = React.useState<{ tabId: string; index: number } | null>(null);
+   442→
+   443→  const hasTabs = tabsProp.length > 0;
+   444→  const hasNav = Boolean(onFirst || onPrev || onNext || onLast);
+   445→
+   446→  const commitRows = (tabId: string, rows: Record<string, string>[]) => {
+   447→    setRowsByTab((prev) => ({ ...prev, [tabId]: rows }));
+   448→    onTabRowsChange?.(tabId, rows);
+   449→  };
+   450→
+   451→  const addRow = () => {
+   452→    const tb = tabsProp.find((x) => x.id === activeTab);
+   453→    if (!tb) return;
+   454→    const rows = rowsByTab[activeTab] ?? [];
+   455→    const blank = Object.fromEntries(tb.columns.map((c) => [c.id, ""])) as Record<string, string>;
+   456→    const next = [...rows, blank];
+   457→    commitRows(activeTab, next);
+   458→    setSelected({ tabId: activeTab, index: next.length - 1 });
+   459→  };
+   460→
+   461→  const removeSelectedRow = () => {
+   462→    if (!selected || selected.tabId !== activeTab) return;
+   463→    const rows = [...(rowsByTab[activeTab] ?? [])];
+   464→    rows.splice(selected.index, 1);
+   465→    commitRows(activeTab, rows);
+   466→    setSelected(null);
+   467→  };
+   468→
+   469→  const copySelectedRow = () => {
+   470→    if (!selected || selected.tabId !== activeTab) return;
+   471→    const rows = [...(rowsByTab[activeTab] ?? [])];
+   472→    const clone = { ...rows[selected.index] };
+   473→    rows.splice(selected.index + 1, 0, clone);
+   474→    commitRows(activeTab, rows);
+   475→    setSelected({ tabId: activeTab, index: selected.index + 1 });
+   476→  };
+   477→
+   478→  const setCell = (tabId: string, rowIndex: number, colId: string, value: string) => {
+   479→    const rows = [...(rowsByTab[tabId] ?? [])];
+   480→    if (!rows[rowIndex]) return;
+   481→    rows[rowIndex] = { ...rows[rowIndex], [colId]: value };
+   482→    commitRows(tabId, rows);
+   483→  };
+   484→
+   485→  const selectedInActive = Boolean(selected && selected.tabId === activeTab);
+   486→
+   487→  return (
+   488→    <section
+   489→      data-simple-form
+   490→      aria-label={title}
+   491→      className={cn("flex h-full min-h-0 flex-col overflow-hidden bg-background/25", className)}
+   492→    >
+   493→      {/* 1) form header — gradient identity strip; Task 26: emerald end sits
+   494→          on the inline END side in both directions (mirrored, §1.4).
+   495→          Task 28: the strip is also the drag handle of a chromeless host
+   496→          window and hosts the caption buttons [– □ ✕] (inline end). */}
+   497→      <header
+   498→        className="relative flex h-11 shrink-0 select-none items-center gap-2.5 rtl:bg-gradient-to-l ltr:bg-gradient-to-r from-teal-600 via-teal-600 to-emerald-600 px-3 text-white"
+   499→        onPointerDown={onHeaderDragStart}
+   500→        onPointerMove={onHeaderDragMove}
+   501→        onPointerUp={onHeaderDragEnd}
+   502→        onPointerCancel={onHeaderDragEnd}
+   503→        onDoubleClick={(e) => {
+   504→          if ((e.target as HTMLElement).closest("[data-window-btn]")) return;
+   505→          onHeaderDoubleClick?.();
+   506→        }}
+   507→      >
+   508→        {icon && (
+   509→          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-white/20 shadow-inner">
+   510→            {icon}
+   511→          </span>
+   512→        )}
+   513→        <h2 className="truncate text-sm font-bold tracking-tight drop-shadow-sm">{title}</h2>
+   514→        {badge && (
+   515→          <span className="rounded-full bg-white/15 px-2 py-0.5 text-[10px] font-medium text-white/90 ring-1 ring-inset ring-white/25">
+   516→            {badge}
+   517→          </span>
+   518→        )}
+   519→        <div className="ms-auto flex items-center gap-0.5">
+   520→          {onHeaderMinimize && (
+   521→            <HeaderButton onClick={onHeaderMinimize} label={t("common.minimize")}>
+   522→              <Minus className="h-4 w-4" aria-hidden />
+   523→            </HeaderButton>
+   524→          )}
+   525→          {onHeaderMaximize && (
+   526→            <HeaderButton onClick={onHeaderMaximize} label={t("common.maximize")}>
+   527→              {headerMaximized ? (
+   528→                <Copy className="h-3 w-3 -scale-x-100" aria-hidden />
+   529→              ) : (
+   530→                <Square className="h-3 w-3" aria-hidden />
+   531→              )}
+   532→            </HeaderButton>
+   533→          )}
+   534→          {onHeaderClose && (
+   535→            <HeaderButton onClick={onHeaderClose} label={t("common.close")}>
+   536→              <X className="h-4 w-4" aria-hidden />
+   537→            </HeaderButton>
+   538→          )}
+   539→        </div>
+   540→        <span
+   541→          aria-hidden
+   542→          className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-white/25"
+   543→        />
+   544→      </header>
+   545→
+   546→      {/* 2) action strip — legacy FormActionBar (start) + record nav (end);
+   547→          Task 28: help rides INSIDE the action bar as its 11th gradient tile */}
+   548→      <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-border/60 bg-muted/40 px-3 py-2">
+   549→        <FormActionBar
+   550→          className="min-w-0 flex-1"
+   551→          onReset={onReset}
+   552→          onSave={onSave}
+   553→          onSaveNew={onSaveNew}
+   554→          onSaveClose={onSaveClose}
+   555→          onCopy={onCopy}
+   556→          onDelete={onDelete}
+   557→          onDeleteNew={onDeleteNew}
+   558→          onDeleteClose={onDeleteClose}
+   559→          onPrint={onPrint}
+   560→          onClose={onClose}
+   561→          onHelp={onHelp}
+   562→          listItems={listItems}
+   563→          listLoading={listLoading}
+   564→          onOpenListItem={onOpenListItem}
+   565→          canSave={canSave}
+   566→          canCopy={canCopy}
+   567→          canDelete={canDelete}
+   568→          canPrint={canPrint}
+   569→        />
+   570→        {/* Task 26 — per-button RTL flip (NOT on the group): the RTL flex
+   571→            flow already puts «اولین» at the reading start (right edge), and
+   572→            mirroring each button shows correctly-flipped glyphs. A group
+   573→            flip would push First to the group's LEFT edge — wrong reading
+   574→            order for RTL. */}
+   575→        {hasNav && (
+   576→          <div
+   577→            role="group"
+   578→            aria-label={t("sft.first")}
+   579→            className="flex shrink-0 items-center gap-0.5 rounded-lg border bg-background/60 p-1"
+   580→          >
+   581→            <NavButton icon={<ChevronFirst className="h-4 w-4" />} label={t("sft.first")} onClick={onFirst} />
+   582→            <NavButton icon={<ChevronLeft className="h-4 w-4" />} label={t("sft.prev")} onClick={onPrev} />
+   583→            <NavButton icon={<ChevronRight className="h-4 w-4" />} label={t("sft.next")} onClick={onNext} />
+   584→            <NavButton icon={<ChevronLast className="h-4 w-4" />} label={t("sft.last")} onClick={onLast} />
+   585→          </div>
+   586→        )}
+   587→      </div>
+   588→
+   589→      {/* 3) scrollable body — two-row field grid + OPTIONAL tabbed detail grids.
+   590→          Task 27: vertical padding around the grid tightened (pt 16→10,
+   591→          pb 12→8) and the row gap 14→8 so fields sit closer together and
+   592→          the tabs/footer area gains the freed space. */}
+   593→      <div className="min-h-0 flex-1 overflow-y-auto scrollbar-slim">
+   594→        <div className="px-4 pb-2 pt-2.5">
+   595→          <div
+   596→            ref={fieldsGridRef}
+   597→            className="grid grid-cols-1 gap-x-5 gap-y-2 sm:grid-cols-2 lg:grid-cols-3"
+   598→          >
+   599→            {fields.map((f) => (
+   600→              <FieldCell key={f.id} field={f} onChange={onFieldChange} />
+   601→            ))}
+   602→          </div>
+   603→        </div>
+   604→
+   605→        {hasTabs && (
+   606→          <div className="border-t border-border/60 bg-muted/30 px-4 pb-2.5 pt-2">
+   607→            <Tabs
+   608→              value={activeTab}
+   609→              onValueChange={(v) => {
+   610→                setActiveTab(v);
+   611→                setSelected(null);
+   612→              }}
+   613→            >
+   614→              <TabsList className="h-8 w-auto justify-start rounded-lg bg-background/70 p-1">
+   615→                {tabsProp.map((tb) => (
+   616→                  <TabsTrigger
+   617→                    key={tb.id}
+   618→                    value={tb.id}
+   619→                    data-simple-form-tab={tb.id}
+   620→                    className="h-6 rounded-md px-3 text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+   621→                  >
+   622→                    {tb.label}
+   623→                  </TabsTrigger>
+   624→                ))}
+   625→              </TabsList>
+   626→
+   627→              {tabsProp.map((tb) => {
+   628→                const rows = rowsByTab[tb.id] ?? [];
+   629→                return (
+   630→                  <TabsContent key={tb.id} value={tb.id} className="mt-2">
+   631→                    <div
+   632→                      data-simple-form-grid={tb.id}
+   633→                      className="max-h-64 overflow-auto rounded-xl border bg-background/70 scrollbar-slim"
+   634→                    >
+   635→                      <table className="w-full min-w-max border-separate border-spacing-0 text-xs">
+   636→                        <thead>
+   637→                          <tr>
+   638→                            {tb.columns.map((c) => (
+   639→                              <th
+   640→                                key={c.id}
+   641→                                scope="col"
+   642→                                className={cn(
+   643→                                  "sticky top-0 z-10 border-b bg-muted/95 px-3 py-1.5 text-start font-semibold backdrop-blur",
+   644→                                  c.minWidth,
+   645→                                )}
+   646→                              >
+   647→                                {c.label}
+   648→                                {c.required && (
+   649→                                  <span className="ms-0.5 text-rose-500" aria-hidden>
+   650→                                    *
+   651→                                  </span>
+   652→                                )}
+   653→                              </th>
+   654→                            ))}
+   655→                          </tr>
+   656→                        </thead>
+   657→                        <tbody>
+   658→                          {rows.length === 0 ? (
+   659→                            <tr>
+   660→                              <td colSpan={tb.columns.length} className="px-3 py-12 text-center">
+   661→                                <div className="flex flex-col items-center gap-2 text-muted-foreground">
+   662→                                  <Inbox className="h-7 w-7 opacity-50" aria-hidden />
+   663→                                  <span className="text-xs">{t("sft.noData")}</span>
+   664→                                </div>
+   665→                              </td>
+   666→                            </tr>
+   667→                          ) : (
+   668→                            rows.map((row, ri) => {
+   669→                              const sel = selected?.tabId === tb.id && selected.index === ri;
+   670→                              return (
+   671→                                <tr
+   672→                                  key={ri}
+   673→                                  onClick={() => setSelected({ tabId: tb.id, index: ri })}
+   674→                                  className={cn(
+   675→                                    "cursor-pointer transition-colors",
+   676→                                    sel ? "bg-primary/10" : "hover:bg-foreground/5",
+   677→                                  )}
+   678→                                >
+   679→                                  {tb.columns.map((c) => (
+   680→                                    <td key={c.id} className="border-b border-border/50 px-1.5 py-0.5">
+   681→                                      <input
+   682→                                        value={row[c.id] ?? ""}
+   683→                                        onChange={(e) => setCell(tb.id, ri, c.id, e.target.value)}
+   684→                                        aria-label={`${tb.label} — ${c.label} ${ri + 1}`}
+   685→                                        className="h-5 w-full min-w-32 rounded-md border border-transparent bg-transparent px-2 text-xs outline-none transition-colors hover:border-border focus:border-ring focus:bg-background"
+   686→                                      />
+   687→                                    </td>
+   688→                                  ))}
+   689→                                </tr>
+   690→                              );
+   691→                            })
+   692→                          )}
+   693→                        </tbody>
+   694→                      </table>
+   695→                    </div>
+   696→                  </TabsContent>
+   697→                );
+   698→              })}
+   699→            </Tabs>
+   700→          </div>
+   701→        )}
+   702→      </div>
+   703→
+   704→      {/* 4) footer strip — row actions of the ACTIVE tab (only when tabs exist) */}
+   705→      {hasTabs && (
+   706→        <footer className="flex h-10 shrink-0 items-center gap-1 border-t border-border/60 bg-muted/40 px-3">
+   707→          {hasNav && (
+   708→            <span className="text-[11px] text-muted-foreground" aria-live="polite">
+   709→              {/* record counter is caller-owned; keep the start side clean */}
+   710→            </span>
+   711→          )}
+   712→          <div className="ms-auto flex items-center gap-1">
+   713→            <MiniRowButton
+   714→              icon={<Plus className="h-4 w-4" />}
+   715→              label={t("sft.addRow")}
+   716→              tintClass="text-amber-500 hover:bg-amber-500/15"
+   717→              onClick={addRow}
+   718→            />
+   719→            <MiniRowButton
+   720→              icon={<X className="h-4 w-4" />}
+   721→              label={t("sft.removeRow")}
+   722→              tintClass="text-rose-500 hover:bg-rose-500/15"
+   723→              onClick={removeSelectedRow}
+   724→              disabled={!selectedInActive}
+   725→            />
+   726→            <MiniRowButton
+   727→              icon={<Copy className="h-4 w-4" />}
+   728→              label={t("sft.copyRows")}
+   729→              tintClass="text-teal-500 hover:bg-teal-500/15"
+   730→              onClick={copySelectedRow}
+   731→              disabled={!selectedInActive}
+   732→            />
+   733→            {onSaveRows && (
+   734→              <>
+   735→                <span aria-hidden className="mx-1 h-5 w-px bg-border" />
+   736→                <MiniRowButton
+   737→                  icon={<Save className="h-4 w-4" />}
+   738→                  label={t("common.save")}
+   739→                  tintClass="text-emerald-500 hover:bg-emerald-500/15"
+   740→                  onClick={() => onSaveRows(activeTab, rowsByTab[activeTab] ?? [])}
+   741→                />
+   742→              </>
+   743→            )}
+   744→          </div>
+   745→        </footer>
+   746→      )}
+   747→    </section>
+   748→  );
+   749→}
+   750→
