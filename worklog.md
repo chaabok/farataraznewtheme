@@ -1801,3 +1801,58 @@ Stage Summary:
   db/custom.db با تمام داده‌ها (۲۷ اپ رجیستری، ساختار کسب‌وکار با شعب اصفهان/شیراز).
   هر سه پروسه در حال اجرا و E2E تأییدشده است. معماری ۱۳-سرویسهٔ جدیدتر در گیت
   (3baf457) نگهداری می‌شود.
+
+---
+Task ID: 42
+Agent: Z.ai Code (main)
+Task: درخواست مالک — «روی صفحه دسکتاپ یک آیکون عمومی اضافه کنید» — افزودن نرم‌افزار «عمومی» به کاتالوگ و دسکتاپ.
+
+Work Log:
+- §0.1: AGENTS.md + worklog بازخوانی شد (آخرین رکورد: Task 41 — بازیابی از بک‌آپ).
+  §0.5 رعایت شد (هیچ قابلیتی حذف نشد؛ build/کد تست/رنگ indigo-blue صفر)؛ §1.4
+  (هیچ کلاس جهت‌دار جدیدی لازم نشد)؛ §5.1 (تغییر فقط افزودنی است)؛ §6/§7 کامل.
+- فرض‌های §0.6: (۱) «عمومی» = بیست‌وهشتمین نرم‌افزار کاتالوگ با appKey "general" و
+  order 29 (شماره‌گذاری بدون ۱۳ حفظ شد)؛ (۲) میزبان apps-service مثل ۲۶ اپ دیگرِ
+  غیرتنظیمات — چون endpointهای placeholder (/meta، /health، /integrations/status)
+  آنجاست و مسیر ارتقا به سرویس مستقل (§4.4) باز می‌ماند؛ (۳) طبق §4.6 پنجرهٔ
+  placeholder استاندارد (بدون فرم/جدول تا رسیدن سند تحلیل)؛ (۴) ترجمه‌های ۱۰ زبان
+  غیرفارسی انتخاب عامل بود (fa=عمومی, en=General, tr=Genel, ar=عام, hi=सामान्य,
+  ps=عمومي, ckb=گشتی, pt=Geral, ko=일반, fr=Général, zh=通用)؛ (۵) اعداد توصیفی
+  «۲۷ نرم‌افزار» در کامنت کاتالوگ/آینهٔ فرانت و §4.1 و جدول پورت‌های AGENTS.md به ۲۸
+  (و میزبان ۲۶→۲۷) به‌روز شد.
+- تغییرات (۳ فایل کد + ۱ سند):
+  1) mini-services/_shared/app-catalog.ts — ردیف { appKey:"general", order:29,
+     titleFa:"عمومی", titleKey:"app.general", iconKey:"boxes", appGroup:"platform",
+     port:3002, dbMode:"shared", host:"apps-service" } (§4.1 منبع واحد حقیقت).
+  2) src/lib/app-catalog.ts — ردیف همان در FRONTEND_APPS + APP_ICONS با آیکون
+     lucide Boxes و گرادیان from-fuchsia-600 to-rose-700 (بدون indigo/blue).
+  3) src/i18n/dictionaries.ts — کلید "app.general" در هر ۱۱ دیکشنری (fa مرجع؛
+     TS شکل کلیدها را قفل می‌کند).
+  4) AGENTS.md — به‌روزرسانی اعداد توصیفی §4.1 و جدول پورت‌ها.
+- بدون تغییر در desktop.tsx: آیکون‌ها از رجیستری DB می‌آیند (store →
+  /api/settings/app-registry)؛ نمای گرید، سایدبار Task 38، چیدمان مرتب زبانی Task 39
+  و تولتیپ Task 40 خودکار آیکون جدید را شامل شدند. BFF (/api/[app]/…) هم appKey
+  ناشناخته را خودکار به apps-service می‌فرستد — صفر تغییر.
+- راه‌اندازی مجدد هر دو سرویس: boot-sync اجرا شد → «AppRegistry synced (28 apps…)»
+  و «Systems synced from APP_CATALOG (total 28…)»؛ ردیف general با isEnabled=true و
+  Version=2 (§2.5 rowversion) در DB ثبت شد.
+- Verification: curl /api/settings/app-registry → 28 آیتم شامل general؛
+  /api/general/integrations/status → overall:"ok"، signed، 7ms. E2E (agent-browser):
+  دسکتاپ fa/RTL 1440×810 → دکمهٔ «عمومی» روی گرید (مجموع ۲۹ آیکون = ۲ دمو + ۲۷ کاتالوگ
+  منهای userManagement)؛ dblclick → پنجرهٔ placeholder با heading «عمومی»، چیپ‌های
+  «پورت سرویس» و «پایگاهدادهٔ اشتراکی»، بنر «در انتظار سند تحلیل» و وضعیت اتصال سبز
+  (ms). سایدبار: ۲۹ ردیف شامل «عمومی». en/LTR: آیکون "General" و عنوان پنجره "General".
+  موبایل 390×844: scrollW=390 بدون سرریز و آیکون حاضر. زبان به fa برگردانده شد.
+  bun run lint → 0؛ bunx tsc --noEmit → 0 خطای src (فقط خطای پیش‌موجود skills/ خارج
+  از دامنه). page errors=0؛ dev.log فقط GET 200 (شامل /api/general/integrations/status).
+  اسکرین‌شات‌ها: /tmp/general-1-window.png، general-2-sidebar.png،
+  general-3-english.png، general-4-english-window.png، general-5-mobile.png،
+  general-6-final-fa.png.
+
+Stage Summary:
+- آیکون «عمومی» روی دسکتاپ اضافه شد — به‌صورت بیست‌وهشتمین نرم‌افزار کاتالوگ (§4.1)
+  نه آیکون محلی: با DB-driven AppRegistry همگام است، در گرید، سایدبار، منوی استارت و
+  پنجرهٔ placeholder با وضعیت زندهٔ اتصال امن مش سرویس‌ها کار می‌کند، در هر ۱۱ زبان
+  برچسب دارد و در RTL/LTR و موبایل سالم است. وقتی سند تحلیل «عمومی» برسد، طبق §4.6
+  همین appKey به فرم/بک‌اند واقعی ارتقا می‌یابد (و در صورت نیاز به سرویس مستقل §4.4).
+  lint/tsc/E2E/console همگی پاک؛ ثبت در worklog انجام شد.

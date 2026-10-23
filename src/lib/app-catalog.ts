@@ -1,6 +1,7 @@
 import {
   ArrowLeftRight,
   BarChart3,
+  Boxes,
   Calculator,
   Factory,
   FileBarChart,
@@ -32,7 +33,7 @@ import {
  * Frontend mirror of mini-services/_shared/app-catalog.ts (Task 18).
  * The DB-driven AppRegistry (settings-service) wins at runtime; this list is the
  * offline fallback so the desktop never goes blank (§5.4 + resilience).
- * Owner's numbering skips #13 intentionally — 27 apps total.
+ * Owner's numbering skips #13 intentionally — 28 apps total (order 29 = عمومی).
  */
 export interface AppDescriptor {
   appKey: string;
@@ -72,6 +73,7 @@ export const FRONTEND_APPS: AppDescriptor[] = [
   { appKey: "businessIntelligence", order: 26, titleKey: "app.businessIntelligence", iconKey: "barChart",        appGroup: "analytics",    port: 3002, dbMode: "shared" },
   { appKey: "maintenance",          order: 27, titleKey: "app.maintenance",          iconKey: "hammer",          appGroup: "production",   port: 3002, dbMode: "shared" },
   { appKey: "onlineWebsite",        order: 28, titleKey: "app.onlineWebsite",        iconKey: "globe",           appGroup: "platform",     port: 3002, dbMode: "shared" },
+  { appKey: "general",              order: 29, titleKey: "app.general",              iconKey: "boxes",           appGroup: "platform",     port: 3002, dbMode: "shared" },
 ];
 
 export const APP_ICONS: Record<string, { Icon: LucideIcon; tile: string }> = {
@@ -102,6 +104,7 @@ export const APP_ICONS: Record<string, { Icon: LucideIcon; tile: string }> = {
   businessIntelligence: { Icon: BarChart3,   tile: "from-fuchsia-600 to-fuchsia-800" },
   maintenance:      { Icon: Hammer,          tile: "from-yellow-500 to-yellow-600" },
   onlineWebsite:    { Icon: Globe,           tile: "from-cyan-500 to-cyan-700" },
+  general:          { Icon: Boxes,           tile: "from-fuchsia-600 to-rose-700" },
 };
 
 export function getAppIcon(appKey: string): { Icon: LucideIcon; tile: string } | undefined {

@@ -8952,6 +8952,7 @@ __turbopack_context__.s([
     "app.businessIntelligence": "هوش تجاری",
     "app.maintenance": "تعمیرات و نگهداری",
     "app.onlineWebsite": "وبسایت آنلاین",
+    "app.general": "عمومی",
     "ph.awaitingBadge": "در انتظار سند تحلیل",
     "ph.awaitingBody": "فرم‌ها و فیلدهای این نرم‌افزار هنوز تعریف نشده‌اند؛ پس از ارائهٔ سند تحلیل، طراحی و پیاده‌سازی دقیقاً بر اساس همان سند انجام می‌شود.",
     "ph.secureApi": "اتصال امن سرویس‌ها",
@@ -9166,6 +9167,7 @@ const en = {
     "app.businessIntelligence": "Business Intelligence",
     "app.maintenance": "Maintenance",
     "app.onlineWebsite": "Online Website",
+    "app.general": "General",
     "ph.awaitingBadge": "Awaiting analysis document",
     "ph.awaitingBody": "The forms and fields of this module are not defined yet; once its analysis document is provided, design and implementation will follow that document exactly.",
     "ph.secureApi": "Secure service connectivity",
@@ -9381,6 +9383,7 @@ const tr = {
     "app.businessIntelligence": "İş Zekası",
     "app.maintenance": "Bakım",
     "app.onlineWebsite": "Çevrimiçi Web Sitesi",
+    "app.general": "Genel",
     "ph.awaitingBadge": "Analiz belgesi bekleniyor",
     "ph.awaitingBody": "Bu modülün formları ve alanları henüz tanımlanmadı; analiz belgesi sunulduğunda tasarım ve uygulama tam olarak o belgeye göre yapılacaktır.",
     "ph.secureApi": "Güvenli servis bağlantısı",
@@ -9596,6 +9599,7 @@ const ar = {
     "app.businessIntelligence": "ذكاء الأعمال",
     "app.maintenance": "الصيانة",
     "app.onlineWebsite": "الموقع الإلكتروني",
+    "app.general": "عام",
     "ph.awaitingBadge": "بانتظار وثيقة التحليل",
     "ph.awaitingBody": "لم يتم تحديد نماذج وحقول هذه الوحدة بعد؛ وعند تقديم وثيقة التحليل، سيتم التصميم والتنفيذ وفقًا لتلك الوثيقة تمامًا.",
     "ph.secureApi": "اتصال آمن للخدمات",
@@ -9811,6 +9815,7 @@ const hi = {
     "app.businessIntelligence": "व्यावसायिक बुद्धिमत्ता",
     "app.maintenance": "रखरखाव",
     "app.onlineWebsite": "ऑनलाइन वेबसाइट",
+    "app.general": "सामान्य",
     "ph.awaitingBadge": "विश्लेषण दस्तावेज़ की प्रतीक्षा",
     "ph.awaitingBody": "इस मॉड्यूल के फ़ॉर्म और फ़ील्ड अभी परिभाषित नहीं हैं; इसका विश्लेषण दस्तावेज़ दिए जाने पर डिज़ाइन और कार्यान्वयन ठीक उसी दस्तावेज़ के अनुसार किया जाएगा।",
     "ph.secureApi": "सुरक्षित सेवा कनेक्टिविटी",
@@ -10026,6 +10031,7 @@ const ps = {
     "app.businessIntelligence": "سوداګریزه ځیرکتیا",
     "app.maintenance": "ترمیم او ساتنه",
     "app.onlineWebsite": "آنلاین وېبسایټ",
+    "app.general": "عمومي",
     "ph.awaitingBadge": "د شننې سند ته انتظار",
     "ph.awaitingBody": "د دې ماډل فورمې او فیلډونه لا تر اوسه تعریف شوي نه دي؛ کله چې یې د شننې سند وړاندې شي، ډیزاین او پلي کول په دقیق ډول د همدې سند له مخې ترسره کیږي.",
     "ph.secureApi": "د خدماتو خوندي اړیکه",
@@ -10241,6 +10247,7 @@ const ckb = {
     "app.businessIntelligence": "زیرەکی بازرگانی",
     "app.maintenance": "چاککردن و پاراستن",
     "app.onlineWebsite": "ماڵپەری ئۆنلاین",
+    "app.general": "گشتی",
     "ph.awaitingBadge": "چاوەڕوانی بەڵگەنامەی شیکاری",
     "ph.awaitingBody": "فۆرم و خانەکانی ئەم مۆدیولە هێشتا دیاری نەکراون؛ دوای پێشکەشکردنی بەڵگەنامەی شیکاری، دیزاین و جێبەجێکردن بە تەواوی بەپێی هەمان بەڵگەنامە ئەنجام دەدرێت.",
     "ph.secureApi": "پەیوەندی پارێزراوی خزمەتگوزارییەکان",
@@ -10456,6 +10463,7 @@ const pt = {
     "app.businessIntelligence": "Inteligência de Negócios",
     "app.maintenance": "Manutenção",
     "app.onlineWebsite": "Site Online",
+    "app.general": "Geral",
     "ph.awaitingBadge": "Aguardando documento de análise",
     "ph.awaitingBody": "Os formulários e campos deste módulo ainda não foram definidos; quando o documento de análise for fornecido, o design e a implementação seguirão exatamente esse documento.",
     "ph.secureApi": "Conectividade segura de serviços",
@@ -10671,6 +10679,7 @@ const ko = {
     "app.businessIntelligence": "비즈니스 인텔리전스",
     "app.maintenance": "유지보수",
     "app.onlineWebsite": "온라인 웹사이트",
+    "app.general": "일반",
     "ph.awaitingBadge": "분석 문서 대기 중",
     "ph.awaitingBody": "이 모듈의 양식과 필드는 아직 정의되지 않았습니다. 분석 문서가 제공되면 해당 문서에 따라 정확히 설계 및 구현됩니다.",
     "ph.secureApi": "보안 서비스 연결",
@@ -10886,6 +10895,7 @@ const fr = {
     "app.businessIntelligence": "Informatique décisionnelle",
     "app.maintenance": "Maintenance",
     "app.onlineWebsite": "Site web en ligne",
+    "app.general": "Général",
     "ph.awaitingBadge": "En attente du document d'analyse",
     "ph.awaitingBody": "Les formulaires et les champs de ce module ne sont pas encore définis ; une fois son document d'analyse fourni, la conception et l'implémentation suivront exactement ce document.",
     "ph.secureApi": "Connectivité sécurisée des services",
@@ -11101,6 +11111,7 @@ const zh = {
     "app.businessIntelligence": "商业智能",
     "app.maintenance": "维护保养",
     "app.onlineWebsite": "在线网站",
+    "app.general": "通用",
     "ph.awaitingBadge": "等待分析文档",
     "ph.awaitingBody": "此模块的表单和字段尚未定义；待其分析文档提供后，设计与实现将严格按照该文档进行。",
     "ph.secureApi": "服务安全连接",
@@ -11301,6 +11312,7 @@ __turbopack_context__.s([
 ]);
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$arrow$2d$left$2d$right$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__ArrowLeftRight$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/arrow-left-right.js [app-ssr] (ecmascript) <export default as ArrowLeftRight>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chart$2d$column$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__BarChart3$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/chart-column.js [app-ssr] (ecmascript) <export default as BarChart3>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$boxes$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Boxes$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/boxes.js [app-ssr] (ecmascript) <export default as Boxes>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$calculator$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Calculator$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/calculator.js [app-ssr] (ecmascript) <export default as Calculator>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$factory$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Factory$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/factory.js [app-ssr] (ecmascript) <export default as Factory>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$file$2d$chart$2d$column$2d$increasing$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__FileBarChart$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/file-chart-column-increasing.js [app-ssr] (ecmascript) <export default as FileBarChart>");
@@ -11569,6 +11581,15 @@ const FRONTEND_APPS = [
         appGroup: "platform",
         port: 3002,
         dbMode: "shared"
+    },
+    {
+        appKey: "general",
+        order: 29,
+        titleKey: "app.general",
+        iconKey: "boxes",
+        appGroup: "platform",
+        port: 3002,
+        dbMode: "shared"
     }
 ];
 const APP_ICONS = {
@@ -11679,6 +11700,10 @@ const APP_ICONS = {
     onlineWebsite: {
         Icon: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$globe$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Globe$3e$__["Globe"],
         tile: "from-cyan-500 to-cyan-700"
+    },
+    general: {
+        Icon: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$boxes$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__$3c$export__default__as__Boxes$3e$__["Boxes"],
+        tile: "from-fuchsia-600 to-rose-700"
     }
 };
 function getAppIcon(appKey) {

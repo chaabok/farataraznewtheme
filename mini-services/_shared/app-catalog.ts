@@ -1,6 +1,7 @@
 /**
  * APP_CATALOG — single source of truth for the ERP app mesh (Task 18).
- * Owner's desktop list numbering skips #13 intentionally (27 apps total).
+ * Owner's desktop list numbering skips #13 intentionally (28 apps total —
+ * #29 "عمومی/general" added by owner request).
  * `port` = port IF/WHEN promoted to a standalone service; today all non-settings
  * apps are hosted by the composite `apps-service` (3002) — promotion path stays
  * open because each entry is self-describing (D8 decision, see AGENTS.md).
@@ -53,6 +54,7 @@ export const APP_CATALOG: AppCatalogEntry[] = [
   { appKey: "businessIntelligence",  order: 26, titleFa: "هوش تجاری",                   titleKey: "app.businessIntelligence",  iconKey: "barChart",        appGroup: "analytics",    port: 3002, dbMode: "shared", host: "apps-service" },
   { appKey: "maintenance",           order: 27, titleFa: "تعمیرات و نگهداری",           titleKey: "app.maintenance",           iconKey: "hammer",          appGroup: "production",   port: 3002, dbMode: "shared", host: "apps-service" },
   { appKey: "onlineWebsite",         order: 28, titleFa: "وبسایت آنلاین",               titleKey: "app.onlineWebsite",         iconKey: "globe",           appGroup: "platform",     port: 3002, dbMode: "shared", host: "apps-service" },
+  { appKey: "general",               order: 29, titleFa: "عمومی",                       titleKey: "app.general",               iconKey: "boxes",           appGroup: "platform",     port: 3002, dbMode: "shared", host: "apps-service" },
 ];
 
 export function findApp(appKey: string): AppCatalogEntry | undefined {
