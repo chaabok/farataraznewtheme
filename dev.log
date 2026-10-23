@@ -1,24 +1,22 @@
-▲ Next.js 16.1.3 (Turbopack)
+▲ Next.js 16.4.2 (Turbopack)
 - Local:         http://localhost:3000
 - Network:       http://21.0.12.181:3000
 - Environments: .env
+✓ Ready in 328ms
+✓ Running next.config.ts took 34ms
+Attention: Next.js now collects completely anonymous telemetry regarding usage.
+This information is used to shape Next.js' roadmap and prioritize features.
+You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+https://nextjs.org/telemetry
 
-✓ Starting...
-✓ Ready in 1163ms
- GET /api/desktop/icons?locale=fa 200 in 283ms (compile: 223ms, render: 60ms)
+
 ○ Compiling / ...
- GET / 200 in 3.7s (compile: 3.4s, render: 300ms)
- GET / 200 in 256ms (compile: 7ms, render: 249ms)
-⚠ Cross origin request detected from 127.0.0.1 to /_next/* resource. In a future major version of Next.js, you will need to explicitly configure "allowedDevOrigins" in next.config to allow this.
-Read more: https://nextjs.org/docs/app/api-reference/config/next-config-js/allowedDevOrigins
- GET /api/desktop/icons?locale=fa 200 in 21ms (compile: 3ms, render: 18ms)
- GET /api/desktop/icons?locale=fa 200 in 16ms (compile: 3ms, render: 13ms)
- POST /api/auth/login 200 in 502ms (compile: 43ms, render: 459ms)
- GET / 200 in 55ms (compile: 5ms, render: 50ms)
- GET /api/desktop/icons?locale=fa 200 in 46ms (compile: 3ms, render: 43ms)
- GET /api/desktop/menus/settings?locale=fa 200 in 953ms (compile: 905ms, render: 48ms)
- GET / 200 in 52ms (compile: 4ms, render: 48ms)
- GET / 200 in 49ms (compile: 4ms, render: 45ms)
- GET / 200 in 49ms (compile: 4ms, render: 45ms)
- GET /api/desktop/icons?locale=fa 200 in 15ms (compile: 3ms, render: 12ms)
-[?25h
+ GET / 200 in 415ms (next.js: 182ms, application-code: 233ms)
+ GET / 200 in 103ms (next.js: 1.7ms, application-code: 101ms)
+ GET /api/settings/app-registry 200 in 599ms (next.js: 561ms, application-code: 38ms)
+ GET /api/settings/app-registry 200 in 23ms (next.js: 13ms, application-code: 10ms)
+ GET / 200 in 178ms (next.js: 1.5ms, application-code: 177ms)
+ GET /api/settings/app-registry 200 in 28ms (next.js: 11ms, application-code: 17ms)
+ GET /api/settings/app-registry 200 in 45ms (next.js: 0.9ms, application-code: 44ms)
+ GET /api/settings/business-structure 200 in 35ms (next.js: 15ms, application-code: 20ms)
+ GET /api/settings/business-structure 200 in 12ms (next.js: 1.1ms, application-code: 11ms)

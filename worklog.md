@@ -1763,3 +1763,41 @@ Stage Summary:
   دکمه ظاهر می‌شود؛ برچسب تولتیپ با جهت زبان و حالت نمایش (گرید/سایدبار) به‌درستی
   عوض می‌شود، رفتار Task 38/39 (سوییچ + چیدمان مرتب زبانی) و موبایل/تیره سالم ماند؛
   lint/tsc/E2E/console همگی پاک؛ ثبت در worklog انجام شد.
+
+---
+Task ID: 41
+Agent: Z.ai Code (main)
+Task: درخواست مالک — «من فایل بک آپ داشتم. سورس و بانک اطلاعاتی را از فایلی که برات فرستادم بازیابی کنید» — بازیابی کامل سورس و دیتابیس از farataraz-backup-20261023-2329.
+
+Work Log:
+- جستجوی مجدد فایل‌سیستم: فایل zip خودِ بک‌آپ یافت نشد (شاید پاک شده باشد) اما محتوای
+  استخراج‌شدهٔ آن در /tmp/farataraz-restore سالم بود — BACKUP-INFO.txt تاریخ ایجاد
+  2026-10-23 ساعت 23:29 (Asia/Tehran) را تأیید می‌کند؛ نسخهٔ 0.16 «erp-rebuild».
+- محتوای بک‌آپ: src/ کامل، mini-services (_shared، settings-service :3001، apps-service
+  :3002)، db/custom.db (SQLite)، package.json/bun.lock/tsconfig و بقیهٔ کانفیگ‌ها،
+  AGENTS.md، worklog.md (تا Task 40)، download/ (اسکرین‌شات‌های E2E)، .env ریشه و
+  .env هر دو سرویس (INTERNAL_API_KEY + DATABASE_URL=file:/home/z/my-project/db/custom.db).
+- ایمنی: معماری قبلی (۱۳ سرویس) در تاریخچهٔ گیت زیر commit های auto-checkpoint
+  (46434a0، 67786cb روی 3baf457) محفوظ است و هر زمان قابل بازیابی است.
+- بازیابی قبلاً در انتهای جلسهٔ قبل انجام شده بود؛ در این جلسه صحت آن با
+  diff -rq کامل (EXIT:0، بدون هیچ تفاوتی به‌جز node_modules/.git/dist) تأیید شد.
+- bun install در ریشه + settings-service + apps-service؛ bunx prisma generate برای
+  settings-service (کلاینت روی اسکیمای دیتابیس بک‌آپ ساخته شد).
+- راه‌اندازی: settings-service :3001 (Prisma وصل؛ AppRegistry سینک شد: 27 اپ،
+  0 تغییر — یعنی دیتابیس بک‌آپ با کاتالوگ کد هم‌خوان است) و apps-service :3002
+  (health: 26 hostedApps از 27 catalogApps)؛ Next dev :3000 (GET / 200).
+- E2E (agent-browser، 1440×810): دسکتاپ با ۲۸ آیکون کامل (ابزارهای پیشرفته تا هوش
+  تجاری) + دکمهٔ سوییچ سایدبار Task 40 + تسک‌بار؛ dblclick «تنظیمات» → پنجرهٔ تنظیمات؛
+  کلیک «ساختار کسب و کار» → درخت با داده‌های واقعی دیتابیس بازیابی‌شده (دفتر مرکزی →
+  شرکت نمونه → شعبه اصفهان، شعبه شیراز) و پنل جزئیات — یعنی سورس و DB هر دو سالم.
+- خطاها: page errors=0، console error=0؛ dev.log فقط GET 200 (app-registry،
+  business-structure). موبایل 390×844: scrollW=390 بدون سرریز.
+- اسکرین‌شات‌ها: /tmp/restore-1-desktop.png، restore-2-settings.png، restore-3-bs.png،
+  restore-4-mobile.png، restore-5-final.png.
+
+Stage Summary:
+- پروژهٔ FaraTaraz (نسخهٔ 0.16 erp-rebuild) عیناً از بک‌آپ 2026-10-23-2329 بازیابی شد:
+  سورس کامل Next.js + دو سرویس NestJS (settings :3001، apps :3002) + دیتابیس
+  db/custom.db با تمام داده‌ها (۲۷ اپ رجیستری، ساختار کسب‌وکار با شعب اصفهان/شیراز).
+  هر سه پروسه در حال اجرا و E2E تأییدشده است. معماری ۱۳-سرویسهٔ جدیدتر در گیت
+  (3baf457) نگهداری می‌شود.
