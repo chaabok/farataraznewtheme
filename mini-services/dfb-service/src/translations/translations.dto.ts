@@ -4,8 +4,9 @@ import { Type } from "class-transformer";
 /** ۱۰ زبان غیر-fa (هم‌راستا با src/i18n/config.ts LOCALES فرانت) */
 export const TRANSLATION_LANGS = ["en", "tr", "ar", "hi", "ps", "ckb", "pt", "ko", "fr", "zh"] as const;
 
-/** موجودیت‌های ترجمه‌پذیر (Tab فعلاً پشتیبانی نمی‌شود — ID تب‌ها در هر ذخیره بازتولید می‌شود) */
-export const TRANSLATION_ENTITY_TYPES = ["Menu", "Form", "Field"] as const;
+/** موجودیت‌های ترجمه‌پذیر — Task 69: Tab (کلید پایدار ClientKey در DfbFormTab)
+    و Option (کلید مرکب `<fieldKey>::<value>` — هویت Field + value آیتم) */
+export const TRANSLATION_ENTITY_TYPES = ["Menu", "Form", "Field", "Tab", "Option"] as const;
 
 export type TranslationEntityType = (typeof TRANSLATION_ENTITY_TYPES)[number];
 

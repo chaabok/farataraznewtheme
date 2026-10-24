@@ -15,10 +15,12 @@ import { useSettings } from "@/stores/settings-store";
  *   · Menu:<menuId>:Title
  *   · Form:<formId>:Title
  *   · Field:<formRef>:<fieldKey>   (EntityRef = FormRef — پایدار در ذخیرهٔ مجدد)
+ *   · Tab:<formRef>:<clientKey>    (Task 69 — ClientKey ذخیره‌شده در DfbFormTab)
+ *   · Option:<formRef>:<fieldKey>::<value>  (Task 69 — آیتم‌های select/radio)
  * زنجیرهٔ جایگزینی: ترجمهٔ زبان فعلی → متن اصلی (fa) → *_En میراث.
  */
 
-export type DfbTransEntityType = "Menu" | "Form" | "Field";
+export type DfbTransEntityType = "Menu" | "Form" | "Field" | "Tab" | "Option";
 
 export interface DfbTranslationRow {
   entityType: DfbTransEntityType;

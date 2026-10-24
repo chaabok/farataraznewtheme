@@ -213,6 +213,19 @@ export class SeedService implements OnModuleInit {
       return true;
     };
 
+    /* ۴ج — Task 69: backfill کلید پایدار ClientKey برای تب‌ها/باندهای قدیمی
+       (هویت ترجمهٔ عنوان تب = Tab:<formRef>:<clientKey>)؛ idempotent */
+    const legacyTabs = await this.prisma.dfbFormTab.findMany({ where: { clientKey: null } });
+    for (const t of legacyTabs) {
+      await this.prisma.dfbFormTab.update({
+        where: { id: t.id },
+        data: { clientKey: `tab_${t.id}` },
+      });
+    }
+    if (legacyTabs.length > 0) {
+      this.logger.log(`backfilled clientKey for ${legacyTabs.length} DfbFormTab row(s) (Task 69)`);
+    }
+
     /* ۴ب — ترجمهٔ نمونهٔ ۱۰زبانهٔ موجودیت‌های فعلی (مالک می‌تواند در استودیو ویرایش کند) */
     const TRANSLATION_SEED: Array<{
       entityType: "Menu" | "Form";

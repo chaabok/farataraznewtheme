@@ -146,7 +146,7 @@ export class TranslationsService {
       if (!row) throw new NotFoundException("فرم مقصد یافت نشد");
       return;
     }
-    // Field — entityRef = FormRef؛ فرم باید وجود داشته باشد
+    // Field / Tab / Option — entityRef = FormRef؛ فرم باید وجود داشته باشد
     const row = await this.prisma.dfbForm.findUnique({ where: { id: BigInt(entityRef) } });
     if (!row) throw new NotFoundException("فرم مقصد یافت نشد");
   }

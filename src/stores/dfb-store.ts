@@ -144,6 +144,42 @@ export function dfbFieldLabel(
   return locale === "en" && f.labelEn ? f.labelEn : f.label;
 }
 
+/**
+ * Task 69 — عنوان تب/باند با ترجمه: کلید پایدار `Tab:<formRef>:<clientKey>`
+ * (ClientKey اکنون در DfbFormTab ذخیره می‌شود و در ذخیرهٔ مجدد — که ID تب‌ها
+ * را بازتولید می‌کند — زنده می‌ماند). تب‌های قدیمی بدون clientKey → fa/Title_En.
+ */
+export function dfbTabTitle(
+  tab: { formRef: number; clientKey?: string | null; title: string; titleEn: string | null },
+  locale: string,
+  tr?: Record<string, string>,
+): string {
+  if (tr && locale !== "fa" && tab.clientKey) {
+    return dfbResolveTr(tr, `Tab:${tab.formRef}:${tab.clientKey}`, tab.title, tab.titleEn);
+  }
+  return locale === "en" && tab.titleEn ? tab.titleEn : tab.title;
+}
+
+/**
+ * Task 69 — برچسب آیتم select/radio با ترجمه: کلید پایدار
+ * `Option:<formRef>:<fieldKey>::<value>` (value آیتم پایدار است — در EAV ذخیره
+ * می‌شود). زنجیره: ترجمهٔ زبان فعلی → برچسب اصلی (fa). آیتم‌های query/script هم
+ * پوشش داده می‌شوند اگر برای valueشان ترجمه‌ای ثبت شده باشد.
+ */
+export function dfbOptionLabel(
+  formRef: number,
+  fieldKey: string,
+  it: { value: string; label: string },
+  locale: string,
+  tr?: Record<string, string>,
+): string {
+  if (tr && locale !== "fa" && it.value) {
+    const v = tr[`Option:${formRef}:${fieldKey}::${it.value}`];
+    if (v && v.trim()) return v;
+  }
+  return it.label;
+}
+
 /** root-level node lookup by catalog appKey (for "app:<appKey>" menu windows) */
 export function findMenuNodeByAppKey(nodes: DfbMenuNode[], appKey: string): DfbMenuNode | null {
   return nodes.find((n) => n.nodeType === 1 && n.isSystem && n.appKey === appKey) ?? null;

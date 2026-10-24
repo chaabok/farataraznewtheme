@@ -111,10 +111,14 @@ model DfbForm {
 /// تبِ ساخته‌شده با «افزودن تب» که داخل همان باند می‌نشیند (هر تب = یک جدول
 /// رکورد؛ TabKind فرزندها همیشه 1 است). چون id تب‌ها در هر ذخیره بازتولید
 /// می‌شود، سلسله‌مراتب از کلاینت با clientKey/parentKey همبستگی می‌شود.
+/// ClientKey — Task 69: همان کلید همبستگی Task 50 اکنون «ذخیره» می‌شود تا
+/// هویت پایدار ترجمهٔ عنوان تب (Tab:<formRef>:<clientKey>) در ذخیرهٔ مجدد
+/// (بازتولید ID) زنده بماند؛ ردیف‌های قدیمی در seed با tab_<ID> پر می‌شوند.
 model DfbFormTab {
   id                   BigInt   @id @map("ID")
   formRef              BigInt   @map("FormRef")
   parentRef            BigInt   @default(0) @map("ParentRef") // 0 = باند سطح بالا | >0 = تبِ داخل باند (ID ردیف باند والد)
+  clientKey            String?  @map("ClientKey") // Task 69 — کلید پایدار سمت کلاینت (هویت ترجمهٔ عنوان)
   title                String   @map("Title")
   titleEn              String?  @map("Title_En")
   tabKind              Int      @default(1) @map("TabKind") // 1=Grid (default/legacy) | 2=InputFields

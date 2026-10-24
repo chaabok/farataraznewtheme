@@ -18,32 +18,46 @@ import {
   dfbTransKey,
   saveDfbTranslations,
   useDfbTranslations,
+  type DfbTransEntityType,
 } from "@/stores/dfb-translations";
 
 /**
- * FieldTranslationsBody (Task 68) — پنل ترجمهٔ برچسب یک فیلد به ۱۰ زبان
- * غیر-fa، داخل ریل تنظیمات و مودال ویژگی‌های استودیو طراحی.
+ * DfbTranslationsBody (Task 68/69) — پنل ترجمهٔ یک متن دیتابیسی فرمساز به
+ * ۱۰ زبان غیر-fa: برچسب فیلد (Field)، عنوان تب/باند (Tab — Task 69) و
+ * آیتم‌های select/radio (Option — Task 69)، داخل ریل تنظیمات و مودال
+ * ویژگی‌های استودیو طراحی.
  *
  * رفتار آفلاین: هر ضربهٔ کلید فوراً در کش کلاینت (Zustand + localStorage)
  * اعمال می‌شود و ذخیرهٔ سرور debounce (۶۰۰ms) می‌گیرد؛ در unmount هم
  * ذخیرهٔ معوق flush می‌شود. مقدار خالی = حذف ترجمه (fallback به fa).
- * هویت پایدار: (Field، formRef، fieldKey، lang) — مستقل از ID ردیف فیلد.
+ * هویت پایدار:
+ *   · Field → (Field، formRef، fieldKey)
+ *   · Tab   → (Tab، formRef، clientKey)   — ClientKey در DfbFormTab ذخیره می‌شود
+ *   · Option→ (Option، formRef، `<fieldKey>::<value>`)
  */
 
 const TR_LANGS = LOCALES.filter((l) => l !== "fa") as Locale[];
 const FLUSH_MS = 600;
 
-export function FieldTranslationsBody({
-  formRef, fieldKey, fallbackFa,
+export function DfbTranslationsBody({
+  entityType,
+  entityRef,
+  fieldKey,
+  fallbackFa,
+  labelKey,
 }: {
-  formRef: number;
+  entityType: DfbTransEntityType;
+  entityRef: number;
+  /** Field = fieldKey فیلد | Tab = clientKey تب/باند | Option = `<fieldKey>::<value>` */
   fieldKey: string;
   fallbackFa: string;
+  /** کلید i18n عنوان پنل (پیش‌فرض: ترجمهٔ برچسب) */
+  labelKey?: "dfb.i18n.title" | "dfb.i18n.tabTitle" | "dfb.i18n.optionTitle";
 }) {
   const t = useT();
   const [lang, setLang] = React.useState<Locale>("en");
   const byLang = useDfbTranslations((s) => s.byLang);
-  const key = dfbTransKey("Field", formRef, fieldKey);
+  const key = dfbTransKey(entityType, entityRef, fieldKey);
   const value = byLang[lang]?.[key] ?? "";
 
   const filled = React.useMemo(
@@ -58,16 +72,16 @@ export function FieldTranslationsBody({
     (payload: string) => {
       pendingRef.current = null;
       saveDfbTranslations([
-        { entityType: "Field", entityRef: formRef, fieldKey, lang, value: payload },
+        { entityType, entityRef, fieldKey, lang, value: payload },
       ]).catch(() => toast.error(t("common.error")));
     },
-    [formRef, fieldKey, lang, t],
+    [entityType, entityRef, fieldKey, lang, t],
   );
 
   const onChange = (v: string) => {
     /* خوش‌بینانه: کش کلاینت همان لحظه — همهٔ پنجره‌های باز به‌روز می‌شوند */
     useDfbTranslations.getState().applyLocal([
-      { entityType: "Field", entityRef: formRef, fieldKey, lang, value: v },
+      { entityType, entityRef, fieldKey, lang, value: v },
     ]);
     pendingRef.current = v.trim();
     if (timerRef.current) window.clearTimeout(timerRef.current);
@@ -82,18 +96,20 @@ export function FieldTranslationsBody({
       if (timerRef.current) window.clearTimeout(timerRef.current);
       if (pendingRef.current !== null) {
         saveDfbTranslations([
-          { entityType: "Field", entityRef: formRef, fieldKey, lang, value: pendingRef.current },
+          { entityType, entityRef, fieldKey, lang, value: pendingRef.current },
         ]).catch(() => undefined);
       }
     };
-  }, [formRef, fieldKey, lang]);
+  }, [entityType, entityRef, fieldKey, lang]);
+
+  const title = t(labelKey ?? "dfb.i18n.title");
 
   return (
     <div className="grid gap-1.5 rounded-xl border border-dashed border-border/70 p-2">
       <div className="flex items-center justify-between gap-2">
         <Label className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
           <Languages className="h-3.5 w-3.5" aria-hidden />
-          {t("dfb.i18n.title")}
+          {title}
           <span
             className="ms-1 rounded-full bg-emerald-500/10 px-1.5 py-px font-mono text-[9px] text-emerald-600 dark:text-emerald-400"
             dir="ltr"
@@ -103,7 +119,7 @@ export function FieldTranslationsBody({
         </Label>
         <Select value={lang} onValueChange={(v) => setLang(v as Locale)}>
           <SelectTrigger
-            aria-label={t("dfb.i18n.title")}
+            aria-label={title}
             className="h-7 w-32 text-[11px]"
             data-window-btn
           >
@@ -137,8 +153,17 @@ export function FieldTranslationsBody({
         onChange={(e) => onChange(e.target.value)}
         placeholder={fallbackFa || "—"}
         className="h-8"
-        aria-label={`${t("dfb.i18n.title")} — ${LOCALE_NAMES[lang]}`}
+        aria-label={`${title} — ${LOCALE_NAMES[lang]}`}
       />
     </div>
   );
+}
+
+/** پنل ترجمهٔ برچسب فیلد (Task 68) — همان DfbTranslationsBody با entityType=Field */
+export function FieldTranslationsBody(props: {
+  formRef: number;
+  fieldKey: string;
+  fallbackFa: string;
+}) {
+  return <DfbTranslationsBody entityType="Field" {...props} />;
 }

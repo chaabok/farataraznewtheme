@@ -4,7 +4,7 @@ import * as React from "react";
 import {
   AlignCenterHorizontal, AlignEndHorizontal, AlignLeft, AlignStartHorizontal, ArrowDown, ArrowUp,
   Braces, CalendarDays, Check, ChevronDown, Circle, CircleDot, Code, Copy, Database, Eye, EyeOff, FileText, FormInput,
-  Grid3x3, Hash, History, KeyRound, Layers, List, Loader2, Lock, Minus, MoveHorizontal, Palette,
+  Grid3x3, Hash, History, KeyRound, Languages, Layers, List, Loader2, Lock, Minus, MoveHorizontal, Palette,
   Pill, PencilLine, Play, Plus, RotateCcw, Save, Search, SlidersHorizontal, Square, Table2, Trash2, Type, X,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -41,7 +41,7 @@ import {
   type DfbFormStyle, type DfbBankAlign,
 } from "@/lib/dfb-theme";
 import { ACTION_BAR_KEYS } from "@/components/forms/action-bar";
-import { FieldTranslationsBody } from "@/components/erp/form-builder/field-translations";
+import { FieldTranslationsBody, DfbTranslationsBody } from "@/components/erp/form-builder/field-translations";
 import {
   SimpleFormTwoRowTabbed,
   type SimpleFormField,
@@ -313,7 +313,9 @@ function buildBanks(d: DfbFormDetail): { banks: StudioBank[]; footer: StudioBank
     config: parseFieldConfig(f.configJson),
   });
   const banks: StudioBank[] = bandRows.map((tb) => ({
-    key: `bank-${tb.id}`,
+    /* Task 69 — کلید پایدار ذخیره‌شده (ClientKey) تا هویت ترجمهٔ عنوان تب در
+       ذخیرهٔ مجدد (بازتولید ID) زنده بماند؛ ردیف‌های قدیمی fallback به tb-<id> */
+    key: tb.clientKey || `bank-${tb.id}`,
     id: tb.id,
     tabKind: tb.tabKind === 2 ? 2 : 1,
     title: tb.title,
@@ -322,7 +324,7 @@ function buildBanks(d: DfbFormDetail): { banks: StudioBank[]; footer: StudioBank
       tb.tabKind === 2
         ? []
         : (childrenOf.get(tb.id) ?? []).map((ct) => ({
-            key: `tb-${ct.id}`,
+            key: ct.clientKey || `tb-${ct.id}`, // Task 69 — کلید پایدار ذخیره‌شده
             id: ct.id,
             title: ct.title,
             titleEn: ct.titleEn ?? "",
@@ -461,6 +463,9 @@ function StudioInner({ formId }: { formId: number }) {
   const [selectedFieldKey, setSelectedFieldKey] = React.useState<string | null>(null);
   /* Task 50 — «افزودن تب» dialog target bank (null = closed) */
   const [tabDialogFor, setTabDialogFor] = React.useState<string | null>(null);
+  /* Task 69 — ترجمهٔ عنوان باند فعال (غیر-main) و تب‌های آن (clientKey باز) */
+  const [trBandOpen, setTrBandOpen] = React.useState(false);
+  const [trTabKey, setTrTabKey] = React.useState<string | null>(null);
   const [paletteType, setPaletteType] = React.useState("text");
   const [preview, setPreview] = React.useState(false);
   const [busy, setBusy] = React.useState(false);
@@ -1723,12 +1728,43 @@ function StudioInner({ formId }: { formId: number }) {
                   </h3>
                   <div className="grid gap-1.5">
                     <Label className="text-[11px] text-muted-foreground">{t("dfb.studio.bankTitle")}</Label>
-                    <Input
-                      value={activeBank.key === "main" ? t("dfb.studio.bankMain") : activeBank.title}
-                      readOnly={activeBank.key === "main"}
-                      onChange={(e) => updateBankTitle(activeBank.key, e.target.value)}
-                      className="h-8"
-                    />
+                    <div className="flex items-center gap-1.5">
+                      <Input
+                        value={activeBank.key === "main" ? t("dfb.studio.bankMain") : activeBank.title}
+                        readOnly={activeBank.key === "main"}
+                        onChange={(e) => updateBankTitle(activeBank.key, e.target.value)}
+                        className="h-8"
+                      />
+                      {/* Task 69 — ترجمهٔ عنوان باند (باند هم ردیف DfbFormTab است و
+                          در ران‌تایم عنوان تب می‌گیرد) */}
+                      {activeBank.key !== "main" && (
+                        <button
+                          type="button"
+                          aria-label={t("dfb.i18n.tabTitle")}
+                          aria-pressed={trBandOpen}
+                          title={t("dfb.i18n.tabTitle")}
+                          onClick={() => setTrBandOpen((v) => !v)}
+                          className={cn(
+                            "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer",
+                            trBandOpen
+                              ? "bg-emerald-500/15 text-emerald-700 ring-1 ring-emerald-500/40 dark:text-emerald-400"
+                              : "text-muted-foreground hover:bg-foreground/5",
+                          )}
+                        >
+                          <Languages className="h-4 w-4" aria-hidden />
+                        </button>
+                      )}
+                    </div>
+                    {/* Task 69 — پنل ترجمهٔ عنوان باند (کلید پایدار Tab:<formRef>:<clientKey>) */}
+                    {activeBank.key !== "main" && trBandOpen && (
+                      <DfbTranslationsBody
+                        entityType="Tab"
+                        entityRef={formId}
+                        fieldKey={activeBank.key}
+                        fallbackFa={activeBank.title}
+                        labelKey="dfb.i18n.tabTitle"
+                      />
+                    )}
                   </div>
                   <div className="grid gap-1.5">
                     <Label className="text-[11px] text-muted-foreground">{t("dfb.studio.bankParent")}</Label>
@@ -1801,6 +1837,14 @@ function StudioInner({ formId }: { formId: number }) {
                                   <span className="min-w-0 truncate text-[10px] text-muted-foreground" dir="ltr">{tb.titleEn}</span>
                                 )}
                                 <Badge variant="outline" className="px-1 py-0 font-mono text-[9px]" dir="ltr">{tb.fields.length}</Badge>
+                                {/* Task 69 — ترجمهٔ عنوان تب (هویت پایدار: clientKey ذخیره‌شده) */}
+                                <MiniIconBtn
+                                  label={t("dfb.i18n.tabTitle")}
+                                  active={trTabKey === tb.key}
+                                  onClick={() => setTrTabKey((k) => (k === tb.key ? null : tb.key))}
+                                >
+                                  <Languages className="h-3 w-3" aria-hidden />
+                                </MiniIconBtn>
                                 {!isSystem && (
                                   <MiniIconBtn
                                     label={t("common.delete")}
@@ -1815,6 +1859,16 @@ function StudioInner({ formId }: { formId: number }) {
                               </div>
                             );
                           })
+                        )}
+                        {/* Task 69 — پنل ترجمهٔ تب انتخاب‌شده */}
+                        {trTabKey && activeBank.tabs.some((tb) => tb.key === trTabKey) && (
+                          <DfbTranslationsBody
+                            entityType="Tab"
+                            entityRef={formId}
+                            fieldKey={trTabKey}
+                            fallbackFa={activeBank.tabs.find((tb) => tb.key === trTabKey)?.title ?? ""}
+                            labelKey="dfb.i18n.tabTitle"
+                          />
                         )}
                         {!isSystem && (
                           <Button
@@ -1906,6 +1960,7 @@ function StudioInner({ formId }: { formId: number }) {
                     </p>
                   ) : (
                     <FieldSettingsBody
+                      key={selectedFieldRef.field.key} /* Task 69 — ریست پنل ترجمهٔ آیتم با تغییر فیلد */
                       field={selectedFieldRef.field}
                       containerLabel={containerLabelOf(selectedFieldRef.containerKey)}
                       isSystem={isSystem}
@@ -2526,7 +2581,7 @@ function FieldFlow({
 }
 
 function MiniIconBtn({
-  label, onClick, children, danger, disabled, title,
+  label, onClick, children, danger, disabled, title, active,
 }: {
   label: string;
   onClick?: () => void;
@@ -2534,17 +2589,21 @@ function MiniIconBtn({
   danger?: boolean;
   disabled?: boolean;
   title?: string;
+  /** Task 69 — حالت «روشن/باز» (مثل دکمهٔ ترجمهٔ تب) */
+  active?: boolean;
 }) {
   return (
     <button
       type="button"
       aria-label={label}
+      aria-pressed={active}
       title={title ?? label}
       disabled={disabled}
       onClick={onClick}
       className={cn(
         "flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         danger && "hover:bg-rose-500/15 hover:text-rose-600 dark:hover:text-rose-400",
+        active && "bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/20 hover:text-emerald-700 dark:text-emerald-400",
         disabled && "pointer-events-none opacity-35",
       )}
     >
@@ -3164,6 +3223,10 @@ function FieldSettingsBody({
   const itemsScriptText = fieldItemsScript(field.config);
   const rowCount =
     typeof field.config?.rowCount === "number" ? (field.config.rowCount as number) : null;
+  /* Task 69 — پنل ترجمهٔ آیتم انتخاب‌شده (اندیس؛ null = بسته). کلید پایدار:
+      Option:<formRef>:<fieldKey>::<value> — remount با key از فراخوانی‌ها */
+  const [trItemIdx, setTrItemIdx] = React.useState<number | null>(null);
+  const items = fieldConfigItems(field.config);
 
   return (
     <div className="grid gap-2">
@@ -3322,13 +3385,13 @@ function FieldSettingsBody({
           </Label>
           {/* Task 60 (owner request) — the «آیتم‌های لیست» extra description
               paragraph was removed; the section explains itself. */}
-          {fieldConfigItems(field.config).length === 0 ? (
+          {items.length === 0 ? (
             <p className="rounded-lg border border-dashed border-border/70 px-2 py-1.5 text-[10px] text-muted-foreground">
               {t("dfb.studio.listItemsEmpty")}
             </p>
           ) : (
             <div className="grid max-h-28 gap-1 overflow-y-auto pe-0.5 scrollbar-slim">
-              {fieldConfigItems(field.config).map((it, i) => (
+              {items.map((it, i) => (
                 <div key={`${it.value}-${i}`} className="flex items-center gap-1.5">
                   <Input
                     value={it.label}
@@ -3336,9 +3399,20 @@ function FieldSettingsBody({
                     className="h-7 text-xs"
                     aria-label={`${t("dfb.studio.listItems")} ${i + 1}`}
                   />
+                  {/* Task 69 — ترجمهٔ آیتم به ۱۰ زبان (value پایدار است) */}
+                  <MiniIconBtn
+                    label={t("dfb.i18n.optionTitle")}
+                    active={trItemIdx === i}
+                    onClick={() => setTrItemIdx((k) => (k === i ? null : i))}
+                  >
+                    <Languages className="h-3 w-3" aria-hidden />
+                  </MiniIconBtn>
                   <button
                     type="button"
-                    onClick={() => onRemoveItem(field.key, i)}
+                    onClick={() => {
+                      onRemoveItem(field.key, i);
+                      setTrItemIdx((k) => (k === i ? null : k));
+                    }}
                     aria-label={t("common.delete")}
                     title={t("common.delete")}
                     className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-rose-600 transition-colors hover:bg-rose-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
@@ -3349,6 +3423,17 @@ function FieldSettingsBody({
               ))}
             </div>
           )}
+          {/* Task 69 — پنل ترجمهٔ آیتم انتخاب‌شده (کلید مرکب fieldKey::value) */}
+          {trItemIdx != null && items[trItemIdx] && field.fieldKey ? (
+            <DfbTranslationsBody
+              key={`${field.fieldKey}:${items[trItemIdx].value}`}
+              entityType="Option"
+              entityRef={formRef}
+              fieldKey={`${field.fieldKey}::${items[trItemIdx].value}`}
+              fallbackFa={items[trItemIdx].label}
+              labelKey="dfb.i18n.optionTitle"
+            />
+          ) : null}
           <div className="flex items-center gap-1.5">
             <Input
               value={newItemLabel}
@@ -3587,7 +3672,7 @@ function FieldPropsDialog({
         <div className="max-h-[65vh] overflow-y-auto pe-1 scrollbar-slim">
           {/* Task 60 — the type was already selected when the field was
               created, so the properties modal does NOT offer «نوع فیلد» again */}
-          <FieldSettingsBody {...body} hideFieldType />
+          <FieldSettingsBody key={body.field.key} {...body} hideFieldType />
         </div>
         <DialogFooter className="gap-2">
           <Button type="button" variant="outline" onClick={onClose}>{t("common.cancel")}</Button>

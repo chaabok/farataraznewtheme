@@ -350,6 +350,7 @@ export class FormsService {
           id: Number(t.id),
           formRef: Number(t.formRef),
           parentRef: Number(t.parentRef), // Task 50 — 0=band-level | >0=tab inside that band row
+          clientKey: t.clientKey, // Task 69 — هویت پایدار ترجمهٔ عنوان تب
           title: t.title,
           titleEn: t.titleEn,
           tabKind: t.tabKind, // Task 49 — 1=grid (default) | 2=input fields
@@ -455,9 +456,9 @@ export class FormsService {
       await tx.dfbFormField.deleteMany({ where: { formRef: BigInt(id) } });
       await tx.dfbFormTab.deleteMany({ where: { formRef: BigInt(id) } });
       await tx.dfbForm.delete({ where: { id: BigInt(id) } });
-      /* Task 68 — ترجمه‌های فرم و فیلدهایش (EntityRef = formId) هم پاک می‌شوند */
+      /* Task 68/69 — ترجمه‌های فرم و فیلدها و تب‌ها و آیتم‌ها (EntityRef = formId) پاک می‌شوند */
       await tx.dfbTranslation.deleteMany({
-        where: { entityRef: BigInt(id), entityType: { in: ["Form", "Field"] } },
+        where: { entityRef: BigInt(id), entityType: { in: ["Form", "Field", "Tab", "Option"] } },
       });
     });
     this.logger.log(`DfbForm deleted ID=${id}`);
@@ -510,6 +511,11 @@ export class FormsService {
     /* Task 68 — ترجمه‌های این فیلد (هویت پایدار: formRef + fieldKey) پاک می‌شوند */
     await this.prisma.dfbTranslation.deleteMany({
       where: { entityType: "Field", entityRef: field.formRef, fieldKey: field.fieldKey },
+    });
+    /* Task 69 — ترجمه‌های آیتم‌های این فیلد (کلید مرکب `<fieldKey>::<value>`) پاک می‌شوند؛
+       پسوند :: جلوترِ پیشوندی‌بودن نام فیلدهای مشابه (fld_a در برابر fld_ab) را می‌گیرد */
+    await this.prisma.dfbTranslation.deleteMany({
+      where: { entityType: "Option", entityRef: field.formRef, fieldKey: { startsWith: `${field.fieldKey}::` } },
     });
     return { ok: true };
   }
@@ -723,7 +729,10 @@ export class FormsService {
     await this.prisma.dfbFormTab.deleteMany({ where: { formRef: BigInt(formId) } });
     /* Task 50 — two passes: band rows first (parentKey empty, ParentRef=0),
        then the tabs INSIDE each records-table band resolved against the
-       freshly generated parent ids via clientKey → parentKey. */
+       freshly generated parent ids via clientKey → parentKey.
+       Task 69 — clientKey now PERSISTS (ClientKey column) so tab titles keep
+       their stable translation identity (Tab:<formRef>:<clientKey>) across
+       saves that regenerate tab ids. */
     const created: Array<{ dbId: number; clientKey?: string }> = [];
     const keyMap = new Map<string, bigint>();
     const bandRows = tabs.filter((t) => !t.parentKey);
@@ -731,11 +740,13 @@ export class FormsService {
     let order = 0;
     for (const t of bandRows) {
       const id = await this.idGen.generateNextId("DfbFormTab");
+      const cKey = t.clientKey?.trim() || `tab_${id}`;
       await this.prisma.dfbFormTab.create({
         data: {
           id: BigInt(id),
           formRef: BigInt(formId),
           parentRef: BigInt(0),
+          clientKey: cKey, // Task 69
           title: t.title,
           titleEn: t.titleEn ?? null,
           tabKind: t.tabKind === 2 ? 2 : 1, // Task 49 — 1=grid (default/legacy) | 2=input fields
@@ -743,18 +754,20 @@ export class FormsService {
           ...appBaseOnCreate(SYSTEM_ACTOR),
         },
       });
-      if (t.clientKey) keyMap.set(t.clientKey, BigInt(id));
-      created.push({ dbId: Number(id), clientKey: t.clientKey });
+      keyMap.set(cKey, BigInt(id));
+      created.push({ dbId: Number(id), clientKey: cKey });
     }
     for (const t of childRows) {
       const parent = t.parentKey ? keyMap.get(t.parentKey) : undefined;
       if (!parent) throw new BadRequestException("باندِ والدِ تب یافت نشد");
       const id = await this.idGen.generateNextId("DfbFormTab");
+      const cKey = t.clientKey?.trim() || `tab_${id}`;
       await this.prisma.dfbFormTab.create({
         data: {
           id: BigInt(id),
           formRef: BigInt(formId),
           parentRef: parent, // تبِ داخل باندِ «جدول رکوردها»
+          clientKey: cKey, // Task 69
           title: t.title,
           titleEn: t.titleEn ?? null,
           tabKind: t.tabKind === 2 ? 2 : 1, // tabs inside a records-table band are grids
@@ -762,8 +775,8 @@ export class FormsService {
           ...appBaseOnCreate(SYSTEM_ACTOR),
         },
       });
-      if (t.clientKey) keyMap.set(t.clientKey, BigInt(id));
-      created.push({ dbId: Number(id), clientKey: t.clientKey });
+      keyMap.set(cKey, BigInt(id));
+      created.push({ dbId: Number(id), clientKey: cKey });
     }
     return created;
   }
@@ -822,5 +835,34 @@ export class FormsService {
         ...(liveKeys.length > 0 ? { fieldKey: { notIn: liveKeys } } : {}),
       },
     });
+    /* Task 69 — همگام‌سازی ترجمه‌های آیتم‌ها (هویت = `<fieldKey>::<value>`)؛
+       آیتم‌هایی که از ConfigJson حذف شده‌اند (یا فیلدشان دیگر نیست) یتیم می‌شوند */
+    const liveOpts = new Set<string>();
+    for (const f of fields) {
+      if (!f.configJson) continue;
+      let cfg: unknown = null;
+      try {
+        cfg = JSON.parse(f.configJson);
+      } catch {
+        continue; // config خراب — آیتمی برای حفظ نیست
+      }
+      const items = (cfg as { items?: unknown } | null)?.items;
+      if (!Array.isArray(items)) continue;
+      for (const it of items) {
+        const value =
+          typeof it === "string"
+            ? it.trim()
+            : String((it as { value?: unknown }).value ?? (it as { label?: unknown }).label ?? "").trim();
+        if (value) liveOpts.add(`${f.fieldKey}::${value}`);
+      }
+    }
+    const optRows = await this.prisma.dfbTranslation.findMany({
+      where: { entityType: "Option", entityRef: BigInt(formId) },
+      select: { id: true, fieldKey: true },
+    });
+    const staleOptIds = optRows.filter((r) => !liveOpts.has(r.fieldKey)).map((r) => r.id);
+    if (staleOptIds.length > 0) {
+      await this.prisma.dfbTranslation.deleteMany({ where: { id: { in: staleOptIds } } });
+    }
   }
 }

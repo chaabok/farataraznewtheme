@@ -21,7 +21,7 @@ import { dfbShellTheme, dfbBankAlign, type DfbFormStyle } from "@/lib/dfb-theme"
 import {
   fetchFormDetail, saveFormData, loadFormData,
   fetchQueryOptionsForFields, normalizeFieldWidth, widthMinWidthClass,
-  dfbFormTitle, dfbFieldLabel, executeFormScript, parseFieldConfig, isDfbInputField,
+  dfbFormTitle, dfbFieldLabel, dfbTabTitle, dfbOptionLabel, executeFormScript, parseFieldConfig, isDfbInputField,
   fieldConfigItems, fieldItemsScript, rowsToItems, DFB_ITEM_FIELD_TYPES,
   type DfbFormDetail, type DfbFieldDef, type DfbFieldItem,
 } from "@/stores/dfb-store";
@@ -243,15 +243,20 @@ function RuntimeInner({ formId }: { formId: number }) {
   /* Task 58 — items of a select/radio field: bound-query options win, then
      the script-fetched items, then the items defined in the studio —
      merged VALUE-UNIQUE (a script row and a studio-defined item with the
-     same value must not render twice) */
+     same value must not render twice). Task 69 — every item's label runs
+     through the offline translation map (Option:<formRef>:<fieldKey>::<value>). */
   const resolveFieldOptions = (f: DfbFieldDef): Array<{ value: string; label: string }> | undefined => {
-    if (f.queryRef != null && queryOptions[f.queryRef]) return queryOptions[f.queryRef];
+    const trLabel = (it: { value: string; label: string }) =>
+      dfbOptionLabel(f.formRef, f.fieldKey, it, locale, trMap);
+    if (f.queryRef != null && queryOptions[f.queryRef]) {
+      return queryOptions[f.queryRef].map((it) => ({ value: it.value, label: trLabel(it) }));
+    }
     const merged: Array<{ value: string; label: string }> = [];
     const seen = new Set<string>();
     for (const it of [...(scriptItemOptions[String(f.id)] ?? []), ...fieldConfigItems(parseFieldConfig(f.configJson))]) {
       if (seen.has(it.value)) continue;
       seen.add(it.value);
-      merged.push(it);
+      merged.push({ value: it.value, label: trLabel(it) });
     }
     return merged.length > 0 ? merged : undefined;
   };
@@ -343,7 +348,8 @@ function RuntimeInner({ formId }: { formId: number }) {
 
     const tabs: SimpleFormTab[] = [];
     for (const tb of bandTabs) {
-      const tabLabel = dfbFormTitle(tb, locale, trMap);
+      /* Task 69 — عنوان تب/باند با هویت پایدار Tab:<formRef>:<clientKey> */
+      const tabLabel = dfbTabTitle(tb, locale, trMap);
       /* Task 49 — input-fields band (TabKind=2): plain inputs, no grid;
          the band title doubles as the tab's user-facing name */
       if (tb.tabKind === 2) {
@@ -364,7 +370,7 @@ function RuntimeInner({ formId }: { formId: number }) {
         for (const ct of kids) {
           tabs.push({
             id: String(ct.id),
-            label: dfbFormTitle(ct, locale, trMap),
+            label: dfbTabTitle(ct, locale, trMap), // Task 69
             columns: columnsOf(ct.id),
           });
         }
