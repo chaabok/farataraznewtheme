@@ -2514,3 +2514,25 @@ Work Log (فقط مشاوره — بدون هیچ کد):
 
 Stage Summary:
 - درک درخواست به مالک بازگویی و طراحی کامل (دیتابیس/بک‌اند/فرانت/i18n×۱۳) پیشنهاد شد؛ هنوز هیچ پیاده‌سازی انجام نشده — Task 72 منتظر «بلی» مالک است.
+
+---
+Task ID: 72
+Agent: Z.ai Code (main orchestrator)
+Task: تأیید مالک («بلی») بر مشاوره — پیاده‌سازی «پیکربندی نرم افزارها» در پنجرهٔ تنظیمات: هاب ۷تب (عمومی/حسابداری/دریافت و پرداخت/انبار/فروش/دارایی ثابت/حقوق) با فیلدهای به‌مرور اعلام‌شونده و رعایت کامل فیلدهای ارث‌بری AppBaseEntity.
+
+Work Log:
+- دیتابیس (db/custom.db): جدول SoftwareConfig با CREATE TABLE مستقیم bun:sqlite (بدون prisma db push — درس Task 69: جدول‌های میراث Dfb* خارج از اسکیمای settings-service با db push در خطر drop بودند) با DDL هم‌سبک Prisma + unique index سه‌جزئی (AppKey,ConfigKey,BusinessStructureRef). مدل در schema.prisma با کامنت کامل ثبت شد (§2.3 مقدار رشته‌ای، §16 ID دستی، بلوک ۱۲فیلدی ارث‌بری).
+- ثبت‌های قراردادی: TABLE_REGISTRY += SoftwareConfig (§16)، VERSIONED_MODELS += SoftwareConfig (§2.5)؛ prisma generate.
+- بک‌اند (settings-service :3001، ماژول software-config): GET /software-config (فهرست ۷ نرم‌افزار + fieldCount) + GET /software-config/:appKey (مقادیر) + PUT /software-config/:appKey (ذخیرهٔ دسته‌ای با whitelist رجیستری SOFTWARE_CONFIG_FIELDS — فعلاً هر ۷ خالی؛ مقدار خالی=حذف الگوی Task 68؛ ID با generateNextId find-then-create بدون سوزاندن شکاف؛ مهر appBaseOnCreate/OnUpdate با SYSTEM_ACTOR؛ appKey ناشناس=404؛ کلید خارج از رجیستری=422 با پیام فارسی). tsc سرویس=0.
+- فرانت: کامپوننت جدید src/components/erp/settings/software-config-window.tsx — هدر فیروزه‌ای SlidersHorizontal + نوار تب RTL-آگاه ۷تایی (آیکون lucide هم‌راستا با کاتالوگ) + رندرکنندهٔ فرم آینده‌نگر از رجیستری (text/number/date/checkbox/select/textarea + دکمهٔ ذخیرهٔ PUT) + placeholder خط‌چین «فیلدهای این بخش به‌مرور اعلان و اضافه می‌شوند» تا اعلام فیلدها (بدون هیچ درخواست شبکه تا آن زمان). settings-window.tsx: کارت پرتابگر سوم + زیرصفحهٔ slim-bar.
+- رجیستری دوقلو (قرارداد اعلام فیلد آینده): فرانت SOFTWARE_CONFIG_FIELDS در software-config-window.tsx + سرور whitelist در software-config.dto.ts — هر اعلام فیلد جدید مالک = فقط افزودن به این دو + ترجمهٔ labelKey؛ صفر مهاجرت دیتابیس.
+- i18n: ۴ کلید جدید (settings.swConfig/swConfigDesc/swConfigPending/swConfigPayroll) ×۱۳ زبان با اسکریپت درج بعد از لنگر settings.umPending — راستی‌آزمایی ۱۳/۱۳ برای هر کلید + جایگاه صحیح de/ru. عنوان ۶ تب اول از کلیدهای موجود app.* بازاستفاده شد؛ «حقوق» طبق عبارت دقیق مالک کلید مستقل گرفت.
+- رفع lint: react-hooks/set-state-in-effect دو بار پرچم کرد (setState در زنجیرهٔ effect و سپس فراخوانی sync از effect) — بازآرایی به الگوی records-list: fetchValues خالص بدون setState + applyValues فقط داخل then/catch. lint نهایی صفر؛ tsc کل پروژه: baseline 11 → after 11 (صفر خطای جدید).
+- E2E API (curl امضاشدهٔ HMAC روی :3001): فهرست ۷ نرم‌افزار ✓؛ لیست خالی ✓؛ appKey ناشناس 404 ✓؛ کلید غیرمجاز 422 ✓؛ [کلید آزمونی موقت testFlag در رجیستری] create → ردیف با ID=1 از IDGeneration (ردیف شمارنده ساخته شد: LastID=1)، Creator=system، CreationDate=14050803 شمسی تهران، BusinessStructureRef=1 ✓؛ update → Version 1→2 خودکار + مهر LastModifier ✓؛ مقدار خالی → حذف (deleted=1، جدول ۰ ردیف) ✓؛ سپس کلید آزمونی از رجیستری حذف و سرویس ری‌استارت شد — دیتابیس بدون ردِ آزمون.
+- E2E مرورگر (agent-browser): دسکتاپ fa — تنظیمات → کارت «پیکربندی نرم افزارها» → زیرصفحه با بازگشت/هدر/۷ تب RTL؛ هر ۷ تب انتخاب + placeholder ✓؛ دکمهٔ بازگشت → خانه با هر ۳ کارت ✓. موبایل 375px — ۷ تب + نوار افقی اسکرول‌پذیر + placeholder ✓. آلمانی LTR — Softwarekonfiguration + Allgemein/Buchhaltung/Einnahmen und Ausgaben/Lager/Verkauf/Anlagevermögen/Gehälter + placeholder آلمانی ✓. ری‌لود تمیز fa = ۰ خطای کنسول/هیدریشن (آرتیفکت شناخته‌شدهٔ تغییر locale فقط در ری‌لود میانی).
+- استقرار: settings-service با bun run start (بدون hot، الگوی پایداری Task 68) با مالکیت انحصاری :3001؛ لاگ /tmp/settings-service.log. سینک origin/main توسط auto-push-service (کامیت bdd7d15 با بک‌آپ §0.9 ضمیمه) — working tree تمیز و هم‌تراز.
+
+Stage Summary:
+- هاب «پیکربندی نرم افزارها» فعال است: ۷ تب اعلام‌شدهٔ مالک با placeholder منتظرِ فیلدها؛ زیرساخت کامل (جدول ارث‌بری ۱۲فیلدی + IDGeneration + API whitelist + رندرکنندهٔ فرم چندنوعی) طوری بسته شد که هر اعلام فیلد جدید فقط «رجیستری + ترجمه» است — بدون مهاجرت دیتابیس و بدون کد جدید.
+- artifacts: mini-services/settings-service/{prisma/schema.prisma، src/software-config/*، src/app.module.ts، src/id-generation/table-registry.ts، src/prisma/prisma.service.ts}، src/components/erp/settings/software-config-window.tsx، src/components/erp/settings-window.tsx، src/i18n/dictionaries.ts؛ جدول SoftwareConfig در db/custom.db.
+- تصمیم‌های تأییدشدهٔ مالک در مشاوره: کارت پرتابگر + زیرصفحه؛ برچسب «حقوق»؛ جدول واحد key-value؛ unique شامل BusinessStructureRef (برای پیکربندی تفکیکی شعب در آینده).
