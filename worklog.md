@@ -2190,3 +2190,18 @@ Work Log:
 
 Stage Summary:
 - از این پس پشتیبان GitHub فقط سورس + بانک اطلاعاتی است؛ .next/ و dev.log دیگر پوش نمی‌شوند (تاریخچهٔ قبلی دست‌نخورده ماند).
+
+---
+Task ID: 57
+Agent: Z.ai Code (main orchestrator)
+Task: درخواست مالک — «بک آپ دیتابیس را همیشه در پوشه backup db قرار دهید».
+
+Work Log:
+- فرض صریح (§0.6): در هر پوش §0.9، علاوه بر وضعیت جاری db/*.db، نسخهٔ زمان‌دار از هر دیتابیس در پوشهٔ «backup db/» ساخته و پوش می‌شود (آرشیو پشتیبان).
+- AGENTS.md §0.9 بند جدید «پوشهٔ backup db» افزوده شد: پوش بدون نسخهٔ تازه در backup db ممنوع.
+- scripts/db-backup.sh ساخته شد (chmod +x): کپی همهٔ db/*.db با نام <نام>-<YYYY-MM-DD_HHMM>.db به وقت تهران.
+- اولین اجرا: backup db/custom-2026-10-24_1432.db + backup db/dfb-2026-10-24_1432.db.
+- طبق §0.9: commit + push به chaabok/farataraznewtheme.
+
+Stage Summary:
+- قانون پشتیبان دیتابیس مستقر شد: هر پوش شامل نسخهٔ زمان‌دار در «backup db/» است؛ اسکریپت استاندارد scripts/db-backup.sh منبع واحد فرمت است.
