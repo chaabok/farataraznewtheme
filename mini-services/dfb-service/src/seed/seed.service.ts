@@ -18,7 +18,7 @@ interface SystemFormSeed {
   code: string;
   titleFa: string;
   titleEn: string;
-  componentKey: string; // "simpleTwoRowTabbed" | "treeForm"
+  componentKey: string; // "simpleTwoRowTabbed" | "treeForm" | "dfb-builder" (launcher)
 }
 
 const SYSTEM_FORMS: SystemFormSeed[] = [
@@ -29,6 +29,20 @@ const SYSTEM_FORMS: SystemFormSeed[] = [
     titleFa: "ساختار کسب و کار",
     titleEn: "Business Structure",
     componentKey: "treeForm",
+  },
+  {
+    /* Task 46 — the «فرمساز» launcher form of «ابزارهای پیشرفته»: the icon
+       opens the app's forms menu (DfbMenuWindow) and this entry opens the
+       form builder + tree (ComponentKey "dfb-builder" is mapped to the
+       builder window by the menu window — never user-creatable, the forms
+       DTO whitelist only accepts the two real templates). Future forms of
+       this menu (system or user-made under this node) join it here. */
+    systemKey: "dfb.formBuilder",
+    anchorAppKey: "advancedTools",
+    code: "FB",
+    titleFa: "فرمساز",
+    titleEn: "Form Builder",
+    componentKey: "dfb-builder",
   },
 ];
 

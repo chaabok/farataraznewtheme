@@ -39,7 +39,10 @@ import { FormBuilderWindow } from "@/components/erp/form-builder/form-builder-wi
 import { DfbMenuWindow } from "@/components/erp/form-builder/dfb-menu-window";
 import { DfbFormRuntime } from "@/components/erp/form-builder/dfb-form-runtime";
 import { DfbGlyph } from "@/components/erp/form-builder/dfb-dialogs";
-import { useDfb, findMenuNode, findFormInTree } from "@/stores/dfb-store";
+import {
+  useDfb, findMenuNode, findFormInTree, findMenuNodeByAppKey,
+  dfbNodeTitle, dfbFormTitle,
+} from "@/stores/dfb-store";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Toaster } from "sonner";
@@ -89,9 +92,11 @@ const STATIC_WINDOWS: Partial<Record<Exclude<WindowKind, "app">, StaticWindowMet
     ),
     content: <TreeDemoWindow />,
   },
-  /* Task 45 — the form builder (فرمساز) of the advancedTools app (dfb-service).
-     openWindow redirects (app, advancedTools) → kind "dfb-builder", so the
-     desktop icon, start-menu tile and taskbar pin share one builder window. */
+  /* Task 45/46 — the form builder (فرمساز) of the advancedTools app
+     (dfb-service). Since Task 46 the advancedTools icon opens the app's
+     forms menu (kind "dfb-menu", ref "app:advancedTools") and the «فرمساز»
+     launcher form inside that menu opens THIS builder window — one shared
+     instance for every entry point. */
   "dfb-builder": {
     titleKey: "dfb.builderTitle",
     icon: (
@@ -107,6 +112,7 @@ function resolveWindowMeta(
   win: WinState,
   t: ReturnType<typeof useT>,
   dfbTree: ReturnType<typeof useDfb.getState>["tree"],
+  locale: string,
 ) {
   if (win.kind === "app") {
     const appKey = win.appKey ?? "";
@@ -116,25 +122,38 @@ function resolveWindowMeta(
       content: <AppPlaceholderWindow appKey={appKey} />,
     };
   }
-  /* Task 45 — dynamic dfb windows: titles come from the builder tree (dfb.db) */
+  /* Task 45/46 — dynamic dfb windows: titles come from the builder tree
+     (dfb.db). A dfb-menu ref is either a numeric node id (user icons) or
+     "app:<appKey>" (a system catalog app's forms menu — Task 46): while the
+     tree is still loading the catalog label/icon answer for it, then the
+     live node takes over. */
   if (win.kind === "dfb-menu") {
-    const menuId = Number(win.appKey ?? 0);
-    const node = findMenuNode(dfbTree, menuId);
+    const ref = win.appKey ?? "";
+    const appRef = ref.startsWith("app:") ? ref.slice(4) : null;
+    const node = appRef
+      ? findMenuNodeByAppKey(dfbTree, appRef)
+      : findMenuNode(dfbTree, Number(ref));
     return {
-      title: node?.title ?? t("dfb.menuNotFound"),
+      title: node
+        ? dfbNodeTitle(node, t, locale)
+        : appRef
+          ? t(`app.${appRef}` as never)
+          : t("dfb.menuNotFound"),
       icon: node ? (
         <DfbGlyph iconKey={node.iconKey} className="h-5 w-5 rounded-md" iconClass="h-3 w-3" />
+      ) : appRef ? (
+        <AppTile appKey={appRef} className="h-5 w-5 rounded-md" iconClass="h-3 w-3" />
       ) : (
         (STATIC_WINDOWS["dfb-builder"]?.icon ?? null)
       ),
-      content: <DfbMenuWindow menuId={menuId} />,
+      content: <DfbMenuWindow menuRef={ref} />,
     };
   }
   if (win.kind === "dfb-form") {
     const formId = Number(win.appKey ?? 0);
     const form = findFormInTree(dfbTree, formId);
     return {
-      title: form?.title ?? t("dfb.formNotFound"),
+      title: form ? dfbFormTitle(form, locale) : t("dfb.formNotFound"),
       icon: (
         <span className="flex h-5 w-5 items-center justify-center rounded-md bg-gradient-to-br from-teal-500 to-emerald-600 text-white">
           <FilePlus2 className="h-3 w-3" />
@@ -751,7 +770,7 @@ export function Desktop() {
           }}
         >
           {windows.map((win) => {
-            const meta = resolveWindowMeta(win, t, dfbTree);
+            const meta = resolveWindowMeta(win, t, dfbTree, locale);
             return (
               <AppWindow key={win.id} win={win} title={meta.title} icon={meta.icon}>
                 {meta.content}

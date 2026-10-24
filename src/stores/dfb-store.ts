@@ -96,6 +96,30 @@ export function findFormInTree(nodes: DfbMenuNode[], id: number): DfbFormSummary
   return null;
 }
 
+/* ------------------- locale-aware display titles (Task 46) ----------------
+   System nodes carry an appKey → the catalog's i18n labels cover all 11
+   locales (§1.3); forms and user-created nodes only store title (fa) and
+   titleEn (en), so other locales fall back to the stored title. */
+export type DfbTitleish = { title: string; titleEn: string | null };
+
+export function dfbFormTitle(form: DfbTitleish, locale: string): string {
+  return locale === "en" && form.titleEn ? form.titleEn : form.title;
+}
+
+export function dfbNodeTitle(
+  node: DfbTitleish & { isSystem: boolean; appKey: string | null },
+  t: (k: never) => string,
+  locale: string,
+): string {
+  if (node.isSystem && node.appKey) return t(`app.${node.appKey}` as never);
+  return dfbFormTitle(node, locale);
+}
+
+/** root-level node lookup by catalog appKey (for "app:<appKey>" menu windows) */
+export function findMenuNodeByAppKey(nodes: DfbMenuNode[], appKey: string): DfbMenuNode | null {
+  return nodes.find((n) => n.nodeType === 1 && n.isSystem && n.appKey === appKey) ?? null;
+}
+
 /* ------------------------- form definition types ------------------------ */
 
 export interface DfbFieldDef {

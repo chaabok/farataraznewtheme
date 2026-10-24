@@ -1,22 +1,30 @@
 "use client";
 
 import * as React from "react";
-import { ChevronLeft, ChevronRight, FileText, Folder } from "lucide-react";
+import { ChevronLeft, ChevronRight, FileText, Folder, Wrench } from "lucide-react";
 import { useT, useSettings } from "@/stores/settings-store";
 import { useDesktop } from "@/stores/desktop-store";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useDfb, findMenuNode, type DfbFormSummary, type DfbMenuNode } from "@/stores/dfb-store";
+import {
+  useDfb, findMenuNode, findMenuNodeByAppKey, dfbNodeTitle, dfbFormTitle,
+  type DfbFormSummary, type DfbMenuNode,
+} from "@/stores/dfb-store";
 import { DfbGlyph } from "./dfb-dialogs";
 
 /**
- * DfbMenuWindow (Task 45) — the desktop window of a USER-CREATED main icon:
- * navigates its submenus (tiles) and lists its forms; clicking a form opens
- * the form runtime window. Light title bar (hosted by AppWindow).
+ * DfbMenuWindow (Task 45/46) — the desktop window of a main icon's forms:
+ * `menuRef` is a numeric node id (user-created icons) or "app:<appKey>"
+ * (a system catalog app — Task 46: «ابزارهای پیشرفته» opens its forms menu
+ * here and the «فرمساز» launcher form inside opens the form builder).
+ * Navigates submenus (tiles), lists its forms; clicking a form opens the
+ * form runtime window — except the dfb-builder launcher, which opens the
+ * builder + tree. Future forms of the menu join the list automatically.
  */
-export function DfbMenuWindow({ menuId }: { menuId: number }) {
+export function DfbMenuWindow({ menuRef }: { menuRef: string }) {
   const t = useT();
   const dir = useSettings((s) => s.dir());
+  const locale = useSettings((s) => s.locale);
   const tree = useDfb((s) => s.tree);
   const loaded = useDfb((s) => s.loaded);
   const load = useDfb((s) => s.load);
@@ -28,7 +36,11 @@ export function DfbMenuWindow({ menuId }: { menuId: number }) {
 
   const [path, setPath] = React.useState<number[]>([]);
 
-  const root = React.useMemo(() => findMenuNode(tree, menuId), [tree, menuId]);
+  const appRef = menuRef.startsWith("app:") ? menuRef.slice(4) : null;
+  const root = React.useMemo(
+    () => (appRef ? findMenuNodeByAppKey(tree, appRef) : findMenuNode(tree, Number(menuRef))),
+    [tree, appRef, menuRef],
+  );
   const current = React.useMemo(() => {
     if (!root) return null;
     let node: DfbMenuNode = root;
@@ -41,7 +53,16 @@ export function DfbMenuWindow({ menuId }: { menuId: number }) {
   }, [root, path]);
 
   const openForm = React.useCallback(
-    (form: DfbFormSummary) => openWindow("dfb-form", String(form.id)),
+    (form: DfbFormSummary) => {
+      /* Task 46 — the «فرمساز» launcher (system form, ComponentKey
+         "dfb-builder") opens the form builder + tree; every other form
+         opens its runtime window. */
+      if (form.componentKey === "dfb-builder") {
+        openWindow("dfb-builder");
+        return;
+      }
+      openWindow("dfb-form", String(form.id));
+    },
     [openWindow],
   );
 
@@ -66,7 +87,7 @@ export function DfbMenuWindow({ menuId }: { menuId: number }) {
             onClick={() => setPath([])}
           >
             <DfbGlyph iconKey={root.iconKey} className="h-4 w-4 rounded" iconClass="h-2.5 w-2.5" />
-            {root.title}
+            {dfbNodeTitle(root, t, locale)}
           </button>
           {path.map((pid, i) => {
             const node = (() => {
@@ -86,7 +107,7 @@ export function DfbMenuWindow({ menuId }: { menuId: number }) {
                   className="rounded-md px-1.5 py-0.5 hover:bg-foreground/5"
                   onClick={() => setPath(path.slice(0, i + 1))}
                 >
-                  {node.title}
+                  {dfbNodeTitle(node, t, locale)}
                 </button>
               </span>
             );
@@ -108,7 +129,7 @@ export function DfbMenuWindow({ menuId }: { menuId: number }) {
                     className="group flex flex-col items-center gap-1.5 rounded-xl border border-border/60 p-3 transition-all hover:border-foreground/25 hover:shadow-md"
                   >
                     <DfbGlyph iconKey={sm.iconKey} className="h-10 w-10" iconClass="h-5 w-5" />
-                    <span className="line-clamp-2 text-center text-[11px] font-medium leading-tight">{sm.title}</span>
+                    <span className="line-clamp-2 text-center text-[11px] font-medium leading-tight">{dfbNodeTitle(sm, t, locale)}</span>
                   </button>
                 ))}
               </div>
@@ -123,26 +144,35 @@ export function DfbMenuWindow({ menuId }: { menuId: number }) {
               </p>
             ) : (
               <ul className="grid gap-2">
-                {forms.map((f) => (
-                  <li key={f.id}>
-                    <button
-                      type="button"
-                      onClick={() => openForm(f)}
-                      className="flex w-full items-center gap-3 rounded-xl border border-border/60 px-3 py-2.5 text-start transition-all hover:border-foreground/25 hover:shadow-md"
-                    >
-                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-teal-500 to-emerald-600 text-white shadow-sm">
-                        <FileText className="h-4 w-4" aria-hidden />
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate text-sm font-medium">{f.title}</span>
-                        <span className="block truncate text-[11px] text-muted-foreground" dir="ltr">
-                          {f.code}
+                {forms.map((f) => {
+                  const isBuilder = f.componentKey === "dfb-builder";
+                  return (
+                    <li key={f.id}>
+                      <button
+                        type="button"
+                        onClick={() => openForm(f)}
+                        className="flex w-full items-center gap-3 rounded-xl border border-border/60 px-3 py-2.5 text-start transition-all hover:border-foreground/25 hover:shadow-md"
+                      >
+                        <span
+                          className={
+                            isBuilder
+                              ? "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-amber-500 to-amber-700 text-white shadow-sm"
+                              : "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-teal-500 to-emerald-600 text-white shadow-sm"
+                          }
+                        >
+                          {isBuilder ? <Wrench className="h-4 w-4" aria-hidden /> : <FileText className="h-4 w-4" aria-hidden />}
                         </span>
-                      </span>
-                      {f.isSystem && <Badge variant="secondary" className="shrink-0 text-[10px]">{t("dfb.systemForm")}</Badge>}
-                    </button>
-                  </li>
-                ))}
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-sm font-medium">{dfbFormTitle(f, locale)}</span>
+                          <span className="block truncate text-[11px] text-muted-foreground" dir="ltr">
+                            {f.code}
+                          </span>
+                        </span>
+                        {f.isSystem && <Badge variant="secondary" className="shrink-0 text-[10px]">{t("dfb.systemForm")}</Badge>}
+                      </button>
+                    </li>
+                  );
+                })}
               </ul>
             )}
           </section>

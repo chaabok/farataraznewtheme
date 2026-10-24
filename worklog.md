@@ -1947,3 +1947,22 @@ Work Log:
 
 Stage Summary:
 - فرمساز مالک‌محور مستقر شد: اسکیمای Dfb روی سرویس مستقل 3003 (نخستین ارتقای §4.4 با dbMode اختصاصی)، درختواره‌ای که هم آیکون‌های سیستمی (کاتالوگ-driven) و هم فرم‌های سیستمی (SYSTEM_FORMS) را به‌تفکیک نشان می‌دهد و افزودن فیلد به آن‌ها را ممکن می‌کند؛ آیکون‌های کاربر بلافاصله در grid/سایدبار/منوی شروع/تسک‌بار ظاهر می‌شوند و فرم‌ها با هدر/بدنه/فوتر تعریف‌شده، فیلدهای متصل به کوئری و ذخیرهٔ EAV اجرا می‌شوند. قرارداد ۱۲فیلدی AppBaseEntity روی همهٔ جداول Dfb فعال است. مکانیزم ثبت فرم‌های سیستمی آینده = افزودن به SYSTEM_FORMS در seed. lint/tsc/E2E/۱۱ زبان/موبایل همگی پاک.
+
+---
+Task ID: 46
+Agent: main (Z.ai Code)
+Task: درخواست مالک — «برای فرم‌ساز در منوی ابزارهای پیشرفته یک فرم ایجاد کنید؛ وقتی کاربر روی فرم کلیک کرد فرم‌ساز و درختواره نمایش داده شود؛ منوی ابزارهای پیشرفته ممکن است فرم‌های دیگری هم در آینده به آن اضافه گردد» — پنجرهٔ منوی فرم‌های advancedTools با فرم سیستمی راه‌انداز «فرمساز».
+
+Work Log:
+- §0.1: AGENTS.md + worklog بازخوانی شد (آخرین رکورد: Task 45). §0.4: درخواست صریح مالک؛ §0.6 فرض‌های ۴گانه دوباره اعلام شد (منوی فرم‌ها به‌جای پرش مستقیم، فرم راه‌انداز سیستمی، افزوده‌شدن خودکار فرم‌های آینده، عنوان‌های locale-آگاه)؛ §0.5/§2.3/§2.6/§4.1/§6/§7 رعایت.
+- زیرساخت (dfb-service): SYSTEM_FORMS += {systemKey: "dfb.formBuilder", anchorAppKey: "advancedTools", code: "FB", titleFa: «فرمساز», titleEn: "Form Builder", componentKey: "dfb-builder"} — seed idempotent بوت، فرم سیستمی راه‌انداز زیر گرهٔ سیستمی advancedTools؛ ComponentKey="dfb-builder" در whitelist فرم‌های کاربر مجاز نیست (فقط دو قالب واقعی) → راه‌انداز صرفاً سیستمی می‌ماند.
+- desktop-store: redirect (app, advancedTools) → kind "dfb-menu" با appKey "app:advancedTools" (پنجرهٔ منوی فرم‌ها)؛ همهٔ نقاط ورود (آیکون دسکتاپ/گرید، سایدبار، منوی استارت، پین تسک‌بار) از openWindow می‌گذرند و خودکار پوشش داده می‌شوند.
+- desktop.tsx resolveWindowMeta: پشتیبانی از ارجاع "app:<appKey>" (یافتن گرهٔ ریشه با appKey از درخت dfb؛ تا لود درخت، برچسب/آیکون از کاتالوگ — بدون پرش عنوان)؛ پارامتر locale؛ عنوان‌های dfb-menu/dfb-form با هلپرهای locale-آگاه؛ به‌روزرسانی کامنت dfb-builder.
+- dfb-store: هلپرهای dfbFormTitle/dfbNodeTitle (گره سیستمی با appKey → برچسب ۱۱زبانهٔ کاتالوگ §1.3؛ فرم/گره کاربر → title (fa) / titleEn (en)) + findMenuNodeByAppKey.
+- dfb-menu-window: پراپ menuRef رشته‌ای ("42" | "app:advancedTools")؛ مسیریابی راه‌انداز — ComponentKey="dfb-builder" → openWindow("dfb-builder")، بقیهٔ فرم‌ها → runtime (dfb-form)؛ آیکون آجری کهربایی برای راه‌انداز؛ عنوان‌های breadcrumb/کاشی زیرمنو/ردیف فرم‌ها locale-آگاه؛ بدنهٔ منو data-driven است → فرم‌های آیندهٔ advancedTools (سیستمی از SYSTEM_FORMS یا کاربرساز از فرمساز زیر همین گره) بدون تغییر کد در همین لیست ظاهر می‌شوند.
+- form-builder-window: برچسب‌های درخت و عنوان جزئیات با هلپرهای locale-آگاه (درخت در en: "Form Builder" زیر "Advanced Tools").
+- restart dfb-service (pid قبلی kill؛ اجرای orphan با DATABASE_URL صریح file:/home/z/my-project/db/dfb.db — درس worklog: نشت DATABASE_URL شل)؛ فرم راه‌انداز با ID=5 زیر گرهٔ 16 ثبت شد (تأیید BFF: menus/tree).
+- Verification: bun run lint → 0؛ bunx tsc --noEmit → 0 خطای src. E2E (agent-browser، fa/RTL 1440×810): dblclick «ابزارهای پیشرفته» → پنجرهٔ منو با بخش «فرم‌ها» و ردیف «فرمساز / FB / فرم سیستمی» (آیکون آجری کهربایی)؛ کلیک → پنجرهٔ «فرمساز» (ریبون + درخت ۲۸ آیکون؛ «ابزارهای پیشرفته» باز با فرزند «فرمساز»)؛ انتخاب گره → پنل جزئیات (عنوان/عنوان لاتین/کد FB/منتشر شده/سیستمی/افزودن فیلد). en/LTR: آیکون "Advanced Tools" → منو "Advanced Tools" با ردیف "Form Builder / FB / System form"؛ کلیک → فوکوس پنجرهٔ موجود (dedup، شمار پنجره‌ها ۲→۲)؛ درخت "Form Builder" زیر "Advanced Tools"؛ جزئیات "Form: Form Builder". موبایل 390×844: scrollW=390 بدون سرریز. page errors=0؛ console error=0؛ dev.log پس از ری‌استارت فقط 200 (سه 502 /queries فقط در پنجرهٔ کوتاه ری‌استارت سرویس بود). زبان به fa/RTL برگشت. اسکرین‌شات‌ها: /tmp/dfb46-1…9.
+
+Stage Summary:
+- «ابزارهای پیشرفته» حالا یک منوی فرم واقعی دارد: کلیک روی آیکون → پنجرهٔ منوی فرم‌ها؛ فرم سیستمی «فرمساز» راه‌اندازِ پنجرهٔ فرمساز + درختواره است؛ فرم‌های آیندهٔ این منو (سیستمی/کاربرساز) خودکار به همان لیست اضافه می‌شوند. گره‌ها/فرم‌ها در همهٔ پنجره‌ها (منو، درخت، عنوان پنجره) locale-آگاه نمایش داده می‌شوند (کاتالوگ ۱۱زبانه برای گره‌های سیستمی، title/titleEn برای فرم‌ها). lint/tsc/E2E/موبایل/کنسول همگی پاک؛ ثبت در worklog انجام شد.

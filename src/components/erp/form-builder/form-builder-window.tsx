@@ -3,7 +3,7 @@
 import * as React from "react";
 import { FileText, ListTree, Network, Plus, Sigma, Wrench } from "lucide-react";
 import { toast } from "sonner";
-import { useT } from "@/stores/settings-store";
+import { useT, useSettings } from "@/stores/settings-store";
 import { useDesktop } from "@/stores/desktop-store";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,7 +16,7 @@ import type { FormAction } from "@/components/forms/action-bar";
 import { ConfirmDeleteDialog } from "@/components/forms/action-bar";
 import { useWindowChrome } from "@/components/desktop/app-window";
 import {
-  useDfb, findMenuNode, fetchFormDetail,
+  useDfb, findMenuNode, fetchFormDetail, dfbNodeTitle, dfbFormTitle,
   type DfbMenuNode, type DfbFormDetail, type DfbFormSummary,
 } from "@/stores/dfb-store";
 import {
@@ -33,6 +33,7 @@ import { dfbApi } from "@/stores/dfb-store";
  */
 export function FormBuilderWindow() {
   const t = useT();
+  const locale = useSettings((s) => s.locale);
   const chrome = useWindowChrome();
   const headerMaximized = useDesktop(
     (s) => s.windows.find((w) => w.kind === "dfb-builder")?.maximized ?? false,
@@ -106,7 +107,7 @@ export function FormBuilderWindow() {
   const nodes = React.useMemo<SimpleTreeFormNode[]>(() => {
     const mapMenu = (n: DfbMenuNode): SimpleTreeFormNode => ({
       id: `m${n.id}`,
-      label: n.title,
+      label: dfbNodeTitle(n, t, locale),
       icon: (
         <span className="flex h-4 w-4 shrink-0 items-center justify-center">
           <DfbGlyph iconKey={n.iconKey} className="h-4 w-4 rounded-md" iconClass="h-2.5 w-2.5" />
@@ -116,7 +117,7 @@ export function FormBuilderWindow() {
         ...n.children.map(mapMenu),
         ...n.forms.map<SimpleTreeFormNode>((f) => ({
           id: `f${f.id}`,
-          label: f.title,
+          label: dfbFormTitle(f, locale),
           icon: (
             <span className="flex h-4 w-4 shrink-0 items-center justify-center">
               <FileText
@@ -129,7 +130,7 @@ export function FormBuilderWindow() {
       ],
     });
     return tree.map(mapMenu);
-  }, [tree]);
+  }, [tree, t, locale]);
 
   /* ---------------- detail fields ---------------- */
   const fields = React.useMemo<SimpleFormField[]>(() => {
@@ -296,9 +297,9 @@ export function FormBuilderWindow() {
   const detailTitleOverride = React.useMemo(() => {
     if (!selected) return null;
     return selected.kind === "menu"
-      ? selected.menu.title
-      : `${t("dfb.formEntry")}: ${selected.form.title}`;
-  }, [selected, t]);
+      ? dfbNodeTitle(selected.menu, t, locale)
+      : `${t("dfb.formEntry")}: ${dfbFormTitle(selected.form, locale)}`;
+  }, [selected, t, locale]);
 
   return (
     <div className="flex h-full flex-col">
