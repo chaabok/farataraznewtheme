@@ -30,6 +30,7 @@ const VERSIONED_MODELS: ReadonlySet<string> = new Set([
   "BusinessStructureUser",
   "AppRegistry",
   "Systems",
+  "SoftwareConfig", // Task 72 — پیکربندی نرم‌افزارها
 ]);
 
 const VERSION_ACTIONS = new Set(["update", "updateMany", "upsert"]);

@@ -137,3 +137,38 @@ model Systems {
 
   @@map("Systems")
 }
+
+/// SoftwareConfig — Task 72 (تأیید مالک): «پیکربندی نرم افزارها» — تنظیمات هر
+/// نرم‌افزارِ سیستم در پنجرهٔ تنظیمات (تب‌های عمومی/حسابداری/دریافت و پرداخت/
+/// انبار/فروش/دارایی ثابت/حقوق). هر فیلد پیکربندی = یک ردیف کلید/مقدار تا
+/// فیلدهای «به‌مرور اعلام‌شوندهٔ» مالک بدون هیچ مهاجرت دیتابیسی فقط ردیف بگیرند.
+/// AppKey = appKey کاتالوگ (general|accounting|receiptsPayment|inventory|sales|
+/// fixedAssets|payroll — بعداً گسترش می‌یابد)؛ ConfigValue رشته‌ای است (§2.3).
+/// §16: ID دستی از IDGeneration ("SoftwareConfig")؛ بلوک کامل ارث‌بری
+/// AppBaseEntity ۱۲فیلدی (درخواست مالک: «فیلدهای ارث بری رعایت گردد») —
+/// درخواست‌کننده تا استقرار IAM = SYSTEM_ACTOR (دفتر مرکزی، ID=1).
+/// Unique شامل BusinessStructureRef است تا پیکربندی تفکیکی هر شرکت/شعبه در
+/// آینده بدون تغییر اسکیما ممکن شود (پیش‌فرض تأییدشدهٔ مشاورهٔ Task 72).
+model SoftwareConfig {
+  id                   BigInt   @id @map("ID")
+  appKey               String   @map("AppKey")
+  configKey            String   @map("ConfigKey")
+  configValue          String?  @map("ConfigValue") // "" = حذف (الگوی Task 68)
+  version              Int      @default(1) @map("Version") // §2.5 auto-rowversion
+  creator              String   @map("Creator") // IAM UserID
+  creationDate         String   @map("CreationDate") // Shamsi 'YYYYMMDD' (Tehran)
+  createTime           String   @map("CreationTime") // 'HHmmss' (Tehran)
+  lastModifier         String?  @map("LastModifier")
+  lastModificationDate String?  @map("LastModificationDate")
+  lastModificationTime String?  @map("LastModificationTime")
+  businessStructureRef BigInt   @map("BusinessStructureRef")
+  companyRef           BigInt?  @map("CompanyRef")
+  branchRef            BigInt?  @map("BranchRef")
+  agencyRef            BigInt?  @map("AgencyRef")
+  shopRef              BigInt?  @map("ShopRef")
+  createdAt            DateTime @default(now()) @map("CreatedAt")
+  updatedAt            DateTime @updatedAt @map("UpdatedAt")
+
+  @@unique([appKey, configKey, businessStructureRef])
+  @@map("SoftwareConfig")
+}

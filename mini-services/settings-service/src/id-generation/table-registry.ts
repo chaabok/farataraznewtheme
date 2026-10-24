@@ -18,7 +18,8 @@ export type TableKey =
   | "IDGeneration"
   | "BusinessStructure"
   | "BusinessStructureUser"
-  | "Systems";
+  | "Systems"
+  | "SoftwareConfig"; // Task 72 — پیکربندی نرم‌افزارها
 
 export const TABLE_REGISTRY: Record<TableKey, TableEntry> = {
   IDGeneration: {
@@ -37,6 +38,10 @@ export const TABLE_REGISTRY: Record<TableKey, TableEntry> = {
   },
   Systems: {
     canonical: "Systems",
+    pk: "ID",
+  },
+  SoftwareConfig: {
+    canonical: "SoftwareConfig", // Task 72 — پیکربندی نرم‌افزارها (هر فیلد یک ردیف)
     pk: "ID",
   },
 };
