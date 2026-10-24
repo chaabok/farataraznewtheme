@@ -3,3 +3,4 @@ node_modules/
 tool-results/
 .next/
 dev.log
+mini-services/*/dist/
