@@ -89,3 +89,7 @@ https://nextjs.org/telemetry
  GET /api/settings/business-structure 200 in 19ms (next.js: 9ms, application-code: 9ms)
  GET /api/settings/business-structure 200 in 54ms (next.js: 32ms, application-code: 22ms)
  GET /api/settings/business-structure 200 in 34ms (next.js: 23ms, application-code: 11ms)
+ GET / 200 in 44ms (next.js: 0.8ms, application-code: 43ms)
+ GET / 200 in 40ms (next.js: 1.2ms, application-code: 39ms)
+ GET /api/settings/app-registry 200 in 25ms (next.js: 10ms, application-code: 15ms)
+ GET /api/settings/app-registry 200 in 12ms (next.js: 1.0ms, application-code: 11ms)
