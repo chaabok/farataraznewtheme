@@ -15,6 +15,53 @@ import {
 import type { SimpleFormField } from "@/components/forms/simple-form-two-row-tabbed";
 
 /* ------------------------------------------------------------------ */
+/* Task 49 — owner date mask (YYYY/MM/DD auto separators): typing the  */
+/* 4-digit year inserts «/» automatically, then the 2-digit month does */
+/* the same, then the 2-digit day. Persian/Arabic-Indic digits are     */
+/* normalized; only 8 digits ever fit (max 10 chars with slashes).     */
+/* ------------------------------------------------------------------ */
+
+const FA_DIGITS = "۰۱۲۳۴۵۶۷۸۹";
+const AR_DIGITS = "٠١٢٣٤٥٦٧٨٩";
+
+/** Task 49 — digit-normalizer (Persian/Arabic-Indic → ASCII) */
+export function normalizeDigits(input: string): string {
+  let out = "";
+  for (const ch of input) {
+    const fi = FA_DIGITS.indexOf(ch);
+    if (fi >= 0) {
+      out += String(fi);
+    } else {
+      const ai = AR_DIGITS.indexOf(ch);
+      out += ai >= 0 ? String(ai) : ch;
+    }
+  }
+  return out;
+}
+
+/**
+ * Task 49 — applies the owner's date mask: digits only, «/» inserted
+ * automatically after the 4-digit year and after the 2-digit month
+ * (YYYY/MM/DD). While TYPING, the trailing separator appears the moment
+ * the group completes; while DELETING, trailing separators are not
+ * re-added so backspace always makes progress.
+ */
+export function applyDateMask(raw: string, isDeleting: boolean): string {
+  const digits = normalizeDigits(raw).replace(/[^0-9]/g, "").slice(0, 8);
+  const y = digits.slice(0, 4);
+  const m = digits.slice(4, 6);
+  const d = digits.slice(6, 8);
+  let out = y;
+  if (m) out += "/" + m;
+  if (d) out += "/" + d;
+  if (!isDeleting) {
+    if (digits.length === 4) out += "/";
+    else if (digits.length === 6) out += "/";
+  }
+  return out;
+}
+
+/* ------------------------------------------------------------------ */
 /* Task 48 — percentage flow grid for dfb-designed forms (design==run) */
 /* ------------------------------------------------------------------ */
 
@@ -156,6 +203,11 @@ export function FieldCell({
      (label alignment, --label-w, gaps) are untouched. */
   const inputBase = "h-5.5 min-w-0 text-xs";
 
+  /* Task 49 — date-mask state (declared unconditionally — rules-of-hooks);
+     only used by the date branch below */
+  const dateRef = React.useRef<HTMLInputElement | null>(null);
+  const lastMasked = React.useRef("");
+
   /* checkbox — inline toggle pushed to the row end (legacy «فعال» placement) */
   if (type === "checkbox") {
     const cid = `${idPrefix}-chk-${field.id}`;
@@ -211,8 +263,20 @@ export function FieldCell({
   }
 
   /* Task 47 — date: LTR YYYY/MM/DD input with an inline calendar chip
-     (mirrors the design studio's date preview and the EAV string storage) */
+     (mirrors the design studio's date preview and the EAV string storage).
+     Task 49 — owner mask: «/» auto-inserts after the 4-digit year and the
+     2-digit month while typing; rejected keystrokes snap the DOM value back. */
   if (type === "date") {
+    const onDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const deleting = e.target.value.length < lastMasked.current.length;
+      const masked = applyDateMask(e.target.value, deleting);
+      if (masked === lastMasked.current && dateRef.current) {
+        /* keystroke rejected by the mask — force the controlled value back */
+        dateRef.current.value = masked;
+      }
+      lastMasked.current = masked;
+      onChange?.(field.id, masked);
+    };
     return (
       <div data-form-cell className="flex min-w-0 items-center gap-2">
         <span
@@ -233,13 +297,15 @@ export function FieldCell({
         </span>
         <div className="relative min-w-0 flex-1">
           <Input
+            ref={dateRef}
             value={field.value ?? ""}
             placeholder="YYYY/MM/DD"
+            inputMode="numeric"
             readOnly={field.readOnly}
             disabled={field.disabled}
             aria-label={field.label}
             dir="ltr"
-            onChange={(e) => onChange?.(field.id, e.target.value)}
+            onChange={onDateChange}
             className={cn(inputBase, "pe-7 text-start")}
           />
           <CalendarDays

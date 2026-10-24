@@ -3,7 +3,7 @@
 import * as React from "react";
 import {
   AlignCenterHorizontal, AlignEndHorizontal, AlignLeft, AlignStartHorizontal, ArrowDown, ArrowUp,
-  CalendarDays, Check, ChevronDown, Copy, Eye, EyeOff, FileText, Hash, History, Layers, List,
+  CalendarDays, Check, ChevronDown, Copy, Eye, EyeOff, FileText, FormInput, Grid3x3, Hash, History, Layers, List,
   ListTree, Loader2, MoveHorizontal, Palette, PencilLine, Plus, RotateCcw, Save, Search,
   SlidersHorizontal, Square, Trash2, Type, X,
 } from "lucide-react";
@@ -41,8 +41,8 @@ import { cn } from "@/lib/utils";
  * designer that opens right after the create-form wizard records the new
  * form's basic info (and from the builder tree for user forms). Center =
  * live canvas of the form shell (theme header, footer action tiles, dashed
- * «بانک» containers, field cards); side rail = shell style (theme/title
- * size/font), active-bank settings, active-field settings (incl. query
+ * «باند» containers, field cards); side rail = shell style (theme/title
+ * size/font), active-band settings, active-field settings (incl. query
  * binding) and the field toolbox. Undo/redo history, preview mode and a
  * two-phase save (tabs → fresh tab ids → fields) keep it professional and
  * safe. Everything persists to the Dfb schema via dfb-service.
@@ -50,10 +50,18 @@ import { cn } from "@/lib/utils";
  * Task 48 — پنج نیازمندی مالک:
  *  1) new forms carry the FULL legacy action bar (footerButtons = all keys);
  *  2) preview hides the design bands — only the fields flow under the shell;
- *  3) bank field alignment (start/center/end, persisted in style.bankAlign)
+ *  3) band field alignment (start/center/end, persisted in style.bankAlign)
  *     + «هم‌عرض کردن» equalize command;
  *  4) field width resize with the mouse (WidthSpan = percent 25..100);
  *  5) preview is a LIVE runtime: real inputs + working action bar (EAV save).
+ *
+ * Task 49 — سه نیازمندی مالک:
+ *  1) «بانک» renamed to «باند» (band) across the studio UI;
+ *  2) date fields mask to YYYY/MM/DD with automatic «/» separators;
+ *  3) «add tab» in the design studio with TWO tab models — grid tab
+ *     (records via the footer add button, DfbFormTab.TabKind=1) and
+ *     input-fields tab (plain inputs, TabKind=2) — selectable at creation
+ *     and switchable in the band settings.
  */
 
 /* ------------------------------- model ------------------------------- */
@@ -76,6 +84,8 @@ interface StudioField {
 interface StudioBank {
   key: string; // "main" | client key
   id?: number; // DfbFormTab id (loaded / last save)
+  /** Task 49 — 0=main band (root fields) | 1=grid tab | 2=input-fields tab */
+  tabKind: number;
   title: string;
   fields: StudioField[];
 }
@@ -90,7 +100,7 @@ interface StudioShell {
 
 interface StudioState {
   shell: StudioShell;
-  /** banks[0] = «بانک اصلی» (fields without a tab); banks[1..] = DfbFormTab rows */
+  /** banks[0] = «باند اصلی» (fields without a tab); banks[1..] = DfbFormTab rows */
   banks: StudioBank[];
 }
 
@@ -200,10 +210,11 @@ function StudioInner({ formId }: { formId: number }) {
         const header = (d.header ?? {}) as Record<string, unknown>;
         const footer = (d.footer ?? {}) as Record<string, unknown>;
         const style = (header.style ?? {}) as DfbFormStyle;
-        const main: StudioBank = { key: "main", title: "", fields: [] };
+        const main: StudioBank = { key: "main", tabKind: 0, title: "", fields: [] };
         const tabBanks: StudioBank[] = d.tabs.map((tb) => ({
           key: `tab-${tb.id}`,
           id: tb.id,
+          tabKind: tb.tabKind === 2 ? 2 : 1, // Task 49 — 1=grid | 2=input fields
           title: tb.title,
           fields: [],
         }));
@@ -547,12 +558,31 @@ function StudioInner({ formId }: { formId: number }) {
     [commit],
   );
 
-  const addBank = React.useCallback(() => {
-    if (isSystem) return;
-    commit((d) => {
-      d.banks.push({ key: nextKey("bank"), title: `${t("dfb.studio.bankTitle")} ${d.banks.length}`, fields: [] });
-    });
-  }, [commit, isSystem, t]);
+  const addBank = React.useCallback(
+    (tabKind: 1 | 2) => {
+      if (isSystem) return;
+      commit((d) => {
+        d.banks.push({
+          key: nextKey("bank"),
+          tabKind, // Task 49 — 1=grid (records via footer add) | 2=input fields
+          title: `${t("dfb.studio.bankTitle")} ${d.banks.length}`,
+          fields: [],
+        });
+      });
+    },
+    [commit, isSystem, t],
+  );
+
+  /** Task 49 — switch a tab band's model (grid ↔ input fields) */
+  const updateBankKind = React.useCallback(
+    (bankKey: string, tabKind: 1 | 2) => {
+      commit((d) => {
+        const bank = d.banks.find((b) => b.key === bankKey);
+        if (bank && bank.key !== "main") bank.tabKind = tabKind;
+      });
+    },
+    [commit],
+  );
 
   const removeBank = React.useCallback(
     (bankKey: string) => {
@@ -618,7 +648,7 @@ function StudioInner({ formId }: { formId: number }) {
       if (!isSystem) {
         metaPayload.tabs = state.banks
           .slice(1)
-          .map((b, i) => ({ title: b.title.trim(), orderIndex: i }));
+          .map((b, i) => ({ title: b.title.trim(), orderIndex: i, tabKind: b.tabKind === 2 ? 2 : 1 }));
       }
       /* phase 1 — meta/style/tabs (tabs regenerate → fresh ids);
          the update endpoint answers with the saved item itself */
@@ -649,10 +679,11 @@ function StudioInner({ formId }: { formId: number }) {
       /* refresh baseline from the server (fresh ids for the next save) */
       const d = await fetchFormDetail(formId);
       const header = (d.header ?? {}) as Record<string, unknown>;
-      const main: StudioBank = { key: "main", title: "", fields: [] };
+      const main: StudioBank = { key: "main", tabKind: 0, title: "", fields: [] };
       const tabBanks: StudioBank[] = d.tabs.map((tb) => ({
         key: `tab-${tb.id}`,
         id: tb.id,
+        tabKind: tb.tabKind === 2 ? 2 : 1, // Task 49
         title: tb.title,
         fields: [],
       }));
@@ -878,14 +909,32 @@ function StudioInner({ formId }: { formId: number }) {
                       />
                     ))}
                     {!isSystem && (
-                      <button
-                        type="button"
-                        onClick={addBank}
-                        className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-teal-600/50 bg-teal-500/5 px-4 py-3 text-sm font-medium text-teal-700 transition-all hover:border-teal-600 hover:bg-teal-500/10 hover:shadow-md dark:text-teal-400"
-                      >
-                        <Layers className="h-4 w-4" aria-hidden />
-                        {t("dfb.studio.addBank")}
-                      </button>
+                      <div className="mt-3 rounded-2xl border border-dashed border-teal-600/50 bg-teal-500/5 px-3 py-2.5">
+                        {/* Task 49 — «add tab» in the studio: two tab models
+                            (grid = records via the footer add button,
+                             input fields = plain inputs, no grid) */}
+                        <p className="mb-2 text-center text-[11px] font-medium text-teal-700 dark:text-teal-400">
+                          {t("dfb.studio.addBank")}
+                        </p>
+                        <div className="flex flex-col gap-1.5 sm:flex-row">
+                          <button
+                            type="button"
+                            onClick={() => addBank(1)}
+                            className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl border border-teal-600/50 bg-background/70 px-4 py-2.5 text-sm font-medium text-teal-700 transition-all hover:border-teal-600 hover:bg-teal-500/10 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:text-teal-400"
+                          >
+                            <Grid3x3 className="h-4 w-4" aria-hidden />
+                            {t("dfb.studio.addGridTab")}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => addBank(2)}
+                            className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl border border-violet-500/50 bg-background/70 px-4 py-2.5 text-sm font-medium text-violet-700 transition-all hover:border-violet-500 hover:bg-violet-500/10 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:text-violet-400"
+                          >
+                            <FormInput className="h-4 w-4" aria-hidden />
+                            {t("dfb.studio.addFieldsTab")}
+                          </button>
+                        </div>
+                      </div>
                     )}
                   </div>
                 </>
@@ -1047,6 +1096,24 @@ function StudioInner({ formId }: { formId: number }) {
                       </SelectContent>
                     </Select>
                   </div>
+                  {/* Task 49 — band model: grid (records via footer add button)
+                      vs input fields (plain inputs, no grid) — switchable */}
+                  {activeBank.key !== "main" && (
+                    <div className="grid gap-1.5">
+                      <Label className="text-[11px] text-muted-foreground">{t("dfb.studio.bankKind")}</Label>
+                      <Select
+                        value={activeBank.tabKind === 2 ? "fields" : "grid"}
+                        onValueChange={(v) => updateBankKind(activeBank.key, v === "fields" ? 2 : 1)}
+                        disabled={isSystem}
+                      >
+                        <SelectTrigger aria-label={t("dfb.studio.bankKind")} className="h-8"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="grid">{t("dfb.studio.bankKindGrid")}</SelectItem>
+                          <SelectItem value="fields">{t("dfb.studio.bankKindFields")}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
                   {/* Task 48 — bank field alignment (start/center/end, persisted
                       in headerJson.style.bankAlign) + equalize-widths command */}
                   {!isSystem && (
@@ -1346,6 +1413,17 @@ function BankCanvas({
             ({t("dfb.studio.fieldsCount").replace("{n}", String(bank.fields.length))})
           </span>
         </button>
+        {/* Task 49 — band-model chip (grid vs input fields) on tab bands */}
+        {!isMain && (
+          <Badge variant="outline" className="gap-1 px-1.5 py-0 text-[9px]">
+            {bank.tabKind === 2 ? (
+              <FormInput className="h-2.5 w-2.5" aria-hidden />
+            ) : (
+              <Grid3x3 className="h-2.5 w-2.5" aria-hidden />
+            )}
+            {bank.tabKind === 2 ? t("dfb.studio.bankKindFields") : t("dfb.studio.bankKindGrid")}
+          </Badge>
+        )}
         <Badge variant="outline" className="font-mono text-[9px]" dir="ltr">100%</Badge>
         {!isSystem && (
           <span className="ms-auto flex items-center gap-1">

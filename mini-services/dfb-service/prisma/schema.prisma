@@ -103,11 +103,15 @@ model DfbForm {
 }
 
 /// DfbFormTab — تب‌های بدنهٔ فرم (اختیاری؛ برای قالب دو ردیفهٔ تب‌دار).
+/// TabKind — Task 49 (درخواست مالک): تب دو مدل دارد — 1=گرید (رکوردها با دکمهٔ
+/// افزودنِ فوتر در جدول ثبت می‌شوند، رفتار پیش‌فرض/میراث) و 2=فیلد ورودی
+/// (بدون گرید؛ فیلدهای اینپوت معمولی DfbFormField با TabRef همین تب).
 model DfbFormTab {
   id                   BigInt   @id @map("ID")
   formRef              BigInt   @map("FormRef")
   title                String   @map("Title")
   titleEn              String?  @map("Title_En")
+  tabKind              Int      @default(1) @map("TabKind") // 1=Grid (default/legacy) | 2=InputFields
   orderIndex           Int      @default(0) @map("OrderIndex")
   version              Int      @default(1) @map("Version")
   creator              String   @map("Creator")

@@ -147,6 +147,9 @@ export interface DfbTabDef {
   formRef: number;
   title: string;
   titleEn: string | null;
+  /** Task 49 — 1=grid (default/legacy, records via footer add button)
+      | 2=input fields (no grid, plain input fields) */
+  tabKind: number;
   orderIndex: number;
   version: number;
 }

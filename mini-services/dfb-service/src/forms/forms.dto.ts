@@ -46,6 +46,9 @@ export class TabInputDto {
   @IsOptional() @IsInt() @Min(0) id?: number;
   @IsString() @MinLength(1) @MaxLength(120) title: string;
   @IsOptional() @IsString() @MaxLength(120) titleEn?: string;
+  /** Task 49 — tab model: 1=grid (default/legacy, records via footer add
+      button) | 2=input fields (no grid, plain input fields) */
+  @IsOptional() @IsInt() @Min(1) @Max(2) tabKind?: number;
   @IsOptional() @IsInt() @Min(0) orderIndex?: number;
 }
 

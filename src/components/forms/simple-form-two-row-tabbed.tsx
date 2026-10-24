@@ -86,6 +86,14 @@ export interface SimpleFormTab {
   /** initial rows; afterwards the grid rows are owned internally —
       mirror every change through onTabRowsChange if the caller needs them. */
   rows?: Record<string, string>[];
+  /** Task 49 — tab model (owner request): "grid" (default) keeps the records
+      table whose rows are created with the footer add button; "fields" is
+      NOT a grid — the tab renders plain input fields (FlowFieldGrid) and the
+      footer record buttons hide while it is active. */
+  kind?: "grid" | "fields";
+  /** Task 49 — input fields of a "fields" tab (entered like the main rows,
+      saved with the form's own record) */
+  fields?: SimpleFormField[];
 }
 
 export interface SimpleFormTwoRowTabbedProps {
@@ -343,6 +351,12 @@ export function SimpleFormTwoRowTabbed({
 
   const selectedInActive = Boolean(selected && selected.tabId === activeTab);
 
+  /* Task 49 — the footer record buttons (+ / × / copy / save-rows) belong to
+     GRID tabs (rows are created with the footer add button); while a
+     "fields" tab is active they are hidden */
+  const activeTabDef = tabsProp.find((x) => x.id === activeTab);
+  const activeTabIsGrid = activeTabDef ? activeTabDef.kind !== "fields" : true;
+
   return (
     <section
       data-simple-form
@@ -504,6 +518,29 @@ export function SimpleFormTwoRowTabbed({
 
               {tabsProp.map((tb) => {
                 const rows = rowsByTab[tb.id] ?? [];
+                /* Task 49 — "fields" tabs render input fields, not a grid */
+                if (tb.kind === "fields") {
+                  const tabFields = tb.fields ?? [];
+                  return (
+                    <TabsContent key={tb.id} value={tb.id} className="mt-2 flex min-h-0 flex-1 flex-col">
+                      <div
+                        data-simple-form-fields-tab={tb.id}
+                        className="min-h-0 flex-1 overflow-auto rounded-xl border bg-background/70 scrollbar-slim"
+                      >
+                        {tabFields.length === 0 ? (
+                          <div className="flex flex-col items-center gap-2 px-3 py-10 text-center text-muted-foreground">
+                            <Inbox className="h-7 w-7 opacity-50" aria-hidden />
+                            <span className="text-xs">{t("dfb.studio.emptyFieldsTab")}</span>
+                          </div>
+                        ) : (
+                          <div className="px-3 pb-1 pt-3">
+                            <FlowFieldGrid fields={tabFields} onFieldChange={onFieldChange} align={fieldsAlign} />
+                          </div>
+                        )}
+                      </div>
+                    </TabsContent>
+                  );
+                }
                 return (
                   <TabsContent key={tb.id} value={tb.id} className="mt-2 flex min-h-0 flex-1 flex-col">
                     <div
@@ -579,13 +616,15 @@ export function SimpleFormTwoRowTabbed({
         )}
       </div>
 
-      {/* 4) footer strip — row actions of the ACTIVE tab (only when tabs exist).
+      {/* 4) footer strip — row actions of the ACTIVE tab (only when tabs exist
+          AND the active tab is a GRID tab — Task 49: "fields" tabs have no
+          record rows, the footer add button creates grid records only).
           Task 29 — direction-aware anchoring: the row buttons anchor at the
           inline START and flow with the reading direction (RTL locales lay
           them out right→left with «افزودن» rightmost; LTR locales left→right
           with Add leftmost). me-auto reserves the far END side for the
           caller-owned record counter. */}
-      {hasTabs && (
+      {hasTabs && activeTabIsGrid && (
         <footer className="flex h-10 shrink-0 items-center gap-1 border-t border-border/60 bg-muted/40 px-3">
           <div className="me-auto flex items-center gap-1">
             <MiniRowButton

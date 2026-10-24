@@ -51,6 +51,7 @@ export class FormsService {
           formRef: Number(t.formRef),
           title: t.title,
           titleEn: t.titleEn,
+          tabKind: t.tabKind, // Task 49 — 1=grid (default) | 2=input fields
           orderIndex: t.orderIndex,
           version: t.version,
         })),
@@ -282,7 +283,10 @@ export class FormsService {
 
   /* ------------------------------- internals ------------------------------- */
 
-  private async replaceTabs(formId: number, tabs: Array<{ id?: number; title: string; titleEn?: string; orderIndex?: number }>) {
+  private async replaceTabs(
+    formId: number,
+    tabs: Array<{ id?: number; title: string; titleEn?: string; tabKind?: number; orderIndex?: number }>,
+  ) {
     await this.prisma.dfbFormTab.deleteMany({ where: { formRef: BigInt(formId) } });
     let order = 0;
     for (const t of tabs) {
@@ -293,6 +297,7 @@ export class FormsService {
           formRef: BigInt(formId),
           title: t.title,
           titleEn: t.titleEn ?? null,
+          tabKind: t.tabKind === 2 ? 2 : 1, // Task 49 — 1=grid (default/legacy) | 2=input fields
           orderIndex: t.orderIndex ?? order++,
           ...appBaseOnCreate(SYSTEM_ACTOR),
         },

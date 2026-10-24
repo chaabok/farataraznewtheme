@@ -238,6 +238,17 @@ function RuntimeInner({ formId }: { formId: number }) {
 
     const tabs: SimpleFormTab[] = detail.tabs.map((tb) => {
       const tabFields = bodyFields.filter((f) => f.tabRef === tb.id);
+      /* Task 49 — input-fields tab (TabKind=2): plain inputs, no grid; its
+         fields are ordinary DfbFormField rows saved with the form's record */
+      if (tb.tabKind === 2) {
+        return {
+          id: String(tb.id),
+          label: tb.title,
+          kind: "fields" as const,
+          columns: [], // Task 49 — fields tabs have no grid columns
+          fields: tabFields.map(toSimpleField),
+        };
+      }
       return {
         id: String(tb.id),
         label: tb.title,
