@@ -1370,6 +1370,7 @@ __turbopack_context__.s([
 ]);
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/compiled/react/jsx-dev-runtime.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/compiled/react/index.js [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$braces$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Braces$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/braces.js [app-client] (ecmascript) <export default as Braces>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$calendar$2d$days$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__CalendarDays$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/calendar-days.js [app-client] (ecmascript) <export default as CalendarDays>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$plus$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Plus$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/plus.js [app-client] (ecmascript) <export default as Plus>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$utils$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/lib/utils.ts [app-client] (ecmascript)");
@@ -1486,6 +1487,108 @@ function FieldCell({ field, onChange, idPrefix = "sft" }) {
     /* Task 49 — date-mask state (declared unconditionally — rules-of-hooks);
      only used by the date branch below */ const dateRef = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRef"](null);
     const lastMasked = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRef"]("");
+    /* Task 53 — static DESIGN shapes (line/box/circle/oval): decorative only —
+     no label unit, no input, no EAV value. Rendered identically in the
+     design preview and the running form. */ if (type === "line") {
+        return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+            "aria-hidden": true,
+            className: "my-1.5 w-full",
+            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                className: "h-0.5 w-full rounded-full bg-gradient-to-l from-border via-foreground/30 to-border"
+            }, void 0, false, {
+                fileName: "[project]/src/components/forms/form-primitives.tsx",
+                lineNumber: 217,
+                columnNumber: 9
+            }, this)
+        }, void 0, false, {
+            fileName: "[project]/src/components/forms/form-primitives.tsx",
+            lineNumber: 216,
+            columnNumber: 7
+        }, this);
+    }
+    if (type === "box") {
+        return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+            "aria-hidden": true,
+            className: "my-1 h-12 w-full rounded-xl border-2 border-border/70 bg-muted/30 shadow-inner"
+        }, void 0, false, {
+            fileName: "[project]/src/components/forms/form-primitives.tsx",
+            lineNumber: 223,
+            columnNumber: 7
+        }, this);
+    }
+    if (type === "circle") {
+        return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+            "aria-hidden": true,
+            className: "flex w-full justify-center py-1",
+            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                className: "h-14 w-14 rounded-full border-2 border-border/70 bg-muted/30 shadow-inner"
+            }, void 0, false, {
+                fileName: "[project]/src/components/forms/form-primitives.tsx",
+                lineNumber: 229,
+                columnNumber: 9
+            }, this)
+        }, void 0, false, {
+            fileName: "[project]/src/components/forms/form-primitives.tsx",
+            lineNumber: 228,
+            columnNumber: 7
+        }, this);
+    }
+    if (type === "oval") {
+        return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+            "aria-hidden": true,
+            className: "flex w-full justify-center py-1",
+            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                className: "h-10 w-32 rounded-[50%] border-2 border-border/70 bg-muted/30 shadow-inner"
+            }, void 0, false, {
+                fileName: "[project]/src/components/forms/form-primitives.tsx",
+                lineNumber: 236,
+                columnNumber: 9
+            }, this)
+        }, void 0, false, {
+            fileName: "[project]/src/components/forms/form-primitives.tsx",
+            lineNumber: 235,
+            columnNumber: 7
+        }, this);
+    }
+    /* Task 53 — script data-source element: not an input — a slim strip
+     marking where the script feeds the form (bound fields render as
+     ordinary fields next to it). */ if (type === "script") {
+        return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+            className: "flex items-center gap-2 rounded-lg border border-dashed border-teal-600/40 bg-teal-500/5 px-2.5 py-1.5 text-[11px] text-teal-700 dark:text-teal-400",
+            "aria-label": field.label,
+            children: [
+                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$braces$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Braces$3e$__["Braces"], {
+                    className: "h-3.5 w-3.5 shrink-0",
+                    "aria-hidden": true
+                }, void 0, false, {
+                    fileName: "[project]/src/components/forms/form-primitives.tsx",
+                    lineNumber: 250,
+                    columnNumber: 9
+                }, this),
+                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                    className: "min-w-0 flex-1 truncate font-medium",
+                    children: field.label
+                }, void 0, false, {
+                    fileName: "[project]/src/components/forms/form-primitives.tsx",
+                    lineNumber: 251,
+                    columnNumber: 9
+                }, this),
+                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                    className: "shrink-0 rounded-md bg-teal-600/10 px-1.5 py-0.5 font-mono text-[9px]",
+                    dir: "ltr",
+                    children: "db"
+                }, void 0, false, {
+                    fileName: "[project]/src/components/forms/form-primitives.tsx",
+                    lineNumber: 252,
+                    columnNumber: 9
+                }, this)
+            ]
+        }, void 0, true, {
+            fileName: "[project]/src/components/forms/form-primitives.tsx",
+            lineNumber: 246,
+            columnNumber: 7
+        }, this);
+    }
     /* checkbox — inline toggle pushed to the row end (legacy «فعال» placement) */ if (type === "checkbox") {
         const cid = `${idPrefix}-chk-${field.id}`;
         return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
@@ -1500,7 +1603,7 @@ function FieldCell({ field, onChange, idPrefix = "sft" }) {
                     "aria-label": field.label
                 }, void 0, false, {
                     fileName: "[project]/src/components/forms/form-primitives.tsx",
-                    lineNumber: 219,
+                    lineNumber: 265,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1508,13 +1611,13 @@ function FieldCell({ field, onChange, idPrefix = "sft" }) {
                     children: field.label
                 }, void 0, false, {
                     fileName: "[project]/src/components/forms/form-primitives.tsx",
-                    lineNumber: 226,
+                    lineNumber: 272,
                     columnNumber: 9
                 }, this)
             ]
         }, void 0, true, {
             fileName: "[project]/src/components/forms/form-primitives.tsx",
-            lineNumber: 215,
+            lineNumber: 261,
             columnNumber: 7
         }, this);
     }
@@ -1535,12 +1638,12 @@ function FieldCell({ field, onChange, idPrefix = "sft" }) {
                                 children: field.label
                             }, void 0, false, {
                                 fileName: "[project]/src/components/forms/form-primitives.tsx",
-                                lineNumber: 240,
+                                lineNumber: 286,
                                 columnNumber: 13
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/src/components/forms/form-primitives.tsx",
-                            lineNumber: 239,
+                            lineNumber: 285,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1549,7 +1652,7 @@ function FieldCell({ field, onChange, idPrefix = "sft" }) {
                             children: ":"
                         }, void 0, false, {
                             fileName: "[project]/src/components/forms/form-primitives.tsx",
-                            lineNumber: 244,
+                            lineNumber: 290,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1558,13 +1661,13 @@ function FieldCell({ field, onChange, idPrefix = "sft" }) {
                             children: "*"
                         }, void 0, false, {
                             fileName: "[project]/src/components/forms/form-primitives.tsx",
-                            lineNumber: 247,
+                            lineNumber: 293,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/forms/form-primitives.tsx",
-                    lineNumber: 235,
+                    lineNumber: 281,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("textarea", {
@@ -1578,13 +1681,13 @@ function FieldCell({ field, onChange, idPrefix = "sft" }) {
                     className: "min-h-10 min-w-0 flex-1 resize-y rounded-md border border-input bg-transparent px-2 py-1 text-xs shadow-xs outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:bg-background disabled:opacity-50"
                 }, void 0, false, {
                     fileName: "[project]/src/components/forms/form-primitives.tsx",
-                    lineNumber: 251,
+                    lineNumber: 297,
                     columnNumber: 9
                 }, this)
             ]
         }, void 0, true, {
             fileName: "[project]/src/components/forms/form-primitives.tsx",
-            lineNumber: 234,
+            lineNumber: 280,
             columnNumber: 7
         }, this);
     }
@@ -1617,12 +1720,12 @@ function FieldCell({ field, onChange, idPrefix = "sft" }) {
                                 children: field.label
                             }, void 0, false, {
                                 fileName: "[project]/src/components/forms/form-primitives.tsx",
-                                lineNumber: 287,
+                                lineNumber: 333,
                                 columnNumber: 13
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/src/components/forms/form-primitives.tsx",
-                            lineNumber: 286,
+                            lineNumber: 332,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1631,7 +1734,7 @@ function FieldCell({ field, onChange, idPrefix = "sft" }) {
                             children: ":"
                         }, void 0, false, {
                             fileName: "[project]/src/components/forms/form-primitives.tsx",
-                            lineNumber: 291,
+                            lineNumber: 337,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1640,13 +1743,13 @@ function FieldCell({ field, onChange, idPrefix = "sft" }) {
                             children: "*"
                         }, void 0, false, {
                             fileName: "[project]/src/components/forms/form-primitives.tsx",
-                            lineNumber: 294,
+                            lineNumber: 340,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/forms/form-primitives.tsx",
-                    lineNumber: 282,
+                    lineNumber: 328,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1665,7 +1768,7 @@ function FieldCell({ field, onChange, idPrefix = "sft" }) {
                             className: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$utils$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["cn"])(inputBase, "pe-7 text-start")
                         }, void 0, false, {
                             fileName: "[project]/src/components/forms/form-primitives.tsx",
-                            lineNumber: 299,
+                            lineNumber: 345,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$calendar$2d$days$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__CalendarDays$3e$__["CalendarDays"], {
@@ -1673,19 +1776,19 @@ function FieldCell({ field, onChange, idPrefix = "sft" }) {
                             className: "pointer-events-none absolute end-1.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground"
                         }, void 0, false, {
                             fileName: "[project]/src/components/forms/form-primitives.tsx",
-                            lineNumber: 311,
+                            lineNumber: 357,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/forms/form-primitives.tsx",
-                    lineNumber: 298,
+                    lineNumber: 344,
                     columnNumber: 9
                 }, this)
             ]
         }, void 0, true, {
             fileName: "[project]/src/components/forms/form-primitives.tsx",
-            lineNumber: 281,
+            lineNumber: 327,
             columnNumber: 7
         }, this);
     }
@@ -1705,12 +1808,12 @@ function FieldCell({ field, onChange, idPrefix = "sft" }) {
                             children: field.label
                         }, void 0, false, {
                             fileName: "[project]/src/components/forms/form-primitives.tsx",
-                            lineNumber: 331,
+                            lineNumber: 377,
                             columnNumber: 11
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/src/components/forms/form-primitives.tsx",
-                        lineNumber: 330,
+                        lineNumber: 376,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1719,7 +1822,7 @@ function FieldCell({ field, onChange, idPrefix = "sft" }) {
                         children: ":"
                     }, void 0, false, {
                         fileName: "[project]/src/components/forms/form-primitives.tsx",
-                        lineNumber: 335,
+                        lineNumber: 381,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1728,13 +1831,13 @@ function FieldCell({ field, onChange, idPrefix = "sft" }) {
                         children: "*"
                     }, void 0, false, {
                         fileName: "[project]/src/components/forms/form-primitives.tsx",
-                        lineNumber: 338,
+                        lineNumber: 384,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/forms/form-primitives.tsx",
-                lineNumber: 326,
+                lineNumber: 372,
                 columnNumber: 7
             }, this),
             type === "select" ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Select"], {
@@ -1749,12 +1852,12 @@ function FieldCell({ field, onChange, idPrefix = "sft" }) {
                             placeholder: field.placeholder
                         }, void 0, false, {
                             fileName: "[project]/src/components/forms/form-primitives.tsx",
-                            lineNumber: 353,
+                            lineNumber: 399,
                             columnNumber: 13
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/src/components/forms/form-primitives.tsx",
-                        lineNumber: 352,
+                        lineNumber: 398,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectContent"], {
@@ -1764,18 +1867,18 @@ function FieldCell({ field, onChange, idPrefix = "sft" }) {
                                 children: o.label
                             }, o.value, false, {
                                 fileName: "[project]/src/components/forms/form-primitives.tsx",
-                                lineNumber: 357,
+                                lineNumber: 403,
                                 columnNumber: 15
                             }, this))
                     }, void 0, false, {
                         fileName: "[project]/src/components/forms/form-primitives.tsx",
-                        lineNumber: 355,
+                        lineNumber: 401,
                         columnNumber: 11
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/forms/form-primitives.tsx",
-                lineNumber: 347,
+                lineNumber: 393,
                 columnNumber: 9
             }, this) : type === "lookup" ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                 className: "flex min-w-0 flex-1 items-center gap-1.5",
@@ -1791,7 +1894,7 @@ function FieldCell({ field, onChange, idPrefix = "sft" }) {
                         className: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$utils$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["cn"])(inputBase, field.ltr && "text-start")
                     }, void 0, false, {
                         fileName: "[project]/src/components/forms/form-primitives.tsx",
-                        lineNumber: 365,
+                        lineNumber: 411,
                         columnNumber: 11
                     }, this),
                     field.onLookup && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1804,18 +1907,18 @@ function FieldCell({ field, onChange, idPrefix = "sft" }) {
                             "aria-hidden": true
                         }, void 0, false, {
                             fileName: "[project]/src/components/forms/form-primitives.tsx",
-                            lineNumber: 382,
+                            lineNumber: 428,
                             columnNumber: 15
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/src/components/forms/form-primitives.tsx",
-                        lineNumber: 376,
+                        lineNumber: 422,
                         columnNumber: 13
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/forms/form-primitives.tsx",
-                lineNumber: 364,
+                lineNumber: 410,
                 columnNumber: 9
             }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                 className: "relative min-w-0 flex-1",
@@ -1832,7 +1935,7 @@ function FieldCell({ field, onChange, idPrefix = "sft" }) {
                         className: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$utils$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["cn"])(inputBase, field.ltr && "text-start", field.suffixChip && "pe-16")
                     }, void 0, false, {
                         fileName: "[project]/src/components/forms/form-primitives.tsx",
-                        lineNumber: 388,
+                        lineNumber: 434,
                         columnNumber: 11
                     }, this),
                     field.suffixChip && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -1840,19 +1943,19 @@ function FieldCell({ field, onChange, idPrefix = "sft" }) {
                         children: field.suffixChip
                     }, void 0, false, {
                         fileName: "[project]/src/components/forms/form-primitives.tsx",
-                        lineNumber: 400,
+                        lineNumber: 446,
                         columnNumber: 13
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/forms/form-primitives.tsx",
-                lineNumber: 387,
+                lineNumber: 433,
                 columnNumber: 9
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/src/components/forms/form-primitives.tsx",
-        lineNumber: 321,
+        lineNumber: 367,
         columnNumber: 5
     }, this);
 }
@@ -2021,12 +2124,12 @@ var _s = __turbopack_context__.k.signature();
         children: icon
     }, void 0, false, {
         fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-        lineNumber: 210,
+        lineNumber: 220,
         columnNumber: 5
     }, this);
 }
 _c = MiniRowButton;
-function SimpleFormTwoRowTabbed({ title, badge, icon, headerClassName, titleClassName, bodyStyle, fields, onFieldChange, labelScope = "container", tabs, defaultTabId, onTabRowsChange, onSaveRows, onFirst, onPrev, onNext, onLast, onReset, onSave, onSaveNew, onSaveClose, onCopy, onDelete, onDeleteNew, onDeleteClose, onPrint, onClose, onHelp, listItems, listLoading, onOpenListItem, canSave = true, canCopy = true, canDelete = true, canPrint = true, actions, fieldsAlign, onHeaderClose, onHeaderMaximize, onHeaderMinimize, headerMaximized, onHeaderDragStart, onHeaderDragMove, onHeaderDragEnd, onHeaderDoubleClick, className }) {
+function SimpleFormTwoRowTabbed({ title, badge, icon, headerClassName, titleClassName, bodyStyle, fields, onFieldChange, labelScope = "container", tabs, defaultTabId, onTabRowsChange, onSaveRows, onFirst, onPrev, onNext, onLast, onReset, onSave, onSaveNew, onSaveClose, onCopy, onDelete, onDeleteNew, onDeleteClose, onPrint, onClose, onHelp, listItems, listLoading, onOpenListItem, canSave = true, canCopy = true, canDelete = true, canPrint = true, actions, fieldsAlign, footerFields, onHeaderClose, onHeaderMaximize, onHeaderMinimize, headerMaximized, onHeaderDragStart, onHeaderDragMove, onHeaderDragEnd, onHeaderDoubleClick, className }) {
     _s();
     const t = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$settings$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useT"])();
     const tabsProp = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useMemo"]({
@@ -2040,6 +2143,17 @@ function SimpleFormTwoRowTabbed({ title, badge, icon, headerClassName, titleClas
      across rows (the owner's expectation). Pass labelScope="row" for
      per-row alignment. */ const fieldsGridRef = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRef"](null);
     (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$forms$2f$use$2d$aligned$2d$labels$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useAlignedLabels"])(fieldsGridRef, {
+        scope: labelScope
+    });
+    /* Task 53 — the FOOTER band keeps its OWN label-alignment scope so the
+     footer zone aligns internally regardless of the body grid. */ const footerFieldsList = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useMemo"]({
+        "SimpleFormTwoRowTabbed.useMemo[footerFieldsList]": ()=>footerFields ?? []
+    }["SimpleFormTwoRowTabbed.useMemo[footerFieldsList]"], [
+        footerFields
+    ]);
+    const hasFooterFields = footerFieldsList.length > 0;
+    const footerGridRef = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRef"](null);
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$forms$2f$use$2d$aligned$2d$labels$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useAlignedLabels"])(footerGridRef, {
         scope: labelScope
     });
     /* detail-grid rows: initialized once per mount from the tabs prop */ const [rowsByTab, setRowsByTab] = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"]({
@@ -2145,23 +2259,23 @@ function SimpleFormTwoRowTabbed({ title, badge, icon, headerClassName, titleClas
                                             children: "*"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-                                            lineNumber: 384,
+                                            lineNumber: 402,
                                             columnNumber: 19
                                         }, this)
                                     ]
                                 }, c.id, true, {
                                     fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-                                    lineNumber: 374,
+                                    lineNumber: 392,
                                     columnNumber: 15
                                 }, this))
                         }, void 0, false, {
                             fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-                            lineNumber: 372,
+                            lineNumber: 390,
                             columnNumber: 11
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-                        lineNumber: 371,
+                        lineNumber: 389,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("tbody", {
@@ -2177,7 +2291,7 @@ function SimpleFormTwoRowTabbed({ title, badge, icon, headerClassName, titleClas
                                             "aria-hidden": true
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-                                            lineNumber: 397,
+                                            lineNumber: 415,
                                             columnNumber: 19
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2185,23 +2299,23 @@ function SimpleFormTwoRowTabbed({ title, badge, icon, headerClassName, titleClas
                                             children: t("sft.noData")
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-                                            lineNumber: 398,
+                                            lineNumber: 416,
                                             columnNumber: 19
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-                                    lineNumber: 396,
+                                    lineNumber: 414,
                                     columnNumber: 17
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-                                lineNumber: 395,
+                                lineNumber: 413,
                                 columnNumber: 15
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-                            lineNumber: 394,
+                            lineNumber: 412,
                             columnNumber: 13
                         }, this) : rows.map((row, ri)=>{
                             const sel = selected?.tabId === tb.id && selected.index === ri;
@@ -2220,34 +2334,34 @@ function SimpleFormTwoRowTabbed({ title, badge, icon, headerClassName, titleClas
                                             className: "h-5 w-full min-w-32 rounded-md border border-transparent bg-transparent px-2 text-xs outline-none transition-colors hover:border-border focus:border-ring focus:bg-background"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-                                            lineNumber: 416,
+                                            lineNumber: 434,
                                             columnNumber: 23
                                         }, this)
                                     }, c.id, false, {
                                         fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-                                        lineNumber: 415,
+                                        lineNumber: 433,
                                         columnNumber: 21
                                     }, this))
                             }, ri, false, {
                                 fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-                                lineNumber: 406,
+                                lineNumber: 424,
                                 columnNumber: 17
                             }, this);
                         })
                     }, void 0, false, {
                         fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-                        lineNumber: 392,
+                        lineNumber: 410,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-                lineNumber: 370,
+                lineNumber: 388,
                 columnNumber: 7
             }, this)
         }, void 0, false, {
             fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-            lineNumber: 366,
+            lineNumber: 384,
             columnNumber: 5
         }, this);
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("section", {
@@ -2271,7 +2385,7 @@ function SimpleFormTwoRowTabbed({ title, badge, icon, headerClassName, titleClas
                         children: icon
                     }, void 0, false, {
                         fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-                        lineNumber: 458,
+                        lineNumber: 476,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
@@ -2279,7 +2393,7 @@ function SimpleFormTwoRowTabbed({ title, badge, icon, headerClassName, titleClas
                         children: title
                     }, void 0, false, {
                         fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-                        lineNumber: 462,
+                        lineNumber: 480,
                         columnNumber: 9
                     }, this),
                     badge && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2287,7 +2401,7 @@ function SimpleFormTwoRowTabbed({ title, badge, icon, headerClassName, titleClas
                         children: badge
                     }, void 0, false, {
                         fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-                        lineNumber: 464,
+                        lineNumber: 482,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2301,12 +2415,12 @@ function SimpleFormTwoRowTabbed({ title, badge, icon, headerClassName, titleClas
                                     "aria-hidden": true
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-                                    lineNumber: 471,
+                                    lineNumber: 489,
                                     columnNumber: 15
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-                                lineNumber: 470,
+                                lineNumber: 488,
                                 columnNumber: 13
                             }, this),
                             onHeaderMaximize && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$forms$2f$form$2d$primitives$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["HeaderButton"], {
@@ -2317,19 +2431,19 @@ function SimpleFormTwoRowTabbed({ title, badge, icon, headerClassName, titleClas
                                     "aria-hidden": true
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-                                    lineNumber: 477,
+                                    lineNumber: 495,
                                     columnNumber: 17
                                 }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$square$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Square$3e$__["Square"], {
                                     className: "h-3 w-3",
                                     "aria-hidden": true
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-                                    lineNumber: 479,
+                                    lineNumber: 497,
                                     columnNumber: 17
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-                                lineNumber: 475,
+                                lineNumber: 493,
                                 columnNumber: 13
                             }, this),
                             onHeaderClose && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$forms$2f$form$2d$primitives$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["HeaderButton"], {
@@ -2340,18 +2454,18 @@ function SimpleFormTwoRowTabbed({ title, badge, icon, headerClassName, titleClas
                                     "aria-hidden": true
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-                                    lineNumber: 485,
+                                    lineNumber: 503,
                                     columnNumber: 15
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-                                lineNumber: 484,
+                                lineNumber: 502,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-                        lineNumber: 468,
+                        lineNumber: 486,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2359,13 +2473,13 @@ function SimpleFormTwoRowTabbed({ title, badge, icon, headerClassName, titleClas
                         className: "pointer-events-none absolute inset-x-0 bottom-0 h-px bg-white/25"
                     }, void 0, false, {
                         fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-                        lineNumber: 489,
+                        lineNumber: 507,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-                lineNumber: 443,
+                lineNumber: 461,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2394,7 +2508,7 @@ function SimpleFormTwoRowTabbed({ title, badge, icon, headerClassName, titleClas
                         actions: actions
                     }, void 0, false, {
                         fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-                        lineNumber: 498,
+                        lineNumber: 516,
                         columnNumber: 9
                     }, this),
                     hasNav && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2407,14 +2521,14 @@ function SimpleFormTwoRowTabbed({ title, badge, icon, headerClassName, titleClas
                                     className: "h-4 w-4"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-                                    lineNumber: 531,
+                                    lineNumber: 549,
                                     columnNumber: 30
                                 }, this),
                                 label: t("sft.first"),
                                 onClick: onFirst
                             }, void 0, false, {
                                 fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-                                lineNumber: 531,
+                                lineNumber: 549,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$forms$2f$form$2d$primitives$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["NavButton"], {
@@ -2422,14 +2536,14 @@ function SimpleFormTwoRowTabbed({ title, badge, icon, headerClassName, titleClas
                                     className: "h-4 w-4"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-                                    lineNumber: 532,
+                                    lineNumber: 550,
                                     columnNumber: 30
                                 }, this),
                                 label: t("sft.prev"),
                                 onClick: onPrev
                             }, void 0, false, {
                                 fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-                                lineNumber: 532,
+                                lineNumber: 550,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$forms$2f$form$2d$primitives$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["NavButton"], {
@@ -2437,14 +2551,14 @@ function SimpleFormTwoRowTabbed({ title, badge, icon, headerClassName, titleClas
                                     className: "h-4 w-4"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-                                    lineNumber: 533,
+                                    lineNumber: 551,
                                     columnNumber: 30
                                 }, this),
                                 label: t("sft.next"),
                                 onClick: onNext
                             }, void 0, false, {
                                 fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-                                lineNumber: 533,
+                                lineNumber: 551,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$forms$2f$form$2d$primitives$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["NavButton"], {
@@ -2452,26 +2566,26 @@ function SimpleFormTwoRowTabbed({ title, badge, icon, headerClassName, titleClas
                                     className: "h-4 w-4"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-                                    lineNumber: 534,
+                                    lineNumber: 552,
                                     columnNumber: 30
                                 }, this),
                                 label: t("sft.last"),
                                 onClick: onLast
                             }, void 0, false, {
                                 fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-                                lineNumber: 534,
+                                lineNumber: 552,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-                        lineNumber: 526,
+                        lineNumber: 544,
                         columnNumber: 11
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-                lineNumber: 497,
+                lineNumber: 515,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2487,7 +2601,7 @@ function SimpleFormTwoRowTabbed({ title, badge, icon, headerClassName, titleClas
                             align: fieldsAlign
                         }, void 0, false, {
                             fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-                            lineNumber: 551,
+                            lineNumber: 569,
                             columnNumber: 13
                         }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                             ref: fieldsGridRef,
@@ -2497,17 +2611,17 @@ function SimpleFormTwoRowTabbed({ title, badge, icon, headerClassName, titleClas
                                     onChange: onFieldChange
                                 }, f.id, false, {
                                     fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-                                    lineNumber: 563,
+                                    lineNumber: 581,
                                     columnNumber: 17
                                 }, this))
                         }, void 0, false, {
                             fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-                            lineNumber: 558,
+                            lineNumber: 576,
                             columnNumber: 13
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-                        lineNumber: 549,
+                        lineNumber: 567,
                         columnNumber: 9
                     }, this),
                     hasTabs && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2529,12 +2643,12 @@ function SimpleFormTwoRowTabbed({ title, badge, icon, headerClassName, titleClas
                                             children: tb.label
                                         }, tb.id, false, {
                                             fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-                                            lineNumber: 581,
+                                            lineNumber: 599,
                                             columnNumber: 19
                                         }, this))
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-                                    lineNumber: 579,
+                                    lineNumber: 597,
                                     columnNumber: 15
                                 }, this),
                                 tabsProp.map((tb)=>{
@@ -2555,7 +2669,7 @@ function SimpleFormTwoRowTabbed({ title, badge, icon, headerClassName, titleClas
                                                             "aria-hidden": true
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-                                                            lineNumber: 605,
+                                                            lineNumber: 623,
                                                             columnNumber: 29
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2563,13 +2677,13 @@ function SimpleFormTwoRowTabbed({ title, badge, icon, headerClassName, titleClas
                                                             children: t("dfb.studio.emptyFieldsTab")
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-                                                            lineNumber: 606,
+                                                            lineNumber: 624,
                                                             columnNumber: 29
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-                                                    lineNumber: 604,
+                                                    lineNumber: 622,
                                                     columnNumber: 27
                                                 }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                     className: "px-3 pb-1 pt-3",
@@ -2579,22 +2693,22 @@ function SimpleFormTwoRowTabbed({ title, badge, icon, headerClassName, titleClas
                                                         align: fieldsAlign
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-                                                        lineNumber: 610,
+                                                        lineNumber: 628,
                                                         columnNumber: 29
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-                                                    lineNumber: 609,
+                                                    lineNumber: 627,
                                                     columnNumber: 27
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-                                                lineNumber: 599,
+                                                lineNumber: 617,
                                                 columnNumber: 23
                                             }, this)
                                         }, tb.id, false, {
                                             fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-                                            lineNumber: 598,
+                                            lineNumber: 616,
                                             columnNumber: 21
                                         }, this);
                                     }
@@ -2604,26 +2718,45 @@ function SimpleFormTwoRowTabbed({ title, badge, icon, headerClassName, titleClas
                                         children: renderGridTable(tb, rows)
                                     }, tb.id, false, {
                                         fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-                                        lineNumber: 618,
+                                        lineNumber: 636,
                                         columnNumber: 19
                                     }, this);
                                 })
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-                            lineNumber: 571,
+                            lineNumber: 589,
                             columnNumber: 13
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-                        lineNumber: 570,
+                        lineNumber: 588,
                         columnNumber: 11
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-                lineNumber: 548,
+                lineNumber: 566,
                 columnNumber: 7
+            }, this),
+            hasFooterFields && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                "data-form-footer-band": true,
+                className: "shrink-0 border-t border-border/60 bg-muted/20 px-4 pb-2.5 pt-2.5",
+                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$forms$2f$form$2d$primitives$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["FlowFieldGrid"], {
+                    fields: footerFieldsList,
+                    onFieldChange: onFieldChange,
+                    idPrefix: "sft-footer",
+                    align: fieldsAlign,
+                    gridRef: footerGridRef
+                }, void 0, false, {
+                    fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
+                    lineNumber: 654,
+                    columnNumber: 11
+                }, this)
+            }, void 0, false, {
+                fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
+                lineNumber: 650,
+                columnNumber: 9
             }, this),
             hasTabs && activeTabIsGrid && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("footer", {
                 className: "flex h-10 shrink-0 items-center gap-1 border-t border-border/60 bg-muted/40 px-3",
@@ -2636,7 +2769,7 @@ function SimpleFormTwoRowTabbed({ title, badge, icon, headerClassName, titleClas
                                     className: "h-4 w-4"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-                                    lineNumber: 640,
+                                    lineNumber: 676,
                                     columnNumber: 21
                                 }, this),
                                 label: t("sft.addRow"),
@@ -2644,7 +2777,7 @@ function SimpleFormTwoRowTabbed({ title, badge, icon, headerClassName, titleClas
                                 onClick: addRow
                             }, void 0, false, {
                                 fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-                                lineNumber: 639,
+                                lineNumber: 675,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(MiniRowButton, {
@@ -2652,7 +2785,7 @@ function SimpleFormTwoRowTabbed({ title, badge, icon, headerClassName, titleClas
                                     className: "h-4 w-4"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-                                    lineNumber: 646,
+                                    lineNumber: 682,
                                     columnNumber: 21
                                 }, this),
                                 label: t("sft.removeRow"),
@@ -2661,7 +2794,7 @@ function SimpleFormTwoRowTabbed({ title, badge, icon, headerClassName, titleClas
                                 disabled: !selectedInActive
                             }, void 0, false, {
                                 fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-                                lineNumber: 645,
+                                lineNumber: 681,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(MiniRowButton, {
@@ -2669,7 +2802,7 @@ function SimpleFormTwoRowTabbed({ title, badge, icon, headerClassName, titleClas
                                     className: "h-4 w-4"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-                                    lineNumber: 653,
+                                    lineNumber: 689,
                                     columnNumber: 21
                                 }, this),
                                 label: t("sft.copyRows"),
@@ -2678,7 +2811,7 @@ function SimpleFormTwoRowTabbed({ title, badge, icon, headerClassName, titleClas
                                 disabled: !selectedInActive
                             }, void 0, false, {
                                 fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-                                lineNumber: 652,
+                                lineNumber: 688,
                                 columnNumber: 13
                             }, this),
                             onSaveRows && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
@@ -2688,7 +2821,7 @@ function SimpleFormTwoRowTabbed({ title, badge, icon, headerClassName, titleClas
                                         className: "mx-1 h-5 w-px bg-border"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-                                        lineNumber: 661,
+                                        lineNumber: 697,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(MiniRowButton, {
@@ -2696,7 +2829,7 @@ function SimpleFormTwoRowTabbed({ title, badge, icon, headerClassName, titleClas
                                             className: "h-4 w-4"
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-                                            lineNumber: 663,
+                                            lineNumber: 699,
                                             columnNumber: 25
                                         }, this),
                                         label: t("common.save"),
@@ -2704,19 +2837,19 @@ function SimpleFormTwoRowTabbed({ title, badge, icon, headerClassName, titleClas
                                         onClick: ()=>onSaveRows(activeTab, rowsByTab[activeTab] ?? [])
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-                                        lineNumber: 662,
+                                        lineNumber: 698,
                                         columnNumber: 17
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-                                lineNumber: 660,
+                                lineNumber: 696,
                                 columnNumber: 15
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-                        lineNumber: 638,
+                        lineNumber: 674,
                         columnNumber: 11
                     }, this),
                     hasNav && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2724,25 +2857,26 @@ function SimpleFormTwoRowTabbed({ title, badge, icon, headerClassName, titleClas
                         "aria-live": "polite"
                     }, void 0, false, {
                         fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-                        lineNumber: 672,
+                        lineNumber: 708,
                         columnNumber: 13
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-                lineNumber: 637,
+                lineNumber: 673,
                 columnNumber: 9
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/src/components/forms/simple-form-two-row-tabbed.tsx",
-        lineNumber: 434,
+        lineNumber: 452,
         columnNumber: 5
     }, this);
 }
-_s(SimpleFormTwoRowTabbed, "qwkIZhvj2Af219dPYNRvX8/LrK8=", false, function() {
+_s(SimpleFormTwoRowTabbed, "va0Zu0PrQHFtzBBI4qV5t7koLk8=", false, function() {
     return [
         __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$settings$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useT"],
+        __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$forms$2f$use$2d$aligned$2d$labels$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useAlignedLabels"],
         __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$forms$2f$use$2d$aligned$2d$labels$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useAlignedLabels"]
     ];
 });

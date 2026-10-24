@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { CalendarDays, Plus } from "lucide-react";
+import { Braces, CalendarDays, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -207,6 +207,52 @@ export function FieldCell({
      only used by the date branch below */
   const dateRef = React.useRef<HTMLInputElement | null>(null);
   const lastMasked = React.useRef("");
+
+  /* Task 53 — static DESIGN shapes (line/box/circle/oval): decorative only —
+     no label unit, no input, no EAV value. Rendered identically in the
+     design preview and the running form. */
+  if (type === "line") {
+    return (
+      <div aria-hidden className="my-1.5 w-full">
+        <div className="h-0.5 w-full rounded-full bg-gradient-to-l from-border via-foreground/30 to-border" />
+      </div>
+    );
+  }
+  if (type === "box") {
+    return (
+      <div aria-hidden className="my-1 h-12 w-full rounded-xl border-2 border-border/70 bg-muted/30 shadow-inner" />
+    );
+  }
+  if (type === "circle") {
+    return (
+      <div aria-hidden className="flex w-full justify-center py-1">
+        <div className="h-14 w-14 rounded-full border-2 border-border/70 bg-muted/30 shadow-inner" />
+      </div>
+    );
+  }
+  if (type === "oval") {
+    return (
+      <div aria-hidden className="flex w-full justify-center py-1">
+        <div className="h-10 w-32 rounded-[50%] border-2 border-border/70 bg-muted/30 shadow-inner" />
+      </div>
+    );
+  }
+
+  /* Task 53 — script data-source element: not an input — a slim strip
+     marking where the script feeds the form (bound fields render as
+     ordinary fields next to it). */
+  if (type === "script") {
+    return (
+      <div
+        className="flex items-center gap-2 rounded-lg border border-dashed border-teal-600/40 bg-teal-500/5 px-2.5 py-1.5 text-[11px] text-teal-700 dark:text-teal-400"
+        aria-label={field.label}
+      >
+        <Braces className="h-3.5 w-3.5 shrink-0" aria-hidden />
+        <span className="min-w-0 flex-1 truncate font-medium">{field.label}</span>
+        <span className="shrink-0 rounded-md bg-teal-600/10 px-1.5 py-0.5 font-mono text-[9px]" dir="ltr">db</span>
+      </div>
+    );
+  }
 
   /* checkbox — inline toggle pushed to the row end (legacy «فعال» placement) */
   if (type === "checkbox") {

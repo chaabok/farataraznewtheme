@@ -937,6 +937,12 @@ if (typeof globalThis.$RefreshHelpers$ === 'object' && globalThis.$RefreshHelper
 "use strict";
 
 __turbopack_context__.s([
+    "DFB_NON_INPUT_TYPES",
+    ()=>DFB_NON_INPUT_TYPES,
+    "DFB_SCRIPT_TYPE",
+    ()=>DFB_SCRIPT_TYPE,
+    "DFB_SHAPE_TYPES",
+    ()=>DFB_SHAPE_TYPES,
     "DFB_WIDTH_MAX",
     ()=>DFB_WIDTH_MAX,
     "DFB_WIDTH_MIN",
@@ -947,6 +953,8 @@ __turbopack_context__.s([
     ()=>dfbFormTitle,
     "dfbNodeTitle",
     ()=>dfbNodeTitle,
+    "executeFormScript",
+    ()=>executeFormScript,
     "executeQuery",
     ()=>executeQuery,
     "fetchFormDetail",
@@ -959,10 +967,14 @@ __turbopack_context__.s([
     ()=>findMenuNode,
     "findMenuNodeByAppKey",
     ()=>findMenuNodeByAppKey,
+    "isDfbInputField",
+    ()=>isDfbInputField,
     "loadFormData",
     ()=>loadFormData,
     "normalizeFieldWidth",
     ()=>normalizeFieldWidth,
+    "parseFieldConfig",
+    ()=>parseFieldConfig,
     "saveFormData",
     ()=>saveFormData,
     "useDfb",
@@ -1090,6 +1102,32 @@ async function saveFormData(formId, values, externalKey) {
 async function loadFormData(formId) {
     const res = await dfbApi.get(`forms/${formId}/data`);
     return res.items ?? [];
+}
+const DFB_SHAPE_TYPES = [
+    "line",
+    "box",
+    "circle",
+    "oval"
+];
+const DFB_SCRIPT_TYPE = "script";
+const DFB_NON_INPUT_TYPES = [
+    ...DFB_SHAPE_TYPES,
+    DFB_SCRIPT_TYPE
+];
+const isDfbInputField = (fieldType)=>!DFB_NON_INPUT_TYPES.includes(fieldType);
+async function executeFormScript(script) {
+    return dfbApi.post("forms/script/execute", {
+        script
+    });
+}
+function parseFieldConfig(configJson) {
+    if (!configJson) return {};
+    try {
+        const v = JSON.parse(configJson);
+        return v && typeof v === "object" && !Array.isArray(v) ? v : {};
+    } catch  {
+        return {};
+    }
 }
 if (typeof globalThis.$RefreshHelpers$ === 'object' && globalThis.$RefreshHelpers !== null) {
     __turbopack_context__.k.registerExports(__turbopack_context__.m, globalThis.$RefreshHelpers$);

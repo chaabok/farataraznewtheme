@@ -3,9 +3,9 @@
 import * as React from "react";
 import {
   AlignCenterHorizontal, AlignEndHorizontal, AlignLeft, AlignStartHorizontal, ArrowDown, ArrowUp,
-  CalendarDays, Check, ChevronDown, Copy, Eye, EyeOff, FileText, FormInput, Grid3x3, Hash, History, Layers, List,
-  ListTree, Loader2, MoveHorizontal, Palette, PencilLine, Plus, RotateCcw, Save, Search,
-  SlidersHorizontal, Square, Trash2, Type, X,
+  Braces, CalendarDays, Check, ChevronDown, Circle, Code, Copy, Eye, EyeOff, FileText, FormInput,
+  Grid3x3, Hash, History, Layers, List, ListTree, Loader2, Lock, Minus, MoveHorizontal, Palette,
+  Pill, PencilLine, Plus, RotateCcw, Save, Search, SlidersHorizontal, Square, Trash2, Type, X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useT, useSettings } from "@/stores/settings-store";
@@ -25,6 +25,7 @@ import {
 import {
   fetchFormDetail, dfbApi, saveFormData, loadFormData,
   fetchQueryOptionsForFields, normalizeFieldWidth, widthMinWidthClass, dfbFormTitle,
+  executeFormScript, parseFieldConfig, isDfbInputField,
   type DfbFormDetail, type DfbFieldDef, type DfbTabDef,
 } from "@/stores/dfb-store";
 import { LatinInput } from "@/components/forms/latin-input";
@@ -83,6 +84,20 @@ import { cn } from "@/lib/utils";
  * navigation as the sample form; ۲) the field delete icon did nothing —
  * removeField reassigned `fields` on the findContainer WRAPPER instead of
  * mutating the bank/tab array in place (fixed with splice).
+ *
+ * Task 53 — سه نیازمندی مالک:
+ *  1) «باند فوتر» — a dedicated FOOTER band that ALWAYS renders at the very
+ *     end of the form (design canvas + preview + runtime); its fields
+ *     persist with DfbFormField.Section="footer" and run in the pinned
+ *     footer zone of the template (footerFields);
+ *  2) the toolbox gains design SHAPES — خط (line), باکس (box), دایره
+ *     (circle), بیضی (oval) — static decorative elements with no EAV value;
+ *  3) new «اسکریپت» field type: the designer writes a script, runs it
+ *     («اجرا و واکشی» — sandboxed read-only db API on dfb-service), the
+ *     FETCHED fields are listed and selectable, and the selected ones are
+ *     added to the form as real fields bound via ConfigJson
+ *     { bindScript, bindField } — the runtime pre-fills them from the
+ *     script's first row.
  */
 
 /* ------------------------------- model ------------------------------- */
@@ -100,6 +115,9 @@ interface StudioField {
   widthSpan: number;
   queryRef: number | null;
   queryFieldKey: string | null;
+  /** Task 53 — per-field config (script text / fetched fields / selected /
+      bindScript+bindField / shape tone) — persisted as ConfigJson */
+  config: Record<string, unknown> | null;
 }
 
 /** Task 50 — a tab created with «افزودن تب» INSIDE a records-table band;
@@ -137,6 +155,10 @@ interface StudioState {
   shell: StudioShell;
   /** banks[0] = «باند اصلی» (fields without a tab); banks[1..] = DfbFormTab rows */
   banks: StudioBank[];
+  /** Task 53 — «باند فوتر»: a DEDICATED band that always renders at the
+      very end of the form (design canvas, preview, runtime). Not part of
+      the orderable banks; holds fields directly (no inner tabs). */
+  footer: StudioBank;
 }
 
 const clone = (s: StudioState): StudioState => JSON.parse(JSON.stringify(s)) as StudioState;
@@ -158,12 +180,16 @@ const containerOfBank = (bank: StudioBank): string =>
   bank.tabKind === 1 && bank.tabs.length > 0 ? `${bank.key}::${bank.tabs[0].key}` : bank.key;
 
 /** resolves a container key against a (draft) state — null when the bank or
-    tab no longer exists (e.g. after an undo) */
+    tab no longer exists (e.g. after an undo). "footer" = the Task 53 FOOTER
+    band (state.footer — always last, holds fields directly). */
 function findContainer(
   d: StudioState,
   cKey: string,
 ): { bank: StudioBank; fields: StudioField[] } | null {
   const { bankKey, tabKey } = splitContainer(cKey);
+  if (bankKey === "footer") {
+    return d.footer && !tabKey ? { bank: d.footer, fields: d.footer.fields } : null;
+  }
   const bank = d.banks.find((b) => b.key === bankKey);
   if (!bank) return null;
   if (tabKey) {
@@ -174,8 +200,10 @@ function findContainer(
 }
 
 /** every field of the form across all containers (preview/validation) */
-const allFieldsOf = (s: StudioState): StudioField[] =>
-  s.banks.flatMap((b) => [...b.fields, ...b.tabs.flatMap((t) => t.fields)]);
+const allFieldsOf = (s: StudioState): StudioField[] => [
+  ...s.banks.flatMap((b) => [...b.fields, ...b.tabs.flatMap((t) => t.fields)]),
+  ...(s.footer?.fields ?? []), // Task 53 — footer band fields
+];
 
 /** a band holds any designed field (direct or inside its tabs) — gates the
     kind switch, band delete and tab delete guards */
@@ -207,8 +235,17 @@ const FIELD_TYPE_META: Record<string, { icon: typeof Type; tile: string }> = {
   lookup: { icon: Search, tile: "from-rose-500 to-red-600" },
   checkbox: { icon: Check, tile: "from-lime-500 to-green-600" },
   textarea: { icon: AlignLeft, tile: "from-orange-500 to-amber-600" },
+  /* Task 53 — design shapes (static, no EAV value) */
+  line: { icon: Minus, tile: "from-zinc-500 to-zinc-600" },
+  box: { icon: Square, tile: "from-cyan-500 to-teal-600" },
+  circle: { icon: Circle, tile: "from-fuchsia-500 to-pink-600" },
+  oval: { icon: Pill, tile: "from-purple-500 to-fuchsia-600" },
+  /* Task 53 — script data-source field */
+  script: { icon: Code, tile: "from-teal-700 to-emerald-800" },
 };
 const FIELD_TYPES = Object.keys(FIELD_TYPE_META);
+/** Task 53 — the SHAPE tiles (grouped last in the palette, after inputs) */
+const SHAPE_PALETTE_TYPES = ["line", "box", "circle", "oval"];
 
 const FOOTER_TILE: Record<string, { icon: typeof Save; tile: string }> = {
   save: { icon: Save, tile: "from-teal-500 to-emerald-600" },
@@ -240,7 +277,7 @@ type DragPayload =
  * the band row (pre-Task 50 layout) is wrapped into one tab titled after
  * the band — nothing is lost and the next save persists the new shape.
  */
-function buildBanks(d: DfbFormDetail): StudioBank[] {
+function buildBanks(d: DfbFormDetail): { banks: StudioBank[]; footer: StudioBank } {
   const sorted = [...d.tabs].sort((a, b) => a.orderIndex - b.orderIndex);
   const bandRows = sorted.filter((t) => !t.parentRef);
   const childrenOf = new Map<number, DfbTabDef[]>();
@@ -260,6 +297,7 @@ function buildBanks(d: DfbFormDetail): StudioBank[] {
     widthSpan: normalizeFieldWidth(f.widthSpan),
     queryRef: f.queryRef,
     queryFieldKey: f.queryFieldKey,
+    config: parseFieldConfig(f.configJson),
   });
   const banks: StudioBank[] = bandRows.map((tb) => ({
     key: `bank-${tb.id}`,
@@ -278,6 +316,14 @@ function buildBanks(d: DfbFormDetail): StudioBank[] {
             fields: [],
           })),
   }));
+  /* Task 53 — the dedicated FOOTER band: fields with Section="footer" */
+  const footer: StudioBank = {
+    key: "footer",
+    tabKind: 3, // footer band (design-only kind; not a DfbFormTab row)
+    title: "footer",
+    fields: d.fields.filter((f) => f.section === "footer").map(toField),
+    tabs: [],
+  };
   const directFieldsOf = (tabRef: number) =>
     d.fields.filter((f) => f.section === "body" && f.tabRef === tabRef);
   for (const b of banks) {
@@ -287,7 +333,7 @@ function buildBanks(d: DfbFormDetail): StudioBank[] {
   }
   const main: StudioBank = { key: "main", tabKind: 0, title: "", fields: [], tabs: [] };
   for (const f of d.fields) {
-    if (f.section !== "body") continue;
+    if (f.section !== "body") continue; // footer fields are collected above
     if (f.tabRef == null) {
       main.fields.push(toField(f));
       continue;
@@ -307,7 +353,7 @@ function buildBanks(d: DfbFormDetail): StudioBank[] {
     if (tab) tab.fields.push(toField(f));
     else main.fields.push(toField(f)); // defensive — unknown tabRef
   }
-  return [main, ...banks];
+  return { banks: [main, ...banks], footer };
 }
 
 /* ------------------------------- entry ------------------------------- */
@@ -371,7 +417,7 @@ function StudioInner({ formId }: { formId: number }) {
             footerButtons: storedFooterButtons(footer),
             style,
           },
-          banks: buildBanks(d),
+          ...buildBanks(d),
         };
         setIsSystem(d.isSystem);
         setTemplate(d.componentKey === "treeForm" ? "treeForm" : "simpleTwoRowTabbed");
@@ -505,6 +551,36 @@ function StudioInner({ formId }: { formId: number }) {
     [],
   );
 
+  /* Task 53 — run every script field of the form and prefill the fields
+     bound to it (config { bindScript, bindField }) from the FIRST row of
+     its result. Bound fields stay editable — the prefill is just a value. */
+  const runPreviewScripts = React.useCallback(async (s: StudioState) => {
+    const scriptFields = allFieldsOf(s).filter(
+      (f) => f.fieldType === "script" && typeof f.config?.script === "string" && (f.config.script as string).trim(),
+    );
+    if (scriptFields.length === 0) return;
+    const prefill: Record<string, string> = {};
+    await Promise.all(
+      scriptFields.map(async (sf) => {
+        try {
+          const res = await executeFormScript(String(sf.config?.script ?? ""));
+          const row0 = res.rows[0] ?? {};
+          for (const f of allFieldsOf(s)) {
+            if (f.config?.bindScript === sf.fieldKey && typeof f.config?.bindField === "string") {
+              const v = row0[f.config.bindField as string];
+              if (v != null) prefill[f.key] = String(v);
+            }
+          }
+        } catch {
+          /* script failures are non-fatal in preview — bound fields stay empty */
+        }
+      }),
+    );
+    if (Object.keys(prefill).length > 0) {
+      setPreviewValues((pv) => ({ ...prefill, ...pv }));
+    }
+  }, []);
+
   const togglePreview = React.useCallback(() => {
     const next = !preview;
     setPreview(next);
@@ -519,13 +595,17 @@ function StudioInner({ formId }: { formId: number }) {
       loadFormData(formId)
         .then((items) => setPreviewRecords(mapLoadedRecords(items, fields)))
         .catch(() => { /* record list is best-effort */ });
+      void runPreviewScripts(state);
     }
-  }, [preview, previewExtrasLoaded, state, formId, mapLoadedRecords]);
+  }, [preview, previewExtrasLoaded, state, formId, mapLoadedRecords, runPreviewScripts]);
 
   const previewSave = React.useCallback(async () => {
     if (!state || busy) return;
     const fields = allFieldsOf(state);
-    const missing = fields.filter(
+    /* Task 53 — shapes + the script element have NO input/value: they are
+       excluded from required-checks and the EAV payload entirely */
+    const inputFields = fields.filter((f) => isDfbInputField(f.fieldType));
+    const missing = inputFields.filter(
       (f) => f.id != null && f.required &&
         (previewValues[f.key] === undefined || previewValues[f.key] === ""),
     );
@@ -533,12 +613,12 @@ function StudioInner({ formId }: { formId: number }) {
       toast.error(`${t("dfb.requiredFieldsMissing")}: ${missing.map((m) => m.label).join("، ")}`);
       return;
     }
-    const unsaved = fields.filter(
+    const unsaved = inputFields.filter(
       (f) => f.id == null && previewValues[f.key] !== undefined && previewValues[f.key] !== "",
     );
     if (unsaved.length > 0) toast.info(t("dfb.studio.unsavedFieldsHint"));
     const payload: Record<string, string | boolean | null> = {};
-    for (const f of fields) {
+    for (const f of inputFields) {
       if (f.id == null) continue;
       const v = previewValues[f.key];
       if (v === undefined) continue;
@@ -561,7 +641,8 @@ function StudioInner({ formId }: { formId: number }) {
   const previewReset = React.useCallback(() => {
     setPreviewValues({});
     setPreviewDataId(null);
-  }, []);
+    if (state) void runPreviewScripts(state); // Task 53 — re-prefill bound fields
+  }, [state, runPreviewScripts]);
 
   const previewCopy = React.useCallback(() => {
     setPreviewDataId(null);
@@ -599,9 +680,13 @@ function StudioInner({ formId }: { formId: number }) {
       commit((d) => {
         const dst = findContainer(d, containerKey);
         if (!dst) return;
+        /* Task 53 — script fields get their STABLE fieldKey at creation: the
+           derived fields added from the fetched list bind to it via config
+           { bindScript } and that binding must survive the save regeneration */
+        const isScript = fieldType === "script";
         const field: StudioField = {
           key: nextKey("f"),
-          fieldKey: "",
+          fieldKey: isScript ? `script_${Date.now().toString(36)}` : "",
           label: t(`dfb.type.${fieldType}` as never),
           fieldType,
           required: false,
@@ -609,6 +694,7 @@ function StudioInner({ formId }: { formId: number }) {
           widthSpan: 50,
           queryRef: null,
           queryFieldKey: null,
+          config: isScript ? { script: "", fields: [], selected: [] } : null,
         };
         const at = beforeFieldKey ? dst.fields.findIndex((f) => f.key === beforeFieldKey) : -1;
         if (at >= 0) dst.fields.splice(at, 0, field);
@@ -803,6 +889,92 @@ function StudioInner({ formId }: { formId: number }) {
     [commit],
   );
 
+  /* -------- Task 53 — script field: run / select fetched fields / add -------- */
+  const [scriptBusy, setScriptBusy] = React.useState(false);
+
+  const runSelectedScript = React.useCallback(async () => {
+    if (!selectedFieldRef || selectedFieldRef.field.fieldType !== "script") return;
+    const f = selectedFieldRef.field;
+    const script = String(f.config?.script ?? "");
+    if (!script.trim()) {
+      toast.error(t("dfb.studio.scriptEmpty"));
+      return;
+    }
+    setScriptBusy(true);
+    try {
+      const res = await executeFormScript(script);
+      updateField(f.key, {
+        config: { ...(f.config ?? {}), fields: res.fields, rowCount: res.rowCount },
+      });
+      toast.success(t("dfb.studio.scriptRows").replace("{n}", String(res.rowCount)));
+    } catch {
+      toast.error(t("dfb.studio.scriptExecError"));
+    } finally {
+      setScriptBusy(false);
+    }
+  }, [selectedFieldRef, updateField, t]);
+
+  const toggleScriptFieldSelection = React.useCallback(
+    (fieldName: string, on: boolean) => {
+      if (!selectedFieldRef) return;
+      const f = selectedFieldRef.field;
+      const cfg: Record<string, unknown> = { ...(f.config ?? {}) };
+      const sel = new Set(Array.isArray(cfg.selected) ? (cfg.selected as string[]) : []);
+      if (on) sel.add(fieldName);
+      else sel.delete(fieldName);
+      cfg.selected = [...sel];
+      updateField(f.key, { config: cfg });
+    },
+    [selectedFieldRef, updateField],
+  );
+
+  /** Task 53 — the SELECTED fetched fields become REAL fields of the form,
+      inserted right after the script element, bound via ConfigJson
+      { bindScript: <script fieldKey>, bindField: <fetched name> } so the
+      runtime prefills them from the script's first row. */
+  const addSelectedScriptFields = React.useCallback(() => {
+    if (!selectedFieldRef) return;
+    const sf = selectedFieldRef.field;
+    const containerKey = selectedFieldRef.containerKey;
+    const selected = Array.isArray(sf.config?.selected) ? (sf.config?.selected as string[]) : [];
+    if (selected.length === 0) {
+      toast.info(t("dfb.studio.scriptNone"));
+      return;
+    }
+    const scriptKey = sf.fieldKey || sf.key;
+    let added = 0;
+    commit((d) => {
+      const dst = findContainer(d, containerKey);
+      if (!dst) return;
+      const existing = new Set(
+        dst.fields
+          .filter((x) => x.config?.bindScript === scriptKey)
+          .map((x) => String(x.config?.bindField ?? "")),
+      );
+      const at = dst.fields.findIndex((x) => x.key === sf.key);
+      for (const name of selected) {
+        if (existing.has(name)) continue;
+        const derived: StudioField = {
+          key: nextKey("f"),
+          fieldKey: "",
+          label: name,
+          fieldType: "text",
+          required: false,
+          readOnly: false,
+          widthSpan: 50,
+          queryRef: null,
+          queryFieldKey: null,
+          config: { bindScript: scriptKey, bindField: name },
+        };
+        if (at >= 0) dst.fields.splice(at + 1 + added, 0, derived);
+        else dst.fields.push(derived);
+        added++;
+      }
+    });
+    if (added > 0) toast.success(t("dfb.studio.scriptAdded").replace("{n}", String(added)));
+    else toast.info(t("dfb.studio.scriptAlready"));
+  }, [selectedFieldRef, commit, t]);
+
   /* ------------------------------ save ------------------------------ */
   const save = React.useCallback(async () => {
     if (!state || busy) return;
@@ -881,8 +1053,13 @@ function StudioInner({ formId }: { formId: number }) {
             }
             return rows;
           })
+          /* Task 53 — the FOOTER band fields ride LAST with Section="footer"
+              (the runtime pins them to the end-of-form zone) */
+          .concat(state.footer.fields.map((f) => ({ f, tabRef: undefined as number | undefined })))
           .map(({ f, tabRef }) => {
             const orderIndex = seq++;
+            /* footer band fields (identity — a field lives in ONE container) */
+            const isFooter = state.footer.fields.includes(f);
             return {
               fieldKey: f.fieldKey || `f${orderIndex + 1}_${f.fieldType}`,
               label: f.label.trim(),
@@ -892,8 +1069,10 @@ function StudioInner({ formId }: { formId: number }) {
               widthSpan: f.widthSpan,
               orderIndex,
               tabRef,
+              section: isFooter ? "footer" : undefined,
               queryRef: f.queryRef ?? undefined,
               queryFieldKey: f.queryFieldKey ?? undefined,
+              configJson: f.config ? JSON.stringify(f.config) : undefined,
             };
           });
         await dfbApi.put(`forms/${formId}`, { fields });
@@ -909,7 +1088,7 @@ function StudioInner({ formId }: { formId: number }) {
           footerButtons: state.shell.footerButtons,
           style: state.shell.style,
         },
-        banks: buildBanks(d),
+        ...buildBanks(d),
       };
       setHist({ stack: [baseline], idx: 0 });
       toast.success(t("dfb.savedToast"));
@@ -1172,6 +1351,41 @@ function StudioInner({ formId }: { formId: number }) {
                         </div>
                       </div>
                     )}
+                    {/* Task 53 — «باند فوتر»: ALWAYS the last band of the
+                        form (owner: pinned to the form end). Hidden only for
+                        system forms with no footer fields. */}
+                    {(!isSystem || state.footer.fields.length > 0) && (
+                      <FooterBandCanvas
+                        fields={state.footer.fields}
+                        active={activeContainerKey === "footer"}
+                        selectedFieldKey={selectedFieldKey}
+                        isSystem={isSystem}
+                        resizing={resizing}
+                        onResizeLive={setResizing}
+                        onResizeCommit={(fieldKey, pct) => {
+                          setResizing(null);
+                          updateField(fieldKey, { widthSpan: pct });
+                        }}
+                        onSelect={() => setActiveContainerKey("footer")}
+                        onSelectField={(k) => {
+                          setActiveContainerKey("footer");
+                          setSelectedFieldKey(k);
+                        }}
+                        onAddField={() => addField("footer", paletteType)}
+                        onMoveFieldDir={(k, dir) => moveFieldDir("footer", k, dir)}
+                        onRemoveField={(k) => removeField("footer", k)}
+                        onDragStartField={(fieldKey) => {
+                          dragRef.current = { kind: "move", fromContainer: "footer", fieldKey };
+                        }}
+                        onDropInBank={(beforeKey) => {
+                          const p = dragRef.current;
+                          if (!p) return;
+                          if (p.kind === "add") addField("footer", p.fieldType, beforeKey);
+                          else reorderField(p.fromContainer, p.fieldKey, "footer", beforeKey);
+                          dragRef.current = null;
+                        }}
+                      />
+                    )}
                   </div>
                 </>
               )}
@@ -1201,44 +1415,28 @@ function StudioInner({ formId }: { formId: number }) {
                     {t("dfb.studio.palette")}
                   </h3>
                   <p className="text-[11px] leading-relaxed text-muted-foreground/90">{t("dfb.studio.paletteHint")}</p>
-                  <div className="grid grid-cols-4 gap-1.5">
-                    {FIELD_TYPES.map((ft) => {
-                      const meta = FIELD_TYPE_META[ft];
-                      const Icon = meta.icon;
-                      const active = paletteType === ft;
-                      return (
-                        <button
-                          key={ft}
-                          type="button"
-                          aria-pressed={active}
-                          draggable
-                          onDragStart={(e) => {
-                            dragRef.current = { kind: "add", fieldType: ft };
-                            e.dataTransfer.effectAllowed = "copy";
-                            try { e.dataTransfer.setData("text/plain", ft); } catch { /* jsdom */ }
-                          }}
-                          onDragEnd={() => { dragRef.current = null; }}
-                          onClick={() => {
-                            setPaletteType(ft);
-                            addField(activeContainerKey, ft);
-                          }}
-                          title={t(`dfb.type.${ft}` as never)}
-                          className={cn(
-                            "flex flex-col items-center gap-1 rounded-xl border p-2 transition-all",
-                            active
-                              ? "border-teal-500/60 bg-teal-500/10 shadow-sm"
-                              : "border-border/60 hover:border-foreground/25 hover:shadow-sm",
-                          )}
-                        >
-                          <span className={cn("flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br text-white shadow-sm", meta.tile)}>
-                            <Icon className="h-3.5 w-3.5" aria-hidden />
-                          </span>
-                          <span className="w-full truncate text-center text-[10px] leading-tight">
-                            {t(`dfb.type.${ft}` as never)}
-                          </span>
-                        </button>
-                      );
-                    })}
+                  <PaletteTileGrid
+                    types={FIELD_TYPES.filter((ft) => !SHAPE_PALETTE_TYPES.includes(ft))}
+                    paletteType={paletteType}
+                    onPick={(ft) => {
+                      setPaletteType(ft);
+                      addField(activeContainerKey, ft);
+                    }}
+                  />
+                  {/* Task 53 — design shapes group (لاین/باکس/دایره/بیضی) */}
+                  <div className="mt-1 rounded-xl border border-dashed border-border/70 p-1.5">
+                    <p className="mb-1 flex items-center gap-1 px-1 text-[10px] font-medium text-muted-foreground">
+                      <Square className="h-3 w-3" aria-hidden />
+                      {t("dfb.studio.shapesGroup")}
+                    </p>
+                    <PaletteTileGrid
+                      types={SHAPE_PALETTE_TYPES}
+                      paletteType={paletteType}
+                      onPick={(ft) => {
+                        setPaletteType(ft);
+                        addField(activeContainerKey, ft);
+                      }}
+                    />
                   </div>
                 </section>
               )}
@@ -1306,8 +1504,9 @@ function StudioInner({ formId }: { formId: number }) {
                 </p>
               </section>
 
-              {/* active bank settings */}
-              {activeBank && !preview && (
+              {/* active bank settings (Task 53 — hidden while the FOOTER band
+                  is active: it is pinned/non-orderable, no band settings) */}
+              {activeBank && !preview && activeBankKey !== "footer" && (
                 <section aria-label={t("dfb.studio.bankSettings")} className="grid gap-2">
                   <h3 className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
                     <Layers className="h-3.5 w-3.5" aria-hidden />
@@ -1596,6 +1795,93 @@ function StudioInner({ formId }: { formId: number }) {
                           )}
                         </>
                       )}
+                      {/* Task 53 — script field config: editor + «اجرا و واکشی»
+                          + the FETCHED fields (selectable) + add-to-form */}
+                      {selectedFieldRef.field.fieldType === "script" && (
+                        <div className="grid gap-1.5 rounded-xl border border-teal-600/30 bg-teal-500/5 p-2">
+                          <Label className="text-[11px] text-teal-700 dark:text-teal-400">
+                            {t("dfb.studio.scriptEditor")}
+                          </Label>
+                          <textarea
+                            value={String(selectedFieldRef.field.config?.script ?? "")}
+                            onChange={(e) =>
+                              updateField(selectedFieldRef.field.key, {
+                                config: { ...(selectedFieldRef.field.config ?? {}), script: e.target.value },
+                              })
+                            }
+                            rows={6}
+                            spellCheck={false}
+                            dir="ltr"
+                            aria-label={t("dfb.studio.scriptEditor")}
+                            placeholder={'const rows = await db.table("DfbMenu").findMany({ take: 10 });\nreturn rows;'}
+                            className="w-full resize-y rounded-lg border border-input bg-background px-2 py-1.5 font-mono text-[11px] leading-relaxed text-foreground shadow-xs outline-none transition-colors placeholder:text-muted-foreground/60 focus-visible:border-ring focus-visible:bg-background"
+                          />
+                          <p className="text-[10px] leading-relaxed text-muted-foreground">
+                            {t("dfb.studio.scriptHint")}
+                          </p>
+                          <Button
+                            type="button" size="sm"
+                            className="h-7 bg-teal-600 hover:bg-teal-700"
+                            disabled={scriptBusy}
+                            onClick={runSelectedScript}
+                          >
+                            {scriptBusy ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
+                            ) : (
+                              <Braces className="h-3.5 w-3.5" aria-hidden />
+                            )}
+                            {t("dfb.studio.scriptRun")}
+                          </Button>
+                          <Label className="text-[11px] text-muted-foreground">
+                            {t("dfb.studio.scriptFetched")}
+                          </Label>
+                          {!Array.isArray(selectedFieldRef.field.config?.fields) ||
+                           (selectedFieldRef.field.config?.fields as string[]).length === 0 ? (
+                            <p className="rounded-lg border border-dashed border-border/70 px-2 py-1.5 text-[10px] leading-relaxed text-muted-foreground">
+                              {t("dfb.studio.scriptFetchedEmpty")}
+                            </p>
+                          ) : (
+                            <>
+                              <div className="max-h-28 overflow-y-auto rounded-lg border border-border/60 bg-background/70 p-1.5 scrollbar-slim">
+                                {(selectedFieldRef.field.config?.fields as string[]).map((name) => {
+                                  const sel =
+                                    Array.isArray(selectedFieldRef.field.config?.selected) &&
+                                    (selectedFieldRef.field.config?.selected as string[]).includes(name);
+                                  return (
+                                    <label
+                                      key={name}
+                                      className="flex cursor-pointer items-center gap-1.5 rounded-md px-1 py-0.5 text-[11px] hover:bg-foreground/5"
+                                    >
+                                      <Checkbox
+                                        checked={sel}
+                                        onCheckedChange={(v) => toggleScriptFieldSelection(name, v === true)}
+                                        aria-label={name}
+                                      />
+                                      <span className="min-w-0 flex-1 truncate font-mono" dir="ltr">{name}</span>
+                                    </label>
+                                  );
+                                })}
+                              </div>
+                              <Button
+                                type="button" size="sm" variant="outline"
+                                className="h-7 border-teal-600/50 text-teal-700 hover:bg-teal-500/10 dark:text-teal-400"
+                                onClick={addSelectedScriptFields}
+                              >
+                                <Plus className="h-3.5 w-3.5" aria-hidden />
+                                {t("dfb.studio.scriptAddSelected")}
+                              </Button>
+                            </>
+                          )}
+                        </div>
+                      )}
+                      {/* Task 53 — derived field: show its script binding */}
+                      {typeof selectedFieldRef.field.config?.bindField === "string" && (
+                        <p className="flex items-center gap-1.5 rounded-lg border border-teal-600/30 bg-teal-500/5 px-2 py-1.5 text-[10px] text-teal-700 dark:text-teal-400">
+                          <Braces className="h-3 w-3 shrink-0" aria-hidden />
+                          {t("dfb.studio.scriptBindNote")
+                            .replace("{field}", String(selectedFieldRef.field.config.bindField))}
+                        </p>
+                      )}
                       {!isSystem && (
                         <Button
                           type="button" size="sm" variant="outline"
@@ -1663,6 +1949,56 @@ function StudioInner({ formId }: { formId: number }) {
 /* module-level drag payload (live only during an HTML5 drag gesture);
    keeps the card/bank components free of drag-prop churn */
 const dragRef: { current: DragPayload | null } = { current: null };
+
+/** Task 53 — reusable toolbox tile grid (input fields AND the shapes group);
+    click = add to the active container, drag = drop onto any band/footer. */
+function PaletteTileGrid({
+  types, paletteType, onPick,
+}: {
+  types: string[];
+  paletteType: string;
+  onPick: (fieldType: string) => void;
+}) {
+  const t = useT();
+  return (
+    <div className="grid grid-cols-4 gap-1.5">
+      {types.map((ft) => {
+        const meta = FIELD_TYPE_META[ft];
+        const Icon = meta.icon;
+        const active = paletteType === ft;
+        return (
+          <button
+            key={ft}
+            type="button"
+            aria-pressed={active}
+            draggable
+            onDragStart={(e) => {
+              dragRef.current = { kind: "add", fieldType: ft };
+              e.dataTransfer.effectAllowed = "copy";
+              try { e.dataTransfer.setData("text/plain", ft); } catch { /* jsdom */ }
+            }}
+            onDragEnd={() => { dragRef.current = null; }}
+            onClick={() => onPick(ft)}
+            title={t(`dfb.type.${ft}` as never)}
+            className={cn(
+              "flex flex-col items-center gap-1 rounded-xl border p-2 transition-all",
+              active
+                ? "border-teal-500/60 bg-teal-500/10 shadow-sm"
+                : "border-border/60 hover:border-foreground/25 hover:shadow-sm",
+            )}
+          >
+            <span className={cn("flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br text-white shadow-sm", meta.tile)}>
+              <Icon className="h-3.5 w-3.5" aria-hidden />
+            </span>
+            <span className="w-full truncate text-center text-[10px] leading-tight">
+              {t(`dfb.type.${ft}` as never)}
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
 
 function BankCanvas({
   bank, index, isMain, active, activeTabKey, align, resizing, onResizeLive, onResizeCommit,
@@ -1901,6 +2237,117 @@ function BankCanvas({
           onRemoveField={onRemoveField}
           onDragStartField={onDragStartField}
           onDropBefore={(beforeKey) => onDropInBank(flowContainer, beforeKey)}
+        />
+      )}
+    </div>
+  );
+}
+
+/**
+ * Task 53 — «باند فوتر» (owner: «یک باند ... مختص و ویژهٔ فوتر فرم ... این
+ * باند همیشه در انتهای فرم باید نمایش داده شود») — the dedicated FOOTER
+ * band canvas: violet-dashed chrome, a lock chip («همیشه در انتهای فرم»),
+ * NOT orderable/removable, and ALWAYS rendered after every body band in the
+ * design canvas. Its fields persist with Section="footer" and run in the
+ * template's pinned end-of-form zone.
+ */
+function FooterBandCanvas({
+  fields, active, selectedFieldKey, isSystem, resizing,
+  onResizeLive, onResizeCommit, onSelect, onSelectField, onAddField,
+  onMoveFieldDir, onRemoveField, onDragStartField, onDropInBank,
+}: {
+  fields: StudioField[];
+  active: boolean;
+  selectedFieldKey: string | null;
+  isSystem: boolean;
+  resizing: { key: string; pct: number } | null;
+  onResizeLive: (r: { key: string; pct: number } | null) => void;
+  onResizeCommit: (fieldKey: string, pct: number) => void;
+  onSelect: () => void;
+  onSelectField: (key: string) => void;
+  onAddField: () => void;
+  onMoveFieldDir: (key: string, dir: -1 | 1) => void;
+  onRemoveField: (key: string) => void;
+  onDragStartField: (fieldKey: string) => void;
+  onDropInBank: (beforeKey: string | null) => void;
+}) {
+  const t = useT();
+  const [over, setOver] = React.useState(false);
+  return (
+    <div
+      data-footer-band
+      onDragOver={(e) => {
+        if (!dragRef.current) return;
+        e.preventDefault();
+        setOver(true);
+      }}
+      onDragLeave={() => setOver(false)}
+      onDrop={(e) => {
+        e.preventDefault();
+        setOver(false);
+        onDropInBank(null); // drop on the band body = append
+      }}
+      className={cn(
+        "mt-3 rounded-2xl border-2 border-dashed p-2.5 transition-colors sm:p-3",
+        over || active
+          ? "border-violet-500/70 bg-violet-500/5"
+          : "border-violet-500/30 bg-violet-500/[0.03]",
+      )}
+    >
+      <div className="mb-2 flex flex-wrap items-center gap-1.5">
+        <button
+          type="button"
+          onClick={onSelect}
+          className={cn(
+            "flex items-center gap-1.5 rounded-lg px-1.5 py-0.5 text-xs font-semibold transition-colors hover:bg-foreground/5",
+            active ? "text-violet-700 dark:text-violet-400" : "text-foreground/80",
+          )}
+        >
+          <span className="flex h-4 w-4 items-center justify-center rounded bg-gradient-to-br from-violet-500 to-purple-600 text-white" aria-hidden>
+            <FormInput className="h-2.5 w-2.5" />
+          </span>
+          {t("dfb.studio.footerBand")}
+          <span className="font-normal text-muted-foreground">
+            ({t("dfb.studio.fieldsCount").replace("{n}", String(fields.length))})
+          </span>
+        </button>
+        {/* the owner rule chip: this band is PINNED to the end of the form */}
+        <Badge variant="outline" className="gap-1 border-violet-500/40 px-1.5 py-0 text-[9px] text-violet-700 dark:text-violet-400">
+          <Lock className="h-2.5 w-2.5" aria-hidden />
+          {t("dfb.studio.footerBandChip")}
+        </Badge>
+        {!isSystem && (
+          <span className="ms-auto flex items-center gap-1">
+            <Button
+              type="button" size="sm" variant="outline"
+              className="h-6 px-2 text-[11px]"
+              onClick={onAddField}
+              title={t("dfb.addField")}
+            >
+              <Plus className="h-3 w-3" aria-hidden /> {t("dfb.addField")}
+            </Button>
+          </span>
+        )}
+      </div>
+      {fields.length === 0 ? (
+        <p className="rounded-xl border border-dashed border-violet-500/30 px-3 py-5 text-center text-[11px] text-muted-foreground">
+          {t("dfb.studio.footerBandHint")}
+        </p>
+      ) : (
+        <FieldFlow
+          fields={fields}
+          containerKey="footer"
+          align="start"
+          resizing={resizing}
+          onResizeLive={onResizeLive}
+          onResizeCommit={onResizeCommit}
+          selectedFieldKey={selectedFieldKey}
+          isSystem={isSystem}
+          onSelectField={(_, key) => onSelectField(key)}
+          onMoveFieldDir={(_, key, dir) => onMoveFieldDir(key, dir)}
+          onRemoveField={(_, key) => onRemoveField(key)}
+          onDragStartField={(_, fieldKey) => onDragStartField(fieldKey)}
+          onDropBefore={onDropInBank}
         />
       )}
     </div>
@@ -2173,6 +2620,45 @@ function FieldCard({
 /** non-interactive preview of the field's editor (edits happen in the rail) */
 function FieldPreview({ field }: { field: StudioField }) {
   const type = field.fieldType;
+  /* Task 53 — design shapes on the canvas card (mini renders) */
+  if (type === "line") {
+    return (
+      <div aria-hidden className="py-1.5">
+        <div className="h-0.5 w-full rounded-full bg-gradient-to-l from-border via-foreground/30 to-border" />
+      </div>
+    );
+  }
+  if (type === "box") {
+    return <div aria-hidden className="h-8 w-full rounded-lg border-2 border-border/70 bg-muted/30" />;
+  }
+  if (type === "circle") {
+    return (
+      <div aria-hidden className="flex w-full justify-center py-0.5">
+        <div className="h-9 w-9 rounded-full border-2 border-border/70 bg-muted/30" />
+      </div>
+    );
+  }
+  if (type === "oval") {
+    return (
+      <div aria-hidden className="flex w-full justify-center py-0.5">
+        <div className="h-7 w-20 rounded-[50%] border-2 border-border/70 bg-muted/30" />
+      </div>
+    );
+  }
+  /* Task 53 — script data-source element on the canvas card */
+  if (type === "script") {
+    return (
+      <div
+        aria-hidden
+        className="flex items-center gap-1.5 rounded-lg border border-dashed border-teal-600/40 bg-teal-500/5 px-2 py-1.5 text-[10px] text-teal-700 dark:text-teal-400"
+      >
+        <Braces className="h-3 w-3 shrink-0" />
+        <span className="min-w-0 flex-1 truncate font-mono" dir="ltr">
+          {typeof field.config?.script === "string" && field.config.script.trim() ? "function(db) { … }" : "—"}
+        </span>
+      </div>
+    );
+  }
   if (type === "checkbox") {
     return (
       <div className="flex items-center justify-end gap-2 py-0.5" aria-hidden>
@@ -2326,6 +2812,9 @@ function PreviewCanvas({
       fields={state.banks[0]?.fields.map(toSimple) ?? []}
       onFieldChange={onFieldChange}
       tabs={previewTabs}
+      /* Task 53 — the footer band ALWAYS renders in the template's pinned
+         end-of-form zone, exactly like the running form */
+      footerFields={(state.footer?.fields ?? []).map(toSimple)}
       actions={state.shell.footerButtons}
       fieldsAlign={align}
       onReset={onReset}

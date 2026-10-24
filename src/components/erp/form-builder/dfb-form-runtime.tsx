@@ -21,7 +21,7 @@ import { dfbShellTheme, dfbBankAlign, type DfbFormStyle } from "@/lib/dfb-theme"
 import {
   fetchFormDetail, saveFormData, loadFormData,
   fetchQueryOptionsForFields, normalizeFieldWidth, widthMinWidthClass,
-  dfbFormTitle,
+  dfbFormTitle, executeFormScript, parseFieldConfig, isDfbInputField,
   type DfbFormDetail, type DfbFieldDef,
 } from "@/stores/dfb-store";
 
@@ -59,6 +59,8 @@ function RuntimeInner({ formId }: { formId: number }) {
   const [records, setRecords] = React.useState<Array<{ dataId: number; values: Record<string, string | boolean> }>>([]);
   const [currentDataId, setCurrentDataId] = React.useState<number | null>(null);
   const [busy, setBusy] = React.useState(false);
+  /* Task 53 — script prefill cache (re-applied after reset) */
+  const scriptPrefillRef = React.useRef<Record<string, string>>({});
 
   const loadRecords = React.useCallback(async (d: DfbFormDetail) => {
     try {
@@ -91,6 +93,38 @@ function RuntimeInner({ formId }: { formId: number }) {
            Task 48 — same mapping the studio preview uses) */
         const options = await fetchQueryOptionsForFields(d.fields);
         if (alive) setQueryOptions(options);
+        /* Task 53 — run each script field and prefill the fields bound to it
+           (config { bindScript, bindField }) from the script's FIRST row; the
+           bound fields stay editable — this is just their starting value. */
+        const scriptFields = d.fields.filter(
+          (f) => f.fieldType === "script" &&
+            typeof parseFieldConfig(f.configJson).script === "string" &&
+            String(parseFieldConfig(f.configJson).script).trim(),
+        );
+        if (scriptFields.length > 0) {
+          const prefill: Record<string, string> = {};
+          await Promise.all(
+            scriptFields.map(async (sf) => {
+              try {
+                const res = await executeFormScript(String(parseFieldConfig(sf.configJson).script));
+                const row0 = res.rows[0] ?? {};
+                for (const f of d.fields) {
+                  const cfg = parseFieldConfig(f.configJson);
+                  if (cfg.bindScript === sf.fieldKey && typeof cfg.bindField === "string") {
+                    const v = row0[cfg.bindField];
+                    if (v != null) prefill[String(f.id)] = String(v);
+                  }
+                }
+              } catch {
+                /* a failing script never blocks the form */
+              }
+            }),
+          );
+          if (alive && Object.keys(prefill).length > 0) {
+            scriptPrefillRef.current = prefill;
+            setValues((v) => ({ ...prefill, ...v }));
+          }
+        }
       })
       .catch(() => {
         if (alive) setError(true);
@@ -106,7 +140,13 @@ function RuntimeInner({ formId }: { formId: number }) {
 
   const save = React.useCallback(async () => {
     if (!detail) return;
-    const missing = detail.fields.filter((f) => f.required && f.section !== "footer" && (values[String(f.id)] === undefined || values[String(f.id)] === ""));
+    /* Task 53 — shapes + the script element have NO value: excluded from
+       required-checks and the EAV payload; FOOTER band fields now SAVE like
+       every other field (they are ordinary inputs, just placed at the end) */
+    const inputFields = detail.fields.filter((f) => isDfbInputField(f.fieldType));
+    const missing = inputFields.filter(
+      (f) => f.required && (values[String(f.id)] === undefined || values[String(f.id)] === ""),
+    );
     if (missing.length > 0) {
       toast.error(`${t("dfb.requiredFieldsMissing")}: ${missing.map((m) => m.label).join("، ")}`);
       return;
@@ -114,8 +154,7 @@ function RuntimeInner({ formId }: { formId: number }) {
     setBusy(true);
     try {
       const payload: Record<string, string | boolean | null> = {};
-      for (const f of detail.fields) {
-        if (f.section === "footer") continue;
+      for (const f of inputFields) {
         const v = values[String(f.id)];
         if (v === undefined) continue;
         payload[String(f.id)] = f.fieldType === "checkbox" ? Boolean(v) : String(v);
@@ -132,7 +171,7 @@ function RuntimeInner({ formId }: { formId: number }) {
   }, [detail, values, t, loadRecords]);
 
   const reset = React.useCallback(() => {
-    setValues({});
+    setValues({ ...scriptPrefillRef.current }); // Task 53 — re-apply script prefill
     setCurrentDataId(null);
   }, []);
 
@@ -168,7 +207,8 @@ function RuntimeInner({ formId }: { formId: number }) {
   const shellTheme = dfbShellTheme(shellStyle);
 
   const toShellType = (ft: string): SimpleFormField["type"] =>
-    (["text", "number", "select", "lookup", "checkbox", "date", "textarea"].includes(ft)
+    (["text", "number", "select", "lookup", "checkbox", "date", "textarea",
+      "line", "box", "circle", "oval", "script"].includes(ft)
       ? ft
       : "text") as SimpleFormField["type"];
 
@@ -221,6 +261,8 @@ function RuntimeInner({ formId }: { formId: number }) {
   if (detail.componentKey !== "treeForm") {
     const bodyFields = detail.fields.filter((f) => f.section === "body");
     const mainFields = bodyFields.filter((f) => f.tabRef == null);
+    /* Task 53 — «باند فوتر» fields run in the template's pinned end zone */
+    const footerBandFields = detail.fields.filter((f) => f.section === "footer");
     const toSimpleField = (f: DfbFieldDef): SimpleFormField => ({
       id: String(f.id),
       label: f.label,
@@ -308,6 +350,7 @@ function RuntimeInner({ formId }: { formId: number }) {
         fields={mainFields.map(toSimpleField)}
         onFieldChange={onFieldChange}
         tabs={tabs}
+        footerFields={footerBandFields.map(toSimpleField)}
         actions={footerButtons}
         fieldsAlign={dfbBankAlign(shellStyle, "main")}
         onSave={footerButtons.includes("save") ? save : undefined}
@@ -337,7 +380,12 @@ function RuntimeInner({ formId }: { formId: number }) {
   }
 
   /* ------------------------------ treeForm runtime ------------------------------ */
-  const treeFields = detail.fields.filter((f) => f.section === "body");
+  /* Task 53 — tree forms append the footer-band fields after the body fields
+     (SimpleTreeForm has no separate footer zone; nothing is lost) */
+  const treeFields = [
+    ...detail.fields.filter((f) => f.section === "body"),
+    ...detail.fields.filter((f) => f.section === "footer"),
+  ];
   const recordLabel = (rec: { dataId: number; values: Record<string, string | boolean> }) => {
     const firstText = treeFields.find((f) => f.fieldType === "text" || f.fieldType === "select");
     const v = firstText ? rec.values[String(firstText.id)] : undefined;

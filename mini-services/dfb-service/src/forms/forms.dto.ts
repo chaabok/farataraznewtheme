@@ -28,7 +28,7 @@ export class FieldInputDto {
   @IsString() @MinLength(1) @MaxLength(60) fieldKey: string;
   @IsString() @MinLength(1) @MaxLength(120) label: string;
   @IsOptional() @IsString() @MaxLength(120) labelEn?: string;
-  @IsString() fieldType: string; // text|number|select|lookup|checkbox|date|textarea
+  @IsString() fieldType: string; // text|number|select|lookup|checkbox|date|textarea|script|line|box|circle|oval
   @IsOptional() tabRef?: number | null;
   @IsOptional() section?: string; // header|body|footer (default body)
   @IsOptional() required?: boolean;
@@ -40,6 +40,9 @@ export class FieldInputDto {
   @IsOptional() defaultValue?: string | null;
   @IsOptional() queryRef?: number | null;
   @IsOptional() queryFieldKey?: string | null;
+  /** Task 53 — per-field config (script text/fetched fields/bind) —
+      serialized JSON string (§2.3 precedent: HeaderJson) */
+  @IsOptional() @IsString() @MaxLength(16000) configJson?: string | null;
 }
 
 export class TabInputDto {
@@ -99,6 +102,16 @@ export class AddFieldDto {
   @IsOptional() defaultValue?: string | null;
   @IsOptional() queryRef?: number | null;
   @IsOptional() queryFieldKey?: string | null;
+  @IsOptional() @IsString() @MaxLength(16000) configJson?: string | null;
+}
+
+/** Task 53 (owner request) — designer/runtime execution of a form script:
+    the script receives a tiny READ-ONLY db API (whitelisted Dfb tables) and
+    returns an array of objects (or a single object) — the service extracts
+    the fetched FIELD NAMES so the studio can offer them as selectable
+    fields, and the runtime can prefill the bound fields. */
+export class RunScriptDto {
+  @IsString() @MinLength(1) @MaxLength(16000) script: string;
 }
 
 export class SaveFormDataDto {
@@ -111,7 +124,14 @@ function isValidComponentKey(key: string): boolean {
   return key === "simpleTwoRowTabbed" || key === "treeForm";
 }
 
-const FIELD_TYPES = new Set(["text", "number", "select", "lookup", "checkbox", "date", "textarea"]);
+/** Task 53 — script field + design shapes (no EAV value, static render) */
+export const SCRIPT_FIELD_TYPE = "script";
+export const SHAPE_FIELD_TYPES = ["line", "box", "circle", "oval"] as const;
+
+const FIELD_TYPES = new Set([
+  "text", "number", "select", "lookup", "checkbox", "date", "textarea",
+  SCRIPT_FIELD_TYPE, ...SHAPE_FIELD_TYPES,
+]);
 
 export function assertFieldType(t: string) {
   if (!FIELD_TYPES.has(t)) throw new Error(`invalid fieldType: ${t}`);

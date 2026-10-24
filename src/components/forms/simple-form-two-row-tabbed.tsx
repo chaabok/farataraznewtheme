@@ -39,7 +39,12 @@ export type SimpleFormFieldType =
   | "lookup"
   | "checkbox"
   | "date" // Task 47 — rendered as an LTR YYYY/MM/DD input with a calendar chip
-  | "textarea"; // Task 47 — rendered as a small multi-line box
+  | "textarea" // Task 47 — rendered as a small multi-line box
+  | "line" // Task 53 — static design shape (divider)
+  | "box" // Task 53 — static design shape (rectangle)
+  | "circle" // Task 53 — static design shape
+  | "oval" // Task 53 — static design shape
+  | "script"; // Task 53 — script data-source element (no input; fetched fields bind nearby)
 
 export interface SimpleFormFieldOption {
   value: string;
@@ -168,6 +173,11 @@ export interface SimpleFormTwoRowTabbedProps {
       (persisted in the form's headerJson.style.bankAlign) */
   fieldsAlign?: "start" | "center" | "end";
 
+  /** Task 53 (owner request «باند فوتر») — fields of the form's FOOTER band;
+      they ALWAYS render in a dedicated zone at the very END of the form
+      (after the tabs, before the row-actions strip), never inside it. */
+  footerFields?: SimpleFormField[];
+
   /* ----- OPTIONAL chromeless-window header controls (Task 28) -----
      When hosted by a chromeless window (no light title bar) the green
      header strip becomes the drag handle and hosts the caption buttons. */
@@ -274,6 +284,7 @@ export function SimpleFormTwoRowTabbed({
   canPrint = true,
   actions,
   fieldsAlign,
+  footerFields,
   onHeaderClose,
   onHeaderMaximize,
   onHeaderMinimize,
@@ -294,6 +305,13 @@ export function SimpleFormTwoRowTabbed({
      per-row alignment. */
   const fieldsGridRef = React.useRef<HTMLDivElement | null>(null);
   useAlignedLabels(fieldsGridRef, { scope: labelScope });
+
+  /* Task 53 — the FOOTER band keeps its OWN label-alignment scope so the
+     footer zone aligns internally regardless of the body grid. */
+  const footerFieldsList = React.useMemo(() => footerFields ?? [], [footerFields]);
+  const hasFooterFields = footerFieldsList.length > 0;
+  const footerGridRef = React.useRef<HTMLDivElement | null>(null);
+  useAlignedLabels(footerGridRef, { scope: labelScope });
 
   /* detail-grid rows: initialized once per mount from the tabs prop */
   const [rowsByTab, setRowsByTab] = React.useState<Record<string, Record<string, string>[]>>(
@@ -624,6 +642,24 @@ export function SimpleFormTwoRowTabbed({
           </div>
         )}
       </div>
+
+      {/* 3.5) Task 53 — FOOTER band zone (owner: «این باند همیشه در انتهای
+          فرم باید نمایش داده شود») — shrink-0 OUTSIDE the scrolling body so
+          it is pinned to the very end of the form at every viewport size. */}
+      {hasFooterFields && (
+        <div
+          data-form-footer-band
+          className="shrink-0 border-t border-border/60 bg-muted/20 px-4 pb-2.5 pt-2.5"
+        >
+          <FlowFieldGrid
+            fields={footerFieldsList}
+            onFieldChange={onFieldChange}
+            idPrefix="sft-footer"
+            align={fieldsAlign}
+            gridRef={footerGridRef}
+          />
+        </div>
+      )}
 
       {/* 4) footer strip — row actions of the ACTIVE tab (only when tabs exist
           AND the active tab is a GRID tab — Task 49: "fields" tabs have no

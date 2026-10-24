@@ -130,7 +130,7 @@ export interface DfbFieldDef {
   fieldKey: string;
   label: string;
   labelEn: string | null;
-  fieldType: string; // text|number|select|lookup|checkbox|date|textarea
+  fieldType: string; // text|number|select|lookup|checkbox|date|textarea|script|line|box|circle|oval
   required: boolean;
   readOnly: boolean;
   orderIndex: number;
@@ -138,6 +138,8 @@ export interface DfbFieldDef {
   defaultValue: string | null;
   queryRef: number | null;
   queryFieldKey: string | null;
+  /** Task 53 — per-field config (script text / fetched fields / script bind / shape tone) — serialized JSON */
+  configJson: string | null;
   isCustom: boolean;
   version: number;
 }
@@ -263,4 +265,41 @@ export async function loadFormData(
     `forms/${formId}/data`,
   );
   return res.items ?? [];
+}
+
+/* ----------------- Task 53 — shapes + script field types -----------------
+   line/box/circle/oval are static DESIGN shapes (no EAV value, nothing to
+   validate); "script" is a data-source element: its value never saves, but
+   it fetches rows from the database and its FETCHED fields become selectable
+   form fields (bind via configJson { bindScript, bindField }). */
+export const DFB_SHAPE_TYPES = ["line", "box", "circle", "oval"] as const;
+export const DFB_SCRIPT_TYPE = "script";
+/** types that render NO input in the runtime (excluded from EAV payload + required checks) */
+export const DFB_NON_INPUT_TYPES: readonly string[] = [...DFB_SHAPE_TYPES, DFB_SCRIPT_TYPE];
+
+export const isDfbInputField = (fieldType: string): boolean =>
+  !DFB_NON_INPUT_TYPES.includes(fieldType);
+
+export interface DfbScriptResult {
+  ok: boolean;
+  fields: string[];
+  rowCount: number;
+  rows: Record<string, unknown>[];
+}
+
+/** executes a form script on dfb-service (sandboxed read-only db API) —
+    used by the studio «اجرا و واکشی» and the runtime prefill */
+export async function executeFormScript(script: string): Promise<DfbScriptResult> {
+  return dfbApi.post<DfbScriptResult>("forms/script/execute", { script });
+}
+
+/** parsed per-field config (DfbFormField.ConfigJson — §2.3 serialized JSON string) */
+export function parseFieldConfig(configJson: string | null | undefined): Record<string, unknown> {
+  if (!configJson) return {};
+  try {
+    const v = JSON.parse(configJson);
+    return v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, unknown>) : {};
+  } catch {
+    return {};
+  }
 }

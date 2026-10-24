@@ -18,6 +18,18 @@ import { appBaseOnCreate, appBaseOnUpdate, SYSTEM_ACTOR } from "../../../_shared
 import { parseJsonColumn, toPlain } from "../shared/serialize";
 
 /**
+ * Task 53 (owner request — «فیلد اسکریپت‌نویسی») — SCRIPT_TABLES: the ONLY
+ * tables a form script may read, through a tiny read-only API handed to the
+ * sandboxed function. No free SQL, no writes, capped row counts — the same
+ * defense-in-depth posture as QUERY_TABLES (no free-form SQL, owner Q4).
+ */
+const SCRIPT_TABLES = new Set([
+  "DfbMenu", "DfbForm", "DfbFormTab", "DfbFormField",
+  "DfbFormData", "DfbFormDataValue", "DfbQuery", "DfbQueryField",
+]);
+const SCRIPT_ROW_CAP = 200;
+
+/**
  * DfbForm service — تعریف/ویرایش فرم‌ها (سیستمی و کاربر)، تب‌ها و فیلدها،
  * افزودن فیلد به فرم سیستمی (IsCustom=true) و ذخیره/خواندن دادهٔ رکوردها (EAV).
  */
@@ -72,6 +84,7 @@ export class FormsService {
           defaultValue: f.defaultValue,
           queryRef: f.queryRef != null ? Number(f.queryRef) : null,
           queryFieldKey: f.queryFieldKey,
+          configJson: f.configJson, // Task 53 — script/bind/shape config
           isCustom: f.isCustom,
           version: f.version,
         })),
@@ -184,6 +197,7 @@ export class FormsService {
         defaultValue: dto.defaultValue ?? null,
         queryRef: dto.queryRef != null ? BigInt(dto.queryRef) : null,
         queryFieldKey: dto.queryFieldKey ?? null,
+        configJson: dto.configJson ?? null, // Task 53
         isCustom: form.isSystem, // کاربر فقط به فرم سیستمی «فیلد الحاقی» اضافه می‌کند
         ...appBaseOnCreate(SYSTEM_ACTOR),
       },
@@ -290,6 +304,80 @@ export class FormsService {
     };
   }
 
+  /* --------------------------- Task 53 — form scripts --------------------------- */
+
+  /**
+   * اجرای اسکریپت فرم (درخواست مالک — فیلد «اسکریپت‌نویسی»): اسکریپت یک
+   * تابع جاوااسکریپت است که با API فقط-خواندنیِ db اجرا می‌شود و آرایه‌ای
+   * از اشیاء (یا یک شیء) برمی‌گرداند. سرویس نام ستون‌های خروجی (فیلدهای
+   * واکشی‌شده) را استخراج می‌کند تا استودیو بگذارد کاربر آن‌ها را انتخاب کند
+   * و ران‌تایم بتواند فیلدهای متصل را پیش‌پر کند.
+   *
+   * امنیت: بدون SQL آزاد؛ فقط جداول whitelist از طریق Prisma delegate،
+   * سقف ردیف (SCRIPT_ROW_CAP)، بدون دسترسی به network/fs/process (تابع
+   * فقط «db» را می‌بیند؛ strict mode).
+   */
+  async runScript(script: string) {
+    const src = String(script ?? "");
+    if (!src.trim()) throw new BadRequestException("اسکریپت خالی است");
+    if (src.length > 16000) throw new BadRequestException("اسکریپت بیش از حد بلند است");
+
+    const prisma = this.prisma as unknown as Record<string, unknown>;
+    const db = {
+      /** db.table("DfbMenu").findMany({ where: {...}, take: 50 }) — read-only */
+      table(name: string) {
+        if (!SCRIPT_TABLES.has(name)) {
+          throw new BadRequestException(`جدول «${name}» در فهرست مجاز اسکریپت نیست`);
+        }
+        const delegate = prisma[name.charAt(0).toLowerCase() + name.slice(1)] as {
+          findMany: (opts?: Record<string, unknown>) => Promise<Array<Record<string, unknown>>>;
+        };
+        if (!delegate?.findMany) throw new BadRequestException(`جدول «${name}» پشتیبانی نمی‌شود`);
+        return {
+          async findMany(opts?: { where?: Record<string, unknown>; take?: number; orderBy?: Record<string, unknown> }) {
+            const take = Math.min(Number(opts?.take ?? 50) || 50, SCRIPT_ROW_CAP);
+            const rows = await delegate.findMany({
+              ...(opts?.where ? { where: opts.where } : {}),
+              ...(opts?.orderBy ? { orderBy: opts.orderBy } : {}),
+              take,
+            });
+            return rows.map((r) => toPlain(r));
+          },
+        };
+      },
+    };
+
+    let result: unknown;
+    try {
+      /* AsyncFunction — scripts may use top-level `await` (db calls) */
+      const AsyncFunction = Object.getPrototypeOf(async function () {
+        /* noop */
+      }).constructor;
+      const fn = new AsyncFunction("db", `"use strict";\n${src}\n`);
+      result = await fn(db);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      this.logger.warn(`form script failed: ${msg}`);
+      throw new BadRequestException(`خطای اجرای اسکریپت: ${msg}`);
+    }
+
+    let rows: Array<Record<string, unknown>>;
+    if (Array.isArray(result)) rows = result as Array<Record<string, unknown>>;
+    else if (result != null && typeof result === "object") rows = [result as Record<string, unknown>];
+    else throw new BadRequestException("خروجی اسکریپت باید آرایه‌ای از اشیاء یا یک شیء باشد");
+
+    rows = rows.slice(0, SCRIPT_ROW_CAP).map((r) => (r && typeof r === "object" ? (toPlain(r) as Record<string, unknown>) : {}));
+    /* fetched fields = union of the first rows' keys (stable order) */
+    const fields: string[] = [];
+    for (const r of rows.slice(0, 20)) {
+      for (const k of Object.keys(r ?? {})) {
+        if (!fields.includes(k)) fields.push(k);
+      }
+    }
+    this.logger.log(`form script executed rows=${rows.length} fields=${fields.length}`);
+    return { ok: true, fields, rowCount: rows.length, rows: rows.slice(0, 50) };
+  }
+
   /* ------------------------------- internals ------------------------------- */
 
   private async replaceTabs(
@@ -353,7 +441,7 @@ export class FormsService {
       id?: number; fieldKey: string; label: string; labelEn?: string; fieldType: string;
       tabRef?: number | null; section?: string; required?: boolean; readOnly?: boolean;
       orderIndex?: number; widthSpan?: number; defaultValue?: string | null;
-      queryRef?: number | null; queryFieldKey?: string | null;
+      queryRef?: number | null; queryFieldKey?: string | null; configJson?: string | null;
     }>,
     keepCustom = true,
   ) {
@@ -385,6 +473,7 @@ export class FormsService {
           defaultValue: f.defaultValue ?? null,
           queryRef: f.queryRef != null ? BigInt(f.queryRef) : null,
           queryFieldKey: f.queryFieldKey ?? null,
+          configJson: f.configJson ?? null, // Task 53
           isCustom: false,
           ...appBaseOnCreate(SYSTEM_ACTOR),
         },

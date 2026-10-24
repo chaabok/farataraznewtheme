@@ -5,6 +5,7 @@ import { FormsService } from "./forms.service";
 import {
   AddFieldDto,
   CreateFormDto,
+  RunScriptDto,
   SaveFormDataDto,
   UpdateFormDto,
 } from "./forms.dto";
@@ -30,6 +31,13 @@ export class FormsController {
   }
 
   /* specific routes FIRST (Nest matches in declaration order) */
+  /** Task 53 — execute a form script (designer «اجرا و واکشی» + runtime prefill) */
+  @Post("script/execute")
+  @HttpCode(200)
+  runScript(@Body() dto: RunScriptDto) {
+    return this.forms.runScript(dto.script);
+  }
+
   @Post(":id/fields")
   addField(@Param("id", ParseIntPipe) id: number, @Body() dto: AddFieldDto) {
     return this.forms.addField(id, dto);

@@ -139,6 +139,11 @@ model DfbFormTab {
 
 /// DfbFormField — فیلدهای فرم؛ IsCustom=true = فیلد الحاقی کاربر روی فرم سیستمی.
 /// QueryRef/QueryFieldKey = اتصال فیلد به کوئری (فیلدهای جداول دیگر — درخواست مالک).
+/// ConfigJson — Task 53 (درخواست مالک): پیکربندی وابسته به نوع فیلد به‌صورت
+/// رشتهٔ JSON (پیش‌آیند §2.3: HeaderJson/BusinessStructure.ActiveStructureTypes):
+///   · fieldType="script" → { script, fields[], selected[] }
+///   · فیلدهای برگرفته از اسکریپت → { bindScript: <FieldKey فیلد اسکریپت>, bindField: <نام ستون واکشی‌شده> }
+///   · شیپ‌های طراحی (line/box/circle/oval) → { tone? } — بدون مقدار EAV
 model DfbFormField {
   id                   BigInt   @id @map("ID")
   formRef              BigInt   @map("FormRef")
@@ -155,6 +160,7 @@ model DfbFormField {
   defaultValue         String?  @map("DefaultValue")
   queryRef             BigInt?  @map("QueryRef")
   queryFieldKey        String?  @map("QueryFieldKey")
+  configJson           String?  @map("ConfigJson") // Task 53 — per-field config (script/bind/shape) — serialized JSON string
   isCustom             Boolean  @default(false) @map("IsCustom")
   version              Int      @default(1) @map("Version")
   creator              String   @map("Creator")
