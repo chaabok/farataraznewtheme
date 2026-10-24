@@ -1,3 +1,5 @@
 skills/
 node_modules/
 tool-results/
+.next/
+dev.log

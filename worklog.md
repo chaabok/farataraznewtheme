@@ -2176,3 +2176,17 @@ Work Log:
 
 Stage Summary:
 - §0.9 از این پس فعال است: پس از هر تغییر سورس → commit + push به chaabok/farataraznewtheme (شامل db/*.db).
+
+---
+Task ID: 56
+Agent: Z.ai Code (main orchestrator)
+Task: درخواست مالک — «.next/ و dev.log موقع ارسال پشتیبانی حذف شوند» + تأیید مقصد پوش: مخزن farataraznewtheme.
+
+Work Log:
+- .gitignore: دو مسیر .next/ و dev.log اضافه شد (در کنار skills/، node_modules/، tool-results/).
+- git rm -r --cached .next dev.log → ۳۲۸ فایل از ردیابی خارج شد (فایل‌ها روی دیسک دست‌نخورده ماندند؛ فقط دیگر در پشتیبان پوش نمی‌شوند).
+- مقصد پوش تأیید مالک: origin = chaabok/farataraznewtheme (همان remote تنظیم‌شدهٔ Task 55 — بدون تغییر).
+- طبق §0.9: commit + push شاخهٔ main.
+
+Stage Summary:
+- از این پس پشتیبان GitHub فقط سورس + بانک اطلاعاتی است؛ .next/ و dev.log دیگر پوش نمی‌شوند (تاریخچهٔ قبلی دست‌نخورده ماند).
