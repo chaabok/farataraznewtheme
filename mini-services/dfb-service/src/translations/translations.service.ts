@@ -146,6 +146,13 @@ export class TranslationsService {
       if (!row) throw new NotFoundException("فرم مقصد یافت نشد");
       return;
     }
+    /* Task 70 — Value: EntityRef = شناسهٔ رکورد EAV (DfbFormData)؛ fieldKey فیلد
+       در forms.service به‌صورت زنده sync می‌شود و اینجا فقط وجود رکورد چک می‌شود */
+    if (entityType === "Value") {
+      const row = await this.prisma.dfbFormData.findUnique({ where: { id: BigInt(entityRef) } });
+      if (!row) throw new NotFoundException("رکورد مقصد یافت نشد");
+      return;
+    }
     // Field / Tab / Option — entityRef = FormRef؛ فرم باید وجود داشته باشد
     const row = await this.prisma.dfbForm.findUnique({ where: { id: BigInt(entityRef) } });
     if (!row) throw new NotFoundException("فرم مقصد یافت نشد");

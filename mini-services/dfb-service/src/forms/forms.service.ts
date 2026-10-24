@@ -460,6 +460,10 @@ export class FormsService {
       await tx.dfbTranslation.deleteMany({
         where: { entityRef: BigInt(id), entityType: { in: ["Form", "Field", "Tab", "Option"] } },
       });
+      /* Task 70 — ترجمهٔ داده‌های واردشدهٔ رکوردهای این فرم (EntityRef = dataId) */
+      await tx.dfbTranslation.deleteMany({
+        where: { entityType: "Value", entityRef: { in: dataRows.map((d) => d.id) } },
+      });
     });
     this.logger.log(`DfbForm deleted ID=${id}`);
     return { ok: true };
@@ -616,6 +620,10 @@ export class FormsService {
     if (!rec || Number(rec.formRef) !== formId) throw new NotFoundException("رکورد یافت نشد");
     const values = await this.prisma.dfbFormDataValue.deleteMany({ where: { dataRef: BigInt(dataId) } });
     await this.prisma.dfbFormData.delete({ where: { id: BigInt(dataId) } });
+    /* Task 70 — ترجمهٔ داده‌های واردشدهٔ این رکورد هم پاک می‌شود */
+    await this.prisma.dfbTranslation.deleteMany({
+      where: { entityType: "Value", entityRef: BigInt(dataId) },
+    });
     this.logger.log(`DfbFormData removed form=${formId} data=${dataId} values=${values.count}`);
     return { ok: true };
   }
