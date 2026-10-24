@@ -1880,3 +1880,51 @@ Work Log:
 Stage Summary:
 - دو قانون حفاظتی مالک‌محور جزء پروتکل اجباری ایجنت‌ها شد (§0.7 حالت راهنمایی،
   §0.8 حذف مخرب با تأیید صریح) — از این پس برای همهٔ ایجنت‌های این مخزن الزامی است.
+
+---
+Task ID: 45
+Agent: Z.ai Code (main)
+Task: درخواست مالک (پس از مشاورهٔ تأییدشده با «بلی») — چک‌باکس «استفاده از داده‌های مشترک دفتر مرکزی» باید واقعاً داده‌ها را حاکم کند؛ افزودن فیلدهای ارث‌بری ۱۲گانه به تمامی جداول + کلاس پایهٔ AppBaseEntity که همهٔ انتیتی‌ها از آن ارث بری کنند.
+
+Work Log:
+- §0.1: AGENTS.md (از جمله §0.7/§0.8 جدید) + worklog بازخوانی شد (آخرین رکورد: Task 44 —
+  مشاوره). §0.4: مالک با «بلی» تأیید کرد → اجرا مجاز شد؛ §0.5 (بدون حذف قابلیت/کد تست/
+  build/رنگ indigo-blue)؛ §0.6 فرض‌های اعلام‌شده: تاریخ/زمان شمسی رشته‌ای به وقت تهران،
+  جداول پلتفرمی مستثنا (تأیید پرسش ۲ مشاوره)، منبع حقیقت = چک‌باکس گرهٔ ریشه، چک‌باکس
+  فقط روی سرشاخهٔ اصلی، بازیگر پیش‌فرض "system" تا رسیدن IAM؛ §2.3–§2.6/§5.1/§6/§7 رعایت.
+- مطالعهٔ وضعیت موجود: UI (bs-window.tsx) چک‌باکس را فقط در شاخهٔ isRoot نشان می‌دهد؛
+  سرویس (business-structure.service.ts) در مسیر update غیر-ریشه اصلاً isBasicInfoShared
+  نمی‌پذیرد، create همیشه false می‌سازد و ریشه به‌صورت تراکنشی به Setting
+  bs.shareHeadquarterData آینه می‌شود → نامتقارنی «اشتراک فقط از ریشه» از قبل برقرار
+  بود (بدون تغییر کد، با E2E اثبات شد).
+- ۱) mini-services/_shared/app-base-entity.ts (جدید، بدون وابستگی تا سرویس‌های آیندهٔ
+  §4.4 هم استفاده کنند): APP_BASE_FIELDS (۱۲فیلد)، HEAD_OFFICE_NODE_ID=1n،
+  AppBaseActor/AppBaseEntityFields/SYSTEM_ACTOR، ساعت شمسی تهران بدون وابستگی
+  (gregorianToJalali استاندارد + tehranNowParts با Intl timeZone Asia/Tehran)،
+  appBaseOnCreate/appBaseOnUpdate (audit هرگز دستی-کاربر نیست؛ Version به §2.5
+  واگذار شد تا دوبامپ نشود)، baseDataScopeWhere (تنها پیاده‌سازی قرارداد اشتراک:
+  scope-off → فقط زنجیرهٔ خود کاربر؛ scope-on → + رکوردهای مالک ریشه).
+- ۲) settings-service/prisma/schema.prisma — قالب اجباری ۱۲فیلدی با نگاشت میراث
+  PascalCase (Creator/CreationDate/…/BusinessStructureRef/CompanyRef/BranchRef/
+  AgencyRef/ShopRef) به‌صورت کامنت مرجع برای «هر» مدل عملیاتی آینده + الزام ثبت مدل
+  در VERSIONED_MODELS (کامنت خالص؛ اسکیما/DB تغییر نکرد — جداول عملیاتی هنوز وجود
+  ندارند چون §4.6 تا رسیدن سند تحلیل جدول عملیاتی ممنوع است؛ به محض نخستین جدول،
+  بلوک ۱۲فیلدی + AppBaseEntity با آن زاده می‌شود).
+- Verification: دودی ماژول: tehranNowParts=14050802/ساعت تهران، jalali(2026-10-23)=
+  1405/8/1 و jalali(2025-03-21)=1404/1/1 (Nowruz ✓)، onCreate/onUpdate/scope درست.
+  E2E (agent-browser): فرم ریشه «دفتر مرکزی» → تیک «استفاده از داده‌های مشترک دفتر
+  مرکزی» → ذخیره → PUT 200 و API: isBasicInfoShared=true، Version 6→7 (§2.5)؛ بازگشت
+  تیک → ذخیره → false، Version 8 (وضعیت اولیهٔ دادهٔ مالک حفظ شد). فرم «شرکت نمونه»:
+  چک‌باکس اشتراک وجود ندارد (hasShare=false) ✓. en/LTR: «Use shared headquarters
+  data» + Holding/Company/Branch/Agency/Store فقط روی ریشه ✓؛ موبایل 390×844 بدون
+  سرریز؛ زبان به fa/RTL برگشت؛ page errors=0، console error=0؛ dev.log فقط GET/PUT 200.
+  bun run lint → 0؛ bunx tsc --noEmit → 0 خطای src/mini-services (فقط skills/ خارج از
+  دامنه). اسکرین‌شات‌ها: /tmp/share-1-on.png، share-2-company.png، share-3-english.png.
+
+Stage Summary:
+- قرارداد ارث‌بری مالک‌محور مستقر شد: کلاس پایهٔ AppBaseEntity در _shared با ساعت شمسی
+  تهران، پرکننده‌های خودکار audit و تک‌پیاده‌سازیِ منطق اشتراک (baseDataScopeWhere) —
+  از این پس هر جدول عملیاتی (با رسیدن سند تحلیل §4.6) با بلوک ۱۲فیلدیِ قالبِ ثبت‌شده در
+  اسکیما و همین کلاس زاده می‌شود؛ رفتار چک‌باکس ریشه در UI/API/پایداری/۱۱ زبان/موبایل
+  E2E-تأیید شد و دادهٔ مالک به حالت اولیه برگشت. lint/tsc/E2E/console همگی پاک؛ ثبت در
+  worklog انجام شد.

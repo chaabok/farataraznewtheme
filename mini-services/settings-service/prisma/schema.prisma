@@ -2,6 +2,33 @@
 // §2.3: 100% PostgreSQL-compatible constructs only (no arrays/enums/JSON types).
 // §16 contract: NO autoincrement anywhere — every operational PK is manual via IdGenerationService.
 
+/*
+ * AppBaseEntity — بلوک اجباری ۱۲فیلدی برای «هر» مدل عملیاتیِ آینده
+ * (درخواست مالک: «در تمامی جداول از فیلدهای ارث‌بری استفاده کنیم» — تأیید 1405/08/01).
+ * قرارداد کامل و توابع پرکردن خودکار: mini-services/_shared/app-base-entity.ts
+ *   · create → spread appBaseOnCreate(actor)   · update → spread appBaseOnUpdate(actor)
+ *   · خواندن اطلاعات پایه → baseDataScopeWhere(scope, root.isBasicInfoShared)
+ *   · مدلِ جدید باید به VERSIONED_MODELS (prisma.service.ts) هم اضافه شود (§2.5).
+ * جداول پلتفرمی (Setting/AppRegistry/Systems/IDGeneration/BusinessStructure/
+ * BusinessStructureUser) با تأیید مالک مستثنا هستند.
+ *
+ * model <OperationalEntity> {
+ *   ...
+ *   version              Int      @default(1) @map("Version")                 // §2.5 rowversion
+ *   creator              String               @map("Creator")                 // IAM UserID
+ *   creationDate         String               @map("CreationDate")            // Shamsi 'YYYYMMDD' (Tehran)
+ *   createTime           String               @map("CreationTime")            // 'HHmmss' (Tehran)
+ *   lastModifier         String?              @map("LastModifier")
+ *   lastModificationDate String?              @map("LastModificationDate")
+ *   lastModificationTime String?              @map("LastModificationTime")
+ *   businessStructureRef BigInt               @map("BusinessStructureRef")   // owning node
+ *   companyRef           BigInt?              @map("CompanyRef")             // level anchors
+ *   branchRef            BigInt?              @map("BranchRef")
+ *   agencyRef            BigInt?              @map("AgencyRef")
+ *   shopRef              BigInt?              @map("ShopRef")
+ * }
+ */
+
 generator client {
   provider = "prisma-client-js"
 }
