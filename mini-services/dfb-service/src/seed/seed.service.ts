@@ -213,20 +213,6 @@ export class SeedService implements OnModuleInit {
       return true;
     };
 
-    /* ۴الف — مهاجرت ستون‌های میراث Title_En / Label_En به ردیف‌های en */
-    const legacyMenus = await this.prisma.dfbMenu.findMany({ where: { titleEn: { not: null } } });
-    for (const m of legacyMenus) {
-      if ((m.titleEn ?? "").trim()) await ensureTr("Menu", m.id, "Title", "en", (m.titleEn ?? "").trim());
-    }
-    const legacyForms = await this.prisma.dfbForm.findMany({ where: { titleEn: { not: null } } });
-    for (const f of legacyForms) {
-      if ((f.titleEn ?? "").trim()) await ensureTr("Form", f.id, "Title", "en", (f.titleEn ?? "").trim());
-    }
-    const legacyFields = await this.prisma.dfbFormField.findMany({ where: { labelEn: { not: null } } });
-    for (const f of legacyFields) {
-      if ((f.labelEn ?? "").trim()) await ensureTr("Field", f.formRef, f.fieldKey, "en", (f.labelEn ?? "").trim());
-    }
-
     /* ۴ب — ترجمهٔ نمونهٔ ۱۰زبانهٔ موجودیت‌های فعلی (مالک می‌تواند در استودیو ویرایش کند) */
     const TRANSLATION_SEED: Array<{
       entityType: "Menu" | "Form";
@@ -270,6 +256,20 @@ export class SeedService implements OnModuleInit {
         },
       },
     ];
+    /* ۴الف — مهاجرت ستون‌های میراث Title_En / Label_En به ردیف‌های en */
+    const legacyMenus = await this.prisma.dfbMenu.findMany({ where: { titleEn: { not: null } } });
+    for (const m of legacyMenus) {
+      if ((m.titleEn ?? "").trim()) await ensureTr("Menu", m.id, "Title", "en", (m.titleEn ?? "").trim());
+    }
+    const legacyForms = await this.prisma.dfbForm.findMany({ where: { titleEn: { not: null } } });
+    for (const f of legacyForms) {
+      if ((f.titleEn ?? "").trim()) await ensureTr("Form", f.id, "Title", "en", (f.titleEn ?? "").trim());
+    }
+    const legacyFields = await this.prisma.dfbFormField.findMany({ where: { labelEn: { not: null } } });
+    for (const f of legacyFields) {
+      if ((f.labelEn ?? "").trim()) await ensureTr("Field", f.formRef, f.fieldKey, "en", (f.labelEn ?? "").trim());
+    }
+
     let seededTr = 0;
     for (const s of TRANSLATION_SEED) {
       const row =

@@ -2,7 +2,9 @@
 
 import * as React from "react";
 import { Search, Settings as SettingsIcon, Pin } from "lucide-react";
-import { useT } from "@/stores/settings-store";
+import { useT, useSettings } from "@/stores/settings-store";
+import { useDfbTrMap } from "@/stores/dfb-translations";
+import { dfbNodeTitle } from "@/stores/dfb-store";
 import { useDesktop, type WindowKind } from "@/stores/desktop-store";
 import { useAppRegistry } from "@/stores/app-registry-store";
 import { useDfb } from "@/stores/dfb-store";
@@ -20,6 +22,8 @@ interface Tile {
 
 export function StartMenu() {
   const t = useT();
+  const locale = useSettings((s) => s.locale);
+  const trMap = useDfbTrMap(); // Task 68 — ترجمهٔ آیکون‌های کاربر
   const { setStartOpen, openWindow } = useDesktop();
   const { apps, load } = useAppRegistry();
   /* Task 45 — user-created main icons join the start-menu grid */
@@ -53,19 +57,18 @@ export function StartMenu() {
         icon: <AppTile appKey={a.appKey} />,
         titleKey: a.titleKey,
       })),
-    /* Task 45 — user-created main icons (فرمساز) */
+    /* Task 45 — user-created main icons (فرمساز); Task 68 — translated label */
     ...dfbUserIcons.map((n) => ({
       id: `dfb-menu-${n.id}`,
       kind: "dfb-menu" as WindowKind,
       appKey: String(n.id),
       icon: <DfbGlyph iconKey={n.iconKey} />,
-      titleKey: n.title, // dynamic DB title — rendered verbatim below
+      titleKey: n.title, // raw DB title (fa) — kept for search
+      label: dfbNodeTitle(n, t, locale, trMap),
     })),
   ];
   const filtered = tiles.filter((a) => {
-    const label = dfbUserIcons.some((n) => `dfb-menu-${n.id}` === a.id)
-      ? a.titleKey
-      : t(a.titleKey as never);
+    const label = "label" in a && a.label ? a.label : t(a.titleKey as never);
     return !q || label.toLowerCase().includes(q) || a.id.toLowerCase().includes(q);
   });
 
@@ -105,9 +108,7 @@ export function StartMenu() {
             >
               {app.icon}
               <span className="line-clamp-2 text-center text-[11px] leading-tight text-foreground/90">
-                {dfbUserIcons.some((n) => `dfb-menu-${n.id}` === app.id)
-                  ? app.titleKey
-                  : t(app.titleKey as never)}
+                {"label" in app && app.label ? app.label : t(app.titleKey as never)}
               </span>
             </button>
           ))}

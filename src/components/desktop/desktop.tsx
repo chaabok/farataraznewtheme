@@ -253,6 +253,7 @@ function DesktopIcons() {
      grid, sidebar and context-menu all treat them exactly like catalog apps */
   const dfbUserIcons = useDfb((s) => s.userIcons);
   const dfbLoad = useDfb((s) => s.load);
+  const trMapDesktopIcons = useDfbTrMap(); // Task 68
 
   const layerRef = React.useRef<HTMLDivElement>(null);
   const [rect, setRect] = React.useState<{ w: number; h: number } | null>(null);
@@ -352,12 +353,13 @@ function DesktopIcons() {
         })),
       /* Task 45 — user-created main icons (isSystem=false, NodeType=1):
          same grid slot semantics as catalog apps (owner-confirmed default:
-         mixed alphabetical ordering via the language collator below) */
+         mixed alphabetical ordering via the language collator below).
+         Task 68 — label via the translation map (fallback fa). */
       ...dfbUserIcons.map((n) => ({
         id: `dfb-menu-${n.id}`,
         kind: "dfb-menu" as WindowKind,
         appKey: String(n.id),
-        label: n.title,
+        label: dfbNodeTitle(n, t, locale, trMapDesktopIcons),
         iconKey: n.iconKey,
       })),
     ];
@@ -367,7 +369,7 @@ function DesktopIcons() {
     return base.sort(
       (a, b) => collator.compare(a.label, b.label) || collator.compare(a.id, b.id),
     );
-  }, [apps, dfbUserIcons, t, collator]);
+  }, [apps, dfbUserIcons, t, collator, locale, trMapDesktopIcons]);
 
   /* Task 36 — the catalog "settings" icon opens the real Settings window too:
      openWindow redirects (app, "settings") → kind "settings", so this icon,
