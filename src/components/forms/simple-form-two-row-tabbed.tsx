@@ -94,11 +94,11 @@ export interface SimpleFormTab {
   /** Task 49 — input fields of a "fields" tab (entered like the main rows,
       saved with the form's own record) */
   fields?: SimpleFormField[];
-  /** Task 50 (owner request) — «افزودن تب» inside a records-table band:
-      when present, the band's panel renders an INNER tab strip and every
-      child is its own grid (records via the footer add button target the
-      active inner tab). */
-  children?: SimpleFormTab[];
+  /* Task 52 (owner rule «عنوان عناصر طراحی در پیش‌نمایش نباید نمایش داده
+     شود») — the Task 50 inner-strip model (band tab + children) is GONE:
+     the dfb mapper now flattens the tabs created with «افزودن تب» into the
+     ONE top-level strip, exactly like the sample form. Bands are design
+     elements and never render here. */
 }
 
 export interface SimpleFormTwoRowTabbedProps {
@@ -295,23 +295,17 @@ export function SimpleFormTwoRowTabbed({
   const fieldsGridRef = React.useRef<HTMLDivElement | null>(null);
   useAlignedLabels(fieldsGridRef, { scope: labelScope });
 
-  /* detail-grid rows: initialized once per mount from the tabs prop
-     (Task 50 — child tabs inside a records-table band own rows too) */
+  /* detail-grid rows: initialized once per mount from the tabs prop */
   const [rowsByTab, setRowsByTab] = React.useState<Record<string, Record<string, string>[]>>(
     () =>
       Object.fromEntries(
-        tabsProp
-          .flatMap((tb) => [tb, ...(tb.children ?? [])])
-          .map((tb) => [tb.id, (tb.rows ?? []).map((r) => ({ ...r }))]),
+        tabsProp.map((tb) => [tb.id, (tb.rows ?? []).map((r) => ({ ...r }))]),
       ),
   );
   const [activeTab, setActiveTab] = React.useState(
     () => defaultTabId ?? tabsProp[0]?.id ?? "",
   );
   const [selected, setSelected] = React.useState<{ tabId: string; index: number } | null>(null);
-  /* Task 50 — active tab INSIDE a records-table band (per form; falls back
-     to the band's first child when the band switches) */
-  const [activeInnerTab, setActiveInnerTab] = React.useState("");
 
   const hasTabs = tabsProp.length > 0;
   const hasNav = Boolean(onFirst || onPrev || onNext || onLast);
@@ -321,18 +315,9 @@ export function SimpleFormTwoRowTabbed({
   const flowMode =
     Boolean(fieldsAlign && fieldsAlign !== "start") || fields.some((f) => f.widthPct != null);
 
-  /* Task 50 — the ACTIVE GRID tab the footer record buttons operate on:
-     when the active outer tab is a records-table band with inner tabs, the
-     active INNER tab is the grid; otherwise the outer tab itself. */
+  /* the ACTIVE GRID tab the footer record buttons operate on */
   const activeTabDef = tabsProp.find((x) => x.id === activeTab);
-  const innerTabs = activeTabDef?.children ?? [];
-  const effectiveGridTabId =
-    innerTabs.length > 0 && innerTabs.some((t) => t.id === activeInnerTab)
-      ? activeInnerTab
-      : (innerTabs[0]?.id ?? activeTab);
-  const effectiveGridDef = innerTabs.find((t) => t.id === effectiveGridTabId) ?? activeTabDef;
-  const activeTabIsGrid =
-    innerTabs.length > 0 ? true : activeTabDef ? activeTabDef.kind !== "fields" : true;
+  const activeTabIsGrid = activeTabDef ? activeTabDef.kind !== "fields" : true;
 
   const commitRows = (tabId: string, rows: Record<string, string>[]) => {
     setRowsByTab((prev) => ({ ...prev, [tabId]: rows }));
@@ -340,30 +325,30 @@ export function SimpleFormTwoRowTabbed({
   };
 
   const addRow = () => {
-    const tb = effectiveGridDef;
-    if (!tb) return;
-    const rows = rowsByTab[effectiveGridTabId] ?? [];
+    const tb = activeTabDef;
+    if (!tb || tb.kind === "fields") return;
+    const rows = rowsByTab[activeTab] ?? [];
     const blank = Object.fromEntries(tb.columns.map((c) => [c.id, ""])) as Record<string, string>;
     const next = [...rows, blank];
-    commitRows(effectiveGridTabId, next);
-    setSelected({ tabId: effectiveGridTabId, index: next.length - 1 });
+    commitRows(activeTab, next);
+    setSelected({ tabId: activeTab, index: next.length - 1 });
   };
 
   const removeSelectedRow = () => {
-    if (!selected || selected.tabId !== effectiveGridTabId) return;
-    const rows = [...(rowsByTab[effectiveGridTabId] ?? [])];
+    if (!selected || selected.tabId !== activeTab) return;
+    const rows = [...(rowsByTab[activeTab] ?? [])];
     rows.splice(selected.index, 1);
-    commitRows(effectiveGridTabId, rows);
+    commitRows(activeTab, rows);
     setSelected(null);
   };
 
   const copySelectedRow = () => {
-    if (!selected || selected.tabId !== effectiveGridTabId) return;
-    const rows = [...(rowsByTab[effectiveGridTabId] ?? [])];
+    if (!selected || selected.tabId !== activeTab) return;
+    const rows = [...(rowsByTab[activeTab] ?? [])];
     const clone = { ...rows[selected.index] };
     rows.splice(selected.index + 1, 0, clone);
-    commitRows(effectiveGridTabId, rows);
-    setSelected({ tabId: effectiveGridTabId, index: selected.index + 1 });
+    commitRows(activeTab, rows);
+    setSelected({ tabId: activeTab, index: selected.index + 1 });
   };
 
   const setCell = (tabId: string, rowIndex: number, colId: string, value: string) => {
@@ -373,10 +358,10 @@ export function SimpleFormTwoRowTabbed({
     commitRows(tabId, rows);
   };
 
-  const selectedInActive = Boolean(selected && selected.tabId === effectiveGridTabId);
+  const selectedInActive = Boolean(selected && selected.tabId === activeTab);
 
-  /* records table of one grid tab — shared by plain band tabs (Task 49)
-     and the INNER tabs of a records-table band (Task 50) */
+  /* records table of one grid tab (Task 52 — one flat strip, sample-form
+     style; the Task 50 inner-strip branch is retired) */
   const renderGridTable = (tb: SimpleFormTab, rows: Record<string, string>[]) => (
     <div
       data-simple-form-grid={tb.id}
@@ -629,42 +614,6 @@ export function SimpleFormTwoRowTabbed({
                     </TabsContent>
                   );
                 }
-                /* Task 50 — records-table band with «افزودن تب» tabs: the
-                   band's panel is an INNER tab strip; every child is its
-                   own grid (footer add button targets the active inner tab) */
-                const kids = tb.children ?? [];
-                if (kids.length > 0) {
-                  return (
-                    <TabsContent key={tb.id} value={tb.id} className="mt-2 flex min-h-0 flex-1 flex-col">
-                      <Tabs
-                        className="flex min-h-0 flex-1 flex-col"
-                        value={effectiveGridTabId}
-                        onValueChange={(v) => {
-                          setActiveInnerTab(v);
-                          setSelected(null);
-                        }}
-                      >
-                        <TabsList className="h-8 w-auto shrink-0 justify-start rounded-lg border border-border/60 bg-background/70 p-1">
-                          {kids.map((ct) => (
-                            <TabsTrigger
-                              key={ct.id}
-                              value={ct.id}
-                              data-simple-form-tab={ct.id}
-                              className="h-6 rounded-md px-3 text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-                            >
-                              {ct.label}
-                            </TabsTrigger>
-                          ))}
-                        </TabsList>
-                        {kids.map((ct) => (
-                          <TabsContent key={ct.id} value={ct.id} className="mt-2 flex min-h-0 flex-1 flex-col">
-                            {renderGridTable(ct, rowsByTab[ct.id] ?? [])}
-                          </TabsContent>
-                        ))}
-                      </Tabs>
-                    </TabsContent>
-                  );
-                }
                 return (
                   <TabsContent key={tb.id} value={tb.id} className="mt-2 flex min-h-0 flex-1 flex-col">
                     {renderGridTable(tb, rows)}
@@ -714,7 +663,7 @@ export function SimpleFormTwoRowTabbed({
                   icon={<Save className="h-4 w-4" />}
                   label={t("common.save")}
                   tintClass="text-emerald-500 hover:bg-emerald-500/15"
-                  onClick={() => onSaveRows(effectiveGridTabId, rowsByTab[effectiveGridTabId] ?? [])}
+                  onClick={() => onSaveRows(activeTab, rowsByTab[activeTab] ?? [])}
                 />
               </>
             )}

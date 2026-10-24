@@ -1010,7 +1010,16 @@ function StudioInner({ formId }: { formId: number }) {
               </div>
             )}
             {/* mock form shell */}
-            <div className="overflow-hidden rounded-2xl border border-border/60 bg-background shadow-lg">
+            <div
+              className={cn(
+                "overflow-hidden rounded-2xl border border-border/60 bg-background shadow-lg",
+                /* Task 52 (owner rule «ارتفاع بدنه فرم باید ثابت باشد») — the
+                   preview IS the running window: the shell gets a FIXED height,
+                   the tabbed grid scrolls INTERNALLY and the form never grows
+                   with the number of records (design canvas still flows). */
+                preview && "h-[min(70vh,640px)] min-h-[420px]",
+              )}
+            >
               {/* shell header (theme) — design mode only; the live preview
                   renders the REAL template which brings its own header */}
               {!preview && (
@@ -2262,40 +2271,49 @@ function PreviewCanvas({
     minWidth: widthMinWidthClass(f.widthSpan),
   });
 
-  /* Task 51 — the runtime's tab mapping, mirrored on the studio model:
-     banks[1..] are the DfbFormTab band rows; a records-table band's tabs
-     (created with «افزودن تب») become the INNER tab strip of its panel.
-     Labels are locale-aware (dfbFormTitle) exactly like the runtime. */
-  const previewTabs: SimpleFormTab[] = state.banks.slice(1).map((bank) => {
+  /* Task 52 (owner rule «عنوان عناصر طراحی در پیش‌نمایش نباید نمایش داده
+     شود») — mirrors the runtime mapper exactly: bands are DESIGN elements
+     and never render as tabs; the tabs created with «افزودن تب» inside a
+     records-table band are flattened into the ONE top-level strip, exactly
+     like the sample form. Labels are locale-aware (dfbFormTitle). */
+  const previewTabs: SimpleFormTab[] = [];
+  for (const bank of state.banks.slice(1)) {
     if (bank.tabKind === 2) {
-      return {
+      previewTabs.push({
         id: bank.key,
         label: bank.title,
         kind: "fields" as const,
         columns: [],
         fields: bank.fields.map(toSimple),
-      };
+      });
+      continue;
     }
     if (bank.tabs.length > 0) {
       /* legacy band-level fields (pre-Task 50 save) wrap into ONE pseudo tab
          titled after the band — render it like the runtime does: a plain
          grid tab, no inner strip (the wrap is materialized on next save) */
       if (bank.tabs.length === 1 && bank.tabs[0].key.startsWith("tb-legacy-")) {
-        return { id: bank.key, label: bank.title, columns: bank.tabs[0].fields.map(colOf) };
+        previewTabs.push({ id: bank.key, label: bank.title, columns: bank.tabs[0].fields.map(colOf) });
+        continue;
       }
-      return {
-        id: bank.key,
-        label: bank.title,
-        columns: [],
-        children: bank.tabs.map((tb) => ({
+      /* each «افزودن تب» tab = its own grid tab in the flat strip */
+      for (const tb of bank.tabs) {
+        previewTabs.push({
           id: `${bank.key}::${tb.key}`,
           label: dfbFormTitle({ title: tb.title, titleEn: tb.titleEn }, locale),
           columns: tb.fields.map(colOf),
-        })),
-      };
+        });
+      }
+      /* defensive: direct band-level fields beside real tabs keep a grid of
+         their own, titled after the band (same as the runtime mapper) */
+      if (bank.fields.length > 0) {
+        previewTabs.push({ id: `band-${bank.key}`, label: bank.title, columns: bank.fields.map(colOf) });
+      }
+      continue;
     }
-    return { id: bank.key, label: bank.title, columns: bank.fields.map(colOf) };
-  });
+    /* legacy single-grid band (no «افزودن تب» tabs yet) */
+    previewTabs.push({ id: bank.key, label: bank.title, columns: bank.fields.map(colOf) });
+  }
 
   return (
     <SimpleFormTwoRowTabbed

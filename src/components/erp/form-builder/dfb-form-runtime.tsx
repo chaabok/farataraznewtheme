@@ -238,11 +238,10 @@ function RuntimeInner({ formId }: { formId: number }) {
       disabled: busy,
     });
 
-    /* Task 50 — records-table bands own their tabs: parentRef=0 rows are the
-       bands, parentRef>0 rows are the tabs created with «افزودن تب» INSIDE a
-       band (each one a grid). A band with children renders an inner tab
-       strip in the shell; the footer add button targets the active inner
-       grid. Legacy band-level grids (no children) behave exactly as before. */
+    /* Task 52 (owner rule «عنوان عناصر طراحی در پیش‌نمایش نباید نمایش داده
+       شود») — bands are DESIGN elements and never render as tabs. The tabs
+       created with «افزودن تب» inside a records-table band are flattened
+       into the ONE top-level strip, exactly like the sample form. */
     const bandTabs = detail.tabs.filter((tb) => !tb.parentRef);
     const childrenOf = (bandId: number) => detail.tabs.filter((tb) => tb.parentRef === bandId);
     const columnsOf = (tabId: number) =>
@@ -255,11 +254,13 @@ function RuntimeInner({ formId }: { formId: number }) {
           minWidth: widthMinWidthClass(normalizeFieldWidth(f.widthSpan)),
         }));
 
-    const tabs: SimpleFormTab[] = bandTabs.map((tb) => {
+    const tabs: SimpleFormTab[] = [];
+    for (const tb of bandTabs) {
       const tabLabel = dfbFormTitle(tb, locale);
-      /* Task 49 — input-fields band (TabKind=2): plain inputs, no grid */
+      /* Task 49 — input-fields band (TabKind=2): plain inputs, no grid;
+         the band title doubles as the tab's user-facing name */
       if (tb.tabKind === 2) {
-        return {
+        tabs.push({
           id: String(tb.id),
           label: tabLabel,
           kind: "fields" as const,
@@ -267,29 +268,34 @@ function RuntimeInner({ formId }: { formId: number }) {
           fields: bodyFields
             .filter((f) => f.tabRef === tb.id)
             .map(toSimpleField),
-        };
+        });
+        continue;
       }
       const kids = childrenOf(tb.id);
       if (kids.length > 0) {
-        const children: SimpleFormTab[] = kids.map((ct) => ({
-          id: String(ct.id),
-          label: dfbFormTitle(ct, locale),
-          columns: columnsOf(ct.id),
-        }));
+        /* each «افزودن تب» tab = its own grid tab in the flat strip */
+        for (const ct of kids) {
+          tabs.push({
+            id: String(ct.id),
+            label: dfbFormTitle(ct, locale),
+            columns: columnsOf(ct.id),
+          });
+        }
         /* defensive: direct band-level fields (pre-Task 50 layout) keep a
            grid of their own, titled after the band */
         const direct = columnsOf(tb.id);
         if (direct.length > 0) {
-          children.push({ id: `band-${tb.id}`, label: tabLabel, columns: direct });
+          tabs.push({ id: `band-${tb.id}`, label: tabLabel, columns: direct });
         }
-        return { id: String(tb.id), label: tabLabel, columns: [], children };
+      } else {
+        /* legacy single-grid band (no «افزودن تب» tabs yet) */
+        tabs.push({
+          id: String(tb.id),
+          label: tabLabel,
+          columns: columnsOf(tb.id),
+        });
       }
-      return {
-        id: String(tb.id),
-        label: tabLabel,
-        columns: columnsOf(tb.id),
-      };
-    });
+    }
 
     return (
       <SimpleFormTwoRowTabbed
