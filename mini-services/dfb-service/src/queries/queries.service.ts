@@ -273,7 +273,9 @@ export class QueriesService {
       for (const [k, v] of Object.entries(r)) row[back[k] ?? k] = v;
       return row;
     });
-    return mapped.map((r) => this.projectRow(r, columns, filterColumn, filterValue));
+    return mapped
+      .map((r) => this.projectRow(r, columns, filterColumn, filterValue))
+      .filter((r): r is QueryRow => r != null); // Task 59 — filtered rows may drop nulls
   }
 
   private async runRemote(
@@ -296,7 +298,9 @@ export class QueriesService {
       for (const [col, src] of Object.entries(keyMap)) row[col] = r[src];
       return row;
     });
-    return mapped.map((r) => this.projectRow(r, columns, filterColumn, filterValue));
+    return mapped
+      .map((r) => this.projectRow(r, columns, filterColumn, filterValue))
+      .filter((r): r is QueryRow => r != null); // Task 59 — filtered rows may drop nulls
   }
 
   /** SELECT of whitelisted columns + optional equality filter — the ONLY filter shape. */

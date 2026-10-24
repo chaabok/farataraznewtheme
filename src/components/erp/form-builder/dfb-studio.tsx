@@ -3,9 +3,9 @@
 import * as React from "react";
 import {
   AlignCenterHorizontal, AlignEndHorizontal, AlignLeft, AlignStartHorizontal, ArrowDown, ArrowUp,
-  Braces, CalendarDays, Check, ChevronDown, Circle, CircleDot, Code, Copy, Eye, EyeOff, FileText, FormInput,
-  Grid3x3, Hash, History, Layers, List, ListTree, Loader2, Lock, Minus, MoveHorizontal, Palette,
-  Pill, PencilLine, Plus, RotateCcw, Save, Search, SlidersHorizontal, Square, Trash2, Type, X,
+  Braces, CalendarDays, Check, ChevronDown, Circle, CircleDot, Code, Copy, Database, Eye, EyeOff, FileText, FormInput,
+  Grid3x3, Hash, History, KeyRound, Layers, List, ListTree, Loader2, Lock, Minus, MoveHorizontal, Palette,
+  Pill, PencilLine, Play, Plus, RotateCcw, Save, Search, SlidersHorizontal, Square, Table2, Trash2, Type, X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useT, useSettings } from "@/stores/settings-store";
@@ -22,13 +22,17 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   fetchFormDetail, dfbApi, saveFormData, loadFormData,
   fetchQueryOptionsForFields, normalizeFieldWidth, widthMinWidthClass, dfbFormTitle,
   executeFormScript, parseFieldConfig, isDfbInputField,
   fieldConfigItems, fieldItemsScript, rowsToItems, DFB_ITEM_FIELD_TYPES,
+  fetchSchemaTree,
   type DfbFormDetail, type DfbFieldDef, type DfbTabDef, type DfbFieldItem,
+  type DfbSchemaGroup, type DfbScriptResult,
 } from "@/stores/dfb-store";
+import { APP_ICONS } from "@/lib/app-catalog";
 import { LatinInput } from "@/components/forms/latin-input";
 import {
   DFB_THEME_SWATCHES, dfbShellTheme, dfbBankAlign,
@@ -108,6 +112,8 @@ interface StudioField {
   id?: number; // DB id (loaded / last save)
   fieldKey: string; // server fieldKey (kept stable for EAV within a save generation)
   label: string;
+  /** Task 59 — Latin label (properties modal; persisted as Label_En) */
+  labelEn: string;
   fieldType: string;
   required: boolean;
   readOnly: boolean;
@@ -294,6 +300,7 @@ function buildBanks(d: DfbFormDetail): { banks: StudioBank[]; footer: StudioBank
     id: f.id,
     fieldKey: f.fieldKey,
     label: f.label,
+    labelEn: f.labelEn ?? "", // Task 59
     fieldType: f.fieldType,
     required: f.required,
     readOnly: f.readOnly,
@@ -452,6 +459,11 @@ function StudioInner({ formId }: { formId: number }) {
   const [busy, setBusy] = React.useState(false);
   const [metaOpen, setMetaOpen] = React.useState(false);
   const [exitConfirm, setExitConfirm] = React.useState(false);
+  /* Task 59 — double-click on a field card opens the PROPERTIES modal */
+  const [propsOpen, setPropsOpen] = React.useState(false);
+  /* Task 59 — the SCRIPT modal: "field" = script data-source element,
+     "items" = the itemsScript of a select/radio field (null = closed) */
+  const [scriptModal, setScriptModal] = React.useState<null | "field" | "items">(null);
 
   /* Task 48 — LIVE preview state: real inputs (data entry) + records list +
      query options; loaded lazily the first time preview opens */
@@ -506,6 +518,32 @@ function StudioInner({ formId }: { formId: number }) {
   }
 
   /* ---------------- Task 48 — alignment / equalize commands ---------------- */
+  /** Task 59 — double-click a field card: select it AND open its properties
+      modal (the card keeps single-click = select, rail stays in sync) */
+  const openFieldProps = React.useCallback((containerKey: string, fieldKey: string) => {
+    setActiveContainerKey(containerKey);
+    setSelectedFieldKey(fieldKey);
+    setPropsOpen(true);
+  }, []);
+
+  /** Task 59 — human label of a container for the properties modal */
+  const containerLabelOf = React.useCallback(
+    (cKey: string): string => {
+      if (!state) return "—";
+      if (cKey === "footer") return t("dfb.studio.footerBand");
+      const { bankKey, tabKey } = splitContainer(cKey);
+      if (bankKey === "main") return t("dfb.studio.bankMain");
+      const bank = state.banks.find((b) => b.key === bankKey);
+      if (!bank) return "—";
+      if (tabKey) {
+        const tab = bank.tabs.find((x) => x.key === tabKey);
+        return `${bank.title} ← ${tab?.title ?? ""}`;
+      }
+      return bank.title;
+    },
+    [state, t],
+  );
+
   const setBankAlign = React.useCallback(
     (bankIndex: number, a: DfbBankAlign) => {
       commit((d) => {
@@ -716,6 +754,7 @@ function StudioInner({ formId }: { formId: number }) {
           key: nextKey("f"),
           fieldKey: isScript ? `script_${Date.now().toString(36)}` : "",
           label: t(`dfb.type.${fieldType}` as never),
+          labelEn: "", // Task 59
           fieldType,
           required: false,
           readOnly: false,
@@ -986,6 +1025,7 @@ function StudioInner({ formId }: { formId: number }) {
           key: nextKey("f"),
           fieldKey: "",
           label: name,
+          labelEn: "", // Task 59
           fieldType: "text",
           required: false,
           readOnly: false,
@@ -1076,6 +1116,11 @@ function StudioInner({ formId }: { formId: number }) {
       else cur.delete(value);
       return { ...m, [fieldKey]: [...cur] };
     });
+  }, []);
+
+  /** Task 59 — the script modal hands over the items it fetched for a field */
+  const setItemsCandidatesFor = React.useCallback((fieldKey: string, items: DfbFieldItem[]) => {
+    setItemsCandidates((m) => ({ ...m, [fieldKey]: items }));
   }, []);
 
   /** merges the picked fetched items into the field's items (value-deduped) */
@@ -1188,6 +1233,7 @@ function StudioInner({ formId }: { formId: number }) {
             return {
               fieldKey: f.fieldKey || `f${orderIndex + 1}_${f.fieldType}`,
               label: f.label.trim(),
+              labelEn: f.labelEn.trim() || undefined, // Task 59
               fieldType: f.fieldType,
               required: f.required,
               readOnly: f.readOnly,
@@ -1421,6 +1467,7 @@ function StudioInner({ formId }: { formId: number }) {
                           setActiveContainerKey(cKey);
                           setSelectedFieldKey(k);
                         }}
+                        onOpenFieldProps={openFieldProps}
                         onAddField={() => {
                           /* Task 50 — a records-table band WITHOUT tabs asks for
                              its first tab instead of a container-less field */
@@ -1497,6 +1544,7 @@ function StudioInner({ formId }: { formId: number }) {
                           setActiveContainerKey("footer");
                           setSelectedFieldKey(k);
                         }}
+                        onOpenFieldProps={(k) => openFieldProps("footer", k)}
                         onAddField={() => addField("footer", paletteType)}
                         onMoveFieldDir={(k, dir) => moveFieldDir("footer", k, dir)}
                         onRemoveField={(k) => removeField("footer", k)}
@@ -1809,7 +1857,8 @@ function StudioInner({ formId }: { formId: number }) {
                 </section>
               )}
 
-              {/* active field settings */}
+              {/* active field settings — Task 59: the SAME FieldSettingsBody
+                  powers the rail AND the double-click properties modal */}
               {!preview && (
                 <section aria-label={t("dfb.studio.fieldSettings")} className="grid gap-2">
                   <h3 className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
@@ -1821,342 +1870,30 @@ function StudioInner({ formId }: { formId: number }) {
                       {t("dfb.studio.fieldSettingsHint")}
                     </p>
                   ) : (
-                    <div className="grid gap-2 rounded-xl border border-border/60 p-2.5">
-                      <div className="grid gap-1.5">
-                        <Label className="text-[11px] text-muted-foreground">{t("dfb.fieldLabel")}</Label>
-                        <Input
-                          value={selectedFieldRef.field.label}
-                          onChange={(e) => updateField(selectedFieldRef.field.key, { label: e.target.value })}
-                          className="h-8"
-                        />
-                      </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="grid gap-1.5">
-                          <Label className="text-[11px] text-muted-foreground">{t("dfb.fieldType")}</Label>
-                          <Select
-                            value={selectedFieldRef.field.fieldType}
-                            onValueChange={(v) => updateField(selectedFieldRef.field.key, { fieldType: v, queryRef: null, queryFieldKey: null })}
-                          >
-                            <SelectTrigger aria-label={t("dfb.fieldType")} className="h-8"><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              {FIELD_TYPES.map((ft) => (
-                                <SelectItem key={ft} value={ft}>{t(`dfb.type.${ft}` as never)}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="grid gap-1.5">
-                          <Label className="text-[11px] text-muted-foreground">{t("dfb.width")}</Label>
-                          <Select
-                            value={String(selectedFieldRef.field.widthSpan)}
-                            onValueChange={(v) => updateField(selectedFieldRef.field.key, { widthSpan: Number(v) })}
-                          >
-                            <SelectTrigger aria-label={t("dfb.width")} className="h-8"><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              {[25, 50, 75, 100].map((w) => (
-                                <SelectItem key={w} value={String(w)}>
-                                  <span dir="ltr" className="font-mono">{w}%</span>
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                      <div className="flex flex-wrap items-center gap-3">
-                        <label className="flex cursor-pointer items-center gap-1.5 text-xs">
-                          <Checkbox
-                            checked={selectedFieldRef.field.required}
-                            onCheckedChange={(v) => updateField(selectedFieldRef.field.key, { required: Boolean(v) })}
-                            aria-label={t("dfb.required")}
-                          />
-                          {t("dfb.required")}
-                        </label>
-                        <label className="flex cursor-pointer items-center gap-1.5 text-xs">
-                          <Checkbox
-                            checked={selectedFieldRef.field.readOnly}
-                            onCheckedChange={(v) => updateField(selectedFieldRef.field.key, { readOnly: Boolean(v) })}
-                            aria-label={t("dfb.studio.readOnly")}
-                          />
-                          {t("dfb.studio.readOnly")}
-                        </label>
-                      </div>
-                      {(selectedFieldRef.field.fieldType === "select" || selectedFieldRef.field.fieldType === "lookup") && (
-                        <>
-                          <div className="grid gap-1.5">
-                            <Label className="text-[11px] text-muted-foreground">{t("dfb.queryBind")}</Label>
-                            <Select
-                              value={selectedFieldRef.field.queryRef != null ? String(selectedFieldRef.field.queryRef) : "-"}
-                              onValueChange={(v) =>
-                                updateField(selectedFieldRef.field.key, {
-                                  queryRef: v === "-" ? null : Number(v),
-                                  queryFieldKey: null,
-                                })
-                              }
-                            >
-                              <SelectTrigger aria-label={t("dfb.queryBind")} className="h-8"><SelectValue /></SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="-">{t("dfb.noQuery")}</SelectItem>
-                                {queries.map((q) => (
-                                  <SelectItem key={q.id} value={String(q.id)}>{q.title}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          {selectedFieldRef.field.queryRef != null && (
-                            <div className="grid gap-1.5">
-                              <Label className="text-[11px] text-muted-foreground">{t("dfb.queryValueColumn")}</Label>
-                              <Select
-                                value={selectedFieldRef.field.queryFieldKey ?? "-"}
-                                onValueChange={(v) => updateField(selectedFieldRef.field.key, { queryFieldKey: v === "-" ? null : v })}
-                              >
-                                <SelectTrigger aria-label={t("dfb.queryValueColumn")} className="h-8"><SelectValue /></SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="-">{t("dfb.none")}</SelectItem>
-                                  {(queries.find((q) => q.id === selectedFieldRef.field.queryRef)?.fields ?? []).map((qf) => (
-                                    <SelectItem key={qf.fieldName} value={qf.fieldName}>{qf.fieldName}</SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                          )}
-                        </>
-                      )}
-                      {/* Task 58 (owner request) — list/radio ITEMS: the user
-                          defines the items OR fetches them from a script;
-                          they feed the field AND its records-table column */}
-                      {selectedFieldRef.field.fieldType === "select" ||
-                       selectedFieldRef.field.fieldType === "radio" ? (
-                        <div className="grid gap-1.5 rounded-xl border border-violet-600/30 bg-violet-500/5 p-2">
-                          <Label className="text-[11px] text-violet-700 dark:text-violet-400">
-                            {t("dfb.studio.listItems")}
-                          </Label>
-                          <p className="text-[10px] leading-relaxed text-muted-foreground">
-                            {t("dfb.studio.listItemsHint")}
-                          </p>
-                          {fieldConfigItems(selectedFieldRef.field.config).length === 0 ? (
-                            <p className="rounded-lg border border-dashed border-border/70 px-2 py-1.5 text-[10px] text-muted-foreground">
-                              {t("dfb.studio.listItemsEmpty")}
-                            </p>
-                          ) : (
-                            <div className="grid max-h-28 gap-1 overflow-y-auto pe-0.5 scrollbar-slim">
-                              {fieldConfigItems(selectedFieldRef.field.config).map((it, i) => (
-                                <div key={`${it.value}-${i}`} className="flex items-center gap-1.5">
-                                  <Input
-                                    value={it.label}
-                                    onChange={(e) => updateItemLabel(selectedFieldRef.field.key, i, e.target.value)}
-                                    className="h-7 text-xs"
-                                    aria-label={`${t("dfb.studio.listItems")} ${i + 1}`}
-                                  />
-                                  <button
-                                    type="button"
-                                    onClick={() => removeItem(selectedFieldRef.field.key, i)}
-                                    aria-label={t("common.delete")}
-                                    title={t("common.delete")}
-                                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-rose-600 transition-colors hover:bg-rose-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
-                                  >
-                                    <Trash2 className="h-3.5 w-3.5" aria-hidden />
-                                  </button>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                          <div className="flex items-center gap-1.5">
-                            <Input
-                              value={newItemLabel}
-                              onChange={(e) => setNewItemLabel(e.target.value)}
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter") {
-                                  e.preventDefault();
-                                  addItem();
-                                }
-                              }}
-                              placeholder={t("dfb.studio.listItemPlaceholder")}
-                              className="h-7 flex-1 text-xs"
-                              aria-label={t("dfb.studio.listItemAdd")}
-                            />
-                            <Button
-                              type="button" size="sm" variant="outline"
-                              className="h-7 shrink-0 border-violet-600/50 text-violet-700 hover:bg-violet-500/10 dark:text-violet-400"
-                              disabled={!newItemLabel.trim()}
-                              onClick={addItem}
-                            >
-                              <Plus className="h-3.5 w-3.5" aria-hidden />
-                              {t("dfb.studio.listItemAdd")}
-                            </Button>
-                          </div>
-                          {/* items from script */}
-                          <Label className="mt-1 text-[11px] text-muted-foreground">
-                            {t("dfb.studio.itemsScriptEditor")}
-                          </Label>
-                          <textarea
-                            value={fieldItemsScript(selectedFieldRef.field.config)}
-                            onChange={(e) =>
-                              updateField(selectedFieldRef.field.key, {
-                                config: { ...(selectedFieldRef.field.config ?? {}), itemsScript: e.target.value },
-                              })
-                            }
-                            rows={4}
-                            spellCheck={false}
-                            dir="ltr"
-                            aria-label={t("dfb.studio.itemsScriptEditor")}
-                            placeholder={'const rows = await db.table("DfbMenu").findMany({ take: 20 });\nreturn rows;'}
-                            className="w-full resize-y rounded-lg border border-input bg-background px-2 py-1.5 font-mono text-[11px] leading-relaxed text-foreground shadow-xs outline-none transition-colors placeholder:text-muted-foreground/60 focus-visible:border-ring focus-visible:bg-background"
-                          />
-                          <Button
-                            type="button" size="sm"
-                            className="h-7 bg-violet-600 hover:bg-violet-700"
-                            disabled={itemsBusy}
-                            onClick={runItemsScript}
-                          >
-                            {itemsBusy ? (
-                              <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
-                            ) : (
-                              <Braces className="h-3.5 w-3.5" aria-hidden />
-                            )}
-                            {t("dfb.studio.itemsRun")}
-                          </Button>
-                          {(itemsCandidates[selectedFieldRef.field.key] ?? []).length > 0 && (
-                            <>
-                              <Label className="text-[11px] text-muted-foreground">
-                                {t("dfb.studio.itemsFetched")}
-                              </Label>
-                              <div className="max-h-28 overflow-y-auto rounded-lg border border-border/60 bg-background/70 p-1.5 scrollbar-slim">
-                                {(itemsCandidates[selectedFieldRef.field.key] ?? []).map((c) => {
-                                  const pickedSet = itemsPicked[selectedFieldRef.field.key];
-                                  const picked = pickedSet ? pickedSet.includes(c.value) : true; // default = ALL
-                                  return (
-                                    <label
-                                      key={c.value}
-                                      className="flex cursor-pointer items-center gap-1.5 rounded-md px-1 py-0.5 text-[11px] hover:bg-foreground/5"
-                                    >
-                                      <Checkbox
-                                        checked={picked}
-                                        onCheckedChange={(v) =>
-                                          toggleItemCandidate(selectedFieldRef.field.key, c.value, v === true)
-                                        }
-                                        aria-label={c.label}
-                                      />
-                                      <span className="min-w-0 flex-1 truncate">{c.label}</span>
-                                      {c.value !== c.label && (
-                                        <span className="shrink-0 font-mono text-[9px] text-muted-foreground" dir="ltr">
-                                          {c.value}
-                                        </span>
-                                      )}
-                                    </label>
-                                  );
-                                })}
-                              </div>
-                              <Button
-                                type="button" size="sm" variant="outline"
-                                className="h-7 border-violet-600/50 text-violet-700 hover:bg-violet-500/10 dark:text-violet-400"
-                                onClick={addSelectedItems}
-                              >
-                                <Plus className="h-3.5 w-3.5" aria-hidden />
-                                {t("dfb.studio.itemsAddSelected")}
-                              </Button>
-                            </>
-                          )}
-                        </div>
-                      ) : null}
-                      {/* Task 53 — script field config: editor + «اجرا و واکشی»
-                          + the FETCHED fields (selectable) + add-to-form */}
-                      {selectedFieldRef.field.fieldType === "script" && (
-                        <div className="grid gap-1.5 rounded-xl border border-teal-600/30 bg-teal-500/5 p-2">
-                          <Label className="text-[11px] text-teal-700 dark:text-teal-400">
-                            {t("dfb.studio.scriptEditor")}
-                          </Label>
-                          <textarea
-                            value={String(selectedFieldRef.field.config?.script ?? "")}
-                            onChange={(e) =>
-                              updateField(selectedFieldRef.field.key, {
-                                config: { ...(selectedFieldRef.field.config ?? {}), script: e.target.value },
-                              })
-                            }
-                            rows={6}
-                            spellCheck={false}
-                            dir="ltr"
-                            aria-label={t("dfb.studio.scriptEditor")}
-                            placeholder={'const rows = await db.table("DfbMenu").findMany({ take: 10 });\nreturn rows;'}
-                            className="w-full resize-y rounded-lg border border-input bg-background px-2 py-1.5 font-mono text-[11px] leading-relaxed text-foreground shadow-xs outline-none transition-colors placeholder:text-muted-foreground/60 focus-visible:border-ring focus-visible:bg-background"
-                          />
-                          <p className="text-[10px] leading-relaxed text-muted-foreground">
-                            {t("dfb.studio.scriptHint")}
-                          </p>
-                          <Button
-                            type="button" size="sm"
-                            className="h-7 bg-teal-600 hover:bg-teal-700"
-                            disabled={scriptBusy}
-                            onClick={runSelectedScript}
-                          >
-                            {scriptBusy ? (
-                              <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
-                            ) : (
-                              <Braces className="h-3.5 w-3.5" aria-hidden />
-                            )}
-                            {t("dfb.studio.scriptRun")}
-                          </Button>
-                          <Label className="text-[11px] text-muted-foreground">
-                            {t("dfb.studio.scriptFetched")}
-                          </Label>
-                          {!Array.isArray(selectedFieldRef.field.config?.fields) ||
-                           (selectedFieldRef.field.config?.fields as string[]).length === 0 ? (
-                            <p className="rounded-lg border border-dashed border-border/70 px-2 py-1.5 text-[10px] leading-relaxed text-muted-foreground">
-                              {t("dfb.studio.scriptFetchedEmpty")}
-                            </p>
-                          ) : (
-                            <>
-                              <div className="max-h-28 overflow-y-auto rounded-lg border border-border/60 bg-background/70 p-1.5 scrollbar-slim">
-                                {(selectedFieldRef.field.config?.fields as string[]).map((name) => {
-                                  const sel =
-                                    Array.isArray(selectedFieldRef.field.config?.selected) &&
-                                    (selectedFieldRef.field.config?.selected as string[]).includes(name);
-                                  return (
-                                    <label
-                                      key={name}
-                                      className="flex cursor-pointer items-center gap-1.5 rounded-md px-1 py-0.5 text-[11px] hover:bg-foreground/5"
-                                    >
-                                      <Checkbox
-                                        checked={sel}
-                                        onCheckedChange={(v) => toggleScriptFieldSelection(name, v === true)}
-                                        aria-label={name}
-                                      />
-                                      <span className="min-w-0 flex-1 truncate font-mono" dir="ltr">{name}</span>
-                                    </label>
-                                  );
-                                })}
-                              </div>
-                              <Button
-                                type="button" size="sm" variant="outline"
-                                className="h-7 border-teal-600/50 text-teal-700 hover:bg-teal-500/10 dark:text-teal-400"
-                                onClick={addSelectedScriptFields}
-                              >
-                                <Plus className="h-3.5 w-3.5" aria-hidden />
-                                {t("dfb.studio.scriptAddSelected")}
-                              </Button>
-                            </>
-                          )}
-                        </div>
-                      )}
-                      {/* Task 53 — derived field: show its script binding */}
-                      {typeof selectedFieldRef.field.config?.bindField === "string" && (
-                        <p className="flex items-center gap-1.5 rounded-lg border border-teal-600/30 bg-teal-500/5 px-2 py-1.5 text-[10px] text-teal-700 dark:text-teal-400">
-                          <Braces className="h-3 w-3 shrink-0" aria-hidden />
-                          {t("dfb.studio.scriptBindNote")
-                            .replace("{field}", String(selectedFieldRef.field.config.bindField))}
-                        </p>
-                      )}
-                      {!isSystem && (
-                        <Button
-                          type="button" size="sm" variant="outline"
-                          className="text-rose-600 hover:text-rose-700"
-                          onClick={() => {
-                            removeField(selectedFieldRef.containerKey, selectedFieldRef.field.key);
-                          }}
-                        >
-                          <Trash2 className="h-3.5 w-3.5" aria-hidden /> {t("common.delete")}
-                        </Button>
-                      )}
-                    </div>
+                    <FieldSettingsBody
+                      field={selectedFieldRef.field}
+                      containerLabel={containerLabelOf(selectedFieldRef.containerKey)}
+                      isSystem={isSystem}
+                      queries={queries}
+                      newItemLabel={newItemLabel}
+                      onNewItemLabel={setNewItemLabel}
+                      scriptBusy={scriptBusy}
+                      itemsBusy={itemsBusy}
+                      itemsCandidates={itemsCandidates}
+                      itemsPicked={itemsPicked}
+                      onUpdate={(patch) => updateField(selectedFieldRef!.field.key, patch)}
+                      onDelete={() => removeField(selectedFieldRef!.containerKey, selectedFieldRef!.field.key)}
+                      onRunScript={runSelectedScript}
+                      onToggleScriptField={toggleScriptFieldSelection}
+                      onAddScriptFields={addSelectedScriptFields}
+                      onAddItem={addItem}
+                      onRemoveItem={removeItem}
+                      onUpdateItemLabel={updateItemLabel}
+                      onRunItemsScript={runItemsScript}
+                      onToggleItemCandidate={toggleItemCandidate}
+                      onAddSelectedItems={addSelectedItems}
+                      onOpenScriptModal={(m) => setScriptModal(m)}
+                    />
                   )}
                 </section>
               )}
@@ -2181,6 +1918,55 @@ function StudioInner({ formId }: { formId: number }) {
           bankTitle={state.banks.find((b) => b.key === tabDialogFor)?.title ?? ""}
           onClose={() => setTabDialogFor(null)}
           onConfirm={(titleFa, titleEn) => addTab(tabDialogFor, titleFa, titleEn)}
+        />
+      )}
+
+      {/* Task 59 — double-click field PROPERTIES modal */}
+      {propsOpen && selectedFieldRef && (
+        <FieldPropsDialog
+          field={selectedFieldRef.field}
+          containerLabel={containerLabelOf(selectedFieldRef.containerKey)}
+          isSystem={isSystem}
+          queries={queries}
+          newItemLabel={newItemLabel}
+          onNewItemLabel={setNewItemLabel}
+          scriptBusy={scriptBusy}
+          itemsBusy={itemsBusy}
+          itemsCandidates={itemsCandidates}
+          itemsPicked={itemsPicked}
+          onUpdate={(patch) => updateField(selectedFieldRef!.field.key, patch)}
+          onDelete={() => {
+            removeField(selectedFieldRef!.containerKey, selectedFieldRef!.field.key);
+            setPropsOpen(false);
+          }}
+          onRunScript={runSelectedScript}
+          onToggleScriptField={toggleScriptFieldSelection}
+          onAddScriptFields={addSelectedScriptFields}
+          onAddItem={addItem}
+          onRemoveItem={removeItem}
+          onUpdateItemLabel={updateItemLabel}
+          onRunItemsScript={runItemsScript}
+          onToggleItemCandidate={toggleItemCandidate}
+          onAddSelectedItems={addSelectedItems}
+          onOpenScriptModal={(m) => setScriptModal(m)}
+          onClose={() => setPropsOpen(false)}
+        />
+      )}
+
+      {/* Task 59 — the SCRIPT modal (code tab + data preview tab + db tree) */}
+      {scriptModal && selectedFieldRef && (
+        <ScriptModalDialog
+          mode={scriptModal}
+          field={selectedFieldRef.field}
+          onUpdate={(patch) => updateField(selectedFieldRef!.field.key, patch)}
+          onToggleScriptField={toggleScriptFieldSelection}
+          onAddScriptFields={addSelectedScriptFields}
+          itemsCandidates={itemsCandidates}
+          itemsPicked={itemsPicked}
+          onToggleItemCandidate={toggleItemCandidate}
+          onAddSelectedItems={addSelectedItems}
+          onSetItemsCandidates={setItemsCandidatesFor}
+          onClose={() => setScriptModal(null)}
         />
       )}
 
@@ -2266,7 +2052,7 @@ function PaletteTileGrid({
 function BankCanvas({
   bank, index, isMain, active, activeTabKey, align, resizing, onResizeLive, onResizeCommit,
   selectedFieldKey, isSystem,
-  onSelectBank, onSelectTab, onSelectField, onAddField, onAddTab, onRemoveTab,
+  onSelectBank, onSelectTab, onSelectField, onOpenFieldProps, onAddField, onAddTab, onRemoveTab,
   onMoveFieldDir, onRemoveField, onMoveBank, onRemoveBank, onDragStartField, onDropInBank,
 }: {
   bank: StudioBank;
@@ -2286,6 +2072,8 @@ function BankCanvas({
   onSelectBank: () => void;
   onSelectTab: (tabKey: string) => void;
   onSelectField: (containerKey: string, key: string) => void;
+  /** Task 59 — double-click a field card → properties modal */
+  onOpenFieldProps: (containerKey: string, key: string) => void;
   onAddField: () => void;
   onAddTab: () => void;
   onRemoveTab: (tabKey: string) => void;
@@ -2473,6 +2261,7 @@ function BankCanvas({
                 selectedFieldKey={selectedFieldKey}
                 isSystem={isSystem}
                 onSelectField={onSelectField}
+                onOpenFieldProps={onOpenFieldProps}
                 onMoveFieldDir={onMoveFieldDir}
                 onRemoveField={onRemoveField}
                 onDragStartField={onDragStartField}
@@ -2496,6 +2285,7 @@ function BankCanvas({
           selectedFieldKey={selectedFieldKey}
           isSystem={isSystem}
           onSelectField={onSelectField}
+          onOpenFieldProps={onOpenFieldProps}
           onMoveFieldDir={onMoveFieldDir}
           onRemoveField={onRemoveField}
           onDragStartField={onDragStartField}
@@ -2516,7 +2306,7 @@ function BankCanvas({
  */
 function FooterBandCanvas({
   fields, active, selectedFieldKey, isSystem, resizing,
-  onResizeLive, onResizeCommit, onSelect, onSelectField, onAddField,
+  onResizeLive, onResizeCommit, onSelect, onSelectField, onOpenFieldProps, onAddField,
   onMoveFieldDir, onRemoveField, onDragStartField, onDropInBank,
 }: {
   fields: StudioField[];
@@ -2528,6 +2318,8 @@ function FooterBandCanvas({
   onResizeCommit: (fieldKey: string, pct: number) => void;
   onSelect: () => void;
   onSelectField: (key: string) => void;
+  /** Task 59 — double-click a field card → properties modal */
+  onOpenFieldProps: (fieldKey: string) => void;
   onAddField: () => void;
   onMoveFieldDir: (key: string, dir: -1 | 1) => void;
   onRemoveField: (key: string) => void;
@@ -2607,6 +2399,7 @@ function FooterBandCanvas({
           selectedFieldKey={selectedFieldKey}
           isSystem={isSystem}
           onSelectField={(_, key) => onSelectField(key)}
+          onOpenFieldProps={(_, key) => onOpenFieldProps(key)}
           onMoveFieldDir={(_, key, dir) => onMoveFieldDir(key, dir)}
           onRemoveField={(_, key) => onRemoveField(key)}
           onDragStartField={(_, fieldKey) => onDragStartField(fieldKey)}
@@ -2624,7 +2417,7 @@ function FooterBandCanvas({
  */
 function FieldFlow({
   fields, containerKey, align, resizing, onResizeLive, onResizeCommit,
-  selectedFieldKey, isSystem, onSelectField, onMoveFieldDir, onRemoveField,
+  selectedFieldKey, isSystem, onSelectField, onOpenFieldProps, onMoveFieldDir, onRemoveField,
   onDragStartField, onDropBefore,
 }: {
   fields: StudioField[];
@@ -2636,6 +2429,8 @@ function FieldFlow({
   selectedFieldKey: string | null;
   isSystem: boolean;
   onSelectField: (containerKey: string, key: string) => void;
+  /** Task 59 — double-click a field card → properties modal */
+  onOpenFieldProps: (containerKey: string, key: string) => void;
   onMoveFieldDir: (containerKey: string, key: string, dir: -1 | 1) => void;
   onRemoveField: (containerKey: string, key: string) => void;
   onDragStartField: (containerKey: string, fieldKey: string) => void;
@@ -2673,6 +2468,7 @@ function FieldFlow({
               preview={false}
               isSystem={isSystem}
               onSelect={() => onSelectField(containerKey, f.key)}
+              onOpenProps={() => onOpenFieldProps(containerKey, f.key)}
               onMoveDir={(dir) => onMoveFieldDir(containerKey, f.key, dir)}
               onRemove={() => onRemoveField(containerKey, f.key)}
               onDragStart={() => onDragStartField(containerKey, f.key)}
@@ -2788,7 +2584,7 @@ function FieldResizeHandle({
 }
 
 function FieldCard({
-  field, order, selected, preview, isSystem, onSelect, onMoveDir, onRemove, onDragStart, onDropBefore,
+  field, order, selected, preview, isSystem, onSelect, onOpenProps, onMoveDir, onRemove, onDragStart, onDropBefore,
 }: {
   field: StudioField;
   order: number;
@@ -2796,6 +2592,8 @@ function FieldCard({
   preview: boolean;
   isSystem: boolean;
   onSelect: () => void;
+  /** Task 59 — double-click opens the field's PROPERTIES modal */
+  onOpenProps?: () => void;
   onMoveDir: (dir: -1 | 1) => void;
   onRemove: () => void;
   onDragStart: () => void;
@@ -2832,6 +2630,7 @@ function FieldCard({
         onDropBefore();
       }}
       onClick={preview ? undefined : onSelect}
+      onDoubleClick={preview ? undefined : onOpenProps} // Task 59 — «دبل کلیک روی هر فیلد مودال ویژگی‌ها را باز کند»
       onKeyDown={(e) => {
         if (preview) return;
         if (e.key === "Enter" || e.key === " ") {
@@ -3267,6 +3066,943 @@ function AddTabDialog({
             onClick={() => onConfirm(titleFa.trim(), titleEn.trim())}
           >
             <Check className="h-4 w-4" aria-hidden /> {t("common.confirm")}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/* ------------- Task 59 — field settings body (rail + properties modal) ------------- */
+
+/**
+ * Task 59 (owner request — «کاربر روی هر فیلد در استودیو طراحی دبل کلیک کرد
+ * مودال باز شود تا کاربر بتواند ویژگی های آن را تغییر دهد») — the field's
+ * SETTINGS body, shared verbatim by the studio rail (single-click selection)
+ * and the double-click PROPERTIES modal: one source of truth for the label /
+ * Latin label / type / width / flags / query binding / list items / script.
+ */
+function FieldSettingsBody({
+  field, containerLabel, isSystem, queries,
+  newItemLabel, onNewItemLabel,
+  scriptBusy, itemsBusy, itemsCandidates, itemsPicked,
+  onUpdate, onDelete,
+  onRunScript, onToggleScriptField, onAddScriptFields,
+  onAddItem, onRemoveItem, onUpdateItemLabel,
+  onRunItemsScript, onToggleItemCandidate, onAddSelectedItems,
+  onOpenScriptModal,
+}: {
+  field: StudioField;
+  containerLabel: string;
+  isSystem: boolean;
+  queries: Array<{ id: number; title: string; fields: Array<{ fieldName: string }> }>;
+  newItemLabel: string;
+  onNewItemLabel: (v: string) => void;
+  scriptBusy: boolean;
+  itemsBusy: boolean;
+  itemsCandidates: Record<string, DfbFieldItem[]>;
+  itemsPicked: Record<string, string[]>;
+  onUpdate: (patch: Partial<StudioField>) => void;
+  onDelete: () => void;
+  onRunScript: () => void;
+  onToggleScriptField: (name: string, on: boolean) => void;
+  onAddScriptFields: () => void;
+  onAddItem: () => void;
+  onRemoveItem: (fieldKey: string, index: number) => void;
+  onUpdateItemLabel: (fieldKey: string, index: number, label: string) => void;
+  onRunItemsScript: () => void;
+  onToggleItemCandidate: (fieldKey: string, value: string, on: boolean) => void;
+  onAddSelectedItems: () => void;
+  onOpenScriptModal: (mode: "field" | "items") => void;
+}) {
+  const t = useT();
+  const scriptText = String(field.config?.script ?? "");
+  const itemsScriptText = fieldItemsScript(field.config);
+  const rowCount =
+    typeof field.config?.rowCount === "number" ? (field.config.rowCount as number) : null;
+
+  return (
+    <div className="grid gap-2">
+      {/* location in the form + the stable fieldKey (EAV identity) */}
+      <div className="flex flex-wrap items-center gap-1.5">
+        <Badge variant="outline" className="max-w-40 truncate px-1.5 py-0 text-[9px]">
+          {containerLabel}
+        </Badge>
+        <span className="font-mono text-[9px] text-muted-foreground" dir="ltr">{field.fieldKey || "—"}</span>
+      </div>
+      <div className="grid gap-1.5">
+        <Label className="text-[11px] text-muted-foreground">{t("dfb.fieldLabel")}</Label>
+        <Input
+          value={field.label}
+          onChange={(e) => onUpdate({ label: e.target.value })}
+          className="h-8"
+        />
+      </div>
+      {/* Task 59 — Latin label (persisted as Label_En, Latin-only enforced) */}
+      <div className="grid gap-1.5">
+        <Label className="text-[11px] text-muted-foreground">{t("dfb.studio.labelEn")}</Label>
+        <LatinInput value={field.labelEn} onValueChange={(v) => onUpdate({ labelEn: v })} />
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <div className="grid gap-1.5">
+          <Label className="text-[11px] text-muted-foreground">{t("dfb.fieldType")}</Label>
+          <Select
+            value={field.fieldType}
+            onValueChange={(v) => onUpdate({ fieldType: v, queryRef: null, queryFieldKey: null })}
+          >
+            <SelectTrigger aria-label={t("dfb.fieldType")} className="h-8"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {FIELD_TYPES.map((ft) => (
+                <SelectItem key={ft} value={ft}>{t(`dfb.type.${ft}` as never)}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="grid gap-1.5">
+          <Label className="text-[11px] text-muted-foreground">{t("dfb.width")}</Label>
+          <Select
+            value={String(field.widthSpan)}
+            onValueChange={(v) => onUpdate({ widthSpan: Number(v) })}
+          >
+            <SelectTrigger aria-label={t("dfb.width")} className="h-8"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {[25, 50, 75, 100].map((w) => (
+                <SelectItem key={w} value={String(w)}>
+                  <span dir="ltr" className="font-mono">{w}%</span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      <div className="flex flex-wrap items-center gap-3">
+        <label className="flex cursor-pointer items-center gap-1.5 text-xs">
+          <Checkbox
+            checked={field.required}
+            onCheckedChange={(v) => onUpdate({ required: Boolean(v) })}
+            aria-label={t("dfb.required")}
+          />
+          {t("dfb.required")}
+        </label>
+        <label className="flex cursor-pointer items-center gap-1.5 text-xs">
+          <Checkbox
+            checked={field.readOnly}
+            onCheckedChange={(v) => onUpdate({ readOnly: Boolean(v) })}
+            aria-label={t("dfb.studio.readOnly")}
+          />
+          {t("dfb.studio.readOnly")}
+        </label>
+      </div>
+      {(field.fieldType === "select" || field.fieldType === "lookup") && (
+        <>
+          <div className="grid gap-1.5">
+            <Label className="text-[11px] text-muted-foreground">{t("dfb.queryBind")}</Label>
+            <Select
+              value={field.queryRef != null ? String(field.queryRef) : "-"}
+              onValueChange={(v) =>
+                onUpdate({
+                  queryRef: v === "-" ? null : Number(v),
+                  queryFieldKey: null,
+                })
+              }
+            >
+              <SelectTrigger aria-label={t("dfb.queryBind")} className="h-8"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="-">{t("dfb.noQuery")}</SelectItem>
+                {queries.map((q) => (
+                  <SelectItem key={q.id} value={String(q.id)}>{q.title}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          {field.queryRef != null && (
+            <div className="grid gap-1.5">
+              <Label className="text-[11px] text-muted-foreground">{t("dfb.queryValueColumn")}</Label>
+              <Select
+                value={field.queryFieldKey ?? "-"}
+                onValueChange={(v) => onUpdate({ queryFieldKey: v === "-" ? null : v })}
+              >
+                <SelectTrigger aria-label={t("dfb.queryValueColumn")} className="h-8"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="-">{t("dfb.none")}</SelectItem>
+                  {(queries.find((q) => q.id === field.queryRef)?.fields ?? []).map((qf) => (
+                    <SelectItem key={qf.fieldName} value={qf.fieldName}>{qf.fieldName}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+        </>
+      )}
+      {/* Task 58 (owner request) — list/radio ITEMS: the user defines the
+          items OR fetches them from a script; they feed the field AND its
+          records-table column. Task 59 — the script text itself is edited
+          in the SCRIPT MODAL (code + preview tabs + db tree). */}
+      {field.fieldType === "select" || field.fieldType === "radio" ? (
+        <div className="grid gap-1.5 rounded-xl border border-violet-600/30 bg-violet-500/5 p-2">
+          <Label className="text-[11px] text-violet-700 dark:text-violet-400">
+            {t("dfb.studio.listItems")}
+          </Label>
+          <p className="text-[10px] leading-relaxed text-muted-foreground">
+            {t("dfb.studio.listItemsHint")}
+          </p>
+          {fieldConfigItems(field.config).length === 0 ? (
+            <p className="rounded-lg border border-dashed border-border/70 px-2 py-1.5 text-[10px] text-muted-foreground">
+              {t("dfb.studio.listItemsEmpty")}
+            </p>
+          ) : (
+            <div className="grid max-h-28 gap-1 overflow-y-auto pe-0.5 scrollbar-slim">
+              {fieldConfigItems(field.config).map((it, i) => (
+                <div key={`${it.value}-${i}`} className="flex items-center gap-1.5">
+                  <Input
+                    value={it.label}
+                    onChange={(e) => onUpdateItemLabel(field.key, i, e.target.value)}
+                    className="h-7 text-xs"
+                    aria-label={`${t("dfb.studio.listItems")} ${i + 1}`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => onRemoveItem(field.key, i)}
+                    aria-label={t("common.delete")}
+                    title={t("common.delete")}
+                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-rose-600 transition-colors hover:bg-rose-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" aria-hidden />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="flex items-center gap-1.5">
+            <Input
+              value={newItemLabel}
+              onChange={(e) => onNewItemLabel(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  onAddItem();
+                }
+              }}
+              placeholder={t("dfb.studio.listItemPlaceholder")}
+              className="h-7 flex-1 text-xs"
+              aria-label={t("dfb.studio.listItemAdd")}
+            />
+            <Button
+              type="button" size="sm" variant="outline"
+              className="h-7 shrink-0 border-violet-600/50 text-violet-700 hover:bg-violet-500/10 dark:text-violet-400"
+              disabled={!newItemLabel.trim()}
+              onClick={onAddItem}
+            >
+              <Plus className="h-3.5 w-3.5" aria-hidden />
+              {t("dfb.studio.listItemAdd")}
+            </Button>
+          </div>
+          {/* items from script — edited in the SCRIPT MODAL */}
+          <Label className="mt-1 text-[11px] text-muted-foreground">
+            {t("dfb.studio.itemsScriptEditor")}
+          </Label>
+          <div className="flex items-center gap-1.5">
+            <span
+              className="min-w-0 flex-1 truncate rounded-lg border border-input bg-muted/40 px-2 py-1.5 font-mono text-[10px] text-muted-foreground"
+              dir="ltr"
+            >
+              {itemsScriptText.trim() ? "function(db) { … }" : "—"}
+            </span>
+            <Button
+              type="button" size="sm" variant="outline"
+              className="h-7 shrink-0 border-violet-600/50 text-violet-700 hover:bg-violet-500/10 dark:text-violet-400"
+              onClick={() => onOpenScriptModal("items")}
+            >
+              <Code className="h-3.5 w-3.5" aria-hidden />
+              {t("dfb.studio.openScriptModal")}
+            </Button>
+          </div>
+          <Button
+            type="button" size="sm"
+            className="h-7 bg-violet-600 hover:bg-violet-700"
+            disabled={itemsBusy}
+            onClick={onRunItemsScript}
+          >
+            {itemsBusy ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
+            ) : (
+              <Braces className="h-3.5 w-3.5" aria-hidden />
+            )}
+            {t("dfb.studio.itemsRun")}
+          </Button>
+          {(itemsCandidates[field.key] ?? []).length > 0 && (
+            <>
+              <Label className="text-[11px] text-muted-foreground">
+                {t("dfb.studio.itemsFetched")}
+              </Label>
+              <div className="max-h-28 overflow-y-auto rounded-lg border border-border/60 bg-background/70 p-1.5 scrollbar-slim">
+                {(itemsCandidates[field.key] ?? []).map((c) => {
+                  const pickedSet = itemsPicked[field.key];
+                  const picked = pickedSet ? pickedSet.includes(c.value) : true; // default = ALL
+                  return (
+                    <label
+                      key={c.value}
+                      className="flex cursor-pointer items-center gap-1.5 rounded-md px-1 py-0.5 text-[11px] hover:bg-foreground/5"
+                    >
+                      <Checkbox
+                        checked={picked}
+                        onCheckedChange={(v) => onToggleItemCandidate(field.key, c.value, v === true)}
+                        aria-label={c.label}
+                      />
+                      <span className="min-w-0 flex-1 truncate">{c.label}</span>
+                      {c.value !== c.label && (
+                        <span className="shrink-0 font-mono text-[9px] text-muted-foreground" dir="ltr">
+                          {c.value}
+                        </span>
+                      )}
+                    </label>
+                  );
+                })}
+              </div>
+              <Button
+                type="button" size="sm" variant="outline"
+                className="h-7 border-violet-600/50 text-violet-700 hover:bg-violet-500/10 dark:text-violet-400"
+                onClick={onAddSelectedItems}
+              >
+                <Plus className="h-3.5 w-3.5" aria-hidden />
+                {t("dfb.studio.itemsAddSelected")}
+              </Button>
+            </>
+          )}
+        </div>
+      ) : null}
+      {/* Task 53/59 — script data-source element: the code lives in the
+          SCRIPT MODAL (owner request) — the rail keeps run + fetched fields */}
+      {field.fieldType === "script" && (
+        <div className="grid gap-1.5 rounded-xl border border-teal-600/30 bg-teal-500/5 p-2">
+          <Label className="text-[11px] text-teal-700 dark:text-teal-400">
+            {t("dfb.studio.scriptEditor")}
+          </Label>
+          <div className="flex items-center gap-1.5">
+            <span
+              className="min-w-0 flex-1 truncate rounded-lg border border-input bg-muted/40 px-2 py-1.5 font-mono text-[10px] text-muted-foreground"
+              dir="ltr"
+            >
+              {scriptText.trim() ? "function(db) { … }" : "—"}
+            </span>
+            <Button
+              type="button" size="sm" variant="outline"
+              className="h-7 shrink-0 border-teal-600/50 text-teal-700 hover:bg-teal-500/10 dark:text-teal-400"
+              onClick={() => onOpenScriptModal("field")}
+            >
+              <Code className="h-3.5 w-3.5" aria-hidden />
+              {t("dfb.studio.openScriptModal")}
+            </Button>
+          </div>
+          {rowCount != null && (
+            <Badge variant="outline" className="w-fit px-1.5 py-0 font-mono text-[9px]" dir="ltr">
+              {t("dfb.studio.scriptRows").replace("{n}", String(rowCount))}
+            </Badge>
+          )}
+          <p className="text-[10px] leading-relaxed text-muted-foreground">
+            {t("dfb.studio.scriptHint")}
+          </p>
+          <Button
+            type="button" size="sm"
+            className="h-7 bg-teal-600 hover:bg-teal-700"
+            disabled={scriptBusy}
+            onClick={onRunScript}
+          >
+            {scriptBusy ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
+            ) : (
+              <Braces className="h-3.5 w-3.5" aria-hidden />
+            )}
+            {t("dfb.studio.scriptRun")}
+          </Button>
+          <Label className="text-[11px] text-muted-foreground">
+            {t("dfb.studio.scriptFetched")}
+          </Label>
+          {!Array.isArray(field.config?.fields) ||
+           (field.config?.fields as string[]).length === 0 ? (
+            <p className="rounded-lg border border-dashed border-border/70 px-2 py-1.5 text-[10px] leading-relaxed text-muted-foreground">
+              {t("dfb.studio.scriptFetchedEmpty")}
+            </p>
+          ) : (
+            <>
+              <div className="max-h-28 overflow-y-auto rounded-lg border border-border/60 bg-background/70 p-1.5 scrollbar-slim">
+                {(field.config?.fields as string[]).map((name) => {
+                  const sel =
+                    Array.isArray(field.config?.selected) &&
+                    (field.config?.selected as string[]).includes(name);
+                  return (
+                    <label
+                      key={name}
+                      className="flex cursor-pointer items-center gap-1.5 rounded-md px-1 py-0.5 text-[11px] hover:bg-foreground/5"
+                    >
+                      <Checkbox
+                        checked={sel}
+                        onCheckedChange={(v) => onToggleScriptField(name, v === true)}
+                        aria-label={name}
+                      />
+                      <span className="min-w-0 flex-1 truncate font-mono" dir="ltr">{name}</span>
+                    </label>
+                  );
+                })}
+              </div>
+              <Button
+                type="button" size="sm" variant="outline"
+                className="h-7 border-teal-600/50 text-teal-700 hover:bg-teal-500/10 dark:text-teal-400"
+                onClick={onAddScriptFields}
+              >
+                <Plus className="h-3.5 w-3.5" aria-hidden />
+                {t("dfb.studio.scriptAddSelected")}
+              </Button>
+            </>
+          )}
+        </div>
+      )}
+      {/* Task 53 — derived field: show its script binding */}
+      {typeof field.config?.bindField === "string" && (
+        <p className="flex items-center gap-1.5 rounded-lg border border-teal-600/30 bg-teal-500/5 px-2 py-1.5 text-[10px] text-teal-700 dark:text-teal-400">
+          <Braces className="h-3 w-3 shrink-0" aria-hidden />
+          {t("dfb.studio.scriptBindNote")
+            .replace("{field}", String(field.config.bindField))}
+        </p>
+      )}
+      {!isSystem && (
+        <Button
+          type="button" size="sm" variant="outline"
+          className="text-rose-600 hover:text-rose-700"
+          onClick={onDelete}
+        >
+          <Trash2 className="h-3.5 w-3.5" aria-hidden /> {t("common.delete")}
+        </Button>
+      )}
+    </div>
+  );
+}
+
+/* ---------------- Task 59 — double-click properties modal ---------------- */
+
+/**
+ * «ویژگی‌های فیلد» — opened by DOUBLE-CLICKING any field card in the design
+ * studio (owner request). Renders the same FieldSettingsBody as the rail,
+ * wrapped in a dialog with the field's position in the form.
+ */
+function FieldPropsDialog({
+  onClose, ...body
+}: React.ComponentProps<typeof FieldSettingsBody> & { onClose: () => void }) {
+  const t = useT();
+  const meta = FIELD_TYPE_META[body.field.fieldType] ?? FIELD_TYPE_META.text;
+  const Icon = meta.icon;
+  return (
+    <Dialog open onOpenChange={(v) => { if (!v) onClose(); }}>
+      <DialogContent className="max-w-lg" dir="auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <span
+              aria-hidden
+              className={cn("flex h-6 w-6 items-center justify-center rounded-lg bg-gradient-to-br text-white shadow-sm", meta.tile)}
+            >
+              <Icon className="h-3.5 w-3.5" />
+            </span>
+            {t("dfb.studio.fieldProps")}
+          </DialogTitle>
+          <DialogDescription>{t("dfb.studio.fieldPropsHint")}</DialogDescription>
+        </DialogHeader>
+        <div className="max-h-[60vh] overflow-y-auto pe-1 scrollbar-slim">
+          <FieldSettingsBody {...body} />
+        </div>
+        <DialogFooter className="gap-2">
+          <Button type="button" variant="outline" onClick={onClose}>{t("common.cancel")}</Button>
+          <Button type="button" onClick={onClose}>
+            <Check className="h-4 w-4" aria-hidden /> {t("common.confirm")}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/* ---------------- Task 59 — script modal (code + preview + db tree) ---------------- */
+
+const schemaObjectKey = (dbFile: string, name: string) => `${dbFile}::${name}`;
+
+/**
+ * Task 59 (owner request) — «برای اسکریپت نویسی باید یک مودال باز شود و در یک تب
+ * کاربر بتواند کد اسکریپت را بنویسد و در تب بعدی بتواند پیش نمایش اطلاعات اسکریپت
+ * و کوئری را مشاهده کند» + «کاربر باید جداول و ویوهای موجود در بانک اطلاعاتی متصل
+ * شده را ببیند؛ لیست جداول هر نرم‌افزار بصورت شاخه به تفکیک فیلدها».
+ *
+ * Two tabs: «کد اسکریپت» = the editor + the connected-database tree (software →
+ * tables/views → fields, click = insert at the caret); «پیش‌نمایش اطلاعات» = a
+ * live run of the script with the fetched rows grid (and the field/item
+ * selection machinery for both modal modes).
+ *
+ * mode="field"  → edits a script field's config.script (fetched fields become
+ *                 selectable form fields).
+ * mode="items"  → edits a select/radio field's config.itemsScript (fetched
+ *                 rows become the opening list of items).
+ */
+function ScriptModalDialog({
+  mode, field, onUpdate,
+  onToggleScriptField, onAddScriptFields,
+  itemsCandidates, itemsPicked, onToggleItemCandidate, onAddSelectedItems, onSetItemsCandidates,
+  onClose,
+}: {
+  mode: "field" | "items";
+  field: StudioField;
+  onUpdate: (patch: Partial<StudioField>) => void;
+  onToggleScriptField: (name: string, on: boolean) => void;
+  onAddScriptFields: () => void;
+  itemsCandidates: Record<string, DfbFieldItem[]>;
+  itemsPicked: Record<string, string[]>;
+  onToggleItemCandidate: (fieldKey: string, value: string, on: boolean) => void;
+  onAddSelectedItems: () => void;
+  onSetItemsCandidates: (fieldKey: string, items: DfbFieldItem[]) => void;
+  onClose: () => void;
+}) {
+  const t = useT();
+  const [tab, setTab] = React.useState<"code" | "preview">("code");
+  const [busy, setBusy] = React.useState(false);
+  const [preview, setPreview] = React.useState<DfbScriptResult | null>(null);
+  /* connected-database tree (loaded once per modal open) */
+  const [schema, setSchema] = React.useState<DfbSchemaGroup[] | null>(null);
+  const [schemaFailed, setSchemaFailed] = React.useState(false);
+  const [search, setSearch] = React.useState("");
+  const [openApps, setOpenApps] = React.useState<Set<string>>(new Set(["advancedTools"]));
+  const [openTables, setOpenTables] = React.useState<Set<string>>(new Set());
+  const taRef = React.useRef<HTMLTextAreaElement | null>(null);
+
+  const script =
+    mode === "field" ? String(field.config?.script ?? "") : fieldItemsScript(field.config);
+
+  React.useEffect(() => {
+    let alive = true;
+    fetchSchemaTree()
+      .then((items) => {
+        if (alive) setSchema(items);
+      })
+      .catch(() => {
+        if (alive) setSchemaFailed(true);
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const applyScript = React.useCallback(
+    (next: string) => {
+      if (mode === "field") onUpdate({ config: { ...(field.config ?? {}), script: next } });
+      else onUpdate({ config: { ...(field.config ?? {}), itemsScript: next } });
+    },
+    [mode, field.config, onUpdate],
+  );
+
+  /** clicking a table/view/field in the tree INSERTS its name at the caret */
+  const insertToken = React.useCallback(
+    (token: string) => {
+      const ta = taRef.current;
+      if (!ta) {
+        applyScript(script + token);
+        return;
+      }
+      const s = ta.selectionStart ?? ta.value.length;
+      const e = ta.selectionEnd ?? s;
+      const next = ta.value.slice(0, s) + token + ta.value.slice(e);
+      applyScript(next);
+      requestAnimationFrame(() => {
+        ta.focus();
+        ta.setSelectionRange(s + token.length, s + token.length);
+      });
+    },
+    [applyScript, script],
+  );
+
+  const runPreview = React.useCallback(async () => {
+    const src =
+      mode === "field" ? String(field.config?.script ?? "") : fieldItemsScript(field.config);
+    if (!src.trim()) {
+      toast.error(t("dfb.studio.scriptEmpty"));
+      return;
+    }
+    setBusy(true);
+    try {
+      const res = await executeFormScript(src);
+      setPreview(res);
+      if (mode === "field") {
+        onUpdate({ config: { ...(field.config ?? {}), fields: res.fields, rowCount: res.rowCount } });
+      } else {
+        const vf =
+          typeof field.config?.itemsValueField === "string"
+            ? (field.config.itemsValueField as string)
+            : undefined;
+        onSetItemsCandidates(field.key, rowsToItems(res.rows, vf));
+      }
+      toast.success(t("dfb.studio.scriptRows").replace("{n}", String(res.rowCount)));
+    } catch {
+      toast.error(t("dfb.studio.scriptExecError"));
+    } finally {
+      setBusy(false);
+    }
+  }, [mode, field, onUpdate, onSetItemsCandidates, t]);
+
+  const toggleApp = (k: string) =>
+    setOpenApps((s) => {
+      const n = new Set(s);
+      if (n.has(k)) n.delete(k);
+      else n.add(k);
+      return n;
+    });
+  const toggleTable = (k: string) =>
+    setOpenTables((s) => {
+      const n = new Set(s);
+      if (n.has(k)) n.delete(k);
+      else n.add(k);
+      return n;
+    });
+
+  const q = search.trim().toLowerCase();
+
+  /* one table/view node + its (expandable) field list */
+  const renderObject = (dbFile: string, tb: DfbSchemaGroup["tables"][number], fields: DfbSchemaGroup["tables"][number]["fields"]) => {
+    const key = schemaObjectKey(dbFile, tb.name);
+    const open = openTables.has(key);
+    return (
+      <div key={key} className="grid gap-0.5">
+        <div className="flex items-center gap-0.5">
+          <button
+            type="button"
+            onClick={() => toggleTable(key)}
+            aria-label={open ? tb.name : `${tb.name}+`}
+            aria-expanded={open}
+            className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-foreground/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <ChevronDown className={cn("h-3 w-3 transition-transform", !open && "-rotate-90")} aria-hidden />
+          </button>
+          <button
+            type="button"
+            onClick={() => insertToken(`db.table("${tb.name}")`)}
+            title={t("dfb.studio.dbTreeHint")}
+            className="flex min-w-0 flex-1 items-center gap-1.5 rounded px-1 py-0.5 text-start text-[11px] hover:bg-foreground/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            {tb.type === "view" ? (
+              <Eye className="h-3 w-3 shrink-0 text-violet-500" aria-hidden />
+            ) : (
+              <Table2 className="h-3 w-3 shrink-0 text-teal-600 dark:text-teal-400" aria-hidden />
+            )}
+            <span className="min-w-0 flex-1 truncate font-mono" dir="ltr">{tb.name}</span>
+            <Badge variant="outline" className="px-1 py-0 font-mono text-[8px]" dir="ltr">{fields.length}</Badge>
+          </button>
+        </div>
+        {open && (
+          <div className="ms-5 grid gap-0.5">
+            {fields.map((f) => (
+              <button
+                key={f.name}
+                type="button"
+                onClick={() => insertToken(`"${f.name}"`)}
+                title={t("dfb.studio.dbTreeHint")}
+                className="flex items-center gap-1.5 rounded px-1 py-0.5 text-start text-[10px] hover:bg-foreground/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                {f.pk && <KeyRound className="h-2.5 w-2.5 shrink-0 text-amber-500" aria-hidden />}
+                <span className="min-w-0 flex-1 truncate font-mono" dir="ltr">{f.name}</span>
+                <span className="shrink-0 font-mono text-[9px] text-muted-foreground" dir="ltr">{f.type}</span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  /* the tree body — search mode flattens matches, normal mode groups by software */
+  const renderTree = (g: DfbSchemaGroup) => {
+    if (q) {
+      const matched = g.tables
+        .map((tb) => {
+          const nameMatch = tb.name.toLowerCase().includes(q);
+          const fields = nameMatch ? tb.fields : tb.fields.filter((f) => f.name.toLowerCase().includes(q));
+          return { tb, fields };
+        })
+        .filter((x) => x.fields.length > 0);
+      if (matched.length === 0) return null;
+      return (
+        <div key={g.dbFile} className="grid gap-1 border-b border-border/40 pb-1.5">
+          <p className="flex items-center gap-1.5 px-1 text-[10px] font-semibold text-muted-foreground" dir="ltr">
+            <Database className="h-3 w-3" aria-hidden /> {g.dbFile}
+          </p>
+          {matched.map(({ tb, fields }) => renderObject(g.dbFile, tb, fields))}
+        </div>
+      );
+    }
+    const tables = g.tables.filter((x) => x.type === "table");
+    const views = g.tables.filter((x) => x.type === "view");
+    return g.apps.map((a) => {
+      const open = openApps.has(a.appKey);
+      const AppIcon = APP_ICONS[a.iconKey]?.Icon;
+      return (
+        <div key={`${g.dbFile}:${a.appKey}`} className="grid gap-0.5">
+          <button
+            type="button"
+            onClick={() => toggleApp(a.appKey)}
+            aria-expanded={open}
+            className="flex items-center gap-1.5 rounded-lg px-1 py-1 text-[11px] font-medium hover:bg-foreground/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <ChevronDown className={cn("h-3 w-3 shrink-0 text-muted-foreground transition-transform", !open && "-rotate-90")} aria-hidden />
+            {AppIcon ? (
+              <span className="flex h-4 w-4 shrink-0 items-center justify-center" aria-hidden><AppIcon className="h-3 w-3" /></span>
+            ) : (
+              <Layers className="h-3 w-3 shrink-0" aria-hidden />
+            )}
+            <span className="min-w-0 flex-1 truncate text-start">{t(`app.${a.appKey}` as never)}</span>
+            <span className="shrink-0 font-mono text-[9px] text-muted-foreground" dir="ltr">{g.dbFile}</span>
+          </button>
+          {open && (
+            <div className="ms-3 grid gap-1.5 border-s border-border/60 ps-2">
+              {([
+                { label: t("dfb.studio.dbTablesGroup"), list: tables },
+                { label: t("dfb.studio.dbViewsGroup"), list: views },
+              ] as const).map((grp) =>
+                grp.list.length > 0 ? (
+                  <div key={grp.label} className="grid gap-0.5">
+                    <p className="px-1 text-[10px] font-medium text-muted-foreground/80">
+                      {grp.label} <span dir="ltr">({grp.list.length})</span>
+                    </p>
+                    {grp.list.map((tb) => renderObject(g.dbFile, tb, tb.fields))}
+                  </div>
+                ) : null,
+              )}
+            </div>
+          )}
+        </div>
+      );
+    });
+  };
+
+  const candidates = mode === "items" ? (itemsCandidates[field.key] ?? []) : [];
+  const fetchedFields = mode === "field" && Array.isArray(field.config?.fields) ? (field.config?.fields as string[]) : [];
+
+  return (
+    <Dialog open onOpenChange={(v) => { if (!v) onClose(); }}>
+      <DialogContent className="max-w-3xl" dir="auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <span
+              aria-hidden
+              className="flex h-6 w-6 items-center justify-center rounded-lg bg-gradient-to-br from-teal-700 to-emerald-800 text-white shadow-sm"
+            >
+              <Code className="h-3.5 w-3.5" />
+            </span>
+            {t("dfb.studio.scriptModalTitle")}
+            <Badge variant="outline" className="max-w-40 truncate px-1.5 py-0 text-[9px]">{field.label}</Badge>
+          </DialogTitle>
+          <DialogDescription>{t("dfb.studio.scriptModalDesc")}</DialogDescription>
+        </DialogHeader>
+
+        <Tabs
+          value={tab}
+          onValueChange={(v) => {
+            setTab(v === "preview" ? "preview" : "code");
+            if (v === "preview") void runPreview(); // owner: switching to the preview tab shows the data
+          }}
+        >
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="code">{t("dfb.studio.scriptTabCode")}</TabsTrigger>
+            <TabsTrigger value="preview">{t("dfb.studio.scriptTabPreview")}</TabsTrigger>
+          </TabsList>
+
+          {/* ── tab 1: the script code + the connected-database tree ── */}
+          <TabsContent value="code" className="mt-2 grid gap-3 lg:grid-cols-5">
+            <div className="grid gap-2 lg:col-span-3">
+              <Label className="text-[11px] text-muted-foreground">
+                {mode === "field" ? t("dfb.studio.scriptEditor") : t("dfb.studio.itemsScriptEditor")}
+              </Label>
+              <textarea
+                ref={taRef}
+                value={script}
+                onChange={(e) => applyScript(e.target.value)}
+                rows={12}
+                spellCheck={false}
+                dir="ltr"
+                aria-label={mode === "field" ? t("dfb.studio.scriptEditor") : t("dfb.studio.itemsScriptEditor")}
+                placeholder={'const rows = await db.table("DfbMenu").findMany({ take: 10 });\nreturn rows;'}
+                className="w-full resize-y rounded-lg border border-input bg-background px-2 py-1.5 font-mono text-[11px] leading-relaxed text-foreground shadow-xs outline-none transition-colors placeholder:text-muted-foreground/60 focus-visible:border-ring focus-visible:bg-background"
+              />
+              <p className="text-[10px] leading-relaxed text-muted-foreground">{t("dfb.studio.scriptHint")}</p>
+            </div>
+            <div className="grid content-start gap-2 lg:col-span-2">
+              <Label className="text-[11px] text-muted-foreground">{t("dfb.studio.dbTree")}</Label>
+              <p className="text-[10px] leading-relaxed text-muted-foreground">{t("dfb.studio.dbTreeHint")}</p>
+              <div className="relative">
+                <Search className="pointer-events-none absolute start-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" aria-hidden />
+                <Input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder={t("dfb.studio.dbSearch")}
+                  aria-label={t("dfb.studio.dbSearch")}
+                  className="h-8 ps-7 text-xs"
+                />
+              </div>
+              <div className="max-h-[42vh] min-h-40 overflow-y-auto rounded-xl border border-border/60 bg-background/70 p-1.5 scrollbar-slim">
+                {schema == null && !schemaFailed && (
+                  <p className="flex items-center gap-2 p-2 text-[11px] text-muted-foreground">
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden /> {t("dfb.studio.dbLoading")}
+                  </p>
+                )}
+                {schemaFailed && (
+                  <p className="p-2 text-[11px] text-rose-600">{t("dfb.studio.dbError")}</p>
+                )}
+                {schema != null && schema.length === 0 && (
+                  <p className="p-2 text-[11px] text-muted-foreground">{t("dfb.studio.dbEmpty")}</p>
+                )}
+                {schema != null && schema.map((g) => renderTree(g))}
+                {schema != null && q !== "" && schema.every((g) => renderTree(g) === null) && (
+                  <p className="p-2 text-[11px] text-muted-foreground">{t("dfb.studio.dbEmpty")}</p>
+                )}
+              </div>
+            </div>
+          </TabsContent>
+
+          {/* ── tab 2: live preview of the script/query data ── */}
+          <TabsContent value="preview" className="mt-2 grid gap-2.5">
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                type="button" size="sm"
+                className="bg-teal-600 hover:bg-teal-700"
+                disabled={busy}
+                onClick={() => void runPreview()}
+              >
+                {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden /> : <Play className="h-3.5 w-3.5" aria-hidden />}
+                {t("dfb.studio.scriptRun")}
+              </Button>
+              {preview && (
+                <Badge variant="outline" className="font-mono text-[9px]" dir="ltr">
+                  {t("dfb.studio.previewRows").replace("{n}", String(preview.rowCount))}
+                </Badge>
+              )}
+            </div>
+            {!preview && !busy && (
+              <p className="rounded-xl border border-dashed border-border/70 px-3 py-6 text-center text-[11px] text-muted-foreground">
+                {t("dfb.studio.scriptFetchedEmpty")}
+              </p>
+            )}
+            {preview && (
+              <>
+                <div className="max-h-56 overflow-auto rounded-xl border border-border/60 scrollbar-slim">
+                  <table className="w-full min-w-max text-xs">
+                    <thead className="sticky top-0 z-10 bg-muted/95 backdrop-blur">
+                      <tr>
+                        {preview.fields.map((f) => (
+                          <th
+                            key={f}
+                            className="whitespace-nowrap border-b border-border/60 px-2 py-1.5 text-start font-mono text-[10px] font-semibold text-muted-foreground"
+                            dir="ltr"
+                          >
+                            {f}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {preview.rows.map((r, i) => (
+                        <tr key={i} className="odd:bg-muted/30">
+                          {preview.fields.map((f) => (
+                            <td key={f} className="max-w-48 truncate whitespace-nowrap px-2 py-1" dir="auto">
+                              {r[f] == null ? <span className="text-muted-foreground">—</span> : String(r[f])}
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                      {preview.rows.length === 0 && (
+                        <tr>
+                          <td colSpan={Math.max(preview.fields.length, 1)} className="px-2 py-4 text-center text-[11px] text-muted-foreground">
+                            {t("dfb.studio.previewEmpty")}
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+                <p className="text-[10px] text-muted-foreground">
+                  {t("dfb.studio.previewCols")}: <span className="font-mono" dir="ltr">{preview.fields.join(", ") || "—"}</span>
+                </p>
+              </>
+            )}
+            {/* field mode — select the FETCHED fields and add them to the form */}
+            {mode === "field" && fetchedFields.length > 0 && (
+              <>
+                <Label className="text-[11px] text-muted-foreground">{t("dfb.studio.scriptFetched")}</Label>
+                <div className="max-h-28 overflow-y-auto rounded-lg border border-border/60 bg-background/70 p-1.5 scrollbar-slim">
+                  {fetchedFields.map((name) => {
+                    const sel =
+                      Array.isArray(field.config?.selected) &&
+                      (field.config?.selected as string[]).includes(name);
+                    return (
+                      <label
+                        key={name}
+                        className="flex cursor-pointer items-center gap-1.5 rounded-md px-1 py-0.5 text-[11px] hover:bg-foreground/5"
+                      >
+                        <Checkbox
+                          checked={sel}
+                          onCheckedChange={(v) => onToggleScriptField(name, v === true)}
+                          aria-label={name}
+                        />
+                        <span className="min-w-0 flex-1 truncate font-mono" dir="ltr">{name}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+                <Button
+                  type="button" size="sm" variant="outline"
+                  className="w-fit border-teal-600/50 text-teal-700 hover:bg-teal-500/10 dark:text-teal-400"
+                  onClick={onAddScriptFields}
+                >
+                  <Plus className="h-3.5 w-3.5" aria-hidden />
+                  {t("dfb.studio.scriptAddSelected")}
+                </Button>
+              </>
+            )}
+            {/* items mode — pick the fetched items and add them to the field */}
+            {mode === "items" && candidates.length > 0 && (
+              <>
+                <Label className="text-[11px] text-muted-foreground">{t("dfb.studio.itemsFetched")}</Label>
+                <div className="max-h-28 overflow-y-auto rounded-lg border border-border/60 bg-background/70 p-1.5 scrollbar-slim">
+                  {candidates.map((c) => {
+                    const pickedSet = itemsPicked[field.key];
+                    const picked = pickedSet ? pickedSet.includes(c.value) : true; // default = ALL
+                    return (
+                      <label
+                        key={c.value}
+                        className="flex cursor-pointer items-center gap-1.5 rounded-md px-1 py-0.5 text-[11px] hover:bg-foreground/5"
+                      >
+                        <Checkbox
+                          checked={picked}
+                          onCheckedChange={(v) => onToggleItemCandidate(field.key, c.value, v === true)}
+                          aria-label={c.label}
+                        />
+                        <span className="min-w-0 flex-1 truncate">{c.label}</span>
+                        {c.value !== c.label && (
+                          <span className="shrink-0 font-mono text-[9px] text-muted-foreground" dir="ltr">
+                            {c.value}
+                          </span>
+                        )}
+                      </label>
+                    );
+                  })}
+                </div>
+                <Button
+                  type="button" size="sm" variant="outline"
+                  className="w-fit border-violet-600/50 text-violet-700 hover:bg-violet-500/10 dark:text-violet-400"
+                  onClick={onAddSelectedItems}
+                >
+                  <Plus className="h-3.5 w-3.5" aria-hidden />
+                  {t("dfb.studio.itemsAddSelected")}
+                </Button>
+              </>
+            )}
+          </TabsContent>
+        </Tabs>
+
+        <DialogFooter className="gap-2">
+          <Button type="button" onClick={onClose}>
+            <Check className="h-4 w-4" aria-hidden /> {t("common.close")}
           </Button>
         </DialogFooter>
       </DialogContent>

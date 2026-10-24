@@ -15,6 +15,22 @@ import {
 export class FormsController {
   constructor(private readonly forms: FormsService) {}
 
+  /* specific literal routes FIRST (Nest matches in declaration order — a
+     static path must never be shadowed by the ":id" parameter route) */
+
+  /** Task 59 — connected-database schema tree (software → tables/views → fields) */
+  @Get("schema/tree")
+  schemaTree() {
+    return this.forms.schemaTree();
+  }
+
+  /** Task 53 — execute a form script (designer «اجرا و واکشی» + runtime prefill) */
+  @Post("script/execute")
+  @HttpCode(200)
+  runScript(@Body() dto: RunScriptDto) {
+    return this.forms.runScript(dto.script);
+  }
+
   @Get(":id")
   findOne(@Param("id", ParseIntPipe) id: number) {
     return this.forms.findOne(id);
@@ -28,14 +44,6 @@ export class FormsController {
   @Put(":id")
   update(@Param("id", ParseIntPipe) id: number, @Body() dto: UpdateFormDto) {
     return this.forms.update(id, dto);
-  }
-
-  /* specific routes FIRST (Nest matches in declaration order) */
-  /** Task 53 — execute a form script (designer «اجرا و واکشی» + runtime prefill) */
-  @Post("script/execute")
-  @HttpCode(200)
-  runScript(@Body() dto: RunScriptDto) {
-    return this.forms.runScript(dto.script);
   }
 
   @Post(":id/fields")

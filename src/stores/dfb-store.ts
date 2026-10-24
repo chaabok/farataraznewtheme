@@ -357,3 +357,41 @@ export function parseFieldConfig(configJson: string | null | undefined): Record<
     return {};
   }
 }
+
+/* -------- Task 59 (owner request) — connected-database schema tree ---------
+   «در مودال اسکریپت‌نویسی کاربر باید جداول و ویوهای موجود در بانک اطلاعاتی
+   متصل شده را ببیند؛ لیست جداول هر نرم‌افزار بصورت شاخه به تفکیک فیلدها» —
+   dfb-service introspects the physical db files (shared custom.db / dedicated
+   dfb.db) with a READ-ONLY sqlite connection and groups the catalog software
+   by their connected database. */
+export interface DfbSchemaField {
+  name: string;
+  type: string;
+  pk: boolean;
+  notNull: boolean;
+}
+
+export interface DfbSchemaTable {
+  name: string;
+  type: "table" | "view";
+  fields: DfbSchemaField[];
+}
+
+export interface DfbSchemaApp {
+  appKey: string;
+  titleFa: string;
+  iconKey: string;
+  order: number;
+}
+
+export interface DfbSchemaGroup {
+  dbFile: string;
+  apps: DfbSchemaApp[];
+  tables: DfbSchemaTable[];
+}
+
+/** software → connected database → tables/views with their fields */
+export async function fetchSchemaTree(): Promise<DfbSchemaGroup[]> {
+  const res = await dfbApi.get<{ items: DfbSchemaGroup[] }>("forms/schema/tree");
+  return res.items ?? [];
+}

@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "NODE_PATH=./node_modules bun --hot src/main.ts",
-    "start": "NODE_PATH=./node_modules bun src/main.ts",
+    "dev": "DATABASE_URL=\"file:/home/z/my-project/db/dfb.db\" NODE_PATH=./node_modules bun --hot src/main.ts",
+    "start": "DATABASE_URL=\"file:/home/z/my-project/db/dfb.db\" NODE_PATH=./node_modules bun src/main.ts",
     "db:generate": "DATABASE_URL=\"file:/home/z/my-project/db/dfb.db\" bunx prisma generate",
     "db:push": "DATABASE_URL=\"file:/home/z/my-project/db/dfb.db\" bunx prisma db push"
   },

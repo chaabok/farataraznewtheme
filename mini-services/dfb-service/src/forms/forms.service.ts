@@ -4,8 +4,16 @@ import {
   Logger,
   NotFoundException,
 } from "@nestjs/common";
+import { existsSync } from "node:fs";
+import path from "node:path";
+// Bun's built-in SQLite driver — provided by the Bun runtime itself (no npm
+// types installed in this package), used READ-ONLY for the Task 59 schema
+// tree + the connected-database script reader.
+// @ts-expect-error — "bun:sqlite" ships with the Bun runtime
+import { Database } from "bun:sqlite";
 import { PrismaService } from "../prisma/prisma.service";
 import { IdGenerationService } from "../id-generation/id-generation.service";
+import { APP_CATALOG } from "../../../_shared/app-catalog";
 import {
   AddFieldDto,
   CreateFormDto,
@@ -17,17 +25,44 @@ import {
 import { appBaseOnCreate, appBaseOnUpdate, SYSTEM_ACTOR } from "../../../_shared/app-base-entity";
 import { parseJsonColumn, toPlain } from "../shared/serialize";
 
+/* ----------------- Task 59 — connected-database schema types ----------------- */
+
+/** one column of a table/view (PRAGMA table_info) */
+interface SchemaFieldOut {
+  name: string;
+  type: string;
+  pk: boolean;
+  notNull: boolean;
+}
+
+/** one table or view of a connected database */
+interface SchemaTableOut {
+  name: string;
+  type: "table" | "view";
+  fields: SchemaFieldOut[];
+}
+
+/** one connected database + the software (catalog apps) using it */
+interface SchemaGroupOut {
+  dbFile: string;
+  apps: Array<{ appKey: string; titleFa: string; iconKey: string; order: number }>;
+  tables: SchemaTableOut[];
+}
+
 /**
- * Task 53 (owner request — «فیلد اسکریپت‌نویسی») — SCRIPT_TABLES: the ONLY
- * tables a form script may read, through a tiny read-only API handed to the
- * sandboxed function. No free SQL, no writes, capped row counts — the same
- * defense-in-depth posture as QUERY_TABLES (no free-form SQL, owner Q4).
+ * Task 53 (owner request — «فیلد اسکریپت‌نویسی») — SCRIPT_ROW_CAP: script
+ * results are capped (rows AND output) through a tiny read-only API handed to
+ * the sandboxed function. No free SQL, no writes — the same defense-in-depth
+ * posture as QUERY_TABLES (no free-form SQL, owner Q4).
  */
-const SCRIPT_TABLES = new Set([
-  "DfbMenu", "DfbForm", "DfbFormTab", "DfbFormField",
-  "DfbFormData", "DfbFormDataValue", "DfbQuery", "DfbQueryField",
-]);
 const SCRIPT_ROW_CAP = 200;
+
+/**
+ * Task 59 — resolution order for script reads: the فرمساز's own dedicated
+ * database first (dfb.db), then the shared platform database (custom.db).
+ */
+const CONNECTED_DB_FILES = ["dfb.db", "custom.db"] as const;
+const IDENT_RE = /^[A-Za-z_][A-Za-z0-9_]{0,62}$/;
 
 /**
  * DfbForm service — تعریف/ویرایش فرم‌ها (سیستمی و کاربر)، تب‌ها و فیلدها،
@@ -37,10 +72,151 @@ const SCRIPT_ROW_CAP = 200;
 export class FormsService {
   private readonly logger = new Logger(FormsService.name);
 
+  /** Task 59 — read-only SQLite handles per db file (shared for the process) */
+  private readonly sqliteConns = new Map<string, InstanceType<typeof Database>>();
+  /** Task 59 — column cache per db file → table (schema introspection) */
+  private readonly columnsCache = new Map<string, Map<string, SchemaFieldOut[]>>();
+  private schemaCache: { at: number; items: SchemaGroupOut[] } | null = null;
+  private static readonly SCHEMA_TTL_MS = 15000;
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly idGen: IdGenerationService,
   ) {}
+
+  /* ---------------- Task 59 — connected-database introspection ---------------- */
+
+  /** resolves db/<file> at the project root (service cwd = mini-services/<svc>) */
+  private dbFilePath(file: string): string | null {
+    const p = path.resolve(process.cwd(), "..", "..", "db", file);
+    return existsSync(p) ? p : null;
+  }
+
+  /** read-only connection — scripts and introspection can never write */
+  private sqliteConn(file: string): InstanceType<typeof Database> | null {
+    const hit = this.sqliteConns.get(file);
+    if (hit) return hit;
+    const p = this.dbFilePath(file);
+    if (!p) return null;
+    const db = new Database(p, { readonly: true });
+    this.sqliteConns.set(file, db);
+    return db;
+  }
+
+  /** full column info of a table/view (cached); null = unknown object */
+  private columnsFull(file: string, table: string): SchemaFieldOut[] | null {
+    const perFile = this.columnsCache.get(file) ?? new Map<string, SchemaFieldOut[]>();
+    const hit = perFile.get(table);
+    if (hit) return hit;
+    const db = this.sqliteConn(file);
+    if (!db) return null;
+    const safe = table.replace(/"/g, '""');
+    const rows = db
+      .query(`PRAGMA table_info("${safe}")`)
+      .all() as Array<{ name: string; type: string; notnull: number; pk: number }>;
+    if (rows.length === 0) return null;
+    const fields = rows.map((r) => ({
+      name: r.name,
+      type: (r.type || "TEXT").toUpperCase(),
+      pk: r.pk > 0,
+      notNull: r.notnull === 1,
+    }));
+    perFile.set(table, fields);
+    this.columnsCache.set(file, perFile);
+    return fields;
+  }
+
+  /** finds which connected db holds a table/view (custom.db first) */
+  private locateTable(name: string): { file: string; fields: SchemaFieldOut[] } | null {
+    for (const file of CONNECTED_DB_FILES) {
+      const fields = this.columnsFull(file, name);
+      if (fields && fields.length > 0) return { file, fields };
+    }
+    return null;
+  }
+
+  /**
+   * Task 59 — GET advancedTools/forms/schema/tree
+   * نرم‌افزارها (کاتالوگ) → بانک متصل هر کدام → جداول و ویوها → فیلدها.
+   * Deduped by physical db file (shared-mode apps point at custom.db).
+   */
+  schemaTree(): { items: SchemaGroupOut[] } {
+    if (this.schemaCache && Date.now() - this.schemaCache.at < FormsService.SCHEMA_TTL_MS) {
+      return { items: this.schemaCache.items };
+    }
+    const groups = new Map<string, SchemaGroupOut>();
+    for (const a of [...APP_CATALOG].sort((x, y) => x.order - y.order)) {
+      /* dedicated apps own their db file; shared apps sit on the main db */
+      const dbFile = a.dbMode === "dedicated" ? "dfb.db" : "custom.db";
+      const g = groups.get(dbFile) ?? { dbFile, apps: [], tables: [] };
+      g.apps.push({ appKey: a.appKey, titleFa: a.titleFa, iconKey: a.iconKey, order: a.order });
+      groups.set(dbFile, g);
+    }
+    for (const g of groups.values()) {
+      const db = this.sqliteConn(g.dbFile);
+      if (!db) {
+        g.tables = [];
+        continue;
+      }
+      const objs = db
+        .query(
+          "SELECT name, type FROM sqlite_master WHERE type IN ('table','view') AND name NOT LIKE 'sqlite_%' ORDER BY type, name",
+        )
+        .all() as Array<{ name: string; type: string }>;
+      g.tables = objs
+        .map((o) => {
+          const fields = this.columnsFull(g.dbFile, o.name) ?? [];
+          return { name: o.name, type: o.type === "view" ? ("view" as const) : ("table" as const), fields };
+        })
+        .filter((t) => t.fields.length > 0);
+    }
+    const items = [...groups.values()];
+    this.schemaCache = { at: Date.now(), items };
+    this.logger.log(`schema tree: ${items.length} db group(s), ${items.reduce((n, g) => n + g.tables.length, 0)} object(s)`);
+    return { items };
+  }
+
+  /**
+   * Task 59 — safe read of a connected-db table/view for scripts: identifiers
+   * validated against the REAL schema (PRAGMA), values bound as parameters,
+   * equality-only WHERE, row cap, read-only connection. No free SQL, no writes.
+   */
+  private sqliteFindMany(
+    file: string,
+    table: string,
+    opts?: { where?: Record<string, unknown>; take?: number; orderBy?: Record<string, unknown> },
+  ): Array<Record<string, unknown>> {
+    const fields = this.columnsFull(file, table);
+    if (!fields || fields.length === 0) throw new BadRequestException(`جدول «${table}» در بانک متصل یافت نشد`);
+    const colSet = new Set(fields.map((f) => f.name));
+    const ident = (c: string) => {
+      if (!colSet.has(c)) throw new BadRequestException(`ستون «${c}» در «${table}» وجود ندارد`);
+      return `"${c.replace(/"/g, '""')}"`;
+    };
+    const params: unknown[] = [];
+    let sql = `SELECT * FROM "${table.replace(/"/g, '""')}"`;
+    if (opts?.where && typeof opts.where === "object") {
+      const conds: string[] = [];
+      for (const [k, v] of Object.entries(opts.where)) {
+        conds.push(`${ident(k)} = ?`);
+        params.push(v as unknown);
+      }
+      if (conds.length > 0) sql += ` WHERE ${conds.join(" AND ")}`;
+    }
+    if (opts?.orderBy && typeof opts.orderBy === "object") {
+      const first = Object.entries(opts.orderBy)[0];
+      if (first && typeof first[1] === "string") {
+        sql += ` ORDER BY ${ident(first[0])} ${first[1].toLowerCase() === "desc" ? "DESC" : "ASC"}`;
+      }
+    }
+    const take = Math.min(Number(opts?.take ?? 50) || 50, SCRIPT_ROW_CAP);
+    sql += ` LIMIT ?`;
+    params.push(take);
+    const db = this.sqliteConn(file);
+    if (!db) throw new BadRequestException(`بانک «${file}» در دسترس نیست`);
+    const rows = db.query(sql).all(...(params as unknown[])) as Array<Record<string, unknown>>;
+    return rows.map((r) => toPlain(r) as Record<string, unknown>);
+  }
 
   /* ------------------------------- read ------------------------------- */
 
@@ -54,7 +230,7 @@ export class FormsService {
     ]);
     return {
       item: {
-        ...toPlain(form),
+        ...(toPlain(form) as Record<string, unknown>), // Task 59 — toPlain returns unknown; spread needs the object cast
         header: parseJsonColumn(form.headerJson),
         body: parseJsonColumn(form.bodyJson),
         footer: parseJsonColumn(form.footerJson),
@@ -313,35 +489,33 @@ export class FormsService {
    * واکشی‌شده) را استخراج می‌کند تا استودیو بگذارد کاربر آن‌ها را انتخاب کند
    * و ران‌تایم بتواند فیلدهای متصل را پیش‌پر کند.
    *
-   * امنیت: بدون SQL آزاد؛ فقط جداول whitelist از طریق Prisma delegate،
-   * سقف ردیف (SCRIPT_ROW_CAP)، بدون دسترسی به network/fs/process (تابع
-   * فقط «db» را می‌بیند؛ strict mode).
+   * امنیت: بدون SQL آزاد؛ جداول whitelist از طریق Prisma delegate + (Task 59)
+   * هر جدول/ویوی بانک‌های متصل از طریق خوانندهٔ امن sqlite (شناسه‌های اعتبارسنجی‌شده
+   * با PRAGMA، مقادیر پارامتری، اتصال فقط-خواندنی)، سقف ردیف (SCRIPT_ROW_CAP)،
+   * بدون دسترسی به network/fs/process (تابع فقط «db» را می‌بیند؛ strict mode).
    */
   async runScript(script: string) {
     const src = String(script ?? "");
     if (!src.trim()) throw new BadRequestException("اسکریپت خالی است");
     if (src.length > 16000) throw new BadRequestException("اسکریپت بیش از حد بلند است");
 
-    const prisma = this.prisma as unknown as Record<string, unknown>;
+    const svc = this; // Task 59 — the connected-db reader needs `this`
     const db = {
-      /** db.table("DfbMenu").findMany({ where: {...}, take: 50 }) — read-only */
+      /** db.table("DfbMenu").findMany({ where: {...}, take: 50 }) — read-only.
+       *  Task 59 — EVERY read (whitelisted Dfb tables AND any other table/view
+       *  of the connected databases) goes through ONE safe SQLite reader so
+       *  scripts always see the PHYSICAL column names — exactly the names the
+       *  schema tree shows the owner (validated identifiers, bound values,
+       *  read-only connection, row cap). No free SQL, no writes. */
       table(name: string) {
-        if (!SCRIPT_TABLES.has(name)) {
-          throw new BadRequestException(`جدول «${name}» در فهرست مجاز اسکریپت نیست`);
+        if (!IDENT_RE.test(name)) throw new BadRequestException(`نام جدول نامعتبر: ${name}`);
+        const loc = svc.locateTable(name);
+        if (!loc) {
+          throw new BadRequestException(`جدول یا ویو «${name}» در بانک‌های اطلاعاتی متصل یافت نشد`);
         }
-        const delegate = prisma[name.charAt(0).toLowerCase() + name.slice(1)] as {
-          findMany: (opts?: Record<string, unknown>) => Promise<Array<Record<string, unknown>>>;
-        };
-        if (!delegate?.findMany) throw new BadRequestException(`جدول «${name}» پشتیبانی نمی‌شود`);
         return {
           async findMany(opts?: { where?: Record<string, unknown>; take?: number; orderBy?: Record<string, unknown> }) {
-            const take = Math.min(Number(opts?.take ?? 50) || 50, SCRIPT_ROW_CAP);
-            const rows = await delegate.findMany({
-              ...(opts?.where ? { where: opts.where } : {}),
-              ...(opts?.orderBy ? { orderBy: opts.orderBy } : {}),
-              take,
-            });
-            return rows.map((r) => toPlain(r));
+            return svc.sqliteFindMany(loc.file, name, opts);
           },
         };
       },
