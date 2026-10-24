@@ -280,6 +280,60 @@ export const DFB_NON_INPUT_TYPES: readonly string[] = [...DFB_SHAPE_TYPES, DFB_S
 export const isDfbInputField = (fieldType: string): boolean =>
   !DFB_NON_INPUT_TYPES.includes(fieldType);
 
+/* -------- Task 58 (owner request) — list/radio ITEMS from config ---------
+   select AND radio fields can carry their items in ConfigJson:
+   { items: Array<string | { label, value? }> } (defined in the studio)
+   and/or { itemsScript: "function(db){...}" } whose fetched rows become
+   items at runtime (value/label columns mapped like query-bound fields). */
+export const DFB_ITEM_FIELD_TYPES: readonly string[] = ["select", "radio"];
+
+export interface DfbFieldItem {
+  value: string;
+  label: string;
+}
+
+/** normalizes the stored config.items into {value,label} pairs (a plain
+    string item = its own value AND label) */
+export function fieldConfigItems(cfg: Record<string, unknown> | null | undefined): DfbFieldItem[] {
+  const raw = cfg?.items;
+  if (!Array.isArray(raw)) return [];
+  const out: DfbFieldItem[] = [];
+  for (const it of raw) {
+    if (typeof it === "string" && it.trim()) out.push({ value: it, label: it });
+    else if (it && typeof it === "object") {
+      const label = String((it as { label?: unknown }).label ?? "").trim();
+      const value = String((it as { value?: unknown }).value ?? label).trim();
+      if (label) out.push({ value: value || label, label });
+    }
+  }
+  return out;
+}
+
+/** the itemsScript text of a field's config (empty string when unset) */
+export function fieldItemsScript(cfg: Record<string, unknown> | null | undefined): string {
+  const s = cfg?.itemsScript;
+  return typeof s === "string" ? s : "";
+}
+
+/** maps fetched script rows to items: value column = itemsValueField (config)
+    or the first column; label = a Title/Label/Name-ish column or the value */
+export function rowsToItems(
+  rows: Record<string, unknown>[],
+  valueField?: string,
+): DfbFieldItem[] {
+  const keys = rows.length ? Object.keys(rows[0]) : [];
+  if (keys.length === 0) return [];
+  const valKey = valueField && keys.includes(valueField) ? valueField : keys[0];
+  const labelKey = keys.find((k) => k !== valKey && /title|label|name/i.test(k)) ?? valKey;
+  const out: DfbFieldItem[] = [];
+  for (const r of rows) {
+    const value = String(r[valKey] ?? "");
+    if (!value) continue;
+    out.push({ value, label: String(r[labelKey] ?? value) });
+  }
+  return out;
+}
+
 export interface DfbScriptResult {
   ok: boolean;
   fields: string[];

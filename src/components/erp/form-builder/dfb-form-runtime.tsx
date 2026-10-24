@@ -22,7 +22,8 @@ import {
   fetchFormDetail, saveFormData, loadFormData,
   fetchQueryOptionsForFields, normalizeFieldWidth, widthMinWidthClass,
   dfbFormTitle, executeFormScript, parseFieldConfig, isDfbInputField,
-  type DfbFormDetail, type DfbFieldDef,
+  fieldConfigItems, fieldItemsScript, rowsToItems, DFB_ITEM_FIELD_TYPES,
+  type DfbFormDetail, type DfbFieldDef, type DfbFieldItem,
 } from "@/stores/dfb-store";
 
 /**
@@ -56,6 +57,9 @@ function RuntimeInner({ formId }: { formId: number }) {
   /* values keyed by fieldId (string) */
   const [values, setValues] = React.useState<Record<string, string | boolean>>({});
   const [queryOptions, setQueryOptions] = React.useState<Record<number, Array<{ value: string; label: string }>>>({});
+  /* Task 58 — script-sourced items of select/radio fields (keyed by field id);
+     static ConfigJson.items ride directly off the field def */
+  const [scriptItemOptions, setScriptItemOptions] = React.useState<Record<string, DfbFieldItem[]>>({});
   const [records, setRecords] = React.useState<Array<{ dataId: number; values: Record<string, string | boolean> }>>([]);
   const [currentDataId, setCurrentDataId] = React.useState<number | null>(null);
   const [busy, setBusy] = React.useState(false);
@@ -93,6 +97,28 @@ function RuntimeInner({ formId }: { formId: number }) {
            Task 48 — same mapping the studio preview uses) */
         const options = await fetchQueryOptionsForFields(d.fields);
         if (alive) setQueryOptions(options);
+        /* Task 58 — run the itemsScript of every select/radio field that has
+           one; the fetched rows become the field's opening list (the owner
+           rule: «آیتم‌ها را از اسکریپت بتواند اضافه کند») */
+        const itemScriptFields = d.fields.filter(
+          (f) => DFB_ITEM_FIELD_TYPES.includes(f.fieldType) && fieldItemsScript(parseFieldConfig(f.configJson)).trim(),
+        );
+        if (itemScriptFields.length > 0) {
+          const itemsMap: Record<string, DfbFieldItem[]> = {};
+          await Promise.all(
+            itemScriptFields.map(async (f) => {
+              try {
+                const cfg = parseFieldConfig(f.configJson);
+                const res = await executeFormScript(fieldItemsScript(cfg));
+                const vf = typeof cfg.itemsValueField === "string" ? cfg.itemsValueField : undefined;
+                itemsMap[String(f.id)] = rowsToItems(res.rows, vf);
+              } catch {
+                /* a failing items script leaves the field with its static items */
+              }
+            }),
+          );
+          if (alive) setScriptItemOptions(itemsMap);
+        }
         /* Task 53 — run each script field and prefill the fields bound to it
            (config { bindScript, bindField }) from the script's FIRST row; the
            bound fields stay editable — this is just their starting value. */
@@ -207,10 +233,26 @@ function RuntimeInner({ formId }: { formId: number }) {
   const shellTheme = dfbShellTheme(shellStyle);
 
   const toShellType = (ft: string): SimpleFormField["type"] =>
-    (["text", "number", "select", "lookup", "checkbox", "date", "textarea",
+    (["text", "number", "select", "lookup", "checkbox", "date", "textarea", "radio",
       "line", "box", "circle", "oval", "script"].includes(ft)
       ? ft
       : "text") as SimpleFormField["type"];
+
+  /* Task 58 — items of a select/radio field: bound-query options win, then
+     the script-fetched items, then the items defined in the studio —
+     merged VALUE-UNIQUE (a script row and a studio-defined item with the
+     same value must not render twice) */
+  const resolveFieldOptions = (f: DfbFieldDef): Array<{ value: string; label: string }> | undefined => {
+    if (f.queryRef != null && queryOptions[f.queryRef]) return queryOptions[f.queryRef];
+    const merged: Array<{ value: string; label: string }> = [];
+    const seen = new Set<string>();
+    for (const it of [...(scriptItemOptions[String(f.id)] ?? []), ...fieldConfigItems(parseFieldConfig(f.configJson))]) {
+      if (seen.has(it.value)) continue;
+      seen.add(it.value);
+      merged.push(it);
+    }
+    return merged.length > 0 ? merged : undefined;
+  };
 
   const footerHandlers: Record<string, FormAction | undefined> = {
     save,
@@ -272,10 +314,7 @@ function RuntimeInner({ formId }: { formId: number }) {
       checked: f.fieldType === "checkbox" ? Boolean(values[String(f.id)]) : undefined,
       readOnly: f.readOnly,
       widthPct: normalizeFieldWidth(f.widthSpan),
-      options:
-        f.queryRef != null && queryOptions[f.queryRef]
-          ? queryOptions[f.queryRef]
-          : undefined,
+      options: resolveFieldOptions(f),
       ltr: f.fieldType === "number" || f.fieldType === "date",
       disabled: busy,
     });
@@ -294,6 +333,10 @@ function RuntimeInner({ formId }: { formId: number }) {
           label: f.label,
           required: f.required,
           minWidth: widthMinWidthClass(normalizeFieldWidth(f.widthSpan)),
+          /* Task 58 — the grid cell renders the SAME editor as the body
+             field (checkbox → checkbox, select → list, date → mask, ...) */
+          type: toShellType(f.fieldType),
+          options: resolveFieldOptions(f),
         }));
 
     const tabs: SimpleFormTab[] = [];
@@ -430,8 +473,7 @@ function RuntimeInner({ formId }: { formId: number }) {
         checked: f.fieldType === "checkbox" ? Boolean(values[String(f.id)]) : undefined,
         readOnly: f.readOnly,
         widthPct: normalizeFieldWidth(f.widthSpan),
-        options:
-          f.queryRef != null && queryOptions[f.queryRef] ? queryOptions[f.queryRef] : undefined,
+        options: resolveFieldOptions(f),
       }))}
       onFieldChange={onFieldChange}
       onSave={save}

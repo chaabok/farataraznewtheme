@@ -3,7 +3,7 @@
 import * as React from "react";
 import {
   AlignCenterHorizontal, AlignEndHorizontal, AlignLeft, AlignStartHorizontal, ArrowDown, ArrowUp,
-  Braces, CalendarDays, Check, ChevronDown, Circle, Code, Copy, Eye, EyeOff, FileText, FormInput,
+  Braces, CalendarDays, Check, ChevronDown, Circle, CircleDot, Code, Copy, Eye, EyeOff, FileText, FormInput,
   Grid3x3, Hash, History, Layers, List, ListTree, Loader2, Lock, Minus, MoveHorizontal, Palette,
   Pill, PencilLine, Plus, RotateCcw, Save, Search, SlidersHorizontal, Square, Trash2, Type, X,
 } from "lucide-react";
@@ -26,7 +26,8 @@ import {
   fetchFormDetail, dfbApi, saveFormData, loadFormData,
   fetchQueryOptionsForFields, normalizeFieldWidth, widthMinWidthClass, dfbFormTitle,
   executeFormScript, parseFieldConfig, isDfbInputField,
-  type DfbFormDetail, type DfbFieldDef, type DfbTabDef,
+  fieldConfigItems, fieldItemsScript, rowsToItems, DFB_ITEM_FIELD_TYPES,
+  type DfbFormDetail, type DfbFieldDef, type DfbTabDef, type DfbFieldItem,
 } from "@/stores/dfb-store";
 import { LatinInput } from "@/components/forms/latin-input";
 import {
@@ -234,6 +235,8 @@ const FIELD_TYPE_META: Record<string, { icon: typeof Type; tile: string }> = {
   select: { icon: ChevronDown, tile: "from-violet-500 to-purple-600" },
   lookup: { icon: Search, tile: "from-rose-500 to-red-600" },
   checkbox: { icon: Check, tile: "from-lime-500 to-green-600" },
+  /* Task 58 (owner request) — radio button with items */
+  radio: { icon: CircleDot, tile: "from-pink-500 to-rose-600" },
   textarea: { icon: AlignLeft, tile: "from-orange-500 to-amber-600" },
   /* Task 53 — design shapes (static, no EAV value) */
   line: { icon: Minus, tile: "from-zinc-500 to-zinc-600" },
@@ -460,6 +463,8 @@ function StudioInner({ formId }: { formId: number }) {
   const [previewOptions, setPreviewOptions] = React.useState<
     Record<number, Array<{ value: string; label: string }>>
   >({});
+  /* Task 58 — script-fetched items of select/radio fields (keyed by field.key) */
+  const [previewItemOptions, setPreviewItemOptions] = React.useState<Record<string, DfbFieldItem[]>>({});
   const [previewExtrasLoaded, setPreviewExtrasLoaded] = React.useState(false);
 
   /* Task 48 — bank resize gesture: live width of the dragged field card */
@@ -553,9 +558,32 @@ function StudioInner({ formId }: { formId: number }) {
 
   /* Task 53 — run every script field of the form and prefill the fields
      bound to it (config { bindScript, bindField }) from the FIRST row of
-     its result. Bound fields stay editable — the prefill is just a value. */
+     its result. Bound fields stay editable — the prefill is just a value.
+     Task 58 — ALSO runs the itemsScript of every select/radio field: the
+     fetched rows become the opening list of the field (and of its grid
+     column) in the live preview, exactly like the runtime. */
   const runPreviewScripts = React.useCallback(async (s: StudioState) => {
-    const scriptFields = allFieldsOf(s).filter(
+    const all = allFieldsOf(s);
+    /* Task 58 — itemsScript → opening lists */
+    const itemScriptFields = all.filter(
+      (f) => DFB_ITEM_FIELD_TYPES.includes(f.fieldType) && fieldItemsScript(f.config).trim(),
+    );
+    if (itemScriptFields.length > 0) {
+      const map: Record<string, DfbFieldItem[]> = {};
+      await Promise.all(
+        itemScriptFields.map(async (f) => {
+          try {
+            const res = await executeFormScript(fieldItemsScript(f.config));
+            const vf = typeof f.config?.itemsValueField === "string" ? (f.config.itemsValueField as string) : undefined;
+            map[f.key] = rowsToItems(res.rows, vf);
+          } catch {
+            /* a failing items script leaves the static items */
+          }
+        }),
+      );
+      setPreviewItemOptions((prev) => ({ ...prev, ...map }));
+    }
+    const scriptFields = all.filter(
       (f) => f.fieldType === "script" && typeof f.config?.script === "string" && (f.config.script as string).trim(),
     );
     if (scriptFields.length === 0) return;
@@ -975,6 +1003,103 @@ function StudioInner({ formId }: { formId: number }) {
     else toast.info(t("dfb.studio.scriptAlready"));
   }, [selectedFieldRef, commit, t]);
 
+  /* ------- Task 58 (owner request) — list/radio items: define items or
+     fetch them from a script (same sandboxed db API as the script field) ------- */
+  const [newItemLabel, setNewItemLabel] = React.useState("");
+  const [itemsBusy, setItemsBusy] = React.useState(false);
+  /* fetched candidate items per field key (transient — not persisted) */
+  const [itemsCandidates, setItemsCandidates] = React.useState<Record<string, DfbFieldItem[]>>({});
+  const [itemsPicked, setItemsPicked] = React.useState<Record<string, string[]>>({});
+
+  const addItem = React.useCallback(() => {
+    if (!selectedFieldRef) return;
+    const f = selectedFieldRef.field;
+    const label = newItemLabel.trim();
+    if (!label) return;
+    const items = fieldConfigItems(f.config);
+    if (items.some((x) => x.value === label)) {
+      toast.info(t("dfb.studio.itemsAlready"));
+      return;
+    }
+    updateField(f.key, { config: { ...(f.config ?? {}), items: [...items, { label, value: label }] } });
+    setNewItemLabel("");
+  }, [selectedFieldRef, newItemLabel, updateField, t]);
+
+  const removeItem = React.useCallback(
+    (fieldKey: string, index: number) => {
+      if (!selectedFieldRef) return;
+      const items = fieldConfigItems(selectedFieldRef.field.config);
+      if (!items[index]) return;
+      items.splice(index, 1);
+      updateField(fieldKey, { config: { ...(selectedFieldRef.field.config ?? {}), items } });
+    },
+    [selectedFieldRef, updateField],
+  );
+
+  /** label edits keep the stored VALUE stable (records already saved with it) */
+  const updateItemLabel = React.useCallback(
+    (fieldKey: string, index: number, label: string) => {
+      if (!selectedFieldRef) return;
+      const items = fieldConfigItems(selectedFieldRef.field.config);
+      if (!items[index]) return;
+      items[index] = { value: items[index].value, label };
+      updateField(fieldKey, { config: { ...(selectedFieldRef.field.config ?? {}), items } });
+    },
+    [selectedFieldRef, updateField],
+  );
+
+  const runItemsScript = React.useCallback(async () => {
+    if (!selectedFieldRef) return;
+    const f = selectedFieldRef.field;
+    const script = fieldItemsScript(f.config);
+    if (!script.trim()) {
+      toast.error(t("dfb.studio.scriptEmpty"));
+      return;
+    }
+    setItemsBusy(true);
+    try {
+      const res = await executeFormScript(script);
+      const vf = typeof f.config?.itemsValueField === "string" ? (f.config.itemsValueField as string) : undefined;
+      setItemsCandidates((m) => ({ ...m, [f.key]: rowsToItems(res.rows, vf) }));
+      toast.success(t("dfb.studio.scriptRows").replace("{n}", String(res.rowCount)));
+    } catch {
+      toast.error(t("dfb.studio.scriptExecError"));
+    } finally {
+      setItemsBusy(false);
+    }
+  }, [selectedFieldRef, t]);
+
+  const toggleItemCandidate = React.useCallback((fieldKey: string, value: string, on: boolean) => {
+    setItemsPicked((m) => {
+      const cur = new Set(m[fieldKey] ?? []);
+      if (on) cur.add(value);
+      else cur.delete(value);
+      return { ...m, [fieldKey]: [...cur] };
+    });
+  }, []);
+
+  /** merges the picked fetched items into the field's items (value-deduped) */
+  const addSelectedItems = React.useCallback(() => {
+    if (!selectedFieldRef) return;
+    const f = selectedFieldRef.field;
+    const candidates = itemsCandidates[f.key] ?? [];
+    const pickedSet = itemsPicked[f.key];
+    const picked = new Set(pickedSet ?? candidates.map((c) => c.value)); // default = ALL
+    const chosen = candidates.filter((c) => picked.has(c.value));
+    if (chosen.length === 0) {
+      toast.info(t("dfb.studio.itemsNone"));
+      return;
+    }
+    const existing = new Set(fieldConfigItems(f.config).map((x) => x.value));
+    const fresh = chosen.filter((c) => !existing.has(c.value));
+    if (fresh.length === 0) {
+      toast.info(t("dfb.studio.itemsAlready"));
+      return;
+    }
+    updateField(f.key, { config: { ...(f.config ?? {}), items: [...fieldConfigItems(f.config), ...fresh] } });
+    toast.success(t("dfb.studio.itemsAdded").replace("{n}", String(fresh.length)));
+  }, [selectedFieldRef, itemsCandidates, itemsPicked, updateField, t]);
+
   /* ------------------------------ save ------------------------------ */
   const save = React.useCallback(async () => {
     if (!state || busy) return;
@@ -1233,6 +1358,7 @@ function StudioInner({ formId }: { formId: number }) {
                   state={state}
                   values={previewValues}
                   options={previewOptions}
+                  itemOptions={previewItemOptions}
                   records={previewRecords}
                   align={dfbBankAlign(state.shell.style, "main")}
                   busy={busy}
@@ -1795,6 +1921,143 @@ function StudioInner({ formId }: { formId: number }) {
                           )}
                         </>
                       )}
+                      {/* Task 58 (owner request) — list/radio ITEMS: the user
+                          defines the items OR fetches them from a script;
+                          they feed the field AND its records-table column */}
+                      {selectedFieldRef.field.fieldType === "select" ||
+                       selectedFieldRef.field.fieldType === "radio" ? (
+                        <div className="grid gap-1.5 rounded-xl border border-violet-600/30 bg-violet-500/5 p-2">
+                          <Label className="text-[11px] text-violet-700 dark:text-violet-400">
+                            {t("dfb.studio.listItems")}
+                          </Label>
+                          <p className="text-[10px] leading-relaxed text-muted-foreground">
+                            {t("dfb.studio.listItemsHint")}
+                          </p>
+                          {fieldConfigItems(selectedFieldRef.field.config).length === 0 ? (
+                            <p className="rounded-lg border border-dashed border-border/70 px-2 py-1.5 text-[10px] text-muted-foreground">
+                              {t("dfb.studio.listItemsEmpty")}
+                            </p>
+                          ) : (
+                            <div className="grid max-h-28 gap-1 overflow-y-auto pe-0.5 scrollbar-slim">
+                              {fieldConfigItems(selectedFieldRef.field.config).map((it, i) => (
+                                <div key={`${it.value}-${i}`} className="flex items-center gap-1.5">
+                                  <Input
+                                    value={it.label}
+                                    onChange={(e) => updateItemLabel(selectedFieldRef.field.key, i, e.target.value)}
+                                    className="h-7 text-xs"
+                                    aria-label={`${t("dfb.studio.listItems")} ${i + 1}`}
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => removeItem(selectedFieldRef.field.key, i)}
+                                    aria-label={t("common.delete")}
+                                    title={t("common.delete")}
+                                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-rose-600 transition-colors hover:bg-rose-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" aria-hidden />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          <div className="flex items-center gap-1.5">
+                            <Input
+                              value={newItemLabel}
+                              onChange={(e) => setNewItemLabel(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  e.preventDefault();
+                                  addItem();
+                                }
+                              }}
+                              placeholder={t("dfb.studio.listItemPlaceholder")}
+                              className="h-7 flex-1 text-xs"
+                              aria-label={t("dfb.studio.listItemAdd")}
+                            />
+                            <Button
+                              type="button" size="sm" variant="outline"
+                              className="h-7 shrink-0 border-violet-600/50 text-violet-700 hover:bg-violet-500/10 dark:text-violet-400"
+                              disabled={!newItemLabel.trim()}
+                              onClick={addItem}
+                            >
+                              <Plus className="h-3.5 w-3.5" aria-hidden />
+                              {t("dfb.studio.listItemAdd")}
+                            </Button>
+                          </div>
+                          {/* items from script */}
+                          <Label className="mt-1 text-[11px] text-muted-foreground">
+                            {t("dfb.studio.itemsScriptEditor")}
+                          </Label>
+                          <textarea
+                            value={fieldItemsScript(selectedFieldRef.field.config)}
+                            onChange={(e) =>
+                              updateField(selectedFieldRef.field.key, {
+                                config: { ...(selectedFieldRef.field.config ?? {}), itemsScript: e.target.value },
+                              })
+                            }
+                            rows={4}
+                            spellCheck={false}
+                            dir="ltr"
+                            aria-label={t("dfb.studio.itemsScriptEditor")}
+                            placeholder={'const rows = await db.table("DfbMenu").findMany({ take: 20 });\nreturn rows;'}
+                            className="w-full resize-y rounded-lg border border-input bg-background px-2 py-1.5 font-mono text-[11px] leading-relaxed text-foreground shadow-xs outline-none transition-colors placeholder:text-muted-foreground/60 focus-visible:border-ring focus-visible:bg-background"
+                          />
+                          <Button
+                            type="button" size="sm"
+                            className="h-7 bg-violet-600 hover:bg-violet-700"
+                            disabled={itemsBusy}
+                            onClick={runItemsScript}
+                          >
+                            {itemsBusy ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
+                            ) : (
+                              <Braces className="h-3.5 w-3.5" aria-hidden />
+                            )}
+                            {t("dfb.studio.itemsRun")}
+                          </Button>
+                          {(itemsCandidates[selectedFieldRef.field.key] ?? []).length > 0 && (
+                            <>
+                              <Label className="text-[11px] text-muted-foreground">
+                                {t("dfb.studio.itemsFetched")}
+                              </Label>
+                              <div className="max-h-28 overflow-y-auto rounded-lg border border-border/60 bg-background/70 p-1.5 scrollbar-slim">
+                                {(itemsCandidates[selectedFieldRef.field.key] ?? []).map((c) => {
+                                  const pickedSet = itemsPicked[selectedFieldRef.field.key];
+                                  const picked = pickedSet ? pickedSet.includes(c.value) : true; // default = ALL
+                                  return (
+                                    <label
+                                      key={c.value}
+                                      className="flex cursor-pointer items-center gap-1.5 rounded-md px-1 py-0.5 text-[11px] hover:bg-foreground/5"
+                                    >
+                                      <Checkbox
+                                        checked={picked}
+                                        onCheckedChange={(v) =>
+                                          toggleItemCandidate(selectedFieldRef.field.key, c.value, v === true)
+                                        }
+                                        aria-label={c.label}
+                                      />
+                                      <span className="min-w-0 flex-1 truncate">{c.label}</span>
+                                      {c.value !== c.label && (
+                                        <span className="shrink-0 font-mono text-[9px] text-muted-foreground" dir="ltr">
+                                          {c.value}
+                                        </span>
+                                      )}
+                                    </label>
+                                  );
+                                })}
+                              </div>
+                              <Button
+                                type="button" size="sm" variant="outline"
+                                className="h-7 border-violet-600/50 text-violet-700 hover:bg-violet-500/10 dark:text-violet-400"
+                                onClick={addSelectedItems}
+                              >
+                                <Plus className="h-3.5 w-3.5" aria-hidden />
+                                {t("dfb.studio.itemsAddSelected")}
+                              </Button>
+                            </>
+                          )}
+                        </div>
+                      ) : null}
                       {/* Task 53 — script field config: editor + «اجرا و واکشی»
                           + the FETCHED fields (selectable) + add-to-form */}
                       {selectedFieldRef.field.fieldType === "script" && (
@@ -2674,6 +2937,21 @@ function FieldPreview({ field }: { field: StudioField }) {
       </div>
     );
   }
+  /* Task 58 (owner request) — radio: two mini radio dots with labels */
+  if (type === "radio") {
+    return (
+      <div className="flex items-center gap-3 py-1" aria-hidden>
+        {[0, 1].map((i) => (
+          <span key={i} className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+            <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full border border-input">
+              {i === 0 && <span className="h-1.5 w-1.5 rounded-full bg-teal-600" />}
+            </span>
+            <span className="h-1.5 w-8 rounded-full bg-border" />
+          </span>
+        ))}
+      </div>
+    );
+  }
   if (type === "lookup") {
     return (
       <div className="flex items-center gap-1.5" aria-hidden>
@@ -2714,13 +2992,15 @@ function FieldPreview({ field }: { field: StudioField }) {
  * add buttons) ever renders; data entry still saves to the EAV store.
  */
 function PreviewCanvas({
-  state, values, options, records, align, busy,
+  state, values, options, itemOptions, records, align, busy,
   onFieldChange, onSave, onSaveClose, onReset, onCopy, onDelete, onPrint,
   onExitPreview, onOpenRecord,
 }: {
   state: StudioState;
   values: Record<string, string | boolean>;
   options: Record<number, Array<{ value: string; label: string }>>;
+  /* Task 58 — script-fetched items of select/radio fields (field.key → items) */
+  itemOptions: Record<string, DfbFieldItem[]>;
   records: Array<{ dataId: number; values: Record<string, string | boolean> }>;
   align: DfbBankAlign;
   busy: boolean;
@@ -2736,6 +3016,23 @@ function PreviewCanvas({
 }) {
   const locale = useSettings((s) => s.locale);
   const theme = dfbShellTheme(state.shell.style);
+  /* Task 58 — items of a select/radio field: bound-query options win, then
+     the script-fetched items, then the items defined in the studio rail —
+     merged VALUE-UNIQUE (mirrors the runtime's resolveFieldOptions) */
+  const fieldOpts = (f: StudioField): Array<{ value: string; label: string }> | undefined => {
+    if (f.queryRef != null) {
+      const q = options[f.queryRef];
+      if (q) return q;
+    }
+    const merged: Array<{ value: string; label: string }> = [];
+    const seen = new Set<string>();
+    for (const it of [...(itemOptions[f.key] ?? []), ...fieldConfigItems(f.config)]) {
+      if (seen.has(it.value)) continue;
+      seen.add(it.value);
+      merged.push(it);
+    }
+    return merged.length > 0 ? merged : undefined;
+  };
   const toSimple = (f: StudioField): SimpleFormField => ({
     id: f.key,
     label: f.label,
@@ -2745,16 +3042,19 @@ function PreviewCanvas({
     checked: f.fieldType === "checkbox" ? Boolean(values[f.key]) : undefined,
     readOnly: f.readOnly,
     widthPct: f.widthSpan,
-    options: f.queryRef != null ? options[f.queryRef] : undefined,
+    options: fieldOpts(f),
     ltr: f.fieldType === "number" || f.fieldType === "date",
     disabled: busy,
   });
-  /** grid columns of one record table (tab fields → columns, widths ride) */
+  /** grid columns of one record table (tab fields → columns, widths ride;
+      Task 58 — the cell editor follows the column TYPE + items) */
   const colOf = (f: StudioField): SimpleFormGridColumn => ({
     id: f.key,
     label: f.label,
     required: f.required,
     minWidth: widthMinWidthClass(f.widthSpan),
+    type: (FIELD_TYPE_META[f.fieldType] ? f.fieldType : "text") as SimpleFormGridColumn["type"],
+    options: fieldOpts(f),
   });
 
   /* Task 52 (owner rule «عنوان عناصر طراحی در پیش‌نمایش نباید نمایش داده

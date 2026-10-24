@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { SimpleFormField } from "@/components/forms/simple-form-two-row-tabbed";
+import type { SimpleFormField, SimpleFormGridColumn } from "@/components/forms/simple-form-two-row-tabbed";
 
 /* ------------------------------------------------------------------ */
 /* Task 49 — owner date mask (YYYY/MM/DD auto separators): typing the  */
@@ -254,6 +254,63 @@ export function FieldCell({
     );
   }
 
+  /* Task 58 (owner request) — radio button group: inline items after the
+     label unit; value = the selected option's value (EAV string) */
+  if (type === "radio") {
+    const items = field.options ?? [];
+    return (
+      <div data-form-cell className="flex min-w-0 items-center gap-2">
+        <span
+          data-form-label
+          className="flex shrink-0 items-center gap-0.5 whitespace-nowrap text-xs text-muted-foreground"
+        >
+          <span className="w-[var(--label-w,auto)] shrink-0 text-end">
+            <span data-form-label-text className="inline-block whitespace-nowrap">
+              {field.label}
+            </span>
+          </span>
+          <span className="opacity-70" aria-hidden>
+            :
+          </span>
+          <span aria-hidden className={cn("text-rose-500", !field.required && "invisible")}>
+            *
+          </span>
+        </span>
+        <div
+          role="radiogroup"
+          aria-label={field.label}
+          className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1"
+        >
+          {items.length === 0 && (
+            <span className="text-[11px] text-muted-foreground">—</span>
+          )}
+          {items.map((o, i) => {
+            const rid = `${idPrefix}-radio-${field.id}-${i}`;
+            return (
+              <label
+                key={`${o.value}-${i}`}
+                htmlFor={rid}
+                className="flex cursor-pointer items-center gap-1.5 text-xs text-foreground/90"
+              >
+                <input
+                  id={rid}
+                  type="radio"
+                  name={`${idPrefix}-radio-${field.id}`}
+                  value={o.value}
+                  checked={field.value === o.value}
+                  onChange={() => onChange?.(field.id, o.value)}
+                  disabled={field.disabled}
+                  className="h-3.5 w-3.5 shrink-0 cursor-pointer accent-teal-600"
+                />
+                <span className="whitespace-nowrap">{o.label}</span>
+              </label>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
   /* checkbox — inline toggle pushed to the row end (legacy «فعال» placement) */
   if (type === "checkbox") {
     const cid = `${idPrefix}-chk-${field.id}`;
@@ -450,5 +507,134 @@ export function FieldCell({
         </div>
       )}
     </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Task 58 (owner request «هر فیلدی در گرید باید با همان فرمت اطلاعات  */
+/* دریافت کند») — the per-TYPE editor of one records-table cell:       */
+/* checkbox renders a real checkbox, select/radio open a list, date    */
+/* carries the YYYY/MM/DD mask, number is LTR decimal — what the       */
+/* designer chose is exactly what the grid cell collects.              */
+/* ------------------------------------------------------------------ */
+
+export function GridCellInput({
+  column,
+  value,
+  onChange,
+  ariaLabel,
+  disabled,
+}: {
+  column: SimpleFormGridColumn;
+  value: string;
+  onChange: (value: string) => void;
+  ariaLabel: string;
+  disabled?: boolean;
+}) {
+  const type = column.type ?? "text";
+  /* date mask state (declared unconditionally — rules-of-hooks) */
+  const dateRef = React.useRef<HTMLInputElement | null>(null);
+  const lastMasked = React.useRef("");
+
+  const textBase =
+    "h-5 w-full min-w-0 rounded-md border border-transparent bg-transparent px-2 text-xs outline-none transition-colors hover:border-border focus:border-ring focus:bg-background disabled:opacity-50";
+
+  if (type === "checkbox") {
+    return (
+      <div className="flex items-center justify-center py-0.5">
+        <Checkbox
+          checked={value === "1"}
+          onCheckedChange={(v) => onChange(v === true ? "1" : "")}
+          disabled={disabled}
+          aria-label={ariaLabel}
+        />
+      </div>
+    );
+  }
+
+  if (type === "select" || type === "radio") {
+    const items = column.options ?? [];
+    if (type === "radio") {
+      /* compact inline radio group (wraps when items are many) */
+      return (
+        <div role="radiogroup" aria-label={ariaLabel} className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 px-1 py-1">
+          {items.length === 0 && <span className="text-[11px] text-muted-foreground">—</span>}
+          {items.map((o, i) => (
+            <label key={`${o.value}-${i}`} className="flex cursor-pointer items-center gap-1 text-[11px] text-foreground/90">
+              <input
+                type="radio"
+                name={`${ariaLabel}-${i}`}
+                value={o.value}
+                checked={value === o.value}
+                onChange={() => onChange(o.value)}
+                disabled={disabled}
+                className="h-3 w-3 shrink-0 cursor-pointer accent-teal-600"
+              />
+              <span className="whitespace-nowrap">{o.label}</span>
+            </label>
+          ))}
+        </div>
+      );
+    }
+    return (
+      <Select value={value || undefined} onValueChange={(v) => onChange(v)} disabled={disabled}>
+        <SelectTrigger aria-label={ariaLabel} className="h-5 w-full min-w-0 border-transparent bg-transparent px-2 text-xs shadow-none hover:border-border focus:border-ring data-[placeholder]:text-muted-foreground">
+          <SelectValue placeholder="—" />
+        </SelectTrigger>
+        <SelectContent>
+          {items.length === 0 && (
+            <div className="px-2 py-1.5 text-[11px] text-muted-foreground">—</div>
+          )}
+          {items.map((o) => (
+            <SelectItem key={o.value} value={o.value} className="text-xs">
+              {o.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    );
+  }
+
+  if (type === "date") {
+    const onDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const deleting = e.target.value.length < lastMasked.current.length;
+      const masked = applyDateMask(e.target.value, deleting);
+      if (masked === lastMasked.current && dateRef.current) {
+        dateRef.current.value = masked;
+      }
+      lastMasked.current = masked;
+      onChange(masked);
+    };
+    return (
+      <div className="relative">
+        <Input
+          ref={dateRef}
+          value={value}
+          placeholder="YYYY/MM/DD"
+          inputMode="numeric"
+          disabled={disabled}
+          aria-label={ariaLabel}
+          dir="ltr"
+          onChange={onDateChange}
+          className={cn(textBase, "pe-6 text-start")}
+        />
+        <CalendarDays
+          aria-hidden
+          className="pointer-events-none absolute end-1 top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground"
+        />
+      </div>
+    );
+  }
+
+  return (
+    <Input
+      value={value}
+      inputMode={type === "number" ? "decimal" : undefined}
+      disabled={disabled}
+      aria-label={ariaLabel}
+      dir={type === "number" ? "ltr" : undefined}
+      onChange={(e) => onChange(e.target.value)}
+      className={cn(textBase, type === "number" && "text-start")}
+    />
   );
 }

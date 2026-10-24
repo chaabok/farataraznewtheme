@@ -2205,3 +2205,24 @@ Work Log:
 
 Stage Summary:
 - قانون پشتیبان دیتابیس مستقر شد: هر پوش شامل نسخهٔ زمان‌دار در «backup db/» است؛ اسکریپت استاندارد scripts/db-backup.sh منبع واحد فرمت است.
+
+---
+Task ID: 58
+Agent: Z.ai Code (main orchestrator)
+Task: درخواست مالک (۳ نیازمندی گرید فرمساز) — «۱) هر فیلدی در گرید باید با همان فرمت از کاربر اطلاعات دریافت کند: چک‌باکس=چک‌باکس، سلکتور=لیست بازشو، تاریخ=فرمت تاریخ؛ ۲) برای فیلد لیست کاربر بتواند آیتم تعریف کند یا آیتم‌ها را از اسکریپت اضافه کند؛ ۳) دکمه رادیو باتن با قابلیت افزودن آیتم‌ها.»
+
+Work Log:
+- §0.1 بازخوانی AGENTS.md + worklog (آخرین: Task 57). §0.4 درخواست صریح مالک؛ §0.6 فرض: آیتم‌ها در ConfigJson (پیش‌آیند §2.3) با ساختار items:[{label,value}] + itemsScript (همان API سندباکس اسکریپت).
+- backend (dfb-service): forms.dto.ts — RADIO_FIELD_TYPE="radio" به whitelist FIELD_TYPES (آیتم‌ها بدون تغییر اسکیما در ConfigJson می‌مانند)؛ سرویس restart تمیز.
+- پریمیتیو (form-primitives): FieldCell شاخهٔ «radio» (گروه رادیو با label-unit هم‌تراز)؛ GridCellInput جدید — ادیتور سلول گرید بر اساس نوع ستون: checkbox→Checkbox واقعی، select→Select بازشو، radio→گروه رادیو فشرده، date→ماسهٔ YYYY/MM/DD (applyDateMask)، number→LTR decimal، text→Input.
+- قالب (simple-form-two-row-tabbed): SimpleFormFieldType+="radio"؛ SimpleFormGridColumn+=type/options؛ renderGridTable سلول‌ها را به GridCellInput سپرد (قبلاً input متنی ساده بود).
+- ران‌تایم (dfb-form-runtime): toShellType+=radio؛ scriptItemOptions state — اجرای itemsScript هر select/radio در load؛ resolveFieldOptions: کوئری-متصل > اسکریپتی > ثابت با ادغام VALUE-UNIQUE؛ columnsOf ستون‌ها type+options دادند (گرید = همان ادیتور بدنه)؛ فرم درختی هم options گرفت.
+- استودیو (dfb-studio): FIELD_TYPE_META+=radio (CircleDot, pink-rose)؛ تایل «دکمه رادیو» در پالت؛ ریل «آیتم‌های لیست» برای select/radio — لیست آیتم‌ها با ویرایش برچسب (مقدار EAV پایدار می‌ماند) + حذف + «افزودن آیتم» (Enter هم)؛ بلوک «آیتم‌ها از اسکریپت» + «اجرا و واکشی آیتم‌ها» + کاندیدها با چک‌باکس (پیش‌فرض همه) + «افزودن آیتم‌های انتخاب‌شده» (ضدتکرار value)؛ FieldPreview رندر مینی رادیو؛ PreviewCanvas fieldOpts value-unique + colOf ستون‌های تایپ‌دار؛ runPreviewScripts آیتم‌های اسکریپتی پیش‌نمایش زنده را هم اجرا می‌کند.
+- i18n: ۱۳ کلید جدید × ۱۱ زبان (dfb.type.radio + dfb.studio.listItems/listItemsHint/listItemsEmpty/listItemPlaceholder/listItemAdd/itemsScriptEditor/itemsRun/itemsFetched/itemsAddSelected/itemsAdded/itemsNone/itemsAlready).
+- E2E مرورگر: فرم تست ساخته شد (select+radio+checkbox+date+number+text به‌عنوان ستون‌های گرید) — ران‌تایم: چک‌باکس واقعی تیک خورد، رادیو «بله» انتخاب شد، تاریخ 14040802→1404/08/02 ماسک شد، سلکتور لیست باز کرد و «آیتم دو» انتخاب شد؛ استودیو: ریل آیتم‌ها، «آیتم سه» اضافه شد، اسکریپت رادیو ۴ رکورد DfbMenu را واکشی و ۴ آیتم اضافه کرد؛ ذخیرهٔ قالب → بک‌اند: select=3 آیتم، radio=6 آیتم؛ بارگذاری مجدد: رادیوی گرید ۶ آیتم یکتا (رفع تکرار value در ادغام)؛ فرم تست پس از آزمون حذف شد.
+- تست: lint = 0 خطا (EXIT=0)؛ dev.log بدون خطای runtime.
+
+Stage Summary:
+- گرید فرمساز اکنون هر فیلد را «با همان فرمت» جمع می‌کند: چک‌باکس=چک‌باکس، سلکتور=لیست بازشو، تاریخ=YYYY/MM/DD، رادیو=گروه رادیو.
+- فیلد لیست/رادیو: آیتم دستی + واکشی اسکریپتی از بانک اطلاعاتی؛ ادغام یکتا بر اساس value؛ ستون گرید همان آیتم‌ها را نشان می‌دهد.
+- artifacts: RADIO_FIELD_TYPE، GridCellInput، ریل آیتم‌ها، ۱۳×۱۱ کلید i18n.

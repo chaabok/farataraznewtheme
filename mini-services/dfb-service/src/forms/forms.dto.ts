@@ -28,7 +28,7 @@ export class FieldInputDto {
   @IsString() @MinLength(1) @MaxLength(60) fieldKey: string;
   @IsString() @MinLength(1) @MaxLength(120) label: string;
   @IsOptional() @IsString() @MaxLength(120) labelEn?: string;
-  @IsString() fieldType: string; // text|number|select|lookup|checkbox|date|textarea|script|line|box|circle|oval
+  @IsString() fieldType: string; // text|number|select|lookup|checkbox|date|textarea|radio|script|line|box|circle|oval
   @IsOptional() tabRef?: number | null;
   @IsOptional() section?: string; // header|body|footer (default body)
   @IsOptional() required?: boolean;
@@ -127,10 +127,14 @@ function isValidComponentKey(key: string): boolean {
 /** Task 53 — script field + design shapes (no EAV value, static render) */
 export const SCRIPT_FIELD_TYPE = "script";
 export const SHAPE_FIELD_TYPES = ["line", "box", "circle", "oval"] as const;
+/** Task 58 (owner request) — radio button field: renders a radio group whose
+    items come from ConfigJson.items (defined in the studio) or are fetched
+    with ConfigJson.itemsScript (same sandboxed db API as the script field). */
+export const RADIO_FIELD_TYPE = "radio";
 
 const FIELD_TYPES = new Set([
   "text", "number", "select", "lookup", "checkbox", "date", "textarea",
-  SCRIPT_FIELD_TYPE, ...SHAPE_FIELD_TYPES,
+  RADIO_FIELD_TYPE, SCRIPT_FIELD_TYPE, ...SHAPE_FIELD_TYPES,
 ]);
 
 export function assertFieldType(t: string) {

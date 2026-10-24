@@ -26,7 +26,7 @@ import { useAlignedLabels, type AlignedLabelsScope } from "@/components/forms/us
 /* Task 30 — HeaderButton/NavButton/FieldCell moved verbatim to the shared
    form-primitives module so SimpleTreeForm reuses the identical visual
    contract (Task 25.1 label markup, Task 27 metrics, Task 26 RTL classes). */
-import { FieldCell, FlowFieldGrid, HeaderButton, NavButton } from "@/components/forms/form-primitives";
+import { FieldCell, FlowFieldGrid, GridCellInput, HeaderButton, NavButton } from "@/components/forms/form-primitives";
 
 /* ------------------------------------------------------------------ */
 /* Public API — SimpleFormTwoRowTabbed (Task 24)                        */
@@ -40,6 +40,7 @@ export type SimpleFormFieldType =
   | "checkbox"
   | "date" // Task 47 — rendered as an LTR YYYY/MM/DD input with a calendar chip
   | "textarea" // Task 47 — rendered as a small multi-line box
+  | "radio" // Task 58 (owner request) — radio group fed by defined/script items
   | "line" // Task 53 — static design shape (divider)
   | "box" // Task 53 — static design shape (rectangle)
   | "circle" // Task 53 — static design shape
@@ -81,6 +82,14 @@ export interface SimpleFormGridColumn {
   required?: boolean;
   /** tailwind min-width hint for the column, e.g. "min-w-40" */
   minWidth?: string;
+  /** Task 58 (owner request «هر فیلدی در گرید باید با همان فرمت اطلاعات
+      دریافت کند») — the field type of the column: the grid cell renders
+      the SAME editor the field renders in the body (checkbox → a real
+      checkbox, select → an opening list, date → the YYYY/MM/DD mask,
+      radio → a radio group); omitted = plain text input (legacy). */
+  type?: SimpleFormFieldType;
+  /** items of a select/radio column (defined items, query or script) */
+  options?: SimpleFormFieldOption[];
 }
 
 /** OPTIONAL detail tab below the two-row fields (owner: tabs must be optional). */
@@ -431,11 +440,17 @@ export function SimpleFormTwoRowTabbed({
                 >
                   {tb.columns.map((c) => (
                     <td key={c.id} className="border-b border-border/50 px-1.5 py-0.5">
-                      <input
+                      {/* Task 58 — the cell editor follows the COLUMN TYPE:
+                          checkbox → a real checkbox, select → an opening
+                          list, date → the masked YYYY/MM/DD input, number →
+                          LTR decimal, radio → a radio group — the owner rule
+                          «هر فیلدی در گرید باید با همان فرمت از کاربر اطلاعات
+                          دریافت کند» */}
+                      <GridCellInput
+                        column={c}
                         value={row[c.id] ?? ""}
-                        onChange={(e) => setCell(tb.id, ri, c.id, e.target.value)}
-                        aria-label={`${tb.label} — ${c.label} ${ri + 1}`}
-                        className="h-5 w-full min-w-32 rounded-md border border-transparent bg-transparent px-2 text-xs outline-none transition-colors hover:border-border focus:border-ring focus:bg-background"
+                        onChange={(v) => setCell(tb.id, ri, c.id, v)}
+                        ariaLabel={`${tb.label} — ${c.label} ${ri + 1}`}
                       />
                     </td>
                   ))}
