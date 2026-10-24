@@ -49,6 +49,7 @@ export class FormsService {
         tabs: tabs.map((t) => ({
           id: Number(t.id),
           formRef: Number(t.formRef),
+          parentRef: Number(t.parentRef), // Task 50 — 0=band-level | >0=tab inside that band row
           title: t.title,
           titleEn: t.titleEn,
           tabKind: t.tabKind, // Task 49 — 1=grid (default) | 2=input fields
@@ -123,11 +124,19 @@ export class FormsService {
 
     // layout sections are user-form owned: system forms keep their shape (only
     // custom fields grow); user forms replace tabs/fields wholesale
+    let tabKeys: Array<{ dbId: number; clientKey?: string }> = [];
     if (!form.isSystem) {
-      if (dto.tabs) await this.replaceTabs(id, dto.tabs);
+      if (dto.tabs) tabKeys = await this.replaceTabs(id, dto.tabs);
       if (dto.fields) await this.replaceFields(id, dto.fields, /*keepCustom*/ false);
     }
-    return (await this.findOne(id)).item;
+    const item = (await this.findOne(id)).item;
+    /* Task 50 — echo each tab's clientKey so the studio's fields phase can
+       map tabRef to the FRESH tab ids (ids regenerate on every save) */
+    if (tabKeys.length > 0) {
+      const keyById = new Map(tabKeys.map((k) => [k.dbId, k.clientKey]));
+      item.tabs = item.tabs.map((tb) => ({ ...tb, clientKey: keyById.get(tb.id) ?? null }));
+    }
+    return item;
   }
 
   async remove(id: number) {
@@ -285,16 +294,27 @@ export class FormsService {
 
   private async replaceTabs(
     formId: number,
-    tabs: Array<{ id?: number; title: string; titleEn?: string; tabKind?: number; orderIndex?: number }>,
-  ) {
+    tabs: Array<{
+      id?: number; title: string; titleEn?: string; tabKind?: number; orderIndex?: number;
+      clientKey?: string; parentKey?: string; // Task 50 — hierarchy correlation
+    }>,
+  ): Promise<Array<{ dbId: number; clientKey?: string }>> {
     await this.prisma.dfbFormTab.deleteMany({ where: { formRef: BigInt(formId) } });
+    /* Task 50 — two passes: band rows first (parentKey empty, ParentRef=0),
+       then the tabs INSIDE each records-table band resolved against the
+       freshly generated parent ids via clientKey → parentKey. */
+    const created: Array<{ dbId: number; clientKey?: string }> = [];
+    const keyMap = new Map<string, bigint>();
+    const bandRows = tabs.filter((t) => !t.parentKey);
+    const childRows = tabs.filter((t) => t.parentKey);
     let order = 0;
-    for (const t of tabs) {
+    for (const t of bandRows) {
       const id = await this.idGen.generateNextId("DfbFormTab");
       await this.prisma.dfbFormTab.create({
         data: {
           id: BigInt(id),
           formRef: BigInt(formId),
+          parentRef: BigInt(0),
           title: t.title,
           titleEn: t.titleEn ?? null,
           tabKind: t.tabKind === 2 ? 2 : 1, // Task 49 — 1=grid (default/legacy) | 2=input fields
@@ -302,7 +322,29 @@ export class FormsService {
           ...appBaseOnCreate(SYSTEM_ACTOR),
         },
       });
+      if (t.clientKey) keyMap.set(t.clientKey, BigInt(id));
+      created.push({ dbId: Number(id), clientKey: t.clientKey });
     }
+    for (const t of childRows) {
+      const parent = t.parentKey ? keyMap.get(t.parentKey) : undefined;
+      if (!parent) throw new BadRequestException("باندِ والدِ تب یافت نشد");
+      const id = await this.idGen.generateNextId("DfbFormTab");
+      await this.prisma.dfbFormTab.create({
+        data: {
+          id: BigInt(id),
+          formRef: BigInt(formId),
+          parentRef: parent, // تبِ داخل باندِ «جدول رکوردها»
+          title: t.title,
+          titleEn: t.titleEn ?? null,
+          tabKind: t.tabKind === 2 ? 2 : 1, // tabs inside a records-table band are grids
+          orderIndex: t.orderIndex ?? 0,
+          ...appBaseOnCreate(SYSTEM_ACTOR),
+        },
+      });
+      if (t.clientKey) keyMap.set(t.clientKey, BigInt(id));
+      created.push({ dbId: Number(id), clientKey: t.clientKey });
+    }
+    return created;
   }
 
   private async replaceFields(

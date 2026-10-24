@@ -145,6 +145,9 @@ export interface DfbFieldDef {
 export interface DfbTabDef {
   id: number;
   formRef: number;
+  /** Task 50 — 0 = band-level row (the «جدول رکوردها» band itself)
+      | >0 = a tab created with «افزودن تب» INSIDE that band (parent row id) */
+  parentRef: number;
   title: string;
   titleEn: string | null;
   /** Task 49 — 1=grid (default/legacy, records via footer add button)
@@ -152,6 +155,9 @@ export interface DfbTabDef {
   tabKind: number;
   orderIndex: number;
   version: number;
+  /** Task 50 — correlation key echoed by the save endpoint so the fields
+      phase can map tabRef to freshly regenerated tab ids */
+  clientKey?: string | null;
 }
 
 export interface DfbFormDetail {

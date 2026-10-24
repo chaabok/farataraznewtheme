@@ -3,7 +3,7 @@
 import * as React from "react";
 import { toast } from "sonner";
 import { FileText, Sigma } from "lucide-react";
-import { useT } from "@/stores/settings-store";
+import { useT, useSettings } from "@/stores/settings-store";
 import { useDesktop } from "@/stores/desktop-store";
 import {
   SimpleFormTwoRowTabbed,
@@ -21,6 +21,7 @@ import { dfbShellTheme, dfbBankAlign, type DfbFormStyle } from "@/lib/dfb-theme"
 import {
   fetchFormDetail, saveFormData, loadFormData,
   fetchQueryOptionsForFields, normalizeFieldWidth, widthMinWidthClass,
+  dfbFormTitle,
   type DfbFormDetail, type DfbFieldDef,
 } from "@/stores/dfb-store";
 
@@ -39,6 +40,7 @@ export function DfbFormRuntime({ formId }: { formId: number }) {
 
 function RuntimeInner({ formId }: { formId: number }) {
   const t = useT();
+  const locale = useSettings((s) => s.locale);
   const chrome = useWindowChrome();
   const headerMaximized = useDesktop(
     (s) => s.windows.find((w) => w.kind === "dfb-form" && w.appKey === String(formId))?.maximized ?? false,
@@ -236,28 +238,56 @@ function RuntimeInner({ formId }: { formId: number }) {
       disabled: busy,
     });
 
-    const tabs: SimpleFormTab[] = detail.tabs.map((tb) => {
-      const tabFields = bodyFields.filter((f) => f.tabRef === tb.id);
-      /* Task 49 — input-fields tab (TabKind=2): plain inputs, no grid; its
-         fields are ordinary DfbFormField rows saved with the form's record */
-      if (tb.tabKind === 2) {
-        return {
-          id: String(tb.id),
-          label: tb.title,
-          kind: "fields" as const,
-          columns: [], // Task 49 — fields tabs have no grid columns
-          fields: tabFields.map(toSimpleField),
-        };
-      }
-      return {
-        id: String(tb.id),
-        label: tb.title,
-        columns: tabFields.map((f) => ({
+    /* Task 50 — records-table bands own their tabs: parentRef=0 rows are the
+       bands, parentRef>0 rows are the tabs created with «افزودن تب» INSIDE a
+       band (each one a grid). A band with children renders an inner tab
+       strip in the shell; the footer add button targets the active inner
+       grid. Legacy band-level grids (no children) behave exactly as before. */
+    const bandTabs = detail.tabs.filter((tb) => !tb.parentRef);
+    const childrenOf = (bandId: number) => detail.tabs.filter((tb) => tb.parentRef === bandId);
+    const columnsOf = (tabId: number) =>
+      bodyFields
+        .filter((f) => f.tabRef === tabId)
+        .map((f) => ({
           id: String(f.id),
           label: f.label,
           required: f.required,
           minWidth: widthMinWidthClass(normalizeFieldWidth(f.widthSpan)),
-        })),
+        }));
+
+    const tabs: SimpleFormTab[] = bandTabs.map((tb) => {
+      const tabLabel = dfbFormTitle(tb, locale);
+      /* Task 49 — input-fields band (TabKind=2): plain inputs, no grid */
+      if (tb.tabKind === 2) {
+        return {
+          id: String(tb.id),
+          label: tabLabel,
+          kind: "fields" as const,
+          columns: [], // Task 49 — fields bands have no grid columns
+          fields: bodyFields
+            .filter((f) => f.tabRef === tb.id)
+            .map(toSimpleField),
+        };
+      }
+      const kids = childrenOf(tb.id);
+      if (kids.length > 0) {
+        const children: SimpleFormTab[] = kids.map((ct) => ({
+          id: String(ct.id),
+          label: dfbFormTitle(ct, locale),
+          columns: columnsOf(ct.id),
+        }));
+        /* defensive: direct band-level fields (pre-Task 50 layout) keep a
+           grid of their own, titled after the band */
+        const direct = columnsOf(tb.id);
+        if (direct.length > 0) {
+          children.push({ id: `band-${tb.id}`, label: tabLabel, columns: direct });
+        }
+        return { id: String(tb.id), label: tabLabel, columns: [], children };
+      }
+      return {
+        id: String(tb.id),
+        label: tabLabel,
+        columns: columnsOf(tb.id),
       };
     });
 

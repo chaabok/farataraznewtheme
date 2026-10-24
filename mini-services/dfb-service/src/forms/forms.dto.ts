@@ -50,6 +50,15 @@ export class TabInputDto {
       button) | 2=input fields (no grid, plain input fields) */
   @IsOptional() @IsInt() @Min(1) @Max(2) tabKind?: number;
   @IsOptional() @IsInt() @Min(0) orderIndex?: number;
+  /** Task 50 — hierarchy correlation keys: the studio rebuilds tabs on every
+      save (fresh ids), so a records-table band and the tabs INSIDE it are
+      linked with client-side keys, not DB ids. clientKey = this row's stable
+      client key; parentKey = clientKey of the band row that owns this tab
+      (empty/omitted = band-level row, ParentRef=0). The server resolves
+      parentRef and echoes clientKey back so the fields phase can map
+      tabRef to the FRESH ids. */
+  @IsOptional() @IsString() @MaxLength(60) clientKey?: string;
+  @IsOptional() @IsString() @MaxLength(60) parentKey?: string;
 }
 
 export class CreateFormDto {

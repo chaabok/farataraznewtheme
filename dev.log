@@ -85,3 +85,227 @@
  GET /api/advancedTools/forms/11 200 in 9ms (next.js: 0.9ms, application-code: 9ms)
  GET /api/advancedTools/forms/11 200 in 13ms (next.js: 1.0ms, application-code: 12ms)
  GET /api/advancedTools/forms/11/data 200 in 21ms (next.js: 8ms, application-code: 14ms)
+ GET / 200 in 33ms (next.js: 0.9ms, application-code: 33ms)
+ GET / 200 in 33ms (next.js: 0.8ms, application-code: 33ms)
+ GET /api/settings/app-registry 200 in 24ms (next.js: 7ms, application-code: 17ms)
+ GET /api/advancedTools/menus/tree 200 in 28ms (next.js: 13ms, application-code: 14ms)
+ GET /api/settings/app-registry 200 in 8ms (next.js: 0.8ms, application-code: 7ms)
+ POST /api/advancedTools/forms/11/data 201 in 26ms (next.js: 8ms, application-code: 18ms)
+ GET /api/advancedTools/forms/11/data 200 in 12ms (next.js: 1.0ms, application-code: 11ms)
+✓ Compiled in 832ms
+ GET /api/advancedTools/forms/11 200 in 34ms (next.js: 13ms, application-code: 22ms)
+ GET /api/advancedTools/queries 200 in 15ms (next.js: 0.7ms, application-code: 14ms)
+ GET /api/advancedTools/menus/tree 200 in 22ms (next.js: 0.8ms, application-code: 21ms)
+✓ Compiled in 3ms
+ GET /api/advancedTools/queries 200 in 21ms (next.js: 10ms, application-code: 10ms)
+ GET /api/advancedTools/forms/11 200 in 14ms (next.js: 1.0ms, application-code: 13ms)
+ GET /api/advancedTools/queries 200 in 9ms (next.js: 1.0ms, application-code: 8ms)
+ GET /api/advancedTools/forms/11 200 in 10ms (next.js: 0.9ms, application-code: 9ms)
+ GET /api/advancedTools/queries 200 in 20ms (next.js: 10ms, application-code: 10ms)
+ GET /api/advancedTools/forms/11 200 in 10ms (next.js: 0.9ms, application-code: 9ms)
+ GET /api/advancedTools/menus/tree 200 in 91ms (next.js: 33ms, application-code: 58ms)
+ GET /api/advancedTools/forms/11 200 in 25ms (next.js: 1.2ms, application-code: 24ms)
+ GET /api/advancedTools/queries 200 in 24ms (next.js: 0.8ms, application-code: 23ms)
+ GET /api/advancedTools/queries 200 in 12ms (next.js: 1.1ms, application-code: 11ms)
+ GET /api/advancedTools/forms/11 200 in 10ms (next.js: 1.1ms, application-code: 9ms)
+ GET /api/advancedTools/forms/11 200 in 27ms (next.js: 8ms, application-code: 19ms)
+ GET /api/advancedTools/queries 200 in 21ms (next.js: 1.1ms, application-code: 20ms)
+ GET /api/advancedTools/menus/tree 200 in 13ms (next.js: 1.0ms, application-code: 12ms)
+ GET /api/advancedTools/queries 200 in 18ms (next.js: 7ms, application-code: 10ms)
+ GET /api/advancedTools/forms/11 200 in 15ms (next.js: 0.7ms, application-code: 14ms)
+✓ Compiled in 241ms
+✓ Compiled in 192ms
+✓ Compiled in 269ms
+✓ Compiled in 198ms
+✓ Compiled in 196ms
+ GET / 200 in 35ms (next.js: 5ms, application-code: 30ms)
+ GET / 200 in 21ms (next.js: 1.6ms, application-code: 19ms)
+✓ Compiled in 185ms
+✓ Compiled in 92ms
+✓ Compiled in 192ms
+✓ Compiled in 114ms
+[browser] ./src/components/forms/simple-form-two-row-tabbed.tsx:381:9
+Error: the name `activeTabDef` is defined multiple times
+  379 |      GRID tabs (rows are created with the footer add button); while a
+  380 |      "fields" tab is active they are hidden */
+> 381 |   const activeTabDef = tabsProp.find((x) => x.id === activeTab);
+      |         ^^^^^^^^^^^^
+  382 |   const activeTabIsGrid = activeTabDef ? activeTabDef.kind !== "fields" : true;
+  383 |
+  384 |   return (
+
+Ecmascript file had an error
+
+Import traces:
+  Client Component Browser:
+    ./src/components/forms/simple-form-two-row-tabbed.tsx [Client Component Browser]
+    ./src/components/erp/form-builder/dfb-form-runtime.tsx [Client Component Browser]
+    ./src/components/desktop/desktop.tsx [Client Component Browser]
+    ./src/components/desktop/desktop.tsx [Server Component]
+    ./src/app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/components/forms/simple-form-two-row-tabbed.tsx [Client Component SSR]
+    ./src/components/erp/form-builder/dfb-form-runtime.tsx [Client Component SSR]
+    ./src/components/desktop/desktop.tsx [Client Component SSR]
+    ./src/components/desktop/desktop.tsx [Server Component]
+    ./src/app/page.tsx [Server Component] 
+[browser] ./src/components/forms/simple-form-two-row-tabbed.tsx:382:9
+Error: the name `activeTabIsGrid` is defined multiple times
+  380 |      "fields" tab is active they are hidden */
+  381 |   const activeTabDef = tabsProp.find((x) => x.id === activeTab);
+> 382 |   const activeTabIsGrid = activeTabDef ? activeTabDef.kind !== "fields" : true;
+      |         ^^^^^^^^^^^^^^^
+  383 |
+  384 |   return (
+  385 |     <section
+
+Ecmascript file had an error
+
+Import traces:
+  Client Component Browser:
+    ./src/components/forms/simple-form-two-row-tabbed.tsx [Client Component Browser]
+    ./src/components/erp/form-builder/dfb-form-runtime.tsx [Client Component Browser]
+    ./src/components/desktop/desktop.tsx [Client Component Browser]
+    ./src/components/desktop/desktop.tsx [Server Component]
+    ./src/app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/components/forms/simple-form-two-row-tabbed.tsx [Client Component SSR]
+    ./src/components/erp/form-builder/dfb-form-runtime.tsx [Client Component SSR]
+    ./src/components/desktop/desktop.tsx [Client Component SSR]
+    ./src/components/desktop/desktop.tsx [Server Component]
+    ./src/app/page.tsx [Server Component] 
+[browser] ./src/components/forms/simple-form-two-row-tabbed.tsx:381:9
+Error: the name `activeTabDef` is defined multiple times
+  379 |      GRID tabs (rows are created with the footer add button); while a
+  380 |      "fields" tab is active they are hidden */
+> 381 |   const activeTabDef = tabsProp.find((x) => x.id === activeTab);
+      |         ^^^^^^^^^^^^
+  382 |   const activeTabIsGrid = activeTabDef ? activeTabDef.kind !== "fields" : true;
+  383 |
+  384 |   return (
+
+Ecmascript file had an error
+
+Import traces:
+  Client Component Browser:
+    ./src/components/forms/simple-form-two-row-tabbed.tsx [Client Component Browser]
+    ./src/components/erp/form-builder/dfb-form-runtime.tsx [Client Component Browser]
+    ./src/components/desktop/desktop.tsx [Client Component Browser]
+    ./src/components/desktop/desktop.tsx [Server Component]
+    ./src/app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/components/forms/simple-form-two-row-tabbed.tsx [Client Component SSR]
+    ./src/components/erp/form-builder/dfb-form-runtime.tsx [Client Component SSR]
+    ./src/components/desktop/desktop.tsx [Client Component SSR]
+    ./src/components/desktop/desktop.tsx [Server Component]
+    ./src/app/page.tsx [Server Component] 
+[browser] ./src/components/forms/simple-form-two-row-tabbed.tsx:382:9
+Error: the name `activeTabIsGrid` is defined multiple times
+  380 |      "fields" tab is active they are hidden */
+  381 |   const activeTabDef = tabsProp.find((x) => x.id === activeTab);
+> 382 |   const activeTabIsGrid = activeTabDef ? activeTabDef.kind !== "fields" : true;
+      |         ^^^^^^^^^^^^^^^
+  383 |
+  384 |   return (
+  385 |     <section
+
+Ecmascript file had an error
+
+Import traces:
+  Client Component Browser:
+    ./src/components/forms/simple-form-two-row-tabbed.tsx [Client Component Browser]
+    ./src/components/erp/form-builder/dfb-form-runtime.tsx [Client Component Browser]
+    ./src/components/desktop/desktop.tsx [Client Component Browser]
+    ./src/components/desktop/desktop.tsx [Server Component]
+    ./src/app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/components/forms/simple-form-two-row-tabbed.tsx [Client Component SSR]
+    ./src/components/erp/form-builder/dfb-form-runtime.tsx [Client Component SSR]
+    ./src/components/desktop/desktop.tsx [Client Component SSR]
+    ./src/components/desktop/desktop.tsx [Server Component]
+    ./src/app/page.tsx [Server Component] 
+✓ Compiled in 296ms
+✓ Compiled in 238ms
+✓ Compiled in 300ms
+✓ Compiled in 5ms
+ GET /api/advancedTools/forms/11 200 in 39ms (next.js: 11ms, application-code: 27ms)
+ GET /api/advancedTools/queries 200 in 10ms (next.js: 0.9ms, application-code: 9ms)
+ GET /api/advancedTools/forms/11 200 in 15ms (next.js: 0.9ms, application-code: 14ms)
+ GET /api/advancedTools/queries 200 in 8ms (next.js: 0.8ms, application-code: 7ms)
+⚠ Blocked cross-origin request to Next.js dev resource /__nextjs_original-stack-frames from "preview-chat-da6bff3b-ac03-4b37-95d7-d24d964543b4.space-z.ai".
+Cross-origin access to Next.js dev resources is blocked by default for safety.
+
+To allow this host in development, add it to "allowedDevOrigins" in next.config.js and restart the dev server:
+
+// next.config.js
+module.exports = {
+  allowedDevOrigins: ['preview-chat-da6bff3b-ac03-4b37-95d7-d24d964543b4.space-z.ai'],
+}
+
+Read more: https://nextjs.org/docs/app/api-reference/config/next-config-js/allowedDevOrigins
+✓ Compiled in 236ms
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+✓ Compiled in 4ms
+ GET / 200 in 79ms (next.js: 1.5ms, application-code: 78ms)
+ GET /api/advancedTools/forms/11 200 in 25ms (next.js: 11ms, application-code: 14ms)
+ GET /api/advancedTools/menus/tree 200 in 25ms (next.js: 0.9ms, application-code: 24ms)
+ GET /api/advancedTools/menus/tree 200 in 34ms (next.js: 10ms, application-code: 24ms)
+ GET /api/settings/app-registry 200 in 22ms (next.js: 9ms, application-code: 13ms)
+ GET /api/settings/app-registry 200 in 9ms (next.js: 1.1ms, application-code: 8ms)
+✓ Compiled in 199ms
+✓ Compiled in 217ms
+✓ Compiled in 216ms
+✓ Compiled in 215ms
+✓ Compiled in 406ms
+✓ Compiled in 179ms
+✓ Compiled in 230ms
+✓ Compiled in 294ms
+✓ Compiled in 213ms
+✓ Compiled in 272ms
+✓ Compiled in 170ms
+✓ Compiled in 174ms
+✓ Compiled in 161ms
+ GET /api/advancedTools/forms/11 200 in 32ms (next.js: 12ms, application-code: 19ms)
+ GET / 200 in 198ms (next.js: 12ms, application-code: 186ms)
+ GET /api/settings/app-registry 200 in 32ms (next.js: 11ms, application-code: 21ms)
+ GET /api/advancedTools/menus/tree 200 in 73ms (next.js: 28ms, application-code: 45ms)
+ GET /api/settings/app-registry 200 in 16ms (next.js: 0.8ms, application-code: 16ms)
+ GET /api/advancedTools/menus/tree 200 in 39ms (next.js: 12ms, application-code: 27ms)
+ GET /api/advancedTools/menus/tree 200 in 19ms (next.js: 8ms, application-code: 12ms)
+ POST /api/advancedTools/forms 201 in 96ms (next.js: 17ms, application-code: 79ms)
+ GET /api/advancedTools/menus/tree 200 in 20ms (next.js: 0.8ms, application-code: 19ms)
+ GET /api/advancedTools/forms/12 200 in 52ms (next.js: 0.8ms, application-code: 51ms)
+ GET /api/advancedTools/queries 200 in 44ms (next.js: 0.7ms, application-code: 43ms)
+ GET /api/advancedTools/forms/12 200 in 16ms (next.js: 0.8ms, application-code: 15ms)
+ GET /api/advancedTools/queries 200 in 17ms (next.js: 1.6ms, application-code: 15ms)
+ GET /api/advancedTools/forms/12 200 in 13ms (next.js: 0.7ms, application-code: 12ms)
+ GET /api/advancedTools/forms/12 200 in 47ms (next.js: 0.7ms, application-code: 46ms)
+ PUT /api/advancedTools/forms/12 200 in 106ms (next.js: 8ms, application-code: 98ms)
+ PUT /api/advancedTools/forms/12 200 in 47ms (next.js: 1.1ms, application-code: 46ms)
+ GET /api/advancedTools/forms/12 200 in 13ms (next.js: 0.8ms, application-code: 12ms)
+ GET /api/advancedTools/forms/12/data 200 in 28ms (next.js: 10ms, application-code: 18ms)
+ GET /api/advancedTools/forms/12 200 in 23ms (next.js: 9ms, application-code: 13ms)
+ GET /api/advancedTools/forms/12 200 in 16ms (next.js: 0.8ms, application-code: 15ms)
+ GET /api/advancedTools/forms/12/data 200 in 44ms (next.js: 0.7ms, application-code: 44ms)
+ GET /api/advancedTools/forms/12 200 in 19ms (next.js: 7ms, application-code: 11ms)
+ GET / 200 in 139ms (next.js: 0.9ms, application-code: 139ms)
+ GET /api/advancedTools/menus/tree 200 in 63ms (next.js: 40ms, application-code: 23ms)
+ GET /api/settings/app-registry 200 in 92ms (next.js: 16ms, application-code: 76ms)
+ GET /api/settings/app-registry 200 in 12ms (next.js: 0.7ms, application-code: 12ms)
+ GET /api/advancedTools/menus/tree 200 in 52ms (next.js: 9ms, application-code: 43ms)
+ GET /api/advancedTools/menus/tree 200 in 38ms (next.js: 8ms, application-code: 29ms)
+ GET /api/advancedTools/forms/12 200 in 36ms (next.js: 16ms, application-code: 20ms)
+ GET /api/advancedTools/forms/12 200 in 24ms (next.js: 0.7ms, application-code: 24ms)
+ GET /api/advancedTools/forms/12 200 in 58ms (next.js: 14ms, application-code: 44ms)
+ GET /api/advancedTools/forms/12 200 in 74ms (next.js: 1.0ms, application-code: 73ms)
+ GET /api/advancedTools/forms/12/data 200 in 8ms (next.js: 0.7ms, application-code: 7ms)
+ GET /api/advancedTools/forms/12 200 in 29ms (next.js: 15ms, application-code: 15ms)
+ GET /api/advancedTools/queries 200 in 20ms (next.js: 0.7ms, application-code: 19ms)
+ GET /api/advancedTools/forms/12 200 in 17ms (next.js: 0.8ms, application-code: 16ms)
+ GET /api/advancedTools/queries 200 in 17ms (next.js: 0.8ms, application-code: 16ms)
+ DELETE /api/advancedTools/forms/12 200 in 30ms (next.js: 11ms, application-code: 19ms)
+✓ Compiled in 255ms

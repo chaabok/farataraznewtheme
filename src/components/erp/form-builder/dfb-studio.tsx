@@ -17,7 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
-  Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -25,8 +25,9 @@ import {
 import {
   fetchFormDetail, dfbApi, saveFormData, loadFormData,
   fetchQueryOptionsForFields, normalizeFieldWidth,
-  type DfbFormDetail,
+  type DfbFormDetail, type DfbFieldDef, type DfbTabDef,
 } from "@/stores/dfb-store";
+import { LatinInput } from "@/components/forms/latin-input";
 import {
   DFB_THEME_SWATCHES, dfbShellTheme, dfbBankAlign,
   type DfbFormStyle, type DfbBankAlign,
@@ -62,6 +63,15 @@ import { cn } from "@/lib/utils";
  *     (records via the footer add button, DfbFormTab.TabKind=1) and
  *     input-fields tab (plain inputs, TabKind=2) — selectable at creation
  *     and switchable in the band settings.
+ *
+ * Task 50 — درخواست مالک: the «جدول رکوردها» (records-table) band is
+ * TABBED ITSELF: an «افزودن تب» button lives ON the band (header + empty
+ * state + tab strip) and every created tab is placed INSIDE the band,
+ * each with a Persian AND a Latin title (Latin-only hard filter —
+ * LatinInput). Fields added to a tab become that tab's grid columns.
+ * The hierarchy persists via DfbFormTab.ParentRef (band row = 0, child
+ * tabs reference their band) with clientKey/parentKey correlation
+ * because tab ids regenerate on every save.
  */
 
 /* ------------------------------- model ------------------------------- */
@@ -81,13 +91,27 @@ interface StudioField {
   queryFieldKey: string | null;
 }
 
+/** Task 50 — a tab created with «افزودن تب» INSIDE a records-table band;
+    every tab is one record table (its fields = the grid columns). */
+interface StudioTab {
+  key: string; // stable client key (band→tab correlation across saves)
+  id?: number; // DfbFormTab id (loaded / last save)
+  title: string;
+  titleEn: string; // Latin-only enforced at input (LatinInput)
+  fields: StudioField[];
+}
+
 interface StudioBank {
   key: string; // "main" | client key
   id?: number; // DfbFormTab id (loaded / last save)
-  /** Task 49 — 0=main band (root fields) | 1=grid tab | 2=input-fields tab */
+  /** 0=main band (root fields) | 1=records table (grid band WITH its own tabs)
+      | 2=input-fields band (plain inputs, no inner tabs) */
   tabKind: number;
   title: string;
-  fields: StudioField[];
+  fields: StudioField[]; // direct fields (main / input-fields bands)
+  /** Task 50 — tabs INSIDE a records-table band (grid bands only; created
+      with the «افزودن تب» dialog that takes Persian + Latin titles) */
+  tabs: StudioTab[];
 }
 
 interface StudioShell {
@@ -105,6 +129,47 @@ interface StudioState {
 }
 
 const clone = (s: StudioState): StudioState => JSON.parse(JSON.stringify(s)) as StudioState;
+
+/* ------------------- Task 50 — field containers -------------------
+   Fields live in a CONTAINER: the bank itself (main band, input-fields
+   band) or a tab inside a records-table band. Container keys are
+   "main" | "{bankKey}" | "{bankKey}::{tabKey}" — every field operation
+   (add/move/remove/resize/equalize) is addressed through them. */
+
+const splitContainer = (cKey: string): { bankKey: string; tabKey: string | null } => {
+  const i = cKey.indexOf("::");
+  return i < 0 ? { bankKey: cKey, tabKey: null } : { bankKey: cKey.slice(0, i), tabKey: cKey.slice(i + 2) };
+};
+
+/** the container a bank's field flow targets (a grid band routes to its
+    active/first tab; main & input-fields bands hold fields directly) */
+const containerOfBank = (bank: StudioBank): string =>
+  bank.tabKind === 1 && bank.tabs.length > 0 ? `${bank.key}::${bank.tabs[0].key}` : bank.key;
+
+/** resolves a container key against a (draft) state — null when the bank or
+    tab no longer exists (e.g. after an undo) */
+function findContainer(
+  d: StudioState,
+  cKey: string,
+): { bank: StudioBank; fields: StudioField[] } | null {
+  const { bankKey, tabKey } = splitContainer(cKey);
+  const bank = d.banks.find((b) => b.key === bankKey);
+  if (!bank) return null;
+  if (tabKey) {
+    const tab = bank.tabs.find((t) => t.key === tabKey);
+    return tab ? { bank, fields: tab.fields } : null;
+  }
+  return { bank, fields: bank.fields };
+}
+
+/** every field of the form across all containers (preview/validation) */
+const allFieldsOf = (s: StudioState): StudioField[] =>
+  s.banks.flatMap((b) => [...b.fields, ...b.tabs.flatMap((t) => t.fields)]);
+
+/** a band holds any designed field (direct or inside its tabs) — gates the
+    kind switch, band delete and tab delete guards */
+const bankHasFields = (b: StudioBank): boolean =>
+  b.fields.length > 0 || b.tabs.some((t) => t.fields.length > 0);
 
 /** Task 48 — stored footer buttons → visible action-bar keys; missing/empty
     config = the FULL legacy action bar (owner default rule) */
@@ -155,7 +220,84 @@ const ALIGN_OPTIONS: Array<{ key: DfbBankAlign; icon: typeof AlignStartHorizonta
 
 type DragPayload =
   | { kind: "add"; fieldType: string }
-  | { kind: "move"; fromBank: string; fieldKey: string };
+  | { kind: "move"; fromContainer: string; fieldKey: string };
+
+/**
+ * Task 50 — normalize a server form definition into studio banks.
+ * parentRef=0 rows become BANDS; parentRef>0 rows become the tabs INSIDE
+ * their records-table band. A legacy grid band whose fields sit directly on
+ * the band row (pre-Task 50 layout) is wrapped into one tab titled after
+ * the band — nothing is lost and the next save persists the new shape.
+ */
+function buildBanks(d: DfbFormDetail): StudioBank[] {
+  const sorted = [...d.tabs].sort((a, b) => a.orderIndex - b.orderIndex);
+  const bandRows = sorted.filter((t) => !t.parentRef);
+  const childrenOf = new Map<number, DfbTabDef[]>();
+  for (const c of sorted.filter((t) => t.parentRef > 0)) {
+    const list = childrenOf.get(c.parentRef) ?? [];
+    list.push(c);
+    childrenOf.set(c.parentRef, list);
+  }
+  const toField = (f: DfbFieldDef): StudioField => ({
+    key: `k${f.id}`,
+    id: f.id,
+    fieldKey: f.fieldKey,
+    label: f.label,
+    fieldType: f.fieldType,
+    required: f.required,
+    readOnly: f.readOnly,
+    widthSpan: normalizeFieldWidth(f.widthSpan),
+    queryRef: f.queryRef,
+    queryFieldKey: f.queryFieldKey,
+  });
+  const banks: StudioBank[] = bandRows.map((tb) => ({
+    key: `bank-${tb.id}`,
+    id: tb.id,
+    tabKind: tb.tabKind === 2 ? 2 : 1,
+    title: tb.title,
+    fields: [],
+    tabs:
+      tb.tabKind === 2
+        ? []
+        : (childrenOf.get(tb.id) ?? []).map((ct) => ({
+            key: `tb-${ct.id}`,
+            id: ct.id,
+            title: ct.title,
+            titleEn: ct.titleEn ?? "",
+            fields: [],
+          })),
+  }));
+  const directFieldsOf = (tabRef: number) =>
+    d.fields.filter((f) => f.section === "body" && f.tabRef === tabRef);
+  for (const b of banks) {
+    if (b.tabKind === 1 && b.id != null && directFieldsOf(b.id).length > 0 && !b.tabs.some((t) => t.id != null)) {
+      b.tabs.push({ key: `tb-legacy-${b.id}`, title: b.title, titleEn: "", fields: [] });
+    }
+  }
+  const main: StudioBank = { key: "main", tabKind: 0, title: "", fields: [], tabs: [] };
+  for (const f of d.fields) {
+    if (f.section !== "body") continue;
+    if (f.tabRef == null) {
+      main.fields.push(toField(f));
+      continue;
+    }
+    const bank = banks.find((b) => b.id === f.tabRef);
+    if (bank) {
+      if (bank.tabKind === 2) bank.fields.push(toField(f));
+      else {
+        /* legacy wrap tab (no id) adopts the band-level fields; defensive
+           fallback = the band's first tab */
+        const legacy = bank.tabs.find((t) => t.id == null) ?? bank.tabs[0];
+        legacy?.fields.push(toField(f));
+      }
+      continue;
+    }
+    const tab = banks.flatMap((b) => b.tabs).find((t) => t.id === f.tabRef);
+    if (tab) tab.fields.push(toField(f));
+    else main.fields.push(toField(f)); // defensive — unknown tabRef
+  }
+  return [main, ...banks];
+}
 
 /* ------------------------------- entry ------------------------------- */
 
@@ -210,31 +352,6 @@ function StudioInner({ formId }: { formId: number }) {
         const header = (d.header ?? {}) as Record<string, unknown>;
         const footer = (d.footer ?? {}) as Record<string, unknown>;
         const style = (header.style ?? {}) as DfbFormStyle;
-        const main: StudioBank = { key: "main", tabKind: 0, title: "", fields: [] };
-        const tabBanks: StudioBank[] = d.tabs.map((tb) => ({
-          key: `tab-${tb.id}`,
-          id: tb.id,
-          tabKind: tb.tabKind === 2 ? 2 : 1, // Task 49 — 1=grid | 2=input fields
-          title: tb.title,
-          fields: [],
-        }));
-        for (const f of d.fields) {
-          if (f.section !== "body") continue;
-          const bank =
-            f.tabRef == null ? main : tabBanks.find((b) => b.id === f.tabRef) ?? main;
-          bank.fields.push({
-            key: `k${f.id}`,
-            id: f.id,
-            fieldKey: f.fieldKey,
-            label: f.label,
-            fieldType: f.fieldType,
-            required: f.required,
-            readOnly: f.readOnly,
-            widthSpan: normalizeFieldWidth(f.widthSpan),
-            queryRef: f.queryRef,
-            queryFieldKey: f.queryFieldKey,
-          });
-        }
         const initial: StudioState = {
           shell: {
             title: d.title,
@@ -243,7 +360,7 @@ function StudioInner({ formId }: { formId: number }) {
             footerButtons: storedFooterButtons(footer),
             style,
           },
-          banks: [main, ...tabBanks],
+          banks: buildBanks(d),
         };
         setIsSystem(d.isSystem);
         setTemplate(d.componentKey === "treeForm" ? "treeForm" : "simpleTwoRowTabbed");
@@ -263,8 +380,13 @@ function StudioInner({ formId }: { formId: number }) {
   }, [formId]);
 
   /* --------------------------- selection --------------------------- */
-  const [activeBankKey, setActiveBankKey] = React.useState("main");
+  /* Task 50 — the ACTIVE CONTAINER ("main" | bank key | "bank::tab") drives
+     the whole studio: bank settings rail = its bank, palette adds and field
+     ops = its fields, grid-band tab strip highlights its tab */
+  const [activeContainerKey, setActiveContainerKey] = React.useState("main");
   const [selectedFieldKey, setSelectedFieldKey] = React.useState<string | null>(null);
+  /* Task 50 — «افزودن تب» dialog target bank (null = closed) */
+  const [tabDialogFor, setTabDialogFor] = React.useState<string | null>(null);
   const [paletteType, setPaletteType] = React.useState("text");
   const [preview, setPreview] = React.useState(false);
   const [busy, setBusy] = React.useState(false);
@@ -299,15 +421,27 @@ function StudioInner({ formId }: { formId: number }) {
     };
   }, []);
 
+  const activeBankKey = splitContainer(activeContainerKey).bankKey;
   const activeBank = state?.banks.find((b) => b.key === activeBankKey) ?? state?.banks[0] ?? null;
-  const selectedField: StudioField | null = React.useMemo(() => {
-    if (!state || !selectedFieldKey) return null;
+  /** selected field WITH its container (rail ops address the right fields) */
+  let selectedFieldRef: { containerKey: string; field: StudioField } | null = null;
+  if (state && selectedFieldKey) {
     for (const b of state.banks) {
-      const hit = b.fields.find((f) => f.key === selectedFieldKey);
-      if (hit) return hit;
+      const i = b.fields.findIndex((f) => f.key === selectedFieldKey);
+      if (i >= 0) {
+        selectedFieldRef = { containerKey: b.key, field: b.fields[i] };
+        break;
+      }
+      for (const tb of b.tabs) {
+        const j = tb.fields.findIndex((f) => f.key === selectedFieldKey);
+        if (j >= 0) {
+          selectedFieldRef = { containerKey: `${b.key}::${tb.key}`, field: tb.fields[j] };
+          break;
+        }
+      }
+      if (selectedFieldRef) break;
     }
-    return null;
-  }, [state, selectedFieldKey]);
+  }
 
   /* ---------------- Task 48 — alignment / equalize commands ---------------- */
   const setBankAlign = React.useCallback(
@@ -319,14 +453,14 @@ function StudioInner({ formId }: { formId: number }) {
     [commit],
   );
 
-  const equalizeBank = React.useCallback(
-    (bankKey: string) => {
+  const equalizeContainer = React.useCallback(
+    (containerKey: string) => {
       commit((d) => {
-        const bank = d.banks.find((b) => b.key === bankKey);
-        if (!bank || bank.fields.length === 0) return;
+        const dst = findContainer(d, containerKey);
+        if (!dst || dst.fields.length === 0) return;
         const counts = new Map<number, number>();
-        for (const f of bank.fields) counts.set(f.widthSpan, (counts.get(f.widthSpan) ?? 0) + 1);
-        let best = bank.fields[0].widthSpan;
+        for (const f of dst.fields) counts.set(f.widthSpan, (counts.get(f.widthSpan) ?? 0) + 1);
+        let best = dst.fields[0].widthSpan;
         let bestN = 0;
         for (const [w, n] of counts) {
           if (n > bestN || (n === bestN && w === 50)) {
@@ -334,7 +468,7 @@ function StudioInner({ formId }: { formId: number }) {
             bestN = n;
           }
         }
-        for (const f of bank.fields) f.widthSpan = best;
+        for (const f of dst.fields) f.widthSpan = best;
       });
     },
     [commit],
@@ -365,7 +499,7 @@ function StudioInner({ formId }: { formId: number }) {
     setPreview(next);
     if (next && !previewExtrasLoaded && state) {
       setPreviewExtrasLoaded(true);
-      const fields = state.banks.flatMap((b) => b.fields);
+      const fields = allFieldsOf(state);
       fetchQueryOptionsForFields(
         fields.map((f) => ({ queryRef: f.queryRef, queryFieldKey: f.queryFieldKey, fieldType: f.fieldType })),
       )
@@ -379,7 +513,7 @@ function StudioInner({ formId }: { formId: number }) {
 
   const previewSave = React.useCallback(async () => {
     if (!state || busy) return;
-    const fields = state.banks.flatMap((b) => b.fields);
+    const fields = allFieldsOf(state);
     const missing = fields.filter(
       (f) => f.id != null && f.required &&
         (previewValues[f.key] === undefined || previewValues[f.key] === ""),
@@ -449,10 +583,11 @@ function StudioInner({ formId }: { formId: number }) {
 
   /* --------------------------- mutations --------------------------- */
   const addField = React.useCallback(
-    (bankKey: string, fieldType: string, beforeFieldKey?: string | null) => {
+    (containerKey: string, fieldType: string, beforeFieldKey?: string | null) => {
       if (isSystem) return;
       commit((d) => {
-        const bank = d.banks.find((b) => b.key === bankKey) ?? d.banks[0];
+        const dst = findContainer(d, containerKey);
+        if (!dst) return;
         const field: StudioField = {
           key: nextKey("f"),
           fieldKey: "",
@@ -464,35 +599,35 @@ function StudioInner({ formId }: { formId: number }) {
           queryRef: null,
           queryFieldKey: null,
         };
-        const at = beforeFieldKey ? bank.fields.findIndex((f) => f.key === beforeFieldKey) : -1;
-        if (at >= 0) bank.fields.splice(at, 0, field);
-        else bank.fields.push(field);
+        const at = beforeFieldKey ? dst.fields.findIndex((f) => f.key === beforeFieldKey) : -1;
+        if (at >= 0) dst.fields.splice(at, 0, field);
+        else dst.fields.push(field);
       });
-      setActiveBankKey(bankKey);
+      setActiveContainerKey(containerKey);
     },
     [commit, isSystem, t],
   );
 
   const moveFieldDir = React.useCallback(
-    (bankKey: string, fieldKey: string, dir: -1 | 1) => {
+    (containerKey: string, fieldKey: string, dir: -1 | 1) => {
       commit((d) => {
-        const bank = d.banks.find((b) => b.key === bankKey);
-        if (!bank) return;
-        const i = bank.fields.findIndex((f) => f.key === fieldKey);
+        const dst = findContainer(d, containerKey);
+        if (!dst) return;
+        const i = dst.fields.findIndex((f) => f.key === fieldKey);
         const j = i + dir;
-        if (i < 0 || j < 0 || j >= bank.fields.length) return;
-        [bank.fields[i], bank.fields[j]] = [bank.fields[j], bank.fields[i]];
+        if (i < 0 || j < 0 || j >= dst.fields.length) return;
+        [dst.fields[i], dst.fields[j]] = [dst.fields[j], dst.fields[i]];
       });
     },
     [commit],
   );
 
   const removeField = React.useCallback(
-    (bankKey: string, fieldKey: string) => {
+    (containerKey: string, fieldKey: string) => {
       commit((d) => {
-        const bank = d.banks.find((b) => b.key === bankKey);
-        if (!bank) return;
-        bank.fields = bank.fields.filter((f) => f.key !== fieldKey);
+        const dst = findContainer(d, containerKey);
+        if (!dst) return;
+        dst.fields = dst.fields.filter((f) => f.key !== fieldKey);
       });
       setSelectedFieldKey((k) => (k === fieldKey ? null : k));
     },
@@ -500,44 +635,41 @@ function StudioInner({ formId }: { formId: number }) {
   );
 
   const moveFieldToBank = React.useCallback(
-    (fromBank: string, fieldKey: string, toBank: string, beforeFieldKey?: string | null) => {
-      if (fromBank === toBank && !beforeFieldKey) return;
+    (fromContainer: string, fieldKey: string, toContainer: string, beforeFieldKey?: string | null) => {
+      if (fromContainer === toContainer && !beforeFieldKey) return;
       commit((d) => {
-        const src = d.banks.find((b) => b.key === fromBank);
+        const src = findContainer(d, fromContainer);
         if (!src) return;
         const i = src.fields.findIndex((f) => f.key === fieldKey);
         if (i < 0) return;
+        const dst = findContainer(d, toContainer);
+        if (!dst) return;
         const [field] = src.fields.splice(i, 1);
-        const dst = d.banks.find((b) => b.key === toBank);
-        if (!dst) {
-          src.fields.splice(i, 0, field); // rollback
-          return;
-        }
         const at = beforeFieldKey ? dst.fields.findIndex((f) => f.key === beforeFieldKey) : -1;
         if (at >= 0) dst.fields.splice(at, 0, field);
         else dst.fields.push(field);
       });
-      setActiveBankKey(toBank);
+      setActiveContainerKey(toContainer);
     },
     [commit],
   );
 
   const reorderField = React.useCallback(
-    (fromBank: string, fieldKey: string, toBank: string, beforeFieldKey: string | null) => {
-      if (fromBank === toBank) {
-        // same bank — move relative to the drop target
+    (fromContainer: string, fieldKey: string, toContainer: string, beforeFieldKey: string | null) => {
+      if (fromContainer === toContainer) {
+        // same container — move relative to the drop target
         commit((d) => {
-          const bank = d.banks.find((b) => b.key === toBank);
-          if (!bank) return;
-          const i = bank.fields.findIndex((f) => f.key === fieldKey);
+          const dst = findContainer(d, toContainer);
+          if (!dst) return;
+          const i = dst.fields.findIndex((f) => f.key === fieldKey);
           if (i < 0) return;
-          const [field] = bank.fields.splice(i, 1);
-          const at = beforeFieldKey ? bank.fields.findIndex((f) => f.key === beforeFieldKey) : -1;
-          if (at >= 0) bank.fields.splice(at, 0, field);
-          else bank.fields.push(field);
+          const [field] = dst.fields.splice(i, 1);
+          const at = beforeFieldKey ? dst.fields.findIndex((f) => f.key === beforeFieldKey) : -1;
+          if (at >= 0) dst.fields.splice(at, 0, field);
+          else dst.fields.push(field);
         });
       } else {
-        moveFieldToBank(fromBank, fieldKey, toBank, beforeFieldKey);
+        moveFieldToBank(fromContainer, fieldKey, toContainer, beforeFieldKey);
       }
     },
     [commit, moveFieldToBank],
@@ -546,9 +678,8 @@ function StudioInner({ formId }: { formId: number }) {
   const updateField = React.useCallback(
     (fieldKey: string, patch: Partial<StudioField>) => {
       commit((d) => {
-        for (const b of d.banks) {
-          const f = b.fields.find((x) => x.key === fieldKey);
-          if (f) {
+        for (const f of allFieldsOf(d)) {
+          if (f.key === fieldKey) {
             Object.assign(f, patch);
             return;
           }
@@ -564,22 +695,56 @@ function StudioInner({ formId }: { formId: number }) {
       commit((d) => {
         d.banks.push({
           key: nextKey("bank"),
-          tabKind, // Task 49 — 1=grid (records via footer add) | 2=input fields
+          tabKind, // 1=records table (with «افزودن تب» tabs) | 2=input fields
           title: `${t("dfb.studio.bankTitle")} ${d.banks.length}`,
           fields: [],
+          tabs: [],
         });
       });
     },
     [commit, isSystem, t],
   );
 
-  /** Task 49 — switch a tab band's model (grid ↔ input fields) */
+  /** Task 49/50 — switch a band's model (grid ↔ input fields). Switching is
+      only possible while the band holds NO fields (direct or in tabs) so a
+      designed field never loses its container. */
   const updateBankKind = React.useCallback(
     (bankKey: string, tabKind: 1 | 2) => {
       commit((d) => {
         const bank = d.banks.find((b) => b.key === bankKey);
-        if (bank && bank.key !== "main") bank.tabKind = tabKind;
+        if (!bank || bank.key === "main") return;
+        if (bankHasFields(bank)) return; // UI disables the select; defensive
+        bank.tabKind = tabKind;
       });
+    },
+    [commit],
+  );
+
+  /* ---------- Task 50 — tabs INSIDE a records-table band ---------- */
+  const addTab = React.useCallback(
+    (bankKey: string, title: string, titleEn: string) => {
+      const tabKey = nextKey("tb");
+      commit((d) => {
+        const bank = d.banks.find((b) => b.key === bankKey);
+        if (!bank || bank.tabKind !== 1) return;
+        bank.tabs.push({ key: tabKey, title: title.trim(), titleEn: titleEn.trim(), fields: [] });
+      });
+      setTabDialogFor(null);
+      setActiveContainerKey(`${bankKey}::${tabKey}`);
+    },
+    [commit],
+  );
+
+  /** only EMPTY tabs are removable (owner delete rule — same as bands) */
+  const removeTab = React.useCallback(
+    (bankKey: string, tabKey: string) => {
+      commit((d) => {
+        const bank = d.banks.find((b) => b.key === bankKey);
+        const tab = bank?.tabs.find((t) => t.key === tabKey);
+        if (!bank || !tab || tab.fields.length > 0) return;
+        bank.tabs = bank.tabs.filter((t) => t.key !== tabKey);
+      });
+      setActiveContainerKey((k) => (k === `${bankKey}::${tabKey}` ? bankKey : k));
     },
     [commit],
   );
@@ -592,7 +757,8 @@ function StudioInner({ formId }: { formId: number }) {
         if (i <= 0) return; // main bank is not removable
         d.banks.splice(i, 1);
       });
-      setActiveBankKey("main");
+      setTabDialogFor((f) => (f === bankKey ? null : f));
+      setActiveContainerKey((k) => (splitContainer(k).bankKey === bankKey ? "main" : k));
       setSelectedFieldKey(null);
     },
     [commit],
@@ -624,7 +790,7 @@ function StudioInner({ formId }: { formId: number }) {
   /* ------------------------------ save ------------------------------ */
   const save = React.useCallback(async () => {
     if (!state || busy) return;
-    const invalid = state.banks.flatMap((b) => b.fields).find((f) => !f.label.trim());
+    const invalid = allFieldsOf(state).find((f) => !f.label.trim());
     if (invalid) {
       toast.error(t("dfb.studio.labelRequired"));
       return;
@@ -646,19 +812,60 @@ function StudioInner({ formId }: { formId: number }) {
         footer: { buttons: state.shell.footerButtons },
       };
       if (!isSystem) {
-        metaPayload.tabs = state.banks
-          .slice(1)
-          .map((b, i) => ({ title: b.title.trim(), orderIndex: i, tabKind: b.tabKind === 2 ? 2 : 1 }));
+        /* Task 50 — hierarchical tabs payload: band rows (parentKey omitted)
+           and the tabs INSIDE each records-table band (parentKey = the
+           band's clientKey). The server resolves parentRef and echoes
+           clientKey so the fields phase can target the FRESH ids. */
+        const tabsPayload: Array<{
+          clientKey: string; parentKey?: string; title: string;
+          titleEn?: string; tabKind: number; orderIndex: number;
+        }> = [];
+        state.banks.slice(1).forEach((b, i) => {
+          tabsPayload.push({
+            clientKey: b.key,
+            title: b.title.trim() || `${t("dfb.studio.bankTitle")} ${i + 1}`,
+            tabKind: b.tabKind === 2 ? 2 : 1,
+            orderIndex: i,
+          });
+          if (b.tabKind === 1) {
+            b.tabs.forEach((tb, j) =>
+              tabsPayload.push({
+                clientKey: tb.key,
+                parentKey: b.key,
+                title: tb.title.trim(),
+                titleEn: tb.titleEn.trim() || undefined,
+                tabKind: 1, // tabs inside a records-table band are grids
+                orderIndex: j,
+              }),
+            );
+          }
+        });
+        metaPayload.tabs = tabsPayload;
       }
       /* phase 1 — meta/style/tabs (tabs regenerate → fresh ids);
          the update endpoint answers with the saved item itself */
       const saved = await dfbApi.put<DfbFormDetail>(`forms/${formId}`, metaPayload);
       if (!isSystem) {
-        /* phase 2 — fields against the FRESH tab ids */
-        const tabIds = (saved.tabs ?? []).map((tb) => tb.id);
+        /* phase 2 — fields against the FRESH ids via clientKey correlation */
+        const idByClientKey = new Map<string, number>();
+        for (const tb of saved.tabs ?? []) {
+          if (tb.clientKey) idByClientKey.set(tb.clientKey, tb.id);
+        }
         let seq = 0;
-        const fields = state.banks.flatMap((b, bi) =>
-          b.fields.map((f) => {
+        const fields = state.banks
+          .flatMap((b) => {
+            const rows: Array<{ f: StudioField; tabRef: number | undefined }> = [];
+            if (b.tabKind !== 1) {
+              const bankTabId = b.key === "main" ? undefined : idByClientKey.get(b.key);
+              for (const f of b.fields) rows.push({ f, tabRef: bankTabId });
+            }
+            for (const tb of b.tabs) {
+              const tabId = idByClientKey.get(tb.key);
+              for (const f of tb.fields) rows.push({ f, tabRef: tabId });
+            }
+            return rows;
+          })
+          .map(({ f, tabRef }) => {
             const orderIndex = seq++;
             return {
               fieldKey: f.fieldKey || `f${orderIndex + 1}_${f.fieldType}`,
@@ -668,41 +875,16 @@ function StudioInner({ formId }: { formId: number }) {
               readOnly: f.readOnly,
               widthSpan: f.widthSpan,
               orderIndex,
-              tabRef: bi === 0 ? undefined : tabIds[bi - 1],
+              tabRef,
               queryRef: f.queryRef ?? undefined,
               queryFieldKey: f.queryFieldKey ?? undefined,
             };
-          }),
-        );
+          });
         await dfbApi.put(`forms/${formId}`, { fields });
       }
       /* refresh baseline from the server (fresh ids for the next save) */
       const d = await fetchFormDetail(formId);
       const header = (d.header ?? {}) as Record<string, unknown>;
-      const main: StudioBank = { key: "main", tabKind: 0, title: "", fields: [] };
-      const tabBanks: StudioBank[] = d.tabs.map((tb) => ({
-        key: `tab-${tb.id}`,
-        id: tb.id,
-        tabKind: tb.tabKind === 2 ? 2 : 1, // Task 49
-        title: tb.title,
-        fields: [],
-      }));
-      for (const f of d.fields) {
-        if (f.section !== "body") continue;
-        const bank = f.tabRef == null ? main : tabBanks.find((b) => b.id === f.tabRef) ?? main;
-        bank.fields.push({
-          key: `k${f.id}`,
-          id: f.id,
-          fieldKey: f.fieldKey,
-          label: f.label,
-          fieldType: f.fieldType,
-          required: f.required,
-          readOnly: f.readOnly,
-          widthSpan: normalizeFieldWidth(f.widthSpan),
-          queryRef: f.queryRef,
-          queryFieldKey: f.queryFieldKey,
-        });
-      }
       const baseline: StudioState = {
         shell: {
           title: d.title,
@@ -711,7 +893,7 @@ function StudioInner({ formId }: { formId: number }) {
           footerButtons: state.shell.footerButtons,
           style: state.shell.style,
         },
-        banks: [main, ...tabBanks],
+        banks: buildBanks(d),
       };
       setHist({ stack: [baseline], idx: 0 });
       toast.success(t("dfb.savedToast"));
@@ -870,13 +1052,18 @@ function StudioInner({ formId }: { formId: number }) {
                   </div>
                   {/* shell body (font) */}
                   <div className="p-3 sm:p-4" style={theme.bodyStyle}>
-                    {state.banks.map((bank, bi) => (
+                    {state.banks.map((bank, bi) => {
+                      const bankActive =
+                        activeContainerKey === bank.key || activeContainerKey.startsWith(`${bank.key}::`);
+                      const activeTabKey = bankActive ? splitContainer(activeContainerKey).tabKey : null;
+                      return (
                       <BankCanvas
                         key={bank.key}
                         bank={bank}
                         index={bi}
                         isMain={bi === 0}
-                        active={activeBankKey === bank.key}
+                        active={bankActive}
+                        activeTabKey={activeTabKey}
                         align={dfbBankAlign(state.shell.style, alignKeyForBank(bi))}
                         resizing={resizing}
                         onResizeLive={setResizing}
@@ -886,28 +1073,40 @@ function StudioInner({ formId }: { formId: number }) {
                         }}
                         selectedFieldKey={selectedFieldKey}
                         isSystem={isSystem}
-                        onSelectBank={() => setActiveBankKey(bank.key)}
-                        onSelectField={(k) => {
-                          setActiveBankKey(bank.key);
+                        onSelectBank={() => setActiveContainerKey(containerOfBank(bank))}
+                        onSelectTab={(tabKey) => setActiveContainerKey(`${bank.key}::${tabKey}`)}
+                        onSelectField={(cKey, k) => {
+                          setActiveContainerKey(cKey);
                           setSelectedFieldKey(k);
                         }}
-                        onAddField={() => addField(bank.key, paletteType)}
-                        onMoveFieldDir={(k, dir) => moveFieldDir(bank.key, k, dir)}
-                        onRemoveField={(k) => removeField(bank.key, k)}
+                        onAddField={() => {
+                          /* Task 50 — a records-table band WITHOUT tabs asks for
+                             its first tab instead of a container-less field */
+                          if (bank.tabKind === 1 && bank.tabs.length === 0) {
+                            setTabDialogFor(bank.key);
+                            return;
+                          }
+                          addField(bankActive ? activeContainerKey : containerOfBank(bank), paletteType);
+                        }}
+                        onAddTab={() => setTabDialogFor(bank.key)}
+                        onRemoveTab={(tabKey) => removeTab(bank.key, tabKey)}
+                        onMoveFieldDir={(cKey, k, dir) => moveFieldDir(cKey, k, dir)}
+                        onRemoveField={(cKey, k) => removeField(cKey, k)}
                         onMoveBank={(dir) => moveBankDir(bank.key, dir)}
                         onRemoveBank={() => removeBank(bank.key)}
-                        onDragStartField={(fieldKey) => {
-                          dragRef.current = { kind: "move", fromBank: bank.key, fieldKey };
+                        onDragStartField={(cKey, fieldKey) => {
+                          dragRef.current = { kind: "move", fromContainer: cKey, fieldKey };
                         }}
-                        onDropInBank={(beforeKey) => {
+                        onDropInBank={(cKey, beforeKey) => {
                           const p = dragRef.current;
                           if (!p) return;
-                          if (p.kind === "add") addField(bank.key, p.fieldType, beforeKey);
-                          else reorderField(p.fromBank, p.fieldKey, bank.key, beforeKey);
+                          if (p.kind === "add") addField(cKey, p.fieldType, beforeKey);
+                          else reorderField(p.fromContainer, p.fieldKey, cKey, beforeKey);
                           dragRef.current = null;
                         }}
                       />
-                    ))}
+                      );
+                    })}
                     {!isSystem && (
                       <div className="mt-3 rounded-2xl border border-dashed border-teal-600/50 bg-teal-500/5 px-3 py-2.5">
                         {/* Task 49 — «add tab» in the studio: two tab models
@@ -984,7 +1183,7 @@ function StudioInner({ formId }: { formId: number }) {
                           onDragEnd={() => { dragRef.current = null; }}
                           onClick={() => {
                             setPaletteType(ft);
-                            addField(activeBankKey, ft);
+                            addField(activeContainerKey, ft);
                           }}
                           title={t(`dfb.type.${ft}` as never)}
                           className={cn(
@@ -1096,22 +1295,92 @@ function StudioInner({ formId }: { formId: number }) {
                       </SelectContent>
                     </Select>
                   </div>
-                  {/* Task 49 — band model: grid (records via footer add button)
-                      vs input fields (plain inputs, no grid) — switchable */}
+                  {/* Task 49 — band model: grid (records table with its own
+                      «افزودن تب» tabs) vs input fields (plain inputs, no grid)
+                      — switchable while the band holds no fields (Task 50) */}
                   {activeBank.key !== "main" && (
                     <div className="grid gap-1.5">
                       <Label className="text-[11px] text-muted-foreground">{t("dfb.studio.bankKind")}</Label>
                       <Select
                         value={activeBank.tabKind === 2 ? "fields" : "grid"}
                         onValueChange={(v) => updateBankKind(activeBank.key, v === "fields" ? 2 : 1)}
-                        disabled={isSystem}
+                        disabled={isSystem || bankHasFields(activeBank)}
                       >
-                        <SelectTrigger aria-label={t("dfb.studio.bankKind")} className="h-8"><SelectValue /></SelectTrigger>
+                        <SelectTrigger
+                          aria-label={t("dfb.studio.bankKind")}
+                          title={bankHasFields(activeBank) ? t("dfb.studio.bankDeleteHint") : undefined}
+                          className="h-8"
+                        >
+                          <SelectValue />
+                        </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="grid">{t("dfb.studio.bankKindGrid")}</SelectItem>
                           <SelectItem value="fields">{t("dfb.studio.bankKindFields")}</SelectItem>
                         </SelectContent>
                       </Select>
+                    </div>
+                  )}
+                  {/* Task 50 — tabs INSIDE the active records-table band:
+                      list + add/delete (only empty tabs are removable) */}
+                  {activeBank.key !== "main" && activeBank.tabKind === 1 && (
+                    <div className="grid gap-1.5">
+                      <Label className="text-[11px] text-muted-foreground">{t("dfb.studio.bandTabs")}</Label>
+                      <div className="grid gap-1 rounded-xl border border-border/60 p-2">
+                        {activeBank.tabs.length === 0 ? (
+                          <p className="px-1 py-0.5 text-[11px] leading-relaxed text-muted-foreground">
+                            {t("dfb.studio.emptyGridBand")} — {t("dfb.studio.emptyGridBandHint")}
+                          </p>
+                        ) : (
+                          activeBank.tabs.map((tb, ti) => {
+                            const tabActive = activeContainerKey === `${activeBank.key}::${tb.key}`;
+                            return (
+                              <div
+                                key={tb.key}
+                                role="button"
+                                tabIndex={0}
+                                onClick={() => setActiveContainerKey(`${activeBank.key}::${tb.key}`)}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter" || e.key === " ") {
+                                    e.preventDefault();
+                                    setActiveContainerKey(`${activeBank.key}::${tb.key}`);
+                                  }
+                                }}
+                                className={cn(
+                                  "flex cursor-pointer items-center gap-1.5 rounded-lg px-1.5 py-1 text-xs transition-colors hover:bg-foreground/5",
+                                  tabActive && "bg-amber-500/10 ring-1 ring-amber-500/30",
+                                )}
+                              >
+                                <span className="font-mono text-[9px] text-muted-foreground" dir="ltr">{ti + 1}</span>
+                                <span className="min-w-0 flex-1 truncate font-medium">{tb.title}</span>
+                                {tb.titleEn && (
+                                  <span className="min-w-0 truncate text-[10px] text-muted-foreground" dir="ltr">{tb.titleEn}</span>
+                                )}
+                                <Badge variant="outline" className="px-1 py-0 font-mono text-[9px]" dir="ltr">{tb.fields.length}</Badge>
+                                {!isSystem && (
+                                  <MiniIconBtn
+                                    label={t("common.delete")}
+                                    danger
+                                    disabled={tb.fields.length > 0}
+                                    title={tb.fields.length > 0 ? t("dfb.studio.tabDeleteHint") : undefined}
+                                    onClick={() => removeTab(activeBank.key, tb.key)}
+                                  >
+                                    <Trash2 className="h-3 w-3" aria-hidden />
+                                  </MiniIconBtn>
+                                )}
+                              </div>
+                            );
+                          })
+                        )}
+                        {!isSystem && (
+                          <Button
+                            type="button" size="sm" variant="outline"
+                            className="h-7 border-amber-500/50 text-amber-700 hover:bg-amber-500/10 dark:text-amber-400"
+                            onClick={() => setTabDialogFor(activeBank.key)}
+                          >
+                            <Plus className="h-3.5 w-3.5" aria-hidden /> {t("dfb.studio.addTab")}
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   )}
                   {/* Task 48 — bank field alignment (start/center/end, persisted
@@ -1147,7 +1416,7 @@ function StudioInner({ formId }: { formId: number }) {
                           type="button"
                           title={t("dfb.studio.equalize")}
                           aria-label={t("dfb.studio.equalize")}
-                          onClick={() => equalizeBank(activeBank.key)}
+                          onClick={() => equalizeContainer(activeContainerKey)}
                           className="flex h-7 flex-1 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-foreground/5"
                         >
                           <MoveHorizontal className="h-4 w-4" aria-hidden />
@@ -1167,8 +1436,8 @@ function StudioInner({ formId }: { formId: number }) {
                       <Button
                         type="button" size="sm" variant="outline"
                         className="h-8 text-rose-600 hover:text-rose-700"
-                        disabled={activeBank.fields.length > 0}
-                        title={activeBank.fields.length > 0 ? t("dfb.studio.bankDeleteHint") : t("common.delete")}
+                        disabled={bankHasFields(activeBank)}
+                        title={bankHasFields(activeBank) ? t("dfb.studio.bankDeleteHint") : t("common.delete")}
                         onClick={() => removeBank(activeBank.key)}
                       >
                         <Trash2 className="h-3.5 w-3.5" aria-hidden />
@@ -1185,7 +1454,7 @@ function StudioInner({ formId }: { formId: number }) {
                     <PencilLine className="h-3.5 w-3.5" aria-hidden />
                     {t("dfb.studio.fieldSettings")}
                   </h3>
-                  {!selectedField ? (
+                  {!selectedFieldRef ? (
                     <p className="rounded-xl border border-dashed border-border/70 p-2.5 text-[11px] leading-relaxed text-muted-foreground">
                       {t("dfb.studio.fieldSettingsHint")}
                     </p>
@@ -1194,8 +1463,8 @@ function StudioInner({ formId }: { formId: number }) {
                       <div className="grid gap-1.5">
                         <Label className="text-[11px] text-muted-foreground">{t("dfb.fieldLabel")}</Label>
                         <Input
-                          value={selectedField.label}
-                          onChange={(e) => updateField(selectedField.key, { label: e.target.value })}
+                          value={selectedFieldRef.field.label}
+                          onChange={(e) => updateField(selectedFieldRef.field.key, { label: e.target.value })}
                           className="h-8"
                         />
                       </div>
@@ -1203,8 +1472,8 @@ function StudioInner({ formId }: { formId: number }) {
                         <div className="grid gap-1.5">
                           <Label className="text-[11px] text-muted-foreground">{t("dfb.fieldType")}</Label>
                           <Select
-                            value={selectedField.fieldType}
-                            onValueChange={(v) => updateField(selectedField.key, { fieldType: v, queryRef: null, queryFieldKey: null })}
+                            value={selectedFieldRef.field.fieldType}
+                            onValueChange={(v) => updateField(selectedFieldRef.field.key, { fieldType: v, queryRef: null, queryFieldKey: null })}
                           >
                             <SelectTrigger aria-label={t("dfb.fieldType")} className="h-8"><SelectValue /></SelectTrigger>
                             <SelectContent>
@@ -1217,8 +1486,8 @@ function StudioInner({ formId }: { formId: number }) {
                         <div className="grid gap-1.5">
                           <Label className="text-[11px] text-muted-foreground">{t("dfb.width")}</Label>
                           <Select
-                            value={String(selectedField.widthSpan)}
-                            onValueChange={(v) => updateField(selectedField.key, { widthSpan: Number(v) })}
+                            value={String(selectedFieldRef.field.widthSpan)}
+                            onValueChange={(v) => updateField(selectedFieldRef.field.key, { widthSpan: Number(v) })}
                           >
                             <SelectTrigger aria-label={t("dfb.width")} className="h-8"><SelectValue /></SelectTrigger>
                             <SelectContent>
@@ -1234,29 +1503,29 @@ function StudioInner({ formId }: { formId: number }) {
                       <div className="flex flex-wrap items-center gap-3">
                         <label className="flex cursor-pointer items-center gap-1.5 text-xs">
                           <Checkbox
-                            checked={selectedField.required}
-                            onCheckedChange={(v) => updateField(selectedField.key, { required: Boolean(v) })}
+                            checked={selectedFieldRef.field.required}
+                            onCheckedChange={(v) => updateField(selectedFieldRef.field.key, { required: Boolean(v) })}
                             aria-label={t("dfb.required")}
                           />
                           {t("dfb.required")}
                         </label>
                         <label className="flex cursor-pointer items-center gap-1.5 text-xs">
                           <Checkbox
-                            checked={selectedField.readOnly}
-                            onCheckedChange={(v) => updateField(selectedField.key, { readOnly: Boolean(v) })}
+                            checked={selectedFieldRef.field.readOnly}
+                            onCheckedChange={(v) => updateField(selectedFieldRef.field.key, { readOnly: Boolean(v) })}
                             aria-label={t("dfb.studio.readOnly")}
                           />
                           {t("dfb.studio.readOnly")}
                         </label>
                       </div>
-                      {(selectedField.fieldType === "select" || selectedField.fieldType === "lookup") && (
+                      {(selectedFieldRef.field.fieldType === "select" || selectedFieldRef.field.fieldType === "lookup") && (
                         <>
                           <div className="grid gap-1.5">
                             <Label className="text-[11px] text-muted-foreground">{t("dfb.queryBind")}</Label>
                             <Select
-                              value={selectedField.queryRef != null ? String(selectedField.queryRef) : "-"}
+                              value={selectedFieldRef.field.queryRef != null ? String(selectedFieldRef.field.queryRef) : "-"}
                               onValueChange={(v) =>
-                                updateField(selectedField.key, {
+                                updateField(selectedFieldRef.field.key, {
                                   queryRef: v === "-" ? null : Number(v),
                                   queryFieldKey: null,
                                 })
@@ -1271,17 +1540,17 @@ function StudioInner({ formId }: { formId: number }) {
                               </SelectContent>
                             </Select>
                           </div>
-                          {selectedField.queryRef != null && (
+                          {selectedFieldRef.field.queryRef != null && (
                             <div className="grid gap-1.5">
                               <Label className="text-[11px] text-muted-foreground">{t("dfb.queryValueColumn")}</Label>
                               <Select
-                                value={selectedField.queryFieldKey ?? "-"}
-                                onValueChange={(v) => updateField(selectedField.key, { queryFieldKey: v === "-" ? null : v })}
+                                value={selectedFieldRef.field.queryFieldKey ?? "-"}
+                                onValueChange={(v) => updateField(selectedFieldRef.field.key, { queryFieldKey: v === "-" ? null : v })}
                               >
                                 <SelectTrigger aria-label={t("dfb.queryValueColumn")} className="h-8"><SelectValue /></SelectTrigger>
                                 <SelectContent>
                                   <SelectItem value="-">{t("dfb.none")}</SelectItem>
-                                  {(queries.find((q) => q.id === selectedField.queryRef)?.fields ?? []).map((qf) => (
+                                  {(queries.find((q) => q.id === selectedFieldRef.field.queryRef)?.fields ?? []).map((qf) => (
                                     <SelectItem key={qf.fieldName} value={qf.fieldName}>{qf.fieldName}</SelectItem>
                                   ))}
                                 </SelectContent>
@@ -1295,8 +1564,7 @@ function StudioInner({ formId }: { formId: number }) {
                           type="button" size="sm" variant="outline"
                           className="text-rose-600 hover:text-rose-700"
                           onClick={() => {
-                            const bank = state.banks.find((b) => b.fields.some((f) => f.key === selectedField.key));
-                            if (bank) removeField(bank.key, selectedField.key);
+                            removeField(selectedFieldRef.containerKey, selectedFieldRef.field.key);
                           }}
                         >
                           <Trash2 className="h-3.5 w-3.5" aria-hidden /> {t("common.delete")}
@@ -1317,6 +1585,16 @@ function StudioInner({ formId }: { formId: number }) {
           state={state}
           onClose={() => setMetaOpen(false)}
           onCommit={(mutate) => commit(mutate)}
+        />
+      )}
+
+      {/* Task 50 — «افزودن تب» dialog: Persian + Latin (Latin-only enforced)
+          titles; the created tab is placed INSIDE the target band */}
+      {tabDialogFor && (
+        <AddTabDialog
+          bankTitle={state.banks.find((b) => b.key === tabDialogFor)?.title ?? ""}
+          onClose={() => setTabDialogFor(null)}
+          onConfirm={(titleFa, titleEn) => addTab(tabDialogFor, titleFa, titleEn)}
         />
       )}
 
@@ -1350,15 +1628,17 @@ function StudioInner({ formId }: { formId: number }) {
 const dragRef: { current: DragPayload | null } = { current: null };
 
 function BankCanvas({
-  bank, index, isMain, active, align, resizing, onResizeLive, onResizeCommit,
+  bank, index, isMain, active, activeTabKey, align, resizing, onResizeLive, onResizeCommit,
   selectedFieldKey, isSystem,
-  onSelectBank, onSelectField, onAddField, onMoveFieldDir, onRemoveField,
-  onMoveBank, onRemoveBank, onDragStartField, onDropInBank,
+  onSelectBank, onSelectTab, onSelectField, onAddField, onAddTab, onRemoveTab,
+  onMoveFieldDir, onRemoveField, onMoveBank, onRemoveBank, onDragStartField, onDropInBank,
 }: {
   bank: StudioBank;
   index: number;
   isMain: boolean;
   active: boolean;
+  /** Task 50 — key of the ACTIVE tab inside a grid band (null = none) */
+  activeTabKey: string | null;
   /** Task 48 — bank-level horizontal alignment (persists in style.bankAlign) */
   align: DfbBankAlign;
   /** Task 48 — live width of the field being resized with the mouse */
@@ -1368,17 +1648,30 @@ function BankCanvas({
   selectedFieldKey: string | null;
   isSystem: boolean;
   onSelectBank: () => void;
-  onSelectField: (key: string) => void;
+  onSelectTab: (tabKey: string) => void;
+  onSelectField: (containerKey: string, key: string) => void;
   onAddField: () => void;
-  onMoveFieldDir: (key: string, dir: -1 | 1) => void;
-  onRemoveField: (key: string) => void;
+  onAddTab: () => void;
+  onRemoveTab: (tabKey: string) => void;
+  onMoveFieldDir: (containerKey: string, key: string, dir: -1 | 1) => void;
+  onRemoveField: (containerKey: string, key: string) => void;
   onMoveBank: (dir: -1 | 1) => void;
   onRemoveBank: () => void;
-  onDragStartField: (fieldKey: string) => void;
-  onDropInBank: (beforeKey: string | null) => void;
+  onDragStartField: (containerKey: string, fieldKey: string) => void;
+  onDropInBank: (containerKey: string, beforeKey: string | null) => void;
 }) {
   const t = useT();
   const [over, setOver] = React.useState(false);
+
+  /* Task 50 — a records-table band routes its field flow into the ACTIVE
+     (or first) tab created with «افزودن تب»; main & input-fields bands
+     hold their fields directly */
+  const activeTab = (activeTabKey ? bank.tabs.find((x) => x.key === activeTabKey) : null) ?? bank.tabs[0] ?? null;
+  const flowContainer =
+    bank.tabKind === 1 && activeTab ? `${bank.key}::${activeTab.key}` : bank.key;
+  const flowFields = bank.tabKind === 1 ? (activeTab?.fields ?? []) : bank.fields;
+  const totalFields =
+    bank.tabKind === 1 ? bank.tabs.reduce((n, tb) => n + tb.fields.length, 0) : bank.fields.length;
 
   return (
     <div
@@ -1391,7 +1684,7 @@ function BankCanvas({
       onDrop={(e) => {
         e.preventDefault();
         setOver(false);
-        onDropInBank(null); // drop on the container body = append
+        onDropInBank(flowContainer, null); // drop on the container body = append
       }}
       className={cn(
         "rounded-2xl border-2 border-dashed p-2.5 transition-colors sm:p-3",
@@ -1410,10 +1703,10 @@ function BankCanvas({
         >
           {isMain ? t("dfb.studio.bankMain") : bank.title}
           <span className="ms-1 font-normal text-muted-foreground">
-            ({t("dfb.studio.fieldsCount").replace("{n}", String(bank.fields.length))})
+            ({t("dfb.studio.fieldsCount").replace("{n}", String(totalFields))})
           </span>
         </button>
-        {/* Task 49 — band-model chip (grid vs input fields) on tab bands */}
+        {/* Task 49 — band-model chip (records table vs input fields) on tab bands */}
         {!isMain && (
           <Badge variant="outline" className="gap-1 px-1.5 py-0 text-[9px]">
             {bank.tabKind === 2 ? (
@@ -1427,6 +1720,17 @@ function BankCanvas({
         <Badge variant="outline" className="font-mono text-[9px]" dir="ltr">100%</Badge>
         {!isSystem && (
           <span className="ms-auto flex items-center gap-1">
+            {/* Task 50 — «افزودن تب» ON the records-table band (owner request:
+                the created tab must be placed INSIDE the band) */}
+            {!isMain && bank.tabKind === 1 && (
+              <Button
+                type="button" size="sm" variant="outline"
+                className="h-6 border-amber-500/50 px-2 text-[11px] text-amber-700 hover:bg-amber-500/10 dark:text-amber-400"
+                onClick={onAddTab}
+              >
+                <Plus className="h-3 w-3" aria-hidden /> {t("dfb.studio.addTab")}
+              </Button>
+            )}
             <Button type="button" size="sm" variant="outline" className="h-6 px-2 text-[11px]" onClick={onAddField} title={t("dfb.addField")}>
               <Plus className="h-3 w-3" aria-hidden /> {t("dfb.addField")}
             </Button>
@@ -1438,7 +1742,7 @@ function BankCanvas({
                 <MiniIconBtn label={t("dfb.studio.moveDown")} onClick={() => onMoveBank(1)}>
                   <ArrowDown className="h-3 w-3" aria-hidden />
                 </MiniIconBtn>
-                <MiniIconBtn label={t("common.delete")} danger onClick={onRemoveBank} disabled={bank.fields.length > 0} title={bank.fields.length > 0 ? t("dfb.studio.bankDeleteHint") : undefined}>
+                <MiniIconBtn label={t("common.delete")} danger onClick={onRemoveBank} disabled={bankHasFields(bank)} title={bankHasFields(bank) ? t("dfb.studio.bankDeleteHint") : undefined}>
                   <Trash2 className="h-3 w-3" aria-hidden />
                 </MiniIconBtn>
               </>
@@ -1447,60 +1751,196 @@ function BankCanvas({
         )}
       </div>
 
-      {/* fields — Task 48 flow layout: per-field width % + bank alignment */}
-      {bank.fields.length === 0 ? (
+      {/* Task 50 — records-table band body: its OWN tab strip + the active
+          tab's fields; empty band asks for its first tab */}
+      {bank.tabKind === 1 ? (
+        bank.tabs.length === 0 ? (
+          <div className="flex flex-col items-center gap-1.5 rounded-xl border border-dashed border-amber-500/40 bg-amber-500/5 px-3 py-6 text-center">
+            <Grid3x3 className="h-6 w-6 text-amber-600/70 dark:text-amber-400/70" aria-hidden />
+            <p className="text-xs font-medium text-amber-700 dark:text-amber-400">{t("dfb.studio.emptyGridBand")}</p>
+            <p className="text-[11px] leading-relaxed text-muted-foreground">{t("dfb.studio.emptyGridBandHint")}</p>
+            {!isSystem && (
+              <Button type="button" size="sm" className="mt-1 h-7" onClick={onAddTab}>
+                <Plus className="h-3.5 w-3.5" aria-hidden /> {t("dfb.studio.addTab")}
+              </Button>
+            )}
+          </div>
+        ) : (
+          <>
+            {/* inner tab strip — tabs created with «افزودن تب» live HERE */}
+            <div
+              role="tablist"
+              aria-label={t("dfb.studio.bandTabs")}
+              className="mb-2 flex flex-wrap items-center gap-1 rounded-xl border border-border/60 bg-background/50 p-1"
+            >
+              {bank.tabs.map((tb) => {
+                const tabActive = tb.key === activeTab?.key;
+                return (
+                  <span
+                    key={tb.key}
+                    role="tab"
+                    aria-selected={tabActive}
+                    tabIndex={0}
+                    onClick={() => onSelectTab(tb.key)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        onSelectTab(tb.key);
+                      }
+                    }}
+                    className={cn(
+                      "flex cursor-pointer items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                      tabActive
+                        ? "bg-amber-500/15 text-amber-700 ring-1 ring-amber-500/40 dark:text-amber-400"
+                        : "text-muted-foreground hover:bg-foreground/5",
+                    )}
+                  >
+                    {tb.title}
+                    {tb.titleEn && <span dir="ltr" className="text-[9px] opacity-70">{tb.titleEn}</span>}
+                    <Badge variant="outline" className="px-1 py-0 font-mono text-[8px]" dir="ltr">{tb.fields.length}</Badge>
+                    {!isSystem && (
+                      <MiniIconBtn
+                        label={t("common.delete")}
+                        danger
+                        disabled={tb.fields.length > 0}
+                        title={tb.fields.length > 0 ? t("dfb.studio.tabDeleteHint") : undefined}
+                        onClick={() => onRemoveTab(tb.key)}
+                      >
+                        <X className="h-3 w-3" aria-hidden />
+                      </MiniIconBtn>
+                    )}
+                  </span>
+                );
+              })}
+              {!isSystem && (
+                <button
+                  type="button"
+                  onClick={onAddTab}
+                  className="flex cursor-pointer items-center gap-1 rounded-lg border border-dashed border-amber-500/50 px-2 py-1 text-[11px] text-amber-700 transition-colors hover:bg-amber-500/10 dark:text-amber-400"
+                >
+                  <Plus className="h-3 w-3" aria-hidden /> {t("dfb.studio.addTab")}
+                </button>
+              )}
+            </div>
+            {flowFields.length === 0 ? (
+              <p className="rounded-xl border border-dashed border-border/60 px-3 py-5 text-center text-[11px] text-muted-foreground">
+                {t("dfb.studio.emptyBankHint")}
+              </p>
+            ) : (
+              <FieldFlow
+                fields={flowFields}
+                containerKey={flowContainer}
+                align={align}
+                resizing={resizing}
+                onResizeLive={onResizeLive}
+                onResizeCommit={onResizeCommit}
+                selectedFieldKey={selectedFieldKey}
+                isSystem={isSystem}
+                onSelectField={onSelectField}
+                onMoveFieldDir={onMoveFieldDir}
+                onRemoveField={onRemoveField}
+                onDragStartField={onDragStartField}
+                onDropBefore={(beforeKey) => onDropInBank(flowContainer, beforeKey)}
+              />
+            )}
+          </>
+        )
+      ) : flowFields.length === 0 ? (
         <p className="rounded-xl border border-dashed border-border/60 px-3 py-5 text-center text-[11px] text-muted-foreground">
           {t("dfb.studio.emptyBankHint")}
         </p>
       ) : (
-        <div
-          data-flow-container
-          className={cn(
-            "flex flex-wrap",
-            align === "center" && "justify-center",
-            align === "end" && "justify-end",
-          )}
-        >
-          {bank.fields.map((f, fi) => {
-            const pct = resizing && resizing.key === f.key ? resizing.pct : f.widthSpan;
-            return (
-              <div
-                key={f.key}
-                className="relative box-border min-w-0 px-2.5 pb-2.5"
-                style={{ width: `${pct}%` }}
-              >
-                {resizing && resizing.key === f.key && (
-                  <span
-                    dir="ltr"
-                    className="absolute end-3 top-1 z-20 rounded-md bg-teal-600 px-1.5 py-0.5 font-mono text-[9px] text-white shadow"
-                  >
-                    {resizing.pct}%
-                  </span>
-                )}
-                <FieldCard
-                  field={f}
-                  order={fi + 1}
-                  selected={selectedFieldKey === f.key}
-                  preview={false}
-                  isSystem={isSystem}
-                  onSelect={() => onSelectField(f.key)}
-                  onMoveDir={(dir) => onMoveFieldDir(f.key, dir)}
-                  onRemove={() => onRemoveField(f.key)}
-                  onDragStart={() => onDragStartField(f.key)}
-                  onDropBefore={() => onDropInBank(f.key)}
-                />
-                {!isSystem && (
-                  <FieldResizeHandle
-                    basePct={f.widthSpan}
-                    onLive={(p) => onResizeLive({ key: f.key, pct: p })}
-                    onCommit={(p) => onResizeCommit(f.key, p)}
-                  />
-                )}
-              </div>
-            );
-          })}
-        </div>
+        <FieldFlow
+          fields={flowFields}
+          containerKey={flowContainer}
+          align={align}
+          resizing={resizing}
+          onResizeLive={onResizeLive}
+          onResizeCommit={onResizeCommit}
+          selectedFieldKey={selectedFieldKey}
+          isSystem={isSystem}
+          onSelectField={onSelectField}
+          onMoveFieldDir={onMoveFieldDir}
+          onRemoveField={onRemoveField}
+          onDragStartField={onDragStartField}
+          onDropBefore={(beforeKey) => onDropInBank(flowContainer, beforeKey)}
+        />
       )}
+    </div>
+  );
+}
+
+/**
+ * Task 50 — the flow layout of ONE field container (a band's own fields or
+ * the fields of a tab inside a records-table band): per-field width % +
+ * band alignment + mouse resize handles + drop-before insertion markers.
+ */
+function FieldFlow({
+  fields, containerKey, align, resizing, onResizeLive, onResizeCommit,
+  selectedFieldKey, isSystem, onSelectField, onMoveFieldDir, onRemoveField,
+  onDragStartField, onDropBefore,
+}: {
+  fields: StudioField[];
+  containerKey: string;
+  align: DfbBankAlign;
+  resizing: { key: string; pct: number } | null;
+  onResizeLive: (r: { key: string; pct: number } | null) => void;
+  onResizeCommit: (fieldKey: string, pct: number) => void;
+  selectedFieldKey: string | null;
+  isSystem: boolean;
+  onSelectField: (containerKey: string, key: string) => void;
+  onMoveFieldDir: (containerKey: string, key: string, dir: -1 | 1) => void;
+  onRemoveField: (containerKey: string, key: string) => void;
+  onDragStartField: (containerKey: string, fieldKey: string) => void;
+  onDropBefore: (beforeKey: string | null) => void;
+}) {
+  return (
+    <div
+      data-flow-container
+      className={cn(
+        "flex flex-wrap",
+        align === "center" && "justify-center",
+        align === "end" && "justify-end",
+      )}
+    >
+      {fields.map((f, fi) => {
+        const pct = resizing && resizing.key === f.key ? resizing.pct : f.widthSpan;
+        return (
+          <div
+            key={f.key}
+            className="relative box-border min-w-0 px-2.5 pb-2.5"
+            style={{ width: `${pct}%` }}
+          >
+            {resizing && resizing.key === f.key && (
+              <span
+                dir="ltr"
+                className="absolute end-3 top-1 z-20 rounded-md bg-teal-600 px-1.5 py-0.5 font-mono text-[9px] text-white shadow"
+              >
+                {resizing.pct}%
+              </span>
+            )}
+            <FieldCard
+              field={f}
+              order={fi + 1}
+              selected={selectedFieldKey === f.key}
+              preview={false}
+              isSystem={isSystem}
+              onSelect={() => onSelectField(containerKey, f.key)}
+              onMoveDir={(dir) => onMoveFieldDir(containerKey, f.key, dir)}
+              onRemove={() => onRemoveField(containerKey, f.key)}
+              onDragStart={() => onDragStartField(containerKey, f.key)}
+              onDropBefore={() => onDropBefore(f.key)}
+            />
+            {!isSystem && (
+              <FieldResizeHandle
+                basePct={f.widthSpan}
+                onLive={(p) => onResizeLive({ key: f.key, pct: p })}
+                onCommit={(p) => onResizeCommit(f.key, p)}
+              />
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -1811,7 +2251,7 @@ function PreviewCanvas({
       {/* fields only — no bands */}
       <div className="px-4 pb-3 pt-2.5" style={dfbShellTheme(state.shell.style).bodyStyle}>
         <FlowFieldGrid
-          fields={state.banks.flatMap((b) => b.fields).map(toSimple)}
+          fields={allFieldsOf(state).map(toSimple)}
           onFieldChange={onFieldChange}
           idPrefix="dfbprev"
           align={align}
@@ -1859,7 +2299,7 @@ function StudioMetaDialog({
           </div>
           <div className="grid gap-1.5">
             <Label htmlFor="dfb-studio-title-en">{t("dfb.formTitleEn")}</Label>
-            <Input id="dfb-studio-title-en" dir="ltr" value={titleEn} onChange={(e) => setTitleEn(e.target.value)} />
+            <LatinInput id="dfb-studio-title-en" value={titleEn} onValueChange={setTitleEn} />
           </div>
           <div className="grid gap-1.5">
             <Label htmlFor="dfb-studio-badge">{t("dfb.badgeLabel")}</Label>
@@ -1886,6 +2326,75 @@ function StudioMetaDialog({
         <DialogFooter className="gap-2">
           <Button type="button" variant="outline" onClick={onClose}>{t("common.cancel")}</Button>
           <Button type="button" onClick={apply} disabled={!title.trim()}>
+            <Check className="h-4 w-4" aria-hidden /> {t("common.confirm")}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/* ---------------------- Task 50 — add-tab dialog ---------------------- */
+
+/**
+ * «افزودن تب» — creates a tab INSIDE a records-table band. Takes the
+ * Persian AND the Latin title from the user (owner request); the Latin
+ * field hard-filters non-Latin characters (LatinInput) so other languages
+ * can never be entered, and both titles are required.
+ */
+function AddTabDialog({
+  bankTitle, onClose, onConfirm,
+}: {
+  bankTitle: string;
+  onClose: () => void;
+  onConfirm: (titleFa: string, titleEn: string) => void;
+}) {
+  const t = useT();
+  const [titleFa, setTitleFa] = React.useState("");
+  const [titleEn, setTitleEn] = React.useState("");
+  const canSave = Boolean(titleFa.trim()) && Boolean(titleEn.trim());
+
+  return (
+    <Dialog open onOpenChange={(v) => { if (!v) onClose(); }}>
+      <DialogContent className="max-w-md" dir="auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <span
+              aria-hidden
+              className="flex h-6 w-6 items-center justify-center rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-sm"
+            >
+              <Plus className="h-3.5 w-3.5" />
+            </span>
+            {t("dfb.studio.addTab")}
+          </DialogTitle>
+          <DialogDescription>
+            {t("dfb.studio.addTabDesc")}
+            {bankTitle ? ` — ${bankTitle}` : ""}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-3">
+          <div className="grid gap-1.5">
+            <Label htmlFor="dfb-tab-title-fa">{t("dfb.studio.tabTitleFa")}</Label>
+            <Input
+              id="dfb-tab-title-fa"
+              value={titleFa}
+              onChange={(e) => setTitleFa(e.target.value)}
+            />
+          </div>
+          <div className="grid gap-1.5">
+            <Label htmlFor="dfb-tab-title-en">{t("dfb.studio.tabTitleEn")}</Label>
+            <LatinInput id="dfb-tab-title-en" value={titleEn} onValueChange={setTitleEn} />
+          </div>
+        </div>
+        <DialogFooter className="gap-2">
+          <Button type="button" variant="outline" onClick={onClose}>
+            {t("common.cancel")}
+          </Button>
+          <Button
+            type="button"
+            disabled={!canSave}
+            onClick={() => onConfirm(titleFa.trim(), titleEn.trim())}
+          >
             <Check className="h-4 w-4" aria-hidden /> {t("common.confirm")}
           </Button>
         </DialogFooter>

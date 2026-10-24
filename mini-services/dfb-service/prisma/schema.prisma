@@ -106,9 +106,15 @@ model DfbForm {
 /// TabKind — Task 49 (درخواست مالک): تب دو مدل دارد — 1=گرید (رکوردها با دکمهٔ
 /// افزودنِ فوتر در جدول ثبت می‌شوند، رفتار پیش‌فرض/میراث) و 2=فیلد ورودی
 /// (بدون گرید؛ فیلدهای اینپوت معمولی DfbFormField با TabRef همین تب).
+/// ParentRef — Task 50 (درخواست مالک): باند «جدول رکوردها» خودش تب‌بندی داخلی
+/// دارد؛ ردیف ParentRef=0 = باند سطح بالا (خودِ باند) و ردیف ParentRef>0 =
+/// تبِ ساخته‌شده با «افزودن تب» که داخل همان باند می‌نشیند (هر تب = یک جدول
+/// رکورد؛ TabKind فرزندها همیشه 1 است). چون id تب‌ها در هر ذخیره بازتولید
+/// می‌شود، سلسله‌مراتب از کلاینت با clientKey/parentKey همبستگی می‌شود.
 model DfbFormTab {
   id                   BigInt   @id @map("ID")
   formRef              BigInt   @map("FormRef")
+  parentRef            BigInt   @default(0) @map("ParentRef") // 0 = باند سطح بالا | >0 = تبِ داخل باند (ID ردیف باند والد)
   title                String   @map("Title")
   titleEn              String?  @map("Title_En")
   tabKind              Int      @default(1) @map("TabKind") // 1=Grid (default/legacy) | 2=InputFields

@@ -1667,6 +1667,26 @@
     }
   }
 
+  .border-amber-500\/40 {
+    border-color: #f99c0066;
+  }
+
+  @supports (color: color-mix(in lab, red, red)) {
+    .border-amber-500\/40 {
+      border-color: color-mix(in oklab, var(--color-amber-500) 40%, transparent);
+    }
+  }
+
+  .border-amber-500\/50 {
+    border-color: #f99c0080;
+  }
+
+  @supports (color: color-mix(in lab, red, red)) {
+    .border-amber-500\/50 {
+      border-color: color-mix(in oklab, var(--color-amber-500) 50%, transparent);
+    }
+  }
+
   .border-border {
     border-color: var(--border);
   }
@@ -1727,6 +1747,10 @@
 
   .border-primary {
     border-color: var(--primary);
+  }
+
+  .border-rose-500 {
+    border-color: var(--color-rose-500);
   }
 
   .border-teal-500\/60 {
@@ -1803,6 +1827,16 @@
     background-color: var(--color-amber-500);
   }
 
+  .bg-amber-500\/5 {
+    background-color: #f99c000d;
+  }
+
+  @supports (color: color-mix(in lab, red, red)) {
+    .bg-amber-500\/5 {
+      background-color: color-mix(in oklab, var(--color-amber-500) 5%, transparent);
+    }
+  }
+
   .bg-amber-500\/10 {
     background-color: #f99c001a;
   }
@@ -1844,6 +1878,16 @@
   @supports (color: color-mix(in lab, red, red)) {
     .bg-background\/40 {
       background-color: color-mix(in oklab, var(--background) 40%, transparent);
+    }
+  }
+
+  .bg-background\/50 {
+    background-color: var(--background);
+  }
+
+  @supports (color: color-mix(in lab, red, red)) {
+    .bg-background\/50 {
+      background-color: color-mix(in oklab, var(--background) 50%, transparent);
     }
   }
 
@@ -2995,6 +3039,16 @@
     color: var(--color-amber-600);
   }
 
+  .text-amber-600\/70 {
+    color: #dd7400b3;
+  }
+
+  @supports (color: color-mix(in lab, red, red)) {
+    .text-amber-600\/70 {
+      color: color-mix(in oklab, var(--color-amber-600) 70%, transparent);
+    }
+  }
+
   .text-amber-700 {
     color: var(--color-amber-700);
   }
@@ -3391,6 +3445,16 @@
     }
   }
 
+  .ring-amber-500\/40 {
+    --tw-ring-color: #f99c0066;
+  }
+
+  @supports (color: color-mix(in lab, red, red)) {
+    .ring-amber-500\/40 {
+      --tw-ring-color: color-mix(in oklab, var(--color-amber-500) 40%, transparent);
+    }
+  }
+
   .ring-border {
     --tw-ring-color: var(--border);
   }
@@ -3457,6 +3521,16 @@
 
   .ring-ring {
     --tw-ring-color: var(--ring);
+  }
+
+  .ring-rose-500\/40 {
+    --tw-ring-color: #ff235766;
+  }
+
+  @supports (color: color-mix(in lab, red, red)) {
+    .ring-rose-500\/40 {
+      --tw-ring-color: color-mix(in oklab, var(--color-rose-500) 40%, transparent);
+    }
   }
 
   .ring-sky-500\/30 {
@@ -3752,6 +3826,16 @@
     @supports (color: color-mix(in lab, red, red)) {
       .hover\:bg-accent\/60:hover {
         background-color: color-mix(in oklab, var(--accent) 60%, transparent);
+      }
+    }
+
+    .hover\:bg-amber-500\/10:hover {
+      background-color: #f99c001a;
+    }
+
+    @supports (color: color-mix(in lab, red, red)) {
+      .hover\:bg-amber-500\/10:hover {
+        background-color: color-mix(in oklab, var(--color-amber-500) 10%, transparent);
       }
     }
 
@@ -4320,6 +4404,16 @@
 
   .dark\:text-amber-400:is(.dark *) {
     color: var(--color-amber-400);
+  }
+
+  .dark\:text-amber-400\/70:is(.dark *) {
+    color: #fcbb00b3;
+  }
+
+  @supports (color: color-mix(in lab, red, red)) {
+    .dark\:text-amber-400\/70:is(.dark *) {
+      color: color-mix(in oklab, var(--color-amber-400) 70%, transparent);
+    }
   }
 
   .dark\:text-emerald-400:is(.dark *) {

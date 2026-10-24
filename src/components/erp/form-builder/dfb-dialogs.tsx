@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/select";
 import { getIconKeyGlyph } from "@/lib/app-catalog";
 import { ACTION_BAR_KEYS } from "@/components/forms/action-bar";
+import { LatinInput } from "@/components/forms/latin-input";
 import {
   dfbApi, type DfbMenuNode, type DfbTabDef, type DfbFieldDef,
 } from "@/stores/dfb-store";
@@ -161,7 +162,7 @@ function MenuDialogBody({
         </div>
         <div className="grid gap-1.5">
           <Label htmlFor="dfb-menu-title-en">{t("dfb.menuTitleEn")}</Label>
-          <Input id="dfb-menu-title-en" dir="ltr" value={titleEn} onChange={(e) => setTitleEn(e.target.value)} />
+          <LatinInput id="dfb-menu-title-en" value={titleEn} onValueChange={setTitleEn} />
         </div>
         <div className="grid gap-1.5">
           <Label>{t("dfb.iconKey")}</Label>
@@ -467,7 +468,7 @@ function WizardBody({
           <div className="grid grid-cols-2 gap-2">
             <div className="grid gap-1.5">
               <Label htmlFor="dfb-form-title-en">{t("dfb.formTitleEn")}</Label>
-              <Input id="dfb-form-title-en" dir="ltr" value={titleEn} onChange={(e) => setTitleEn(e.target.value)} />
+              <LatinInput id="dfb-form-title-en" value={titleEn} onValueChange={setTitleEn} />
             </div>
             <div className="grid gap-1.5">
               <Label htmlFor="dfb-form-badge">{t("dfb.badgeLabel")}</Label>
