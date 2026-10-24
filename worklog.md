@@ -2350,3 +2350,16 @@ Work Log:
 Stage Summary:
 - MainDataGrid آمادهٔ استفادهٔ مجدد است: هر پنجرهٔ فهرستی آینده (فهرست کلّی هر فرم، گزارش‌ها) فقط با دادن columns/rows/actions ساخته می‌شود؛ فیلتر عملگری، مرتب‌سازی، انتخابگر ستون، خروجی CSV و نوار اکشن رنگی داخل خود گرید است.
 - artifacts: main-data-grid.tsx، records-list-window.tsx، DELETE forms/:id/data/:dataId، dfb-list window kind + titleOverride، ۲۳×۱۱ کلید i18n؛ دیتابیس بدون ردِ آزمون.
+
+---
+Task ID: 65
+Agent: Z.ai Code (main orchestrator)
+Task: درخواست مالک — «آخرین نسخهٔ سورس و بک‌آپ دیتابیس به گیت‌هاب پوش شود».
+
+Work Log:
+- بررسی مخزن: working tree تمیز و HEAD (861c1a6 = Task 64) هم‌تراز origin/main بود → سورس از پیش به‌روز بود.
+- خانه‌داری §0.9: اجرای scripts/db-backup.sh در ۱۹:۲۰ تهران → backup db/custom-2026-10-24_1920.db و dfb-2026-10-24_1920.db (اعتبارسنجی سلامت SQLite: ۱۴ و ۹ جدول).
+- کامیت + پوش به origin/main.
+
+Stage Summary:
+- مخزن گیت‌هاب اکنون آخرین سورس (Task 64: MainDataGrid) و تازه‌ترین بک‌آپ دیتابیس (۱۹:۲۰ تهران) را دارد.
