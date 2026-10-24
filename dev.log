@@ -1004,3 +1004,90 @@ Read more: https://nextjs.org/docs/app/api-reference/config/next-config-js/allow
  GET /api/advancedTools/forms/5 200 in 37ms (next.js: 15ms, application-code: 22ms)
  GET /api/advancedTools/forms/5 200 in 10ms (next.js: 0.6ms, application-code: 9ms)
  GET /api/advancedTools/menus/tree 200 in 42ms (next.js: 22ms, application-code: 21ms)
+ GET / 200 in 34ms (next.js: 0.8ms, application-code: 33ms)
+ GET / 200 in 37ms (next.js: 1.1ms, application-code: 36ms)
+ GET /api/advancedTools/menus/tree 200 in 53ms (next.js: 17ms, application-code: 36ms)
+ GET /api/settings/app-registry 200 in 36ms (next.js: 13ms, application-code: 23ms)
+ GET /api/settings/app-registry 200 in 9ms (next.js: 0.9ms, application-code: 8ms)
+ GET /api/advancedTools/menus/tree 200 in 27ms (next.js: 16ms, application-code: 12ms)
+ GET /api/advancedTools/menus/tree 200 in 29ms (next.js: 16ms, application-code: 13ms)
+✓ Compiled in 189ms
+✓ Compiled in 297ms
+✓ Compiled in 173ms
+✓ Compiled in 220ms
+✓ Compiled in 180ms
+✓ Compiled in 216ms
+✓ Compiled in 158ms
+✓ Compiled in 216ms
+✓ Compiled in 398ms
+ GET /api/advancedTools/menus/tree 200 in 38ms (next.js: 17ms, application-code: 22ms)
+✓ Compiled in 230ms
+✓ Compiled in 211ms
+✓ Compiled in 183ms
+✓ Compiled in 377ms
+✓ Compiled in 195ms
+✓ Compiled in 163ms
+✓ Compiled in 230ms
+✓ Compiled in 240ms
+✓ Compiled in 160ms
+✓ Compiled in 2ms
+ GET /api/advancedTools/menus/tree 200 in 93ms (next.js: 46ms, application-code: 47ms)
+ GET /api/advancedTools/menus/tree 200 in 24ms (next.js: 1.1ms, application-code: 23ms)
+ POST /api/advancedTools/forms 201 in 78ms (next.js: 16ms, application-code: 62ms)
+✓ Compiled in 400ms
+✓ Compiled in 0ms
+ GET /api/advancedTools/menus/tree 200 in 101ms (next.js: 2ms, application-code: 99ms)
+ GET /api/advancedTools/forms/6 200 in 47ms (next.js: 17ms, application-code: 30ms)
+ GET /api/advancedTools/queries 200 in 38ms (next.js: 0.7ms, application-code: 37ms)
+ GET /api/advancedTools/forms/6 200 in 31ms (next.js: 1.1ms, application-code: 29ms)
+ GET /api/advancedTools/queries 200 in 12ms (next.js: 1.0ms, application-code: 11ms)
+ GET /api/advancedTools/forms/6 200 in 56ms (next.js: 27ms, application-code: 28ms)
+ GET /api/advancedTools/forms/6 200 in 41ms (next.js: 1.3ms, application-code: 39ms)
+ GET / 200 in 78ms (next.js: 1.4ms, application-code: 77ms)
+ GET /api/settings/app-registry 200 in 56ms (next.js: 16ms, application-code: 39ms)
+ GET /api/advancedTools/menus/tree 200 in 37ms (next.js: 15ms, application-code: 22ms)
+ GET /api/settings/app-registry 200 in 11ms (next.js: 1.1ms, application-code: 10ms)
+ GET /api/advancedTools/menus/tree 200 in 27ms (next.js: 15ms, application-code: 12ms)
+ GET /api/advancedTools/menus/tree 200 in 24ms (next.js: 14ms, application-code: 10ms)
+ POST /api/advancedTools/forms 201 in 36ms (next.js: 14ms, application-code: 22ms)
+ GET /api/advancedTools/menus/tree 200 in 12ms (next.js: 0.8ms, application-code: 11ms)
+ GET /api/advancedTools/forms/7 200 in 23ms (next.js: 0.9ms, application-code: 22ms)
+ GET /api/advancedTools/queries 200 in 11ms (next.js: 1.3ms, application-code: 10ms)
+ GET /api/advancedTools/queries 200 in 27ms (next.js: 14ms, application-code: 13ms)
+ GET /api/advancedTools/forms/7 200 in 12ms (next.js: 0.8ms, application-code: 11ms)
+ GET /api/advancedTools/forms/7 200 in 10ms (next.js: 0.9ms, application-code: 9ms)
+ GET /api/advancedTools/forms/7 200 in 24ms (next.js: 14ms, application-code: 10ms)
+✓ Compiled in 217ms
+ GET / 200 in 110ms (next.js: 2ms, application-code: 108ms)
+ GET /api/settings/app-registry 200 in 52ms (next.js: 18ms, application-code: 33ms)
+ GET /api/advancedTools/menus/tree 200 in 106ms (next.js: 42ms, application-code: 64ms)
+ GET /api/settings/app-registry 200 in 28ms (next.js: 0.6ms, application-code: 27ms)
+ GET /api/advancedTools/menus/tree 200 in 75ms (next.js: 24ms, application-code: 51ms)
+ GET /api/advancedTools/menus/tree 200 in 33ms (next.js: 19ms, application-code: 13ms)
+ POST /api/advancedTools/forms 201 in 118ms (next.js: 20ms, application-code: 98ms)
+ GET /api/advancedTools/menus/tree 200 in 25ms (next.js: 0.7ms, application-code: 24ms)
+ GET /api/advancedTools/forms/8 200 in 15ms (next.js: 0.7ms, application-code: 14ms)
+ GET /api/advancedTools/forms/8 200 in 43ms (next.js: 3ms, application-code: 40ms)
+ GET /api/advancedTools/queries 200 in 41ms (next.js: 1.5ms, application-code: 40ms)
+ GET /api/advancedTools/queries 200 in 31ms (next.js: 0.8ms, application-code: 30ms)
+ GET /api/advancedTools/forms/8 200 in 74ms (next.js: 2ms, application-code: 72ms)
+ GET /api/advancedTools/forms/8 200 in 28ms (next.js: 0.8ms, application-code: 27ms)
+ PUT /api/advancedTools/forms/8 200 in 41ms (next.js: 18ms, application-code: 23ms)
+ PUT /api/advancedTools/forms/8 200 in 85ms (next.js: 0.7ms, application-code: 84ms)
+ GET /api/advancedTools/forms/8 200 in 10ms (next.js: 0.9ms, application-code: 9ms)
+ GET /api/advancedTools/forms/8 200 in 45ms (next.js: 16ms, application-code: 28ms)
+ GET /api/advancedTools/forms/8 200 in 40ms (next.js: 25ms, application-code: 15ms)
+ GET /api/advancedTools/forms/8 200 in 22ms (next.js: 0.8ms, application-code: 21ms)
+ GET /api/advancedTools/forms/8/data 200 in 10ms (next.js: 0.7ms, application-code: 9ms)
+ GET /api/advancedTools/forms/8/data 200 in 26ms (next.js: 15ms, application-code: 11ms)
+ POST /api/advancedTools/forms/8/data 201 in 52ms (next.js: 16ms, application-code: 36ms)
+ GET /api/advancedTools/forms/8/data 200 in 42ms (next.js: 1.0ms, application-code: 41ms)
+ GET /api/advancedTools/forms/8/data 200 in 27ms (next.js: 19ms, application-code: 8ms)
+ GET /api/advancedTools/forms/8 200 in 37ms (next.js: 21ms, application-code: 16ms)
+ GET /api/advancedTools/queries 200 in 13ms (next.js: 0.7ms, application-code: 13ms)
+ GET /api/advancedTools/forms/8 200 in 13ms (next.js: 0.8ms, application-code: 13ms)
+ GET /api/advancedTools/queries 200 in 10ms (next.js: 0.6ms, application-code: 10ms)
+✓ Compiled in 227ms
+✓ Compiled in 1ms
+ DELETE /api/advancedTools/forms/8 200 in 41ms (next.js: 16ms, application-code: 25ms)
+ GET /api/advancedTools/forms/8/data 200 in 11ms (next.js: 0.6ms, application-code: 11ms)
