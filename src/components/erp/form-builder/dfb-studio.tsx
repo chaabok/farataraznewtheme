@@ -41,6 +41,7 @@ import {
   type DfbFormStyle, type DfbBankAlign,
 } from "@/lib/dfb-theme";
 import { ACTION_BAR_KEYS } from "@/components/forms/action-bar";
+import { FieldTranslationsBody } from "@/components/erp/form-builder/field-translations";
 import {
   SimpleFormTwoRowTabbed,
   type SimpleFormField,
@@ -756,9 +757,13 @@ function StudioInner({ formId }: { formId: number }) {
            derived fields added from the fetched list bind to it via config
            { bindScript } and that binding must survive the save regeneration */
         const isScript = fieldType === "script";
+        /* Task 68 — کلید پایدار از لحظهٔ ساخت: ترجمه‌ها با (formRef، fieldKey)
+           هویت می‌گیرند، پس fieldKey نباید در اولین ذخیره «تولید» شود */
         const field: StudioField = {
           key: nextKey("f"),
-          fieldKey: isScript ? `script_${Date.now().toString(36)}` : "",
+          fieldKey: isScript
+            ? `script_${Date.now().toString(36)}`
+            : `fld_${Date.now().toString(36)}${Math.floor(Math.random() * 36)}`,
           label: t(`dfb.type.${fieldType}` as never),
           labelEn: "", // Task 59
           fieldType,
@@ -1905,6 +1910,7 @@ function StudioInner({ formId }: { formId: number }) {
                       containerLabel={containerLabelOf(selectedFieldRef.containerKey)}
                       isSystem={isSystem}
                       queries={queries}
+                      formRef={formId}
                       newItemLabel={newItemLabel}
                       onNewItemLabel={setNewItemLabel}
                       scriptBusy={scriptBusy}
@@ -1958,6 +1964,7 @@ function StudioInner({ formId }: { formId: number }) {
           containerLabel={containerLabelOf(selectedFieldRef.containerKey)}
           isSystem={isSystem}
           queries={queries}
+          formRef={formId}
           newItemLabel={newItemLabel}
           onNewItemLabel={setNewItemLabel}
           scriptBusy={scriptBusy}
@@ -3113,7 +3120,7 @@ function AddTabDialog({
  * Latin label / type / width / flags / query binding / list items / script.
  */
 function FieldSettingsBody({
-  field, containerLabel, isSystem, queries,
+  field, containerLabel, isSystem, queries, formRef,
   newItemLabel, onNewItemLabel,
   scriptBusy, itemsBusy, itemsCandidates, itemsPicked,
   onUpdate, onDelete,
@@ -3126,6 +3133,8 @@ function FieldSettingsBody({
   containerLabel: string;
   isSystem: boolean;
   queries: Array<{ id: number; title: string; fields: Array<{ fieldName: string }> }>;
+  /** Task 68 — formRef for the stable translation key (Field:<formRef>:<fieldKey>) */
+  formRef: number;
   newItemLabel: string;
   onNewItemLabel: (v: string) => void;
   scriptBusy: boolean;
@@ -3180,6 +3189,15 @@ function FieldSettingsBody({
         <Label className="text-[11px] text-muted-foreground">{t("dfb.studio.labelEn")}</Label>
         <LatinInput value={field.labelEn} onValueChange={(v) => onUpdate({ labelEn: v })} hideHint />
       </div>
+      {/* Task 68 — ترجمهٔ برچسب به ۱۰ زبان دیگر (ذخیرهٔ فوری، نمایش آفلاین) */}
+      {formRef > 0 && field.fieldKey ? (
+        <FieldTranslationsBody
+          key={`${formRef}:${field.fieldKey}`}
+          formRef={formRef}
+          fieldKey={field.fieldKey}
+          fallbackFa={field.label}
+        />
+      ) : null}
       {/* Task 60 — in the properties modal (hideFieldType) the type selector
           is omitted: the type was already selected at creation. «عرض» then
           takes the full row instead of sharing the 2-column grid. */}

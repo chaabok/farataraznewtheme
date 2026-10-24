@@ -6,9 +6,10 @@ import { toast } from "sonner";
 import { useT, useSettings } from "@/stores/settings-store";
 import { useDesktop } from "@/stores/desktop-store";
 import {
-  fetchFormDetail, loadFormData, dfbFormTitle, dfbApi, isDfbInputField,
+  fetchFormDetail, loadFormData, dfbFormTitle, dfbFieldLabel, dfbApi, isDfbInputField,
   type DfbFormDetail,
 } from "@/stores/dfb-store";
+import { useDfbTrMap } from "@/stores/dfb-translations";
 import {
   MainDataGrid, GridActionButton, type MainGridColumn, type MainGridRow,
 } from "./main-data-grid";
@@ -25,6 +26,7 @@ import { ConfirmDeleteDialog } from "@/components/forms/action-bar";
 export function RecordsListWindow({ formId }: { formId: number }) {
   const t = useT();
   const locale = useSettings((s) => s.locale);
+  const trMap = useDfbTrMap(); // Task 68
 
   const [detail, setDetail] = React.useState<DfbFormDetail | null>(null);
   const [rows, setRows] = React.useState<MainGridRow[]>([]);
@@ -96,11 +98,11 @@ export function RecordsListWindow({ formId }: { formId: number }) {
       .getState()
       .windows.find((w) => w.kind === "dfb-list" && w.appKey === String(formId));
     if (!win) return;
-    const label = detail ? dfbFormTitle(detail, locale) : "";
+    const label = detail ? dfbFormTitle(detail, locale, trMap) : "";
     useDesktop
       .getState()
       .setWindowTitle(win.id, `${t("dfb.list.title")} ${label} (${rows.length})`.trim());
-  }, [detail, rows.length, t, locale, formId]);
+  }, [detail, rows.length, t, locale, formId, trMap]);
 
   const columns = React.useMemo<MainGridColumn[]>(() => {
     const cols: MainGridColumn[] = [
@@ -117,13 +119,13 @@ export function RecordsListWindow({ formId }: { formId: number }) {
         .sort((a, b) => a.orderIndex - b.orderIndex)) {
         cols.push({
           key: String(f.id),
-          label: locale === "en" && f.labelEn ? f.labelEn : f.label,
+          label: dfbFieldLabel(f, locale, trMap), // Task 68
           width: 170,
         });
       }
     }
     return cols;
-  }, [detail, t, locale]);
+  }, [detail, t, locale, trMap]);
 
   const doDelete = React.useCallback(async () => {
     if (!selectedId) return;

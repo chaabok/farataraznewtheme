@@ -83,10 +83,10 @@ export class TranslationsService {
       if (!Number.isInteger(entityRef) || entityRef <= 0) {
         throw new BadRequestException("شناسهٔ موجودیت نامعتبر است");
       }
-      if (!fieldKey || fieldKey.length > FIELD_KEY_MAX) {
+      if (!fieldKey || fieldKey.length > 200) { // §DTO MaxLength — defense in depth
         throw new BadRequestException("کلید فیلد نامعتبر است");
       }
-      if (value.length > VALUE_MAX) {
+      if (value.length > 1000) { // §DTO MaxLength — defense in depth
         throw new BadRequestException("متن ترجمه بیش از حد بلند است");
       }
 
@@ -100,7 +100,10 @@ export class TranslationsService {
       };
 
       if (!value) {
-        const res = await this.prisma.dfbTranslation.deleteMany({ where });
+        /* deleteMany accepts only scalar filters (not the composite-unique key name) */
+        const res = await this.prisma.dfbTranslation.deleteMany({
+          where: { entityType, entityRef: BigInt(entityRef), fieldKey, lang },
+        });
         deleted += res.count;
         continue;
       }

@@ -2,6 +2,7 @@
 
 import { create } from "zustand";
 import { appApi } from "@/lib/api";
+import { dfbResolveTr } from "@/stores/dfb-translations";
 
 /**
  * Dfb store (Task 45 — فرمساز): the builder tree (icons → submenus → forms)
@@ -96,23 +97,51 @@ export function findFormInTree(nodes: DfbMenuNode[], id: number): DfbFormSummary
   return null;
 }
 
-/* ------------------- locale-aware display titles (Task 46) ----------------
+/* --------------- locale-aware display titles (Task 46 / Task 68) ----------
    System nodes carry an appKey → the catalog's i18n labels cover all 11
-   locales (§1.3); forms and user-created nodes only store title (fa) and
-   titleEn (en), so other locales fall back to the stored title. */
+   locales (§1.3). Forms and user-created nodes store title (fa) + titleEn
+   (en); Task 68 adds the central DfbTranslation map (one lang at a time,
+   passed by the caller from useDfbTrMap()) with the fallback chain:
+   ترجمهٔ زبان فعلی → fa → Title_En → fa. */
 export type DfbTitleish = { title: string; titleEn: string | null };
 
-export function dfbFormTitle(form: DfbTitleish, locale: string): string {
+export function dfbFormTitle(
+  form: DfbTitleish & { id?: number },
+  locale: string,
+  tr?: Record<string, string>,
+): string {
+  if (tr && locale !== "fa" && form.id != null) {
+    return dfbResolveTr(tr, `Form:${form.id}:Title`, form.title, form.titleEn);
+  }
   return locale === "en" && form.titleEn ? form.titleEn : form.title;
 }
 
 export function dfbNodeTitle(
-  node: DfbTitleish & { isSystem: boolean; appKey: string | null },
+  node: DfbTitleish & { id?: number; isSystem: boolean; appKey: string | null },
   t: (k: never) => string,
   locale: string,
+  tr?: Record<string, string>,
 ): string {
   if (node.isSystem && node.appKey) return t(`app.${node.appKey}` as never);
+  if (tr && locale !== "fa" && node.id != null) {
+    return dfbResolveTr(tr, `Menu:${node.id}:Title`, node.title, node.titleEn);
+  }
   return dfbFormTitle(node, locale);
+}
+
+/**
+ * Task 68 — برچسب نمایشی فیلد با ترجمه: کلید پایدار
+ * `Field:<formRef>:<fieldKey>`؛ زنجیره: ترجمهٔ زبان فعلی → fa (Label) → Label_En.
+ */
+export function dfbFieldLabel(
+  f: { formRef: number; fieldKey: string; label: string; labelEn?: string | null },
+  locale: string,
+  tr?: Record<string, string>,
+): string {
+  if (tr && locale !== "fa") {
+    return dfbResolveTr(tr, `Field:${f.formRef}:${f.fieldKey}`, f.label, f.labelEn);
+  }
+  return locale === "en" && f.labelEn ? f.labelEn : f.label;
 }
 
 /** root-level node lookup by catalog appKey (for "app:<appKey>" menu windows) */

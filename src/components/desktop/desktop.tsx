@@ -46,6 +46,7 @@ import {
   useDfb, findMenuNode, findFormInTree, findMenuNodeByAppKey,
   dfbNodeTitle, dfbFormTitle,
 } from "@/stores/dfb-store";
+import { ensureDfbTranslations, useDfbTrMap } from "@/stores/dfb-translations";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Toaster } from "sonner";
@@ -116,6 +117,7 @@ function resolveWindowMeta(
   t: ReturnType<typeof useT>,
   dfbTree: ReturnType<typeof useDfb.getState>["tree"],
   locale: string,
+  trMap?: Record<string, string>, // Task 68 — نقشهٔ ترجمهٔ زبان فعلی
 ) {
   if (win.kind === "app") {
     const appKey = win.appKey ?? "";
@@ -138,7 +140,7 @@ function resolveWindowMeta(
       : findMenuNode(dfbTree, Number(ref));
     return {
       title: node
-        ? dfbNodeTitle(node, t, locale)
+        ? dfbNodeTitle(node, t, locale, trMap)
         : appRef
           ? t(`app.${appRef}` as never)
           : t("dfb.menuNotFound"),
@@ -156,7 +158,7 @@ function resolveWindowMeta(
     const formId = Number(win.appKey ?? 0);
     const form = findFormInTree(dfbTree, formId);
     return {
-      title: form ? dfbFormTitle(form, locale) : t("dfb.formNotFound"),
+      title: form ? dfbFormTitle(form, locale, trMap) : t("dfb.formNotFound"),
       icon: (
         <span className="flex h-5 w-5 items-center justify-center rounded-md bg-gradient-to-br from-teal-500 to-emerald-600 text-white">
           <FilePlus2 className="h-3 w-3" />
@@ -171,7 +173,7 @@ function resolveWindowMeta(
     const form = findFormInTree(dfbTree, formId);
     return {
       title: form
-        ? `${t("dfb.list.title")} — ${dfbFormTitle(form, locale)}`
+        ? `${t("dfb.list.title")} — ${dfbFormTitle(form, locale, trMap)}`
         : t("dfb.list.title"),
       icon: (
         <span className="flex h-5 w-5 items-center justify-center rounded-md bg-gradient-to-br from-emerald-500 to-teal-600 text-white">
@@ -187,7 +189,7 @@ function resolveWindowMeta(
     const form = findFormInTree(dfbTree, formId);
     return {
       title: form
-        ? `${t("dfb.studio.title")} — ${dfbFormTitle(form, locale)}`
+        ? `${t("dfb.studio.title")} — ${dfbFormTitle(form, locale, trMap)}`
         : t("dfb.studio.title"),
       icon: (
         <span className="flex h-5 w-5 items-center justify-center rounded-md bg-gradient-to-br from-amber-500 to-orange-600 text-white">
@@ -765,9 +767,11 @@ export function Desktop() {
   /* Task 45 — dfb tree feeds the dynamic window titles/icons (dfb-menu/dfb-form) */
   const dfbTree = useDfb((s) => s.tree);
   const dfbLoad = useDfb((s) => s.load);
+  const trMap = useDfbTrMap(); // Task 68
 
   React.useEffect(() => {
     void dfbLoad();
+    void ensureDfbTranslations(); // Task 68 — واکشی یک‌بارهٔ نقشهٔ ترجمه (کش آفلاین)
   }, [dfbLoad]);
 
   /* apply locale direction + language to <html> */
@@ -805,7 +809,7 @@ export function Desktop() {
           }}
         >
           {windows.map((win) => {
-            const meta = resolveWindowMeta(win, t, dfbTree, locale);
+            const meta = resolveWindowMeta(win, t, dfbTree, locale, trMap);
             return (
               <AppWindow key={win.id} win={win} title={win.titleOverride ?? meta.title} icon={meta.icon}>
                 {meta.content}

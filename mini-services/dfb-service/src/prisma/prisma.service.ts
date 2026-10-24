@@ -18,6 +18,7 @@ const VERSIONED_MODELS: ReadonlySet<string> = new Set([
   "DfbQueryField",
   "DfbFormData",
   "DfbFormDataValue",
+  "DfbTranslation", // Task 68
 ]);
 
 const VERSION_ACTIONS = new Set(["update", "updateMany", "upsert"]);

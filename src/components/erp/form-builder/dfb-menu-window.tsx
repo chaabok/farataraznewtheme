@@ -10,6 +10,7 @@ import {
   useDfb, findMenuNode, findMenuNodeByAppKey, dfbNodeTitle, dfbFormTitle,
   type DfbFormSummary, type DfbMenuNode,
 } from "@/stores/dfb-store";
+import { useDfbTrMap } from "@/stores/dfb-translations";
 import { DfbGlyph } from "./dfb-dialogs";
 
 /**
@@ -25,6 +26,7 @@ export function DfbMenuWindow({ menuRef }: { menuRef: string }) {
   const t = useT();
   const dir = useSettings((s) => s.dir());
   const locale = useSettings((s) => s.locale);
+  const trMap = useDfbTrMap(); // Task 68
   const tree = useDfb((s) => s.tree);
   const loaded = useDfb((s) => s.loaded);
   const load = useDfb((s) => s.load);
@@ -87,7 +89,7 @@ export function DfbMenuWindow({ menuRef }: { menuRef: string }) {
             onClick={() => setPath([])}
           >
             <DfbGlyph iconKey={root.iconKey} className="h-4 w-4 rounded" iconClass="h-2.5 w-2.5" />
-            {dfbNodeTitle(root, t, locale)}
+            {dfbNodeTitle(root, t, locale, trMap)}
           </button>
           {path.map((pid, i) => {
             const node = (() => {
@@ -107,7 +109,7 @@ export function DfbMenuWindow({ menuRef }: { menuRef: string }) {
                   className="rounded-md px-1.5 py-0.5 hover:bg-foreground/5"
                   onClick={() => setPath(path.slice(0, i + 1))}
                 >
-                  {dfbNodeTitle(node, t, locale)}
+                  {dfbNodeTitle(node, t, locale, trMap)}
                 </button>
               </span>
             );
@@ -129,7 +131,7 @@ export function DfbMenuWindow({ menuRef }: { menuRef: string }) {
                     className="group flex flex-col items-center gap-1.5 rounded-xl border border-border/60 p-3 transition-all hover:border-foreground/25 hover:shadow-md"
                   >
                     <DfbGlyph iconKey={sm.iconKey} className="h-10 w-10" iconClass="h-5 w-5" />
-                    <span className="line-clamp-2 text-center text-[11px] font-medium leading-tight">{dfbNodeTitle(sm, t, locale)}</span>
+                    <span className="line-clamp-2 text-center text-[11px] font-medium leading-tight">{dfbNodeTitle(sm, t, locale, trMap)}</span>
                   </button>
                 ))}
               </div>
@@ -163,7 +165,7 @@ export function DfbMenuWindow({ menuRef }: { menuRef: string }) {
                           {isBuilder ? <Wrench className="h-4 w-4" aria-hidden /> : <FileText className="h-4 w-4" aria-hidden />}
                         </span>
                         <span className="min-w-0 flex-1">
-                          <span className="block truncate text-sm font-medium">{dfbFormTitle(f, locale)}</span>
+                          <span className="block truncate text-sm font-medium">{dfbFormTitle(f, locale, trMap)}</span>
                           <span className="block truncate text-[11px] text-muted-foreground" dir="ltr">
                             {f.code}
                           </span>

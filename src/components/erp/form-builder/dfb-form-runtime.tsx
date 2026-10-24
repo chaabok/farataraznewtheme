@@ -21,10 +21,11 @@ import { dfbShellTheme, dfbBankAlign, type DfbFormStyle } from "@/lib/dfb-theme"
 import {
   fetchFormDetail, saveFormData, loadFormData,
   fetchQueryOptionsForFields, normalizeFieldWidth, widthMinWidthClass,
-  dfbFormTitle, executeFormScript, parseFieldConfig, isDfbInputField,
+  dfbFormTitle, dfbFieldLabel, executeFormScript, parseFieldConfig, isDfbInputField,
   fieldConfigItems, fieldItemsScript, rowsToItems, DFB_ITEM_FIELD_TYPES,
   type DfbFormDetail, type DfbFieldDef, type DfbFieldItem,
 } from "@/stores/dfb-store";
+import { useDfbTrMap } from "@/stores/dfb-translations";
 
 /**
  * DfbFormRuntime (Task 45) — runs a DfbForm definition: renders the template
@@ -42,6 +43,7 @@ export function DfbFormRuntime({ formId }: { formId: number }) {
 function RuntimeInner({ formId }: { formId: number }) {
   const t = useT();
   const locale = useSettings((s) => s.locale);
+  const trMap = useDfbTrMap(); // Task 68 — برچسب/عنوان‌ها به زبان فعلی (آفلاین)
   const chrome = useWindowChrome();
   const headerMaximized = useDesktop(
     (s) => s.windows.find((w) => w.kind === "dfb-form" && w.appKey === String(formId))?.maximized ?? false,
@@ -307,7 +309,7 @@ function RuntimeInner({ formId }: { formId: number }) {
     const footerBandFields = detail.fields.filter((f) => f.section === "footer");
     const toSimpleField = (f: DfbFieldDef): SimpleFormField => ({
       id: String(f.id),
-      label: f.label,
+      label: dfbFieldLabel(f, locale, trMap), // Task 68
       type: toShellType(f.fieldType),
       required: f.required,
       value: f.fieldType === "checkbox" ? undefined : String(values[String(f.id)] ?? ""),
@@ -330,7 +332,7 @@ function RuntimeInner({ formId }: { formId: number }) {
         .filter((f) => f.tabRef === tabId)
         .map((f) => ({
           id: String(f.id),
-          label: f.label,
+          label: dfbFieldLabel(f, locale, trMap), // Task 68
           required: f.required,
           minWidth: widthMinWidthClass(normalizeFieldWidth(f.widthSpan)),
           /* Task 58 — the grid cell renders the SAME editor as the body
@@ -341,7 +343,7 @@ function RuntimeInner({ formId }: { formId: number }) {
 
     const tabs: SimpleFormTab[] = [];
     for (const tb of bandTabs) {
-      const tabLabel = dfbFormTitle(tb, locale);
+      const tabLabel = dfbFormTitle(tb, locale, trMap);
       /* Task 49 — input-fields band (TabKind=2): plain inputs, no grid;
          the band title doubles as the tab's user-facing name */
       if (tb.tabKind === 2) {
@@ -362,7 +364,7 @@ function RuntimeInner({ formId }: { formId: number }) {
         for (const ct of kids) {
           tabs.push({
             id: String(ct.id),
-            label: dfbFormTitle(ct, locale),
+            label: dfbFormTitle(ct, locale, trMap),
             columns: columnsOf(ct.id),
           });
         }
@@ -384,7 +386,7 @@ function RuntimeInner({ formId }: { formId: number }) {
 
     return (
       <SimpleFormTwoRowTabbed
-        title={detail.title}
+        title={dfbFormTitle(detail, locale, trMap)}
         badge={(header.badge as string) ?? undefined}
         icon={<FileText className="h-3.5 w-3.5" aria-hidden />}
         headerClassName={shellTheme.headerClassName}
@@ -452,7 +454,7 @@ function RuntimeInner({ formId }: { formId: number }) {
 
   return (
     <SimpleTreeForm
-      treeTitle={detail.title}
+      treeTitle={dfbFormTitle(detail, locale, trMap)}
       treeEmptyText={t("dfb.noRecords")}
       nodes={nodes}
       selectedId={selectedRecordId}
@@ -466,7 +468,7 @@ function RuntimeInner({ formId }: { formId: number }) {
       fieldsAlign={dfbBankAlign(shellStyle, "main")}
       fields={treeFields.map((f) => ({
         id: String(f.id),
-        label: f.label,
+        label: dfbFieldLabel(f, locale, trMap), // Task 68
         type: toShellType(f.fieldType),
         required: f.required,
         value: f.fieldType === "checkbox" ? undefined : String(values[String(f.id)] ?? ""),

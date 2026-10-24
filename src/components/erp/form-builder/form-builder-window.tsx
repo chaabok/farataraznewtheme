@@ -19,6 +19,7 @@ import {
   useDfb, findMenuNode, fetchFormDetail, dfbNodeTitle, dfbFormTitle,
   type DfbMenuNode, type DfbFormDetail, type DfbFormSummary,
 } from "@/stores/dfb-store";
+import { useDfbTrMap } from "@/stores/dfb-translations";
 import {
   DfbGlyph, DfbMenuDialog, DfbFormWizard, DfbQueryDialog, DfbFieldsOverview,
 } from "./dfb-dialogs";
@@ -34,6 +35,7 @@ import { dfbApi } from "@/stores/dfb-store";
 export function FormBuilderWindow() {
   const t = useT();
   const locale = useSettings((s) => s.locale);
+  const trMap = useDfbTrMap(); // Task 68 — نقشهٔ ترجمهٔ زبان فعلی (آفلاین)
   const chrome = useWindowChrome();
   const headerMaximized = useDesktop(
     (s) => s.windows.find((w) => w.kind === "dfb-builder")?.maximized ?? false,
@@ -107,7 +109,7 @@ export function FormBuilderWindow() {
   const nodes = React.useMemo<SimpleTreeFormNode[]>(() => {
     const mapMenu = (n: DfbMenuNode): SimpleTreeFormNode => ({
       id: `m${n.id}`,
-      label: dfbNodeTitle(n, t, locale),
+      label: dfbNodeTitle(n, t, locale, trMap),
       icon: (
         <span className="flex h-4 w-4 shrink-0 items-center justify-center">
           <DfbGlyph iconKey={n.iconKey} className="h-4 w-4 rounded-md" iconClass="h-2.5 w-2.5" />
@@ -117,7 +119,7 @@ export function FormBuilderWindow() {
         ...n.children.map(mapMenu),
         ...n.forms.map<SimpleTreeFormNode>((f) => ({
           id: `f${f.id}`,
-          label: dfbFormTitle(f, locale),
+          label: dfbFormTitle(f, locale, trMap),
           icon: (
             <span className="flex h-4 w-4 shrink-0 items-center justify-center">
               <FileText
@@ -130,7 +132,7 @@ export function FormBuilderWindow() {
       ],
     });
     return tree.map(mapMenu);
-  }, [tree, t, locale]);
+  }, [tree, t, locale, trMap]);
 
   /* ---------------- detail fields ---------------- */
   const fields = React.useMemo<SimpleFormField[]>(() => {
@@ -297,9 +299,9 @@ export function FormBuilderWindow() {
   const detailTitleOverride = React.useMemo(() => {
     if (!selected) return null;
     return selected.kind === "menu"
-      ? dfbNodeTitle(selected.menu, t, locale)
-      : `${t("dfb.formEntry")}: ${dfbFormTitle(selected.form, locale)}`;
-  }, [selected, t, locale]);
+      ? dfbNodeTitle(selected.menu, t, locale, trMap)
+      : `${t("dfb.formEntry")}: ${dfbFormTitle(selected.form, locale, trMap)}`;
+  }, [selected, t, locale, trMap]);
 
   return (
     <div className="flex h-full flex-col">
