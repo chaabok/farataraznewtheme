@@ -67,6 +67,16 @@ export class FormsController {
     return this.forms.loadData(id, externalKey);
   }
 
+  /* Task 64 — MainDataGrid «فهرست کلّی»: حذف رکورد انتخاب‌شده */
+  @Delete(":id/data/:dataId")
+  @HttpCode(200)
+  removeData(
+    @Param("id", ParseIntPipe) id: number,
+    @Param("dataId", ParseIntPipe) dataId: number,
+  ) {
+    return this.forms.removeData(id, dataId);
+  }
+
   @Delete(":id")
   @HttpCode(200)
   remove(@Param("id", ParseIntPipe) id: number) {

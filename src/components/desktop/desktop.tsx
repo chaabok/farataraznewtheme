@@ -6,6 +6,7 @@ import {
   ChevronRight,
   ExternalLink,
   FilePlus2,
+  ListChecks,
   ListTree,
   Network,
   PanelLeftClose,
@@ -39,6 +40,7 @@ import { FormBuilderWindow } from "@/components/erp/form-builder/form-builder-wi
 import { DfbMenuWindow } from "@/components/erp/form-builder/dfb-menu-window";
 import { DfbFormRuntime } from "@/components/erp/form-builder/dfb-form-runtime";
 import { FormDesignStudio } from "@/components/erp/form-builder/dfb-studio";
+import { RecordsListWindow } from "@/components/erp/form-builder/records-list-window";
 import { DfbGlyph } from "@/components/erp/form-builder/dfb-dialogs";
 import {
   useDfb, findMenuNode, findFormInTree, findMenuNodeByAppKey,
@@ -161,6 +163,22 @@ function resolveWindowMeta(
         </span>
       ),
       content: <DfbFormRuntime formId={formId} />,
+    };
+  }
+  /* Task 64 — the form's master-list window (فهرست کلّی) — MainDataGrid */
+  if (win.kind === "dfb-list") {
+    const formId = Number(win.appKey ?? 0);
+    const form = findFormInTree(dfbTree, formId);
+    return {
+      title: form
+        ? `${t("dfb.list.title")} — ${dfbFormTitle(form, locale)}`
+        : t("dfb.list.title"),
+      icon: (
+        <span className="flex h-5 w-5 items-center justify-center rounded-md bg-gradient-to-br from-emerald-500 to-teal-600 text-white">
+          <ListChecks className="h-3 w-3" />
+        </span>
+      ),
+      content: <RecordsListWindow formId={formId} />,
     };
   }
   /* Task 47 — the per-form design studio (استودیوی طراحی فرم) */
@@ -789,7 +807,7 @@ export function Desktop() {
           {windows.map((win) => {
             const meta = resolveWindowMeta(win, t, dfbTree, locale);
             return (
-              <AppWindow key={win.id} win={win} title={meta.title} icon={meta.icon}>
+              <AppWindow key={win.id} win={win} title={win.titleOverride ?? meta.title} icon={meta.icon}>
                 {meta.content}
               </AppWindow>
             );

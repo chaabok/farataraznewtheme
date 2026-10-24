@@ -12,13 +12,17 @@ export type WindowKind =
   | "dfb-builder"
   | "dfb-menu"
   | "dfb-form"
-  | "dfb-studio";
+  | "dfb-studio"
+  | "dfb-list";
 
 export interface WinState {
   id: string;
   kind: WindowKind;
   /** catalog key for kind === "app" (e.g. "accounting") */
   appKey?: string;
+  /** Task 64 — dynamic title override (MainDataGrid list windows append the
+      live record count: «فهرست کلّی خدمات (12)») — undefined = resolveWindowMeta title */
+  titleOverride?: string;
   x: number;
   y: number;
   w: number;
@@ -72,6 +76,8 @@ interface DesktopState {
   toggleMaximize: (id: string) => void;
   moveWindow: (id: string, x: number, y: number) => void;
   resizeWindow: (id: string, w: number, h: number, x?: number, y?: number) => void;
+  /** Task 64 — live window title (record-count in list windows) */
+  setWindowTitle: (id: string, title: string) => void;
   setStartOpen: (open: boolean) => void;
   setIconPos: (id: string, pos: IconPos) => void;
   resetIconLayout: () => void;
@@ -212,6 +218,10 @@ export const useDesktop = create<DesktopState>()(
                 }
               : win,
           ),
+        })),
+      setWindowTitle: (id, title) =>
+        set((s) => ({
+          windows: s.windows.map((w) => (w.id === id ? { ...w, titleOverride: title } : w)),
         })),
       setStartOpen: (open) => set({ startOpen: open }),
       setIconPos: (id, pos) =>

@@ -592,6 +592,20 @@ export class FormsService {
     };
   }
 
+  /**
+   * Task 64 — حذف یک رکورد EAV (درخواست مالک — MainDataGrid «فهرست کلّی»):
+   * ابتدا مقادیر (DfbFormDataValue) سپس خود رکورد (DfbFormData) حذف می‌شود؛
+   * رکورد باید متعلق به همین فرم باشد تا حذف بین-فرمی ممکن نشود.
+   */
+  async removeData(formId: number, dataId: number) {
+    const rec = await this.prisma.dfbFormData.findUnique({ where: { id: BigInt(dataId) } });
+    if (!rec || Number(rec.formRef) !== formId) throw new NotFoundException("رکورد یافت نشد");
+    const values = await this.prisma.dfbFormDataValue.deleteMany({ where: { dataRef: BigInt(dataId) } });
+    await this.prisma.dfbFormData.delete({ where: { id: BigInt(dataId) } });
+    this.logger.log(`DfbFormData removed form=${formId} data=${dataId} values=${values.count}`);
+    return { ok: true };
+  }
+
   /* --------------------------- Task 53 — form scripts --------------------------- */
 
   /**

@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { FileText, ListTree, Network, Palette, Plus, Sigma, Wrench } from "lucide-react";
+import { FileText, ListTree, Network, Palette, Plus, Sigma, Table2, Wrench } from "lucide-react";
 import { toast } from "sonner";
 import { useT, useSettings } from "@/stores/settings-store";
 import { useDesktop } from "@/stores/desktop-store";
@@ -452,6 +452,13 @@ function FormDetailPanel({
             <ListTree className="h-4 w-4" /> {t("dfb.openForm")}
           </Button>
         )}
+        {/* Task 64 — the form's master list (فهرست کلّی) — MainDataGrid */}
+        <Button
+          type="button" size="sm" variant="outline"
+          onClick={() => useDesktop.getState().openWindow("dfb-list", String(form.id))}
+        >
+          <Table2 className="h-4 w-4" /> {t("dfb.list.open")}
+        </Button>
         {!form.isSystem && (
           <Button
             type="button" size="sm" variant="outline" className="text-rose-600 hover:text-rose-700"
