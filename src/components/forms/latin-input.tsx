@@ -27,10 +27,15 @@ export function sanitizeLatin(value: string): string {
 }
 
 export function LatinInput({
-  value, onValueChange, id, maxLength = 120, className, ...props
+  value, onValueChange, id, maxLength = 120, className, hideHint = false, ...props
 }: Omit<React.ComponentProps<typeof Input>, "value" | "onChange" | "dir"> & {
   value: string;
   onValueChange: (value: string) => void;
+  /** Task 60 (owner request) — hide the permanent «فقط نویسه‌های لاتین»
+   *  hint line (decluttered contexts e.g. the field-properties modal);
+   *  the transient blocked-flash still shows so silent stripping is
+   *  never invisible to the user. */
+  hideHint?: boolean;
 }) {
   const t = useT();
   const [blocked, setBlocked] = React.useState(false);
@@ -62,15 +67,17 @@ export function LatinInput({
         onChange={handleChange}
         className={cn("text-start", blocked && "border-rose-500 ring-1 ring-rose-500/40", className)}
       />
-      <p
-        aria-live="polite"
-        className={cn(
-          "text-[10px] leading-tight",
-          blocked ? "font-medium text-rose-600 dark:text-rose-400" : "text-muted-foreground/70",
-        )}
-      >
-        {blocked ? t("dfb.studio.latinBlocked") : t("dfb.studio.latinOnly")}
-      </p>
+      {blocked || !hideHint ? (
+        <p
+          aria-live="polite"
+          className={cn(
+            "text-[10px] leading-tight",
+            blocked ? "font-medium text-rose-600 dark:text-rose-400" : "text-muted-foreground/70",
+          )}
+        >
+          {blocked ? t("dfb.studio.latinBlocked") : t("dfb.studio.latinOnly")}
+        </p>
+      ) : null}
     </div>
   );
 }

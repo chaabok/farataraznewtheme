@@ -3090,7 +3090,7 @@ function FieldSettingsBody({
   onRunScript, onToggleScriptField, onAddScriptFields,
   onAddItem, onRemoveItem, onUpdateItemLabel,
   onRunItemsScript, onToggleItemCandidate, onAddSelectedItems,
-  onOpenScriptModal,
+  onOpenScriptModal, hideFieldType,
 }: {
   field: StudioField;
   containerLabel: string;
@@ -3114,6 +3114,11 @@ function FieldSettingsBody({
   onToggleItemCandidate: (fieldKey: string, value: string, on: boolean) => void;
   onAddSelectedItems: () => void;
   onOpenScriptModal: (mode: "field" | "items") => void;
+  /** Task 60 (owner request) — in the double-click PROPERTIES modal the
+   *  field's type was already chosen when the field was created, so the
+   *  «نوع فیلد» selector is not shown again (type is frozen there); the
+   *  rail keeps it for quick editing while designing. */
+  hideFieldType?: boolean;
 }) {
   const t = useT();
   const scriptText = String(field.config?.script ?? "");
@@ -3138,26 +3143,17 @@ function FieldSettingsBody({
           className="h-8"
         />
       </div>
-      {/* Task 59 — Latin label (persisted as Label_En, Latin-only enforced) */}
+      {/* Task 59 — Latin label (persisted as Label_En, Latin-only enforced);
+          Task 60 — the permanent latin-only hint line is hidden here
+          (owner request: no extra descriptions in the properties modal) */}
       <div className="grid gap-1.5">
         <Label className="text-[11px] text-muted-foreground">{t("dfb.studio.labelEn")}</Label>
-        <LatinInput value={field.labelEn} onValueChange={(v) => onUpdate({ labelEn: v })} />
+        <LatinInput value={field.labelEn} onValueChange={(v) => onUpdate({ labelEn: v })} hideHint />
       </div>
-      <div className="grid grid-cols-2 gap-2">
-        <div className="grid gap-1.5">
-          <Label className="text-[11px] text-muted-foreground">{t("dfb.fieldType")}</Label>
-          <Select
-            value={field.fieldType}
-            onValueChange={(v) => onUpdate({ fieldType: v, queryRef: null, queryFieldKey: null })}
-          >
-            <SelectTrigger aria-label={t("dfb.fieldType")} className="h-8"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {FIELD_TYPES.map((ft) => (
-                <SelectItem key={ft} value={ft}>{t(`dfb.type.${ft}` as never)}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+      {/* Task 60 — in the properties modal (hideFieldType) the type selector
+          is omitted: the type was already selected at creation. «عرض» then
+          takes the full row instead of sharing the 2-column grid. */}
+      {hideFieldType ? (
         <div className="grid gap-1.5">
           <Label className="text-[11px] text-muted-foreground">{t("dfb.width")}</Label>
           <Select
@@ -3174,7 +3170,40 @@ function FieldSettingsBody({
             </SelectContent>
           </Select>
         </div>
-      </div>
+      ) : (
+        <div className="grid grid-cols-2 gap-2">
+          <div className="grid gap-1.5">
+            <Label className="text-[11px] text-muted-foreground">{t("dfb.fieldType")}</Label>
+            <Select
+              value={field.fieldType}
+              onValueChange={(v) => onUpdate({ fieldType: v, queryRef: null, queryFieldKey: null })}
+            >
+              <SelectTrigger aria-label={t("dfb.fieldType")} className="h-8"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {FIELD_TYPES.map((ft) => (
+                  <SelectItem key={ft} value={ft}>{t(`dfb.type.${ft}` as never)}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid gap-1.5">
+            <Label className="text-[11px] text-muted-foreground">{t("dfb.width")}</Label>
+            <Select
+              value={String(field.widthSpan)}
+              onValueChange={(v) => onUpdate({ widthSpan: Number(v) })}
+            >
+              <SelectTrigger aria-label={t("dfb.width")} className="h-8"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {[25, 50, 75, 100].map((w) => (
+                  <SelectItem key={w} value={String(w)}>
+                    <span dir="ltr" className="font-mono">{w}%</span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      )}
       <div className="flex flex-wrap items-center gap-3">
         <label className="flex cursor-pointer items-center gap-1.5 text-xs">
           <Checkbox
@@ -3243,9 +3272,8 @@ function FieldSettingsBody({
           <Label className="text-[11px] text-violet-700 dark:text-violet-400">
             {t("dfb.studio.listItems")}
           </Label>
-          <p className="text-[10px] leading-relaxed text-muted-foreground">
-            {t("dfb.studio.listItemsHint")}
-          </p>
+          {/* Task 60 (owner request) — the «آیتم‌های لیست» extra description
+              paragraph was removed; the section explains itself. */}
           {fieldConfigItems(field.config).length === 0 ? (
             <p className="rounded-lg border border-dashed border-border/70 px-2 py-1.5 text-[10px] text-muted-foreground">
               {t("dfb.studio.listItemsEmpty")}
@@ -3493,7 +3521,10 @@ function FieldPropsDialog({
   const Icon = meta.icon;
   return (
     <Dialog open onOpenChange={(v) => { if (!v) onClose(); }}>
-      <DialogContent className="max-w-lg" dir="auto">
+      {/* Task 60 (owner request) — widened to sm:max-w-2xl; the header
+          description line was removed (title alone), hence
+          aria-describedby={undefined} to keep Radix a11y quiet. */}
+      <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-2xl" dir="auto" aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <span
@@ -3504,10 +3535,11 @@ function FieldPropsDialog({
             </span>
             {t("dfb.studio.fieldProps")}
           </DialogTitle>
-          <DialogDescription>{t("dfb.studio.fieldPropsHint")}</DialogDescription>
         </DialogHeader>
-        <div className="max-h-[60vh] overflow-y-auto pe-1 scrollbar-slim">
-          <FieldSettingsBody {...body} />
+        <div className="max-h-[65vh] overflow-y-auto pe-1 scrollbar-slim">
+          {/* Task 60 — the type was already selected when the field was
+              created, so the properties modal does NOT offer «نوع فیلد» again */}
+          <FieldSettingsBody {...body} hideFieldType />
         </div>
         <DialogFooter className="gap-2">
           <Button type="button" variant="outline" onClick={onClose}>{t("common.cancel")}</Button>

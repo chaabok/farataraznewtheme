@@ -587,7 +587,10 @@ function AddFieldBody({
   const [labelEn, setLabelEn] = React.useState("");
   const [fieldType, setFieldType] = React.useState("text");
   const [required, setRequired] = React.useState(false);
-  const [widthSpan, setWidthSpan] = React.useState(1);
+  // Task 48 API contract: widthSpan is a PERCENT (25..100) — the legacy 1=half/
+  // 2=full values fail AddFieldDto validation (400). The dialog keeps the
+  // نیم‌عرض/تمام‌عرض labels and maps them to 50/100.
+  const [widthSpan, setWidthSpan] = React.useState(50);
   const [busy, setBusy] = React.useState(false);
 
   const submit = async () => {
@@ -655,8 +658,8 @@ function AddFieldBody({
             <Select value={String(widthSpan)} onValueChange={(v) => setWidthSpan(Number(v))}>
               <SelectTrigger className="h-8 w-32" aria-label={t("dfb.width")}><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="1">{t("dfb.widthHalf")}</SelectItem>
-                <SelectItem value="2">{t("dfb.widthFull")}</SelectItem>
+                <SelectItem value="50">{t("dfb.widthHalf")}</SelectItem>
+                <SelectItem value="100">{t("dfb.widthFull")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
