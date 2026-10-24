@@ -8,7 +8,10 @@ export type WindowKind =
   | "settings"
   | "app"
   | "form-demo"
-  | "tree-demo";
+  | "tree-demo"
+  | "dfb-builder"
+  | "dfb-menu"
+  | "dfb-form";
 
 export interface WinState {
   id: string;
@@ -130,6 +133,13 @@ export const useDesktop = create<DesktopState>()(
            §4.6 exception; the other 26 catalog apps keep their placeholder). */
         if (kind === "app" && appKey === "settings") {
           kind = "settings";
+          appKey = undefined;
+        }
+        /* Task 45 — the catalog "advancedTools" app opens the real form-builder
+           window (فرمساز, dfb-service) instead of the §4.6 placeholder —
+           owner-requested promotion, same one-window pattern as settings. */
+        if (kind === "app" && appKey === "advancedTools") {
+          kind = "dfb-builder";
           appKey = undefined;
         }
         const existing = get().windows.find((w) => w.kind === kind && w.appKey === appKey);

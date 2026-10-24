@@ -9,6 +9,8 @@ import { useDesktop, type WindowKind } from "@/stores/desktop-store";
 import { LOCALES, LOCALE_NAMES, type Locale } from "@/i18n/config";
 import { AppTile } from "./app-tile";
 import { FloatingMenu } from "./floating-menu";
+import { useDfb, findMenuNode } from "@/stores/dfb-store";
+import { DfbGlyph } from "@/components/erp/form-builder/dfb-dialogs";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -25,6 +27,11 @@ interface PinnedMeta {
 function pinnedMeta(id: string): PinnedMeta {
   if (id === "business-structure") return { kind: "business-structure", titleKey: "menus.businessStructure" };
   if (id === "settings") return { kind: "settings", titleKey: "settings.title" };
+  /* Task 45 — user-created dfb main icons pinned to the dock */
+  if (id.startsWith("dfb-menu-")) {
+    const menuId = Number(id.slice("dfb-menu-".length));
+    return { kind: "dfb-menu", appKey: String(menuId), titleKey: `dfb-menu-${menuId}` };
+  }
   return { kind: "app", appKey: id, titleKey: `app.${id}` };
 }
 
@@ -40,6 +47,19 @@ function PinnedGlyph({ id, size }: { id: string; size: number }) {
       >
         <Network style={{ width: glyph, height: glyph }} />
       </span>
+    );
+  }
+  /* Task 45 — dfb icon glyph by its stored iconKey */
+  if (id.startsWith("dfb-menu-")) {
+    const menuId = Number(id.slice("dfb-menu-".length));
+    const node = findMenuNode(useDfb.getState().tree, menuId);
+    return (
+      <DfbGlyph
+        iconKey={node?.iconKey ?? "folder"}
+        className="rounded-lg"
+        iconClass=""
+        style={{ width: tile, height: tile }}
+      />
     );
   }
   return (
@@ -178,11 +198,16 @@ export function Taskbar() {
             const win = windows.find((w) => w.kind === meta.kind && w.appKey === meta.appKey);
             const running = Boolean(win) && !win?.minimized;
             const dotW = Math.max(5, Math.round(size * 0.3));
+            /* Task 45 — dfb pins show their DB title (not a dictionary key) */
+            const dfbLabel = id.startsWith("dfb-menu-")
+              ? findMenuNode(useDfb.getState().tree, Number(id.slice("dfb-menu-".length)))?.title
+              : undefined;
+            const pinLabel = dfbLabel ?? t(meta.titleKey as never);
             return (
               <button
                 key={id}
-                title={t(meta.titleKey as never)}
-                aria-label={t(meta.titleKey as never)}
+                title={pinLabel}
+                aria-label={pinLabel}
                 onClick={() => toggleId(id)}
                 onContextMenu={(e) => {
                   e.preventDefault();

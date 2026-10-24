@@ -5,6 +5,8 @@ import { Search, Settings as SettingsIcon, Pin } from "lucide-react";
 import { useT } from "@/stores/settings-store";
 import { useDesktop, type WindowKind } from "@/stores/desktop-store";
 import { useAppRegistry } from "@/stores/app-registry-store";
+import { useDfb } from "@/stores/dfb-store";
+import { DfbGlyph } from "@/components/erp/form-builder/dfb-dialogs";
 import { AppTile } from "./app-tile";
 import { Input } from "@/components/ui/input";
 
@@ -20,11 +22,18 @@ export function StartMenu() {
   const t = useT();
   const { setStartOpen, openWindow } = useDesktop();
   const { apps, load } = useAppRegistry();
+  /* Task 45 — user-created main icons join the start-menu grid */
+  const dfbUserIcons = useDfb((s) => s.userIcons);
+  const dfbLoad = useDfb((s) => s.load);
   const [query, setQuery] = React.useState("");
 
   React.useEffect(() => {
     void load();
   }, [load]);
+
+  React.useEffect(() => {
+    void dfbLoad();
+  }, [dfbLoad]);
 
   const close = () => setStartOpen(false);
   const q = query.trim().toLowerCase();
@@ -34,18 +43,31 @@ export function StartMenu() {
      lives as a sub-page inside the Settings window (owner request).
      Task 37 — userManagement moved into Settings the same way: no standalone
      tile; it lives on the Settings home as a launcher card. */
-  const tiles: Tile[] = apps
-    .filter((a) => a.appKey !== "userManagement")
-    .map((a) => ({
-      id: a.appKey,
-      kind: "app" as WindowKind,
-      appKey: a.appKey,
-      icon: <AppTile appKey={a.appKey} />,
-      titleKey: a.titleKey,
-    }));
-  const filtered = tiles.filter(
-    (a) => !q || t(a.titleKey as never).toLowerCase().includes(q) || a.id.toLowerCase().includes(q),
-  );
+  const tiles: Tile[] = [
+    ...apps
+      .filter((a) => a.appKey !== "userManagement")
+      .map((a) => ({
+        id: a.appKey,
+        kind: "app" as WindowKind,
+        appKey: a.appKey,
+        icon: <AppTile appKey={a.appKey} />,
+        titleKey: a.titleKey,
+      })),
+    /* Task 45 — user-created main icons (فرمساز) */
+    ...dfbUserIcons.map((n) => ({
+      id: `dfb-menu-${n.id}`,
+      kind: "dfb-menu" as WindowKind,
+      appKey: String(n.id),
+      icon: <DfbGlyph iconKey={n.iconKey} />,
+      titleKey: n.title, // dynamic DB title — rendered verbatim below
+    })),
+  ];
+  const filtered = tiles.filter((a) => {
+    const label = dfbUserIcons.some((n) => `dfb-menu-${n.id}` === a.id)
+      ? a.titleKey
+      : t(a.titleKey as never);
+    return !q || label.toLowerCase().includes(q) || a.id.toLowerCase().includes(q);
+  });
 
   return (
     <>
@@ -83,7 +105,9 @@ export function StartMenu() {
             >
               {app.icon}
               <span className="line-clamp-2 text-center text-[11px] leading-tight text-foreground/90">
-                {t(app.titleKey as never)}
+                {dfbUserIcons.some((n) => `dfb-menu-${n.id}` === app.id)
+                  ? app.titleKey
+                  : t(app.titleKey as never)}
               </span>
             </button>
           ))}

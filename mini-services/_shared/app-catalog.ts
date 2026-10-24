@@ -2,14 +2,19 @@
  * APP_CATALOG — single source of truth for the ERP app mesh (Task 18).
  * Owner's desktop list numbering skips #13 intentionally (28 apps total —
  * #29 "عمومی/general" added by owner request).
- * `port` = port IF/WHEN promoted to a standalone service; today all non-settings
- * apps are hosted by the composite `apps-service` (3002) — promotion path stays
- * open because each entry is self-describing (D8 decision, see AGENTS.md).
+ * `port` = port IF/WHEN promoted to a standalone service; settings-service (3001)
+ * hosts the settings app, dfb-service (3003) hosts the form builder
+ * (advancedTools — first promoted standalone app, owner-confirmed Task 45), and
+ * the remaining non-settings apps are hosted by the composite `apps-service`
+ * (3002) — promotion path stays open because each entry is self-describing
+ * (D8 decision, see AGENTS.md).
  * `dbMode`: "shared" = one database for all apps (default), "dedicated" = app gets
  * its own database when its analysis document demands it. Integrity is guaranteed
  * by the IDGeneration contract (§2.4) + cross-service reference rules (§4).
  */
 export type DbMode = "shared" | "dedicated";
+
+export type CatalogHost = "apps-service" | "settings-service" | "dfb-service";
 
 export interface AppCatalogEntry {
   appKey: string;
@@ -20,11 +25,12 @@ export interface AppCatalogEntry {
   appGroup: "platform" | "financial" | "logistics" | "sales" | "production" | "hr" | "distribution" | "analytics";
   port: number;
   dbMode: DbMode;
-  host: "apps-service" | "settings-service";
+  host: CatalogHost;
 }
 
 export const SETTINGS_SERVICE_PORT = 3001;
 export const APPS_SERVICE_PORT = 3002;
+export const DFB_SERVICE_PORT = 3003;
 
 export const APP_CATALOG: AppCatalogEntry[] = [
   { appKey: "settings",              order: 1,  titleFa: "تنظیمات",                     titleKey: "app.settings",              iconKey: "settings",        appGroup: "platform",     port: 3001, dbMode: "shared", host: "settings-service" },
@@ -42,7 +48,7 @@ export const APP_CATALOG: AppCatalogEntry[] = [
   { appKey: "hr",                    order: 14, titleFa: "منابع انسانی",                titleKey: "app.hr",                    iconKey: "users",           appGroup: "hr",           port: 3002, dbMode: "shared", host: "apps-service" },
   { appKey: "officeAutomation",      order: 15, titleFa: "اتوماسیون اداری",             titleKey: "app.officeAutomation",      iconKey: "fileStack",       appGroup: "platform",     port: 3002, dbMode: "shared", host: "apps-service" },
   { appKey: "crm",                   order: 16, titleFa: "مدیریت ارتباط با مشتریان",    titleKey: "app.crm",                   iconKey: "heartHandshake",  appGroup: "sales",        port: 3002, dbMode: "shared", host: "apps-service" },
-  { appKey: "advancedTools",         order: 17, titleFa: "ابزارهای پیشرفته",            titleKey: "app.advancedTools",         iconKey: "wrench",          appGroup: "platform",     port: 3002, dbMode: "shared", host: "apps-service" },
+  { appKey: "advancedTools",         order: 17, titleFa: "ابزارهای پیشرفته",            titleKey: "app.advancedTools",         iconKey: "wrench",          appGroup: "platform",     port: 3003, dbMode: "dedicated", host: "dfb-service" },
   { appKey: "userManagement",        order: 18, titleFa: "مدیریت کاربران",              titleKey: "app.userManagement",        iconKey: "userCog",         appGroup: "platform",     port: 3002, dbMode: "shared", host: "apps-service" },
   { appKey: "workflow",              order: 19, titleFa: "گردش کار",                    titleKey: "app.workflow",              iconKey: "workflow",        appGroup: "platform",     port: 3002, dbMode: "shared", host: "apps-service" },
   { appKey: "smsCenter",             order: 20, titleFa: "پیامک رسان",                  titleKey: "app.smsCenter",             iconKey: "messageSquare",   appGroup: "platform",     port: 3002, dbMode: "shared", host: "apps-service" },

@@ -17,6 +17,8 @@ const CHROMELESS_KINDS: readonly WindowKind[] = [
   "form-demo",
   "tree-demo",
   "business-structure",
+  "dfb-builder",
+  "dfb-form",
 ];
 
 /** Caption-button + drag API a chromeless host injects into its content. */

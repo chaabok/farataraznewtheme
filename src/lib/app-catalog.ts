@@ -3,17 +3,21 @@ import {
   BarChart3,
   Boxes,
   Calculator,
+  ClipboardList,
   Factory,
   FileBarChart,
   FileStack,
   Flame,
+  Folder,
   Globe,
   HandCoins,
   Hammer,
   HeartHandshake,
   Landmark,
+  ListTree,
   Megaphone,
   MessageSquare,
+  NotebookPen,
   PackageSearch,
   Settings,
   ShoppingCart,
@@ -61,7 +65,7 @@ export const FRONTEND_APPS: AppDescriptor[] = [
   { appKey: "hr",                   order: 14, titleKey: "app.hr",                   iconKey: "users",           appGroup: "hr",           port: 3002, dbMode: "shared" },
   { appKey: "officeAutomation",     order: 15, titleKey: "app.officeAutomation",     iconKey: "fileStack",       appGroup: "platform",     port: 3002, dbMode: "shared" },
   { appKey: "crm",                  order: 16, titleKey: "app.crm",                  iconKey: "heartHandshake",  appGroup: "sales",        port: 3002, dbMode: "shared" },
-  { appKey: "advancedTools",        order: 17, titleKey: "app.advancedTools",        iconKey: "wrench",          appGroup: "platform",     port: 3002, dbMode: "shared" },
+  { appKey: "advancedTools",        order: 17, titleKey: "app.advancedTools",        iconKey: "wrench",          appGroup: "platform",     port: 3003, dbMode: "dedicated" },
   { appKey: "userManagement",       order: 18, titleKey: "app.userManagement",       iconKey: "userCog",         appGroup: "platform",     port: 3002, dbMode: "shared" },
   { appKey: "workflow",             order: 19, titleKey: "app.workflow",             iconKey: "workflow",        appGroup: "platform",     port: 3002, dbMode: "shared" },
   { appKey: "smsCenter",            order: 20, titleKey: "app.smsCenter",            iconKey: "messageSquare",   appGroup: "platform",     port: 3002, dbMode: "shared" },
@@ -109,6 +113,24 @@ export const APP_ICONS: Record<string, { Icon: LucideIcon; tile: string }> = {
 
 export function getAppIcon(appKey: string): { Icon: LucideIcon; tile: string } | undefined {
   return APP_ICONS[appKey];
+}
+
+/* Task 45 (فرمساز) — glyph by ICON KEY: user-created menus/icons store an
+   iconKey (the same keys as the catalog iconKey column); resolve through the
+   catalog, then a small extra set, then a neutral folder fallback. */
+const ICON_KEY_EXTRA: Record<string, { Icon: LucideIcon; tile: string }> = {
+  folder: { Icon: Folder, tile: "from-emerald-500 to-emerald-700" },
+  listTree: { Icon: ListTree, tile: "from-amber-500 to-orange-600" },
+  clipboardList: { Icon: ClipboardList, tile: "from-sky-500 to-sky-700" },
+  notebookPen: { Icon: NotebookPen, tile: "from-rose-500 to-rose-700" },
+};
+
+export function getIconKeyGlyph(iconKey: string): { Icon: LucideIcon; tile: string } {
+  const direct = APP_ICONS[iconKey];
+  if (direct) return direct;
+  const desc = FRONTEND_APPS.find((a) => a.iconKey === iconKey);
+  if (desc && APP_ICONS[desc.appKey]) return APP_ICONS[desc.appKey];
+  return ICON_KEY_EXTRA[iconKey] ?? { Icon: Folder, tile: "from-slate-400 to-slate-600" };
 }
 
 export function getAppDescriptor(appKey: string): AppDescriptor | undefined {

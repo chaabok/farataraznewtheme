@@ -4,13 +4,18 @@ import { signedInternalHeaders } from "@/lib/internal-sign";
 /**
  * BFF proxy for the ERP app mesh (Task 18): /api/{appKey}/** → hosting service.
  * settings → settings-service:3001 (its static /api/settings route takes precedence);
+ * advancedTools → dfb-service:3003 (فرمساز — first promoted standalone app, Task 45);
  * every other appKey → apps-service:3002 (composite host, catalog-driven).
  * §3.3: browser sees relative paths only. §4: every upstream hop is HMAC-signed;
  * the internal secret never reaches the browser.
  */
 const APPS_SERVICE = process.env.APPS_SERVICE_URL ?? "http://127.0.0.1:3002";
 const SETTINGS_SERVICE = process.env.SETTINGS_SERVICE_URL ?? "http://127.0.0.1:3001";
-const HOST_BY_APP: Record<string, string> = { settings: SETTINGS_SERVICE };
+const DFB_SERVICE = process.env.DFB_SERVICE_URL ?? "http://127.0.0.1:3003";
+const HOST_BY_APP: Record<string, string> = {
+  settings: SETTINGS_SERVICE,
+  advancedTools: DFB_SERVICE,
+};
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

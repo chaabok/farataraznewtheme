@@ -15,6 +15,7 @@ import {
   Pin,
   PinOff,
   RotateCcw,
+  Wrench,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { DirectionProvider } from "@radix-ui/react-direction";
@@ -34,6 +35,11 @@ import { SettingsWindow } from "@/components/erp/settings-window";
 import { AppPlaceholderWindow } from "@/components/erp/app-placeholder-window";
 import { FormDemoWindow } from "@/components/erp/form-demo-window";
 import { TreeDemoWindow } from "@/components/erp/tree-demo-window";
+import { FormBuilderWindow } from "@/components/erp/form-builder/form-builder-window";
+import { DfbMenuWindow } from "@/components/erp/form-builder/dfb-menu-window";
+import { DfbFormRuntime } from "@/components/erp/form-builder/dfb-form-runtime";
+import { DfbGlyph } from "@/components/erp/form-builder/dfb-dialogs";
+import { useDfb, findMenuNode, findFormInTree } from "@/stores/dfb-store";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Toaster } from "sonner";
@@ -44,7 +50,9 @@ interface StaticWindowMeta {
   content: React.ReactNode;
 }
 
-const STATIC_WINDOWS: Record<Exclude<WindowKind, "app">, StaticWindowMeta> = {
+/* Task 45 — dfb-menu/dfb-form resolve dynamically in resolveWindowMeta,
+   so the static map only covers the fixed kinds (Partial on purpose). */
+const STATIC_WINDOWS: Partial<Record<Exclude<WindowKind, "app">, StaticWindowMeta>> = {
   "business-structure": {
     titleKey: "menus.businessStructure",
     icon: (
@@ -81,9 +89,25 @@ const STATIC_WINDOWS: Record<Exclude<WindowKind, "app">, StaticWindowMeta> = {
     ),
     content: <TreeDemoWindow />,
   },
+  /* Task 45 — the form builder (فرمساز) of the advancedTools app (dfb-service).
+     openWindow redirects (app, advancedTools) → kind "dfb-builder", so the
+     desktop icon, start-menu tile and taskbar pin share one builder window. */
+  "dfb-builder": {
+    titleKey: "dfb.builderTitle",
+    icon: (
+      <span className="flex h-5 w-5 items-center justify-center rounded-md bg-gradient-to-br from-amber-600 to-amber-800 text-white">
+        <Wrench className="h-3 w-3" />
+      </span>
+    ),
+    content: <FormBuilderWindow />,
+  },
 };
 
-function resolveWindowMeta(win: WinState, t: ReturnType<typeof useT>) {
+function resolveWindowMeta(
+  win: WinState,
+  t: ReturnType<typeof useT>,
+  dfbTree: ReturnType<typeof useDfb.getState>["tree"],
+) {
   if (win.kind === "app") {
     const appKey = win.appKey ?? "";
     return {
@@ -92,7 +116,38 @@ function resolveWindowMeta(win: WinState, t: ReturnType<typeof useT>) {
       content: <AppPlaceholderWindow appKey={appKey} />,
     };
   }
+  /* Task 45 — dynamic dfb windows: titles come from the builder tree (dfb.db) */
+  if (win.kind === "dfb-menu") {
+    const menuId = Number(win.appKey ?? 0);
+    const node = findMenuNode(dfbTree, menuId);
+    return {
+      title: node?.title ?? t("dfb.menuNotFound"),
+      icon: node ? (
+        <DfbGlyph iconKey={node.iconKey} className="h-5 w-5 rounded-md" iconClass="h-3 w-3" />
+      ) : (
+        (STATIC_WINDOWS["dfb-builder"]?.icon ?? null)
+      ),
+      content: <DfbMenuWindow menuId={menuId} />,
+    };
+  }
+  if (win.kind === "dfb-form") {
+    const formId = Number(win.appKey ?? 0);
+    const form = findFormInTree(dfbTree, formId);
+    return {
+      title: form?.title ?? t("dfb.formNotFound"),
+      icon: (
+        <span className="flex h-5 w-5 items-center justify-center rounded-md bg-gradient-to-br from-teal-500 to-emerald-600 text-white">
+          <FilePlus2 className="h-3 w-3" />
+        </span>
+      ),
+      content: <DfbFormRuntime formId={formId} />,
+    };
+  }
   const meta = STATIC_WINDOWS[win.kind];
+  if (!meta) {
+    /* unreachable today — every fixed kind has a static entry */
+    return { title: win.kind, icon: null, content: null };
+  }
   return { title: t(meta.titleKey as never), icon: meta.icon, content: meta.content };
 }
 
@@ -113,6 +168,8 @@ interface IconEntry {
   kind: WindowKind;
   appKey?: string;
   label: string;
+  /** Task 45 — iconKey of user-created dfb main icons (glyph via getIconKeyGlyph) */
+  iconKey?: string;
 }
 
 function DesktopIcons() {
@@ -136,6 +193,10 @@ function DesktopIcons() {
   const setIconMode = useDesktop((s) => s.setIconMode);
   const setSidebarCollapsed = useDesktop((s) => s.setSidebarCollapsed);
   const { apps, load } = useAppRegistry();
+  /* Task 45 — user-created main icons (فرمساز) merge into the very same list:
+     grid, sidebar and context-menu all treat them exactly like catalog apps */
+  const dfbUserIcons = useDfb((s) => s.userIcons);
+  const dfbLoad = useDfb((s) => s.load);
 
   const layerRef = React.useRef<HTMLDivElement>(null);
   const [rect, setRect] = React.useState<{ w: number; h: number } | null>(null);
@@ -158,6 +219,10 @@ function DesktopIcons() {
   React.useEffect(() => {
     void load();
   }, [load]);
+
+  React.useEffect(() => {
+    void dfbLoad();
+  }, [dfbLoad]);
 
   /* SSR-safe: persisted layout (icon positions + footer pins) rehydrated after mount */
   React.useEffect(() => {
@@ -229,6 +294,16 @@ function DesktopIcons() {
           appKey: a.appKey,
           label: t(a.titleKey as never),
         })),
+      /* Task 45 — user-created main icons (isSystem=false, NodeType=1):
+         same grid slot semantics as catalog apps (owner-confirmed default:
+         mixed alphabetical ordering via the language collator below) */
+      ...dfbUserIcons.map((n) => ({
+        id: `dfb-menu-${n.id}`,
+        kind: "dfb-menu" as WindowKind,
+        appKey: String(n.id),
+        label: n.title,
+        iconKey: n.iconKey,
+      })),
     ];
     /* Task 39 — owner request: order by the active language's collation in
        BOTH presentations, so the desktop grid and the sidebar always tell
@@ -236,7 +311,7 @@ function DesktopIcons() {
     return base.sort(
       (a, b) => collator.compare(a.label, b.label) || collator.compare(a.id, b.id),
     );
-  }, [apps, t, collator]);
+  }, [apps, dfbUserIcons, t, collator]);
 
   /* Task 36 — the catalog "settings" icon opens the real Settings window too:
      openWindow redirects (app, "settings") → kind "settings", so this icon,
@@ -351,6 +426,8 @@ function DesktopIcons() {
       <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-lg">
         <ListTree className="h-6 w-6" />
       </span>
+    ) : entry.kind === "dfb-menu" ? (
+      <DfbGlyph iconKey={entry.iconKey ?? "folder"} className="h-12 w-12 rounded-2xl" iconClass="h-6 w-6" />
     ) : (
       <AppTile appKey={entry.appKey ?? ""} className="h-12 w-12 rounded-2xl" iconClass="h-6 w-6" />
     );
@@ -389,6 +466,8 @@ function DesktopIcons() {
       <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-md">
         <ListTree className="h-4 w-4" />
       </span>
+    ) : entry.kind === "dfb-menu" ? (
+      <DfbGlyph iconKey={entry.iconKey ?? "folder"} className="h-8 w-8 rounded-lg" iconClass="h-4 w-4" />
     ) : (
       <AppTile appKey={entry.appKey ?? ""} className="h-8 w-8 rounded-lg" iconClass="h-4 w-4" />
     );
@@ -629,6 +708,13 @@ export function Desktop() {
   const { windows, setStartOpen, startOpen } = useDesktop();
   const headerDock = useDesktop((s) => s.headerDock);
   const { resolvedTheme } = useTheme();
+  /* Task 45 — dfb tree feeds the dynamic window titles/icons (dfb-menu/dfb-form) */
+  const dfbTree = useDfb((s) => s.tree);
+  const dfbLoad = useDfb((s) => s.load);
+
+  React.useEffect(() => {
+    void dfbLoad();
+  }, [dfbLoad]);
 
   /* apply locale direction + language to <html> */
   React.useEffect(() => {
@@ -665,7 +751,7 @@ export function Desktop() {
           }}
         >
           {windows.map((win) => {
-            const meta = resolveWindowMeta(win, t);
+            const meta = resolveWindowMeta(win, t, dfbTree);
             return (
               <AppWindow key={win.id} win={win} title={meta.title} icon={meta.icon}>
                 {meta.content}

@@ -1,0 +1,269 @@
+// dfb-service — فرمساز (Dynamic Form Builder) — اسکیمای Dfb
+// §2.3: 100% PostgreSQL-compatible constructs only (no arrays/enums/JSON types —
+//       layout payloads are String columns holding serialized JSON, same precedent
+//       as BusinessStructure.ActiveStructureTypes).
+// §16 contract: NO autoincrement anywhere — every operational PK is manual via IdGenerationService.
+// §2.6: legacy PascalCase column naming via @@map.
+
+/*
+ * AppBaseEntity — بلوک اجباری ۱۲فیلدی روی «هر» مدل عملیاتی
+ * (قرارداد مالک، تأیید 1405/08/01 — Task 44). پیاده‌سازی:
+ * mini-services/_shared/app-base-entity.ts
+ *   · create → spread appBaseOnCreate(actor)   · update → spread appBaseOnUpdate(actor)
+ *   · خواندن اطلاعات پایه → baseDataScopeWhere(scope, root.isBasicInfoShared)
+ */
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+/// IDGeneration — central per-table counters (legacy "Gnr"."IDGeneration").
+model IDGeneration {
+  idGenerationId BigInt @id @map("IDGenerationID")
+  tableName      String @unique @map("TableName")
+  lastId         BigInt @default(0) @map("LastID")
+  version        Int    @default(1) @map("Version") // §2.5 auto-rowversion
+
+  @@map("IDGeneration")
+}
+
+/// DfbMenu — درخت فرمساز: آیکون اصلی (NodeType=1، ParentRef=0) و زیرمنو (NodeType=2).
+/// ردیف‌های IsSystem=true در بوت از کاتالوگ (mini-services/_shared/app-catalog.ts) seed
+/// می‌شوند (یک گره برای هر نرم‌افزار کاتالوگ؛ AppKey = appKey کاتالوگ) — فرم‌های سیستمی
+/// آینده هم به‌تفکیک همین آیکون‌ها ثبت می‌شوند (درخواست مالک، تأیید 1405/08/02).
+model DfbMenu {
+  id                   BigInt   @id @map("ID")
+  parentRef            BigInt   @default(0) @map("ParentRef") // 0 = آیکون اصلی
+  nodeType             Int      @default(1) @map("NodeType") // 1=MainIcon 2=SubMenu
+  code                 String   @map("Code")
+  title                String   @map("Title")
+  titleEn              String?  @map("Title_En")
+  iconKey              String   @default("folder") @map("IconKey") // کلید lucide (APP_ICONS فرانت)
+  appKey               String?  @map("AppKey") // برای گره‌های سیستمی = appKey کاتالوگ
+  sortOrder            Int      @default(0) @map("SortOrder")
+  isActive             Boolean  @default(true) @map("IsActive")
+  isSystem             Boolean  @default(false) @map("IsSystem")
+  version              Int      @default(1) @map("Version")
+  creator              String   @map("Creator")
+  creationDate         String   @map("CreationDate")
+  createTime           String   @map("CreationTime")
+  lastModifier         String?  @map("LastModifier")
+  lastModificationDate String?  @map("LastModificationDate")
+  lastModificationTime String?  @map("LastModificationTime")
+  businessStructureRef BigInt   @map("BusinessStructureRef")
+  companyRef           BigInt?  @map("CompanyRef")
+  branchRef            BigInt?  @map("BranchRef")
+  agencyRef            BigInt?  @map("AgencyRef")
+  shopRef              BigInt?  @map("ShopRef")
+  createdAt            DateTime @default(now()) @map("CreatedAt")
+  updatedAt            DateTime @updatedAt @map("UpdatedAt")
+
+  @@unique([parentRef, code])
+  @@map("DfbMenu")
+}
+
+/// DfbForm — تعریف هر فرم (سیستمی یا ساختهٔ کاربر).
+/// ComponentKey = قالب انتخابی از پالت («simpleTwoRowTabbed» | «treeForm» | …).
+/// Header/Body/Footer = پیکربندی سطح بخش (رشتهٔ JSON — §2.3); فیلدها و تب‌ها
+/// رابطه‌ای‌اند (DfbFormField/DfbFormTab) تا «افزودن فیلد» روی فرم سیستمی ممکن باشد.
+model DfbForm {
+  id                   BigInt   @id @map("ID")
+  menuRef              BigInt   @map("MenuRef")
+  code                 String   @map("Code")
+  title                String   @map("Title")
+  titleEn              String?  @map("Title_En")
+  componentKey         String   @map("ComponentKey")
+  headerJson           String?  @map("HeaderJson")
+  bodyJson             String?  @map("BodyJson")
+  footerJson           String?  @map("FooterJson")
+  status               Int      @default(1) @map("Status") // 1=Draft 2=Published
+  systemKey            String?  @map("SystemKey") // فرم سیستمی: کلید ثابت (مثل gnr.businessStructure)
+  isSystem             Boolean  @default(false) @map("IsSystem")
+  version              Int      @default(1) @map("Version")
+  creator              String   @map("Creator")
+  creationDate         String   @map("CreationDate")
+  createTime           String   @map("CreationTime")
+  lastModifier         String?  @map("LastModifier")
+  lastModificationDate String?  @map("LastModificationDate")
+  lastModificationTime String?  @map("LastModificationTime")
+  businessStructureRef BigInt   @map("BusinessStructureRef")
+  companyRef           BigInt?  @map("CompanyRef")
+  branchRef            BigInt?  @map("BranchRef")
+  agencyRef            BigInt?  @map("AgencyRef")
+  shopRef              BigInt?  @map("ShopRef")
+  createdAt            DateTime @default(now()) @map("CreatedAt")
+  updatedAt            DateTime @updatedAt @map("UpdatedAt")
+
+  @@map("DfbForm")
+}
+
+/// DfbFormTab — تب‌های بدنهٔ فرم (اختیاری؛ برای قالب دو ردیفهٔ تب‌دار).
+model DfbFormTab {
+  id                   BigInt   @id @map("ID")
+  formRef              BigInt   @map("FormRef")
+  title                String   @map("Title")
+  titleEn              String?  @map("Title_En")
+  orderIndex           Int      @default(0) @map("OrderIndex")
+  version              Int      @default(1) @map("Version")
+  creator              String   @map("Creator")
+  creationDate         String   @map("CreationDate")
+  createTime           String   @map("CreationTime")
+  lastModifier         String?  @map("LastModifier")
+  lastModificationDate String?  @map("LastModificationDate")
+  lastModificationTime String?  @map("LastModificationTime")
+  businessStructureRef BigInt   @map("BusinessStructureRef")
+  companyRef           BigInt?  @map("CompanyRef")
+  branchRef            BigInt?  @map("BranchRef")
+  agencyRef            BigInt?  @map("AgencyRef")
+  shopRef              BigInt?  @map("ShopRef")
+  createdAt            DateTime @default(now()) @map("CreatedAt")
+  updatedAt            DateTime @updatedAt @map("UpdatedAt")
+
+  @@map("DfbFormTab")
+}
+
+/// DfbFormField — فیلدهای فرم؛ IsCustom=true = فیلد الحاقی کاربر روی فرم سیستمی.
+/// QueryRef/QueryFieldKey = اتصال فیلد به کوئری (فیلدهای جداول دیگر — درخواست مالک).
+model DfbFormField {
+  id                   BigInt   @id @map("ID")
+  formRef              BigInt   @map("FormRef")
+  tabRef               BigInt?  @map("TabRef")
+  section              String   @default("body") @map("Section") // header | body | footer
+  fieldKey             String   @map("FieldKey")
+  label                String   @map("Label")
+  labelEn              String?  @map("Label_En")
+  fieldType            String   @map("FieldType") // text|number|select|lookup|checkbox|date|textarea
+  required             Boolean  @default(false) @map("Required")
+  readOnly             Boolean  @default(false) @map("ReadOnly")
+  orderIndex           Int      @default(0) @map("OrderIndex")
+  widthSpan            Int      @default(1) @map("WidthSpan") // 1|2 (گرید دو ردیفه)
+  defaultValue         String?  @map("DefaultValue")
+  queryRef             BigInt?  @map("QueryRef")
+  queryFieldKey        String?  @map("QueryFieldKey")
+  isCustom             Boolean  @default(false) @map("IsCustom")
+  version              Int      @default(1) @map("Version")
+  creator              String   @map("Creator")
+  creationDate         String   @map("CreationDate")
+  createTime           String   @map("CreationTime")
+  lastModifier         String?  @map("LastModifier")
+  lastModificationDate String?  @map("LastModificationDate")
+  lastModificationTime String?  @map("LastModificationTime")
+  businessStructureRef BigInt   @map("BusinessStructureRef")
+  companyRef           BigInt?  @map("CompanyRef")
+  branchRef            BigInt?  @map("BranchRef")
+  agencyRef            BigInt?  @map("AgencyRef")
+  shopRef              BigInt?  @map("ShopRef")
+  createdAt            DateTime @default(now()) @map("CreatedAt")
+  updatedAt            DateTime @updatedAt @map("UpdatedAt")
+
+  @@map("DfbFormField")
+}
+
+/// DfbQuery — کوئری ذخیره‌شده برای استفادهٔ فیلدهای جداول دیگر در فرم.
+/// SourceTable فقط از QUERY_TABLES (whitelist) پذیرفته می‌شود؛ سرویس کوئری
+/// پارامتریِ فقط-خواندنی می‌سازد (بدون SQL آزاد کاربر).
+model DfbQuery {
+  id                   BigInt   @id @map("ID")
+  code                 String   @map("Code")
+  title                String   @map("Title")
+  titleEn              String?  @map("Title_En")
+  sourceTable          String   @map("SourceTable")
+  filterColumn         String?  @map("FilterColumn")
+  filterValue          String?  @map("FilterValue")
+  isActive             Boolean  @default(true) @map("IsActive")
+  version              Int      @default(1) @map("Version")
+  creator              String   @map("Creator")
+  creationDate         String   @map("CreationDate")
+  createTime           String   @map("CreationTime")
+  lastModifier         String?  @map("LastModifier")
+  lastModificationDate String?  @map("LastModificationDate")
+  lastModificationTime String?  @map("LastModificationTime")
+  businessStructureRef BigInt   @map("BusinessStructureRef")
+  companyRef           BigInt?  @map("CompanyRef")
+  branchRef            BigInt?  @map("BranchRef")
+  agencyRef            BigInt?  @map("AgencyRef")
+  shopRef              BigInt?  @map("ShopRef")
+  createdAt            DateTime @default(now()) @map("CreatedAt")
+  updatedAt            DateTime @updatedAt @map("UpdatedAt")
+
+  @@map("DfbQuery")
+}
+
+/// DfbQueryField — ستون‌های منتخب کوئری.
+model DfbQueryField {
+  id                   BigInt   @id @map("ID")
+  queryRef             BigInt   @map("QueryRef")
+  fieldName            String   @map("FieldName")
+  alias                String?  @map("Alias")
+  orderIndex           Int      @default(0) @map("OrderIndex")
+  version              Int      @default(1) @map("Version")
+  creator              String   @map("Creator")
+  creationDate         String   @map("CreationDate")
+  createTime           String   @map("CreationTime")
+  lastModifier         String?  @map("LastModifier")
+  lastModificationDate String?  @map("LastModificationDate")
+  lastModificationTime String?  @map("LastModificationTime")
+  businessStructureRef BigInt   @map("BusinessStructureRef")
+  companyRef           BigInt?  @map("CompanyRef")
+  branchRef            BigInt?  @map("BranchRef")
+  agencyRef            BigInt?  @map("AgencyRef")
+  shopRef              BigInt?  @map("ShopRef")
+  createdAt            DateTime @default(now()) @map("CreatedAt")
+  updatedAt            DateTime @updatedAt @map("UpdatedAt")
+
+  @@map("DfbQueryField")
+}
+
+/// DfbFormData — هر رکورد ذخیره‌شدهٔ یک فرم پویا (یا رکورد خارجیِ فرم سیستمی از طریق ExternalKey).
+model DfbFormData {
+  id                   BigInt   @id @map("ID")
+  formRef              BigInt   @map("FormRef")
+  externalKey          String?  @map("ExternalKey") // فرم سیستمی: "bs:5" مثل شناسهٔ رکورد واقعی
+  version              Int      @default(1) @map("Version")
+  creator              String   @map("Creator")
+  creationDate         String   @map("CreationDate")
+  createTime           String   @map("CreationTime")
+  lastModifier         String?  @map("LastModifier")
+  lastModificationDate String?  @map("LastModificationDate")
+  lastModificationTime String?  @map("LastModificationTime")
+  businessStructureRef BigInt   @map("BusinessStructureRef")
+  companyRef           BigInt?  @map("CompanyRef")
+  branchRef            BigInt?  @map("BranchRef")
+  agencyRef            BigInt?  @map("AgencyRef")
+  shopRef              BigInt?  @map("ShopRef")
+  createdAt            DateTime @default(now()) @map("CreatedAt")
+  updatedAt            DateTime @updatedAt @map("UpdatedAt")
+
+  @@unique([formRef, externalKey])
+  @@map("DfbFormData")
+}
+
+/// DfbFormDataValue — مقدار هر فیلد (الگوی EAV — §2.3 بدون ستون JSON).
+model DfbFormDataValue {
+  id                   BigInt   @id @map("ID")
+  dataRef              BigInt   @map("DataRef")
+  fieldRef             BigInt   @map("FieldRef")
+  value                String?  @map("Value")
+  version              Int      @default(1) @map("Version")
+  creator              String   @map("Creator")
+  creationDate         String   @map("CreationDate")
+  createTime           String   @map("CreationTime")
+  lastModifier         String?  @map("LastModifier")
+  lastModificationDate String?  @map("LastModificationDate")
+  lastModificationTime String?  @map("LastModificationTime")
+  businessStructureRef BigInt   @map("BusinessStructureRef")
+  companyRef           BigInt?  @map("CompanyRef")
+  branchRef            BigInt?  @map("BranchRef")
+  agencyRef            BigInt?  @map("AgencyRef")
+  shopRef              BigInt?  @map("ShopRef")
+  createdAt            DateTime @default(now()) @map("CreatedAt")
+  updatedAt            DateTime @updatedAt @map("UpdatedAt")
+
+  @@unique([dataRef, fieldRef])
+  @@map("DfbFormDataValue")
+}
