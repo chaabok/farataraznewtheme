@@ -1,0 +1,459 @@
+common.loading	در حال بارگذاری…
+common.retry	تلاش مجدد
+common.close	بستن
+common.minimize	کوچک‌نمایی
+common.maximize	بزرگ‌نمایی
+common.cancel	انصراف
+common.save	ذخیره
+common.delete	حذف
+common.confirm	تأیید
+common.all	همه
+common.search	جست‌وجو
+common.language	زبان
+common.theme	پوسته
+common.description	توضیحات
+common.error	خطا
+app.name	سامانهٔ جامع بازرگانی
+app.shortName	بازرگانی
+taskbar.search	جست‌وجوی برنامه‌ها و تنظیمات
+header.dashboard	داشبورد
+header.search	جست‌وجو در داشبورد…
+header.dragHint	برای جابه‌جایی هدر، آن را بکشید
+header.dockTop	استقرار در بالای صفحه
+header.dockLeft	استقرار در سمت چپ
+header.dockRight	استقرار در سمت راست
+header.dropHint	رها کنید تا هدر اینجا مستقر شود
+startmenu.pinned	برنامه‌های سنجاق‌شده
+startmenu.recommended	پیشنهاد شده
+startmenu.searchPlaceholder	برای جست‌وجو تایپ کنید…
+menus.general	تنظیمات و عمومی
+menus.structural	تنظیمات ساختاری
+menus.businessStructure	ساختار کسب و کار
+bs.title	ساختار کسب و کار
+bs.subtitle	مدیریت درخت ساختار سازمانی، شعب و نمایندگی‌ها
+bs.treeTitle	درخت ساختار
+bs.searchPlaceholder	جست‌وجو در ساختار…
+bs.newSubtree	زیرشاخهٔ جدید
+bs.deleteBranch	حذف شاخه
+bs.emptyTree	هیچ ساختاری ثبت نشده است
+bs.loadingTree	بارگذاری ساختار…
+bs.selectNode	برای مشاهدهٔ جزئیات، یک شاخه را انتخاب کنید
+bs.addNode	افزودن زیرشاخه
+bs.addDisabledMax	حداکثر عمق ساختار (۴ سطح) تکمیل است
+bs.mainTab	تب اصلی
+bs.usersTab	کاربران مجاز
+bs.users.comingSoon	اتصال کاربران در فاز IAM فعال می‌شود
+bs.field.code	کد
+bs.field.title	عنوان
+bs.field.titleEn	عنوان لاتین
+bs.field.type	نوع
+bs.field.manager	مدیر
+bs.field.logo	لوگو
+bs.field.isActive	وضعیت فعال
+bs.field.isBasicInfoShared	اشتراک اطلاعات پایه
+bs.field.shareHeadquarterData	استفاده از داده‌های مشترک دفتر مرکزی
+bs.field.activeStructureTypes	ساختارهای مجاز این کسب‌وکار
+bs.field.parent	والد
+bs.type.1	هولدینگ
+bs.type.2	شرکت
+bs.type.3	شعبه
+bs.type.4	نمایندگی
+bs.type.5	فروشگاه
+bs.type.hq	دفتر مرکزی
+bs.action.save	ذخیره
+bs.action.saveNew	ذخیره و جدید
+bs.action.saveClose	ذخیره و بستن
+bs.action.new	جدید
+bs.action.delete	حذف
+bs.msg.saved	با موفقیت ذخیره شد
+bs.msg.deleted	شاخه حذف شد
+bs.msg.deleteBlockedChildren	این شاخه دارای زیرشاخه است و حذف نمی‌شود
+bs.msg.deleteBlockedRoot	دفتر مرکزی قابل حذف نیست
+bs.msg.deleteBlockedSystem	رکورد سیستمی قابل حذف نیست
+bs.msg.deleteConfirm	آیا از حذف این شاخه مطمئن هستید؟
+bs.msg.loadError	خطا در دریافت ساختار
+bs.msg.saveError	خطا در ذخیره‌سازی
+bs.val.titleRequired	عنوان الزامی است
+bs.val.titleEnRequired	عنوان لاتین (انگلیسی) الزامی است
+bs.val.typeRequired	انتخاب نوع الزامی است
+bs.hint.codeAuto	کد به‌صورت خودکار تولید می‌شود
+bs.hint.latinTitle	عنوان معادل به لاتین وارد کنید
+bs.root.unionWarning	در نهایت، اجتماع (Union) ساختارهای تعریف‌شدهٔ سیستم و انتخاب شما اعمال می‌شود
+settings.title	تنظیمات
+settings.subtitle	شخصی‌سازی سامانه
+settings.appearance	ظاهر
+settings.light	روشن
+settings.dark	تیره
+settings.back	بازگشت
+settings.bsDesc	مدیریت سطوح هلدینگ، شرکت، شعبه، نمایندگی و فروشگاه
+settings.umDesc	مدیریت کاربران، نقش‌ها و سطوح دسترسی سامانه
+settings.umPending	این بخش از چندین فرم تشکیل شده است؛ سند تحلیل آن ارائه خواهد شد و فرم‌ها پس از آن پیاده‌سازی می‌شوند.
+settings.activeLangs	زبان‌های فعال
+settings.activeLangsDesc	زبان‌هایی که در سوییچر زبان و پنل‌های ترجمه نمایش داده می‌شوند (فارسی همیشه فعال است)
+sidebar.title	همهٔ آیتم‌ها
+sidebar.toSidebar	نمایش به‌صورت منوی کناری
+sidebar.toGrid	نمایش آیکون‌ها روی دسکتاپ
+sidebar.collapse	جمع کردن منو
+sidebar.expand	باز کردن منو
+app.settings	تنظیمات
+app.accounting	حسابداری
+app.receiptsPayment	دریافت و پرداخت
+app.inventory	انبار
+app.sales	فروش
+app.fixedAssets	دارایی ثابت
+app.procurement	تدارکات
+app.foreignOrders	سفارشات خارجی
+app.costing	بهای تمام شده
+app.materialDelivery	کنترل تحویل مواد
+app.productionPlanning	برنامه ریزی تولید
+app.payroll	حقوق و دستمزد
+app.hr	منابع انسانی
+app.officeAutomation	اتوماسیون اداری
+app.crm	مدیریت ارتباط با مشتریان
+app.advancedTools	ابزارهای پیشرفته
+app.userManagement	مدیریت کاربران
+app.workflow	گردش کار
+app.smsCenter	پیامک رسان
+app.retailSales	فروش فروشگاهی
+app.marketingSales	بازاریابی و فروش
+app.coldDistribution	پخش سرد
+app.hotDistribution	پخش گرم
+app.financialStatements	صورت های مالی
+app.businessIntelligence	هوش تجاری
+app.maintenance	تعمیرات و نگهداری
+app.onlineWebsite	وبسایت آنلاین
+app.general	عمومی
+dfb.builderTitle	فرمساز
+dfb.systemForm	فرم سیستمی
+dfb.prev	قبلی
+dfb.next	بعدی
+dfb.noRecordSelected	رکوردی انتخاب نشده است
+dfb.builderNote	ساخت آیکون، زیرمنو و فرم روی درختواره
+dfb.studio.title	استودیوی طراحی فرم
+dfb.studio.open	طراحی در استودیو
+dfb.studio.save	ذخیرهٔ قالب
+dfb.studio.exit	خروج از طراحی
+dfb.studio.exitConfirm	تغییرات ذخیره‌نشده وجود دارد؛ بدون ذخیره خارج می‌شوید؟
+dfb.studio.exitDiscard	خروج بدون ذخیره
+dfb.studio.exitStay	بازگشت به طراحی
+dfb.studio.undo	واگرد
+dfb.studio.redo	ازانجام
+dfb.studio.preview	پیش‌نمایش
+dfb.studio.editMode	حالت ویرایش
+dfb.studio.align	تراز فیلدها
+dfb.studio.alignStart	تراز از ابتدا
+dfb.studio.alignCenter	وسط‌چین
+dfb.studio.alignEnd	تراز از انتها
+dfb.studio.equalize	هم‌عرض کردن
+dfb.studio.alignHint	تراز و عرض فیلدهای این باند را یکدست کنید؛ عرض هر فیلد را می‌توانید با کشیدن لبهٔ آن تغییر دهید.
+dfb.studio.previewHint	حالت پیش‌نمایش: باندهای طراحی پنهان‌اند؛ می‌توانید داده وارد کنید و با اکشن بار ذخیره کنید.
+dfb.studio.unsavedFieldsHint	برای ذخیرهٔ دادهٔ فیلدهای تازه‌ساخت، ابتدا قالب فرم را ذخیره کنید.
+dfb.studio.meta	مشخصات پایه و متا
+dfb.studio.shellStyle	استایل کلی پوستهٔ فرم
+dfb.studio.theme	طرح رنگ پوسته (Theme)
+dfb.studio.titleSize	اندازهٔ قلم عنوان فرم
+dfb.studio.font	نام قلم متن فرم (Font)
+dfb.studio.size.sm	کوچک (۱۴px)
+dfb.studio.size.md	متوسط (۱۶px)
+dfb.studio.size.lg	بزرگ (۱۸px)
+dfb.studio.font.sans	سنس-سریف
+dfb.studio.font.serif	سریف
+dfb.studio.font.mono	مونواسپیس
+dfb.studio.styleHint	طرح رنگ، اندازهٔ عنوان و قلم پوستهٔ فرم را از همین بخش تنظیم کنید؛ نتیجه بلافاصله روی پیش‌نمایش می‌نشیند.
+dfb.studio.bankSettings	تنظیمات باند فعال (شمار {n})
+dfb.studio.bankTitle	عنوان باند
+dfb.studio.bankParent	نوع والد (ثابت در توئی)
+dfb.studio.parentRoot	بدون والد (باند اصلی / سطح ریشه)
+dfb.studio.parentTab	والد: پوستهٔ فرم (توئی)
+dfb.studio.addBank	افزودن باند جدید به فرم
+dfb.studio.addGridTab	افزودن باند گرید
+dfb.studio.addFieldsTab	افزودن باند فیلد ورودی
+dfb.studio.addTab	افزودن تب
+dfb.studio.addTabDesc	برای تب جدید عنوان فارسی و عنوان لاتین را وارد کنید
+dfb.studio.tabTitleFa	عنوان فارسی تب
+dfb.studio.tabTitleEn	عنوان لاتین تب
+dfb.studio.latinOnly	فقط نویسه‌های لاتین مجاز است
+dfb.studio.latinBlocked	نویسه‌های غیرلاتین حذف شد
+dfb.studio.emptyGridBand	این باند هنوز تب ندارد
+dfb.studio.emptyGridBandHint	با «افزودن تب» یک تب برای جدول رکوردها بسازید
+dfb.studio.tabDeleteHint	برای حذف تب ابتدا فیلدهای آن را حذف کنید
+dfb.studio.bandTabs	تب‌های باند
+dfb.studio.bankKind	نوع باند
+dfb.studio.bankKindGrid	گرید (جدول رکوردها)
+dfb.studio.bankKindFields	فیلدهای ورودی
+dfb.studio.emptyFieldsTab	این باند فیلدی ندارد؛ از جعبه‌ابزار فیلد بیفزایید.
+dfb.studio.bankMain	باند اصلی
+dfb.studio.bankDeleteHint	برای حذف باند، ابتدا فیلدهایش را جابه‌جا یا حذف کنید.
+dfb.studio.moveUp	انتقال به بالا
+dfb.studio.moveDown	انتقال به پایین
+dfb.studio.palette	جعبه‌ابزار فیلدها
+dfb.studio.paletteHint	روی نوع فیلد کلیک کنید تا به باند فعال افزوده شود، یا آن را روی بوم بکشید.
+dfb.studio.fieldsCount	{n} فیلد
+dfb.studio.fieldSettings	تنظیمات فیلد فعال
+dfb.studio.fieldSettingsHint	برای ویرایش مشخصات، فیلدی را روی بوم انتخاب کنید.
+dfb.studio.readOnly	فقط-خواندنی
+dfb.studio.emptyBankHint	از جعبه‌ابزار فیلدی به این باند بیفزایید.
+dfb.studio.labelRequired	برچسب همهٔ فیلدها باید وارد شده باشد.
+dfb.studio.createAndOpen	ایجاد و ورود به استودیو
+dfb.treeTitle	درختواره فرم‌ها
+dfb.emptyTree	هنوز موردی ایجاد نشده است
+dfb.addMainIcon	افزودن آیکون اصلی
+dfb.addSubMenu	افزودن زیرمنو
+dfb.menuDialogDesc	عنوان و نماد آیکون یا زیرمنو را تعیین کنید.
+dfb.menuTitle	عنوان
+dfb.menuTitleEn	عنوان (لاتین)
+dfb.iconKey	نماد
+dfb.menuKind	نوع
+dfb.kindIcon	آیکون اصلی
+dfb.kindSubmenu	زیرمنو
+dfb.systemEntry	سیستمی
+dfb.systemEntryToast	موارد سیستمی تغییرناپذیرند
+dfb.manageQueries	مدیریت کوئری‌ها
+dfb.createQuery	ایجاد کوئری
+dfb.queryDialogDesc	جدول مجاز و ستون‌های موردنیاز را انتخاب کنید.
+dfb.queryTitle	عنوان کوئری
+dfb.queryTable	جدول مبدأ
+dfb.queryColumns	ستون‌ها
+dfb.filterColumn	ستون فیلتر
+dfb.filterValue	مقدار فیلتر
+dfb.none	بدون فیلتر
+dfb.createForm	ایجاد فرم
+dfb.wizard.step1	قالب فرم را انتخاب کنید
+dfb.wizard.step2	هدر و فوتر فرم را تعیین کنید
+dfb.wizard.step3	فیلدهای فرم را تعریف کنید
+dfb.template.simple	فرم ساده (با قابلیت تب)
+dfb.template.simpleDesc	ساختار دو ردیفی میراث با نوار ابزار و تب‌های اختیاری
+dfb.template.tree	فرم درختی
+dfb.template.treeDesc	ساختار درختی با پنل جزئیات
+dfb.templateLabel	قالب
+dfb.formTitle	عنوان فرم
+dfb.formTitleEn	عنوان فرم (لاتین)
+dfb.badgeLabel	برچسب هدر
+dfb.footerButtons	دکمه‌های فوتر
+dfb.btn.save	ذخیره
+dfb.btn.saveNew	ذخیره و جدید
+dfb.btn.saveClose	ذخیره و بستن
+dfb.btn.reset	بازنشانی
+dfb.btn.delete	حذف
+dfb.btn.print	چاپ
+dfb.btn.copy	کپی
+dfb.btn.deleteNew	حذف و جدید
+dfb.btn.deleteClose	حذف و بستن
+dfb.btn.list	لیست
+dfb.tabsSection	تب‌ها (اختیاری)
+dfb.tabTitle	عنوان تب
+dfb.addTab	افزودن تب
+dfb.fieldsSection	فیلدها
+dfb.newField	فیلد جدید
+dfb.fieldLabel	برچسب فیلد
+dfb.fieldType	نوع فیلد
+dfb.type.text	متن
+dfb.type.number	عدد
+dfb.type.select	انتخابی
+dfb.type.lookup	جست‌وجو
+dfb.type.checkbox	چک‌باکس
+dfb.type.date	تاریخ
+dfb.type.textarea	متن بلند
+dfb.type.line	خط
+dfb.type.box	باکس
+dfb.type.circle	دایره
+dfb.type.oval	بیضی
+dfb.type.script	اسکریپت
+dfb.type.radio	دکمه رادیو
+dfb.studio.listItems	آیتم‌های لیست
+dfb.studio.listItemsEmpty	هنوز آیتمی تعریف نشده است
+dfb.studio.listItemPlaceholder	عنوان آیتم
+dfb.studio.listItemAdd	افزودن آیتم
+dfb.studio.itemsScriptEditor	آیتم‌ها از اسکریپت (جاوااسکریپت)
+dfb.studio.itemsRun	اجرا و واکشی آیتم‌ها
+dfb.studio.itemsFetched	آیتم‌های واکشی‌شده
+dfb.studio.itemsAddSelected	افزودن آیتم‌های انتخاب‌شده
+dfb.studio.itemsAdded	{n} آیتم افزوده شد
+dfb.studio.itemsNone	آیتمی انتخاب نشده است
+dfb.studio.itemsAlready	آیتم‌های انتخاب‌شده از قبل موجودند
+dfb.studio.footerBand	باند فوتر
+dfb.studio.footerBandChip	همیشه در انتهای فرم
+dfb.studio.footerBandHint	فیلدهای این باند همیشه در انتهای فرم نمایش داده می‌شوند؛ از جعبه‌ابزار بیفزایید.
+dfb.studio.shapesGroup	اشکال طراحی
+dfb.studio.scriptEditor	اسکریپت (جاوااسکریپت)
+dfb.studio.scriptHint	با db.table(\"DfbMenu\").findMany({...}) داده واکشی کنید و آرایه‌ای از اشیاء را return کنید؛ ستون‌های خروجی به‌عنوان فیلد قابل انتخاب می‌شوند. یا ساده‌تر، دستور SQL هم پذیرفته می‌شود: select * from DfbForm limit 10.
+dfb.studio.scriptRun	اجرا و واکشی
+dfb.studio.scriptEmpty	ابتدا اسکریپت را بنویسید
+dfb.studio.scriptRows	{n} رکورد واکشی شد
+dfb.studio.scriptExecError	خطا در اجرای اسکریپت
+dfb.studio.scriptFetched	فیلدهای واکشی‌شده
+dfb.studio.scriptFetchedEmpty	هنوز چیزی واکشی نشده؛ ابتدا «اجرا و واکشی» را بزنید
+dfb.studio.scriptAddSelected	افزودن فیلدهای انتخاب‌شده به فرم
+dfb.studio.scriptAdded	{n} فیلد به فرم افزوده شد
+dfb.studio.scriptNone	فیلدی انتخاب نشده است
+dfb.studio.scriptAlready	فیلدهای انتخاب‌شده قبلاً به فرم افزوده شده‌اند
+dfb.studio.scriptBindNote	متصل به اسکریپت — ستون «{field}»
+dfb.studio.fieldProps	ویژگی‌های فیلد
+dfb.i18n.title	ترجمهٔ برچسب
+dfb.i18n.tabTitle	ترجمهٔ عنوان تب
+dfb.i18n.optionTitle	ترجمهٔ آیتم
+dfb.i18n.valueTitle	ترجمهٔ داده
+dfb.studio.labelEn	برچسب لاتین
+dfb.studio.openScriptModal	ویرایش اسکریپت در مودال
+dfb.studio.scriptModalTitle	اسکریپت‌نویسی فرم
+dfb.studio.scriptModalDesc	در تب «کد اسکریپت» بنویسید و از درخت جداول نرم‌افزارها کمک بگیرید؛ در تب «پیش‌نمایش اطلاعات» داده‌های واکشی‌شده را ببینید.
+dfb.studio.scriptTabCode	کد اسکریپت
+dfb.studio.scriptTabPreview	پیش‌نمایش اطلاعات
+dfb.studio.dbTree	جداول و ویوهای نرم‌افزارها
+dfb.studio.dbTreeHint	روی جدول/فیلد کلیک کنید تا نامش در اسکریپت درج شود
+dfb.studio.dbSearch	جستجوی جدول یا فیلد…
+dfb.studio.dbTablesGroup	جداول
+dfb.studio.dbViewsGroup	ویوها
+dfb.studio.dbLoading	در حال خواندن ساختار بانک اطلاعاتی…
+dfb.studio.dbError	خطا در خواندن ساختار بانک اطلاعاتی
+dfb.studio.dbEmpty	جدولی یافت نشد
+dfb.studio.previewRows	{n} ردیف واکشی شد
+dfb.studio.previewCols	ستون‌های خروجی
+dfb.studio.previewEmpty	این اسکریپت ردیفی برنگرداند
+dfb.required	اجباری
+dfb.width	عرض
+dfb.queryBind	اتصال به کوئری
+dfb.noQuery	بدون کوئری
+dfb.queryValueColumn	ستون مقدار
+dfb.queryBound	متصل به کوئری
+dfb.noFieldsYet	فیلدی تعریف نشده است
+dfb.addField	افزودن فیلد
+dfb.customField	الحاقی
+dfb.openForm	باز کردن فرم
+dfb.list.open	فهرست رکوردها
+dfb.list.title	فهرست کلّی
+dfb.list.code	کد
+dfb.list.yes	بلی
+dfb.list.empty	اطلاعاتی برای نمایش وجود ندارد
+dfb.list.recordsCount	{n} رکورد
+dfb.list.filterRow	نوار فیلتر
+dfb.list.showColumns	نمایش ستون‌ها
+dfb.list.sortHint	برای مرتب‌سازی کلیک کنید
+dfb.list.refresh	بازخوانی
+dfb.list.translate	ترجمه
+dfb.list.translateOnline	ترجمهٔ خودکار (آنلاین)
+dfb.list.translateLangsHint	زبان فعال
+dfb.list.translateOffline	ورود دستی (آفلاین)
+dfb.list.translateOfflineHint	ترجمهٔ فیلدهای متنی این رکورد
+dfb.list.translateDone	ترجمهٔ خودکار انجام شد
+dfb.list.translateManualTitle	ترجمهٔ دستی رکورد
+dfb.list.translateNoTextFields	این رکورد فیلد متنی قابل ترجمه ندارد
+dfb.list.addRecord	افزودن رکورد
+dfb.list.deleteRecord	حذف رکورد
+dfb.list.deletedToast	رکورد حذف شد
+dfb.list.deleteConfirm	رکورد انتخاب‌شده حذف شود؟ این عمل بازگشت‌پذیر نیست.
+dfb.list.exportCsv	خروجی CSV
+dfb.list.op.contains	شامل
+dfb.list.op.notContains	شامل نبودن
+dfb.list.op.startsWith	شروع با
+dfb.list.op.endsWith	پایان با
+dfb.list.op.equals	برابر با
+dfb.list.op.notEquals	نابرابر با
+dfb.list.op.empty	خالی باشد
+dfb.list.op.notEmpty	خالی نباشد
+dfb.formsCount	فرم
+dfb.formEntry	فرم
+dfb.statusLabel	وضعیت
+dfb.statusDraft	پیش‌نویس
+dfb.statusPublished	منتشرشده
+dfb.confirmDeleteBody	مورد انتخاب‌شده حذف شود؟
+dfb.savedToast	با موفقیت ذخیره شد
+dfb.menuNotFound	این منو یافت نشد
+dfb.formNotFound	این فرم یافت نشد
+dfb.submenusSection	زیرمنوها
+dfb.formsSection	فرم‌ها
+dfb.noFormsHere	در این منو فرمی ثبت نشده است
+dfb.emptyMenu	این منو خالی است
+dfb.noRecords	رکوردی ذخیره نشده است
+dfb.record	رکورد
+dfb.requiredFieldsMissing	تکمیل فیلدهای اجباری لازم است
+ph.awaitingBadge	در انتظار سند تحلیل
+ph.awaitingBody	فرم‌ها و فیلدهای این نرم‌افزار هنوز تعریف نشده‌اند؛ پس از ارائهٔ سند تحلیل، طراحی و پیاده‌سازی دقیقاً بر اساس همان سند انجام می‌شود.
+ph.secureApi	اتصال امن سرویس‌ها
+ph.infraStatus	وضعیت زیرساخت
+ph.portLabel	پورت سرویس
+ph.dbShared	پایگاه‌دادهٔ اشتراکی
+ph.dbDedicated	پایگاه‌دادهٔ مجزا
+ph.linkOk	متصل (امضاشده)
+ph.linkFail	قطع موقت
+ph.checking	در حال بررسی اتصال امن…
+ctx.open	باز کردن
+ctx.pinTaskbar	سنجاق به نوار پایین
+ctx.unpinTaskbar	برداشتن از نوار پایین
+ctx.resetLayout	بازنشانی چیدمان میزکار
+taskbar.dropHint	رها کنید تا به نوار پایین سنجاق شود
+taskbar.pinnedToast	آیکون به نوار پایین سنجاق شد
+taskbar.unpinnedToast	آیکون از نوار پایین برداشته شد
+taskbar.alreadyPinned	این آیکون از قبل در نوار پایین قرار دارد
+abar.reset	ریست فیلدهای فرم
+abar.save	ذخیره اطلاعات
+abar.saveNew	ذخیره و جدید
+abar.saveClose	ذخیره و بستن
+abar.copy	کپی اطلاعات فرم
+abar.delete	حذف اطلاعات
+abar.deleteNew	حذف و جدید
+abar.deleteClose	حذف و بستن
+abar.print	پرینت فرم
+abar.list	لیست اطلاعات ثبت‌شده
+abar.listEmpty	موردی برای نمایش وجود ندارد
+abar.confirmDeleteTitle	تأیید حذف
+abar.confirmDeleteBody	آیا از حذف اطلاعات فرم جاری مطمئن هستید؟ این عملیات قابل بازگشت نیست.
+abar.demoTitle	نوار عملیات فرم — پیش‌نمایش زیرساخت
+abar.demoNote	تا ارائهٔ سند تحلیل، اتصال به دادهٔ واقعی وجود ندارد و رفتار دکمهها با دادهٔ نمونه نمایش داده می شود.
+abar.resetToast	فیلدهای فرم بازنشانی شد
+abar.savedToast	اطلاعات با موفقیت ذخیره شد
+abar.deletedToast	اطلاعات حذف شد
+abar.itemOpened	اطلاعات آیتم انتخاب‌شده در فرم باز شد
+abar.printToast	فرم برای پرینت ارسال شد
+abar.copyToast	اطلاعات فرم برای ثبت جدید کپی شد
+abar.toolbar	نوار عملیات فرم
+sft.noData	اطلاعاتی وجود ندارد
+sft.addRow	افزودن سطر جدید
+sft.removeRow	حذف سطر انتخاب‌شده
+sft.copyRows	کپی سطر انتخاب‌شده
+sft.first	رکورد اول
+sft.prev	رکورد قبلی
+sft.next	رکورد بعدی
+sft.last	رکورد آخر
+sft.help	راهنما
+sft.selectPlaceholder	انتخاب کنید…
+stf.details	جزئیات
+stf.iconLabel	نمونه درختی
+stf.geoTitle	محل های جغرافیایی
+stf.iran	ایران
+stf.tehranProvince	استان تهران
+stf.tehran	تهران
+stf.alborz	استان البرز
+stf.karaj	کرج
+stf.type	نوع
+stf.latinTitle	عنوان (لاتین)
+stf.optCountry	کشور
+stf.optProvince	استان
+stf.optCity	شهر
+fdf.title	مشتری جدید
+fdf.badge	نمونه
+fdf.iconLabel	نمونه فرم
+fdf.code	کد
+fdf.customerType	نوع مشتری
+fdf.name	عنوان
+fdf.customerGroup	گروه مشتری
+fdf.balance	مانده حساب
+fdf.formStatus	وضعیت فرم
+fdf.effect	اثر
+fdf.typeNormal	عادی
+fdf.typeSpecial	ویژه
+fdf.dirDirect	مستقیم
+fdf.dirIndirect	غیرمستقیم
+fdf.rial	ریال ایران
+fdf.debit	بدهکار
+fdf.active	فعال
+fdf.tabAddresses	آدرس‌ها
+fdf.tabContacts	تماس‌ها
+fdf.addrType	نوع آدرس
+fdf.city	شهر
+fdf.fullAddr	آدرس کامل
+fdf.postal	کد پستی
+fdf.contactType	نوع تماس
+fdf.number	شماره
+fdf.notes	توضیحات
+fdf.sampleName	مشتری نمونه
