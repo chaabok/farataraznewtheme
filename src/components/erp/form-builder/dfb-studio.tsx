@@ -4,13 +4,14 @@ import * as React from "react";
 import {
   AlignCenterHorizontal, AlignEndHorizontal, AlignLeft, AlignStartHorizontal, ArrowDown, ArrowUp,
   Braces, CalendarDays, Check, ChevronDown, Circle, CircleDot, Code, Copy, Database, Eye, EyeOff, FileText, FormInput,
-  Grid3x3, Hash, History, KeyRound, Layers, List, ListTree, Loader2, Lock, Minus, MoveHorizontal, Palette,
+  Grid3x3, Hash, History, KeyRound, Layers, List, Loader2, Lock, Minus, MoveHorizontal, Palette,
   Pill, PencilLine, Play, Plus, RotateCcw, Save, Search, SlidersHorizontal, Square, Table2, Trash2, Type, X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { ApiError } from "@/lib/api";
 import { useT, useSettings } from "@/stores/settings-store";
 import { useDesktop } from "@/stores/desktop-store";
+import { useWindowChrome } from "@/components/desktop/app-window";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -386,8 +387,14 @@ function StudioInner({ formId }: { formId: number }) {
   const [loading, setLoading] = React.useState(true);
   const [failed, setFailed] = React.useState(false);
   const [isSystem, setIsSystem] = React.useState(false);
-  const [template, setTemplate] = React.useState<"simpleTwoRowTabbed" | "treeForm">("simpleTwoRowTabbed");
-  const [code, setCode] = React.useState("");
+
+  /* Task 62 — the studio window is CHROMELESS (no light title bar): this
+     component hosts the caption buttons (minimize / maximize / close) in its
+     own toolbar row and lets the toolbar act as the drag strip. */
+  const chrome = useWindowChrome();
+  const winMaximized = useDesktop(
+    (s) => s.windows.find((w) => w.kind === "dfb-studio" && w.appKey === String(formId))?.maximized ?? false,
+  );
 
   /* undo/redo history — every mutation commits a snapshot;
      idx 0 = saved/loaded baseline ⇒ dirty = idx !== 0 */
@@ -431,8 +438,6 @@ function StudioInner({ formId }: { formId: number }) {
           ...buildBanks(d),
         };
         setIsSystem(d.isSystem);
-        setTemplate(d.componentKey === "treeForm" ? "treeForm" : "simpleTwoRowTabbed");
-        setCode(d.code);
         setHist({ stack: [initial], idx: 0 });
         setLoading(false);
       })
@@ -1308,35 +1313,40 @@ function StudioInner({ formId }: { formId: number }) {
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden">
-      {/* ══════════ toolbar ══════════ */}
-      <div className="flex shrink-0 flex-wrap items-center gap-1.5 border-b border-border/60 bg-background/70 px-3 py-2 backdrop-blur-sm">
+      {/* ══════════ toolbar — the window drag strip (Task 62: the light
+          OS-style title bar is GONE; this row hosts the caption buttons
+          next to «ذخیره قالب» and drags/moves the window) ══════════ */}
+      <div
+        className="flex shrink-0 cursor-default select-none flex-wrap items-center gap-1.5 border-b border-border/60 bg-background/70 px-3 py-2 backdrop-blur-sm"
+        onPointerDown={chrome?.onDragStart}
+        onPointerMove={chrome?.onDragMove}
+        onPointerUp={chrome?.onDragEnd}
+        onDoubleClick={(e) => {
+          /* Windows caption rule — double-click an empty strip area toggles
+             maximize; buttons must keep their own semantics */
+          if ((e.target as HTMLElement).closest("[data-window-btn]")) return;
+          chrome?.onDoubleClick();
+        }}
+      >
         <span className="me-1 flex items-center gap-1.5 text-sm font-semibold">
           <Palette className="h-4 w-4 text-teal-600 dark:text-teal-400" aria-hidden />
           {t("dfb.studio.title")}
         </span>
-        <Badge variant="secondary" className="max-w-40 truncate text-[10px]">{state.shell.title}</Badge>
-        <Badge variant="outline" className="gap-1 text-[10px]">
-          {template === "treeForm" ? (
-            <><ListTree className="h-3 w-3" aria-hidden />{t("dfb.template.tree")}</>
-          ) : (
-            <><FileText className="h-3 w-3" aria-hidden />{t("dfb.template.simple")}</>
-          )}
-        </Badge>
 
         <span className="mx-1 hidden h-5 w-px bg-border sm:block" aria-hidden />
 
-        <Button type="button" size="sm" variant="outline" onClick={() => setMetaOpen(true)}>
+        <Button type="button" size="sm" variant="outline" data-window-btn onClick={() => setMetaOpen(true)}>
           <SlidersHorizontal className="h-3.5 w-3.5" />
           <span className="hidden sm:inline">{t("dfb.studio.meta")}</span>
         </Button>
-        <Button type="button" size="sm" variant="ghost" disabled={!canUndo} onClick={undo} aria-label={t("dfb.studio.undo")} title={t("dfb.studio.undo")}>
+        <Button type="button" size="sm" variant="ghost" data-window-btn disabled={!canUndo} onClick={undo} aria-label={t("dfb.studio.undo")} title={t("dfb.studio.undo")}>
           <History className="h-4 w-4 rotate-90" aria-hidden />
         </Button>
-        <Button type="button" size="sm" variant="ghost" disabled={!canRedo} onClick={redo} aria-label={t("dfb.studio.redo")} title={t("dfb.studio.redo")}>
+        <Button type="button" size="sm" variant="ghost" data-window-btn disabled={!canRedo} onClick={redo} aria-label={t("dfb.studio.redo")} title={t("dfb.studio.redo")}>
           <History className="h-4 w-4 -rotate-90" aria-hidden />
         </Button>
         <Button
-          type="button" size="sm" variant={preview ? "secondary" : "ghost"}
+          type="button" size="sm" variant={preview ? "secondary" : "ghost"} data-window-btn
           onClick={togglePreview}
           aria-label={preview ? t("dfb.studio.editMode") : t("dfb.studio.preview")}
           title={preview ? t("dfb.studio.editMode") : t("dfb.studio.preview")}
@@ -1344,13 +1354,21 @@ function StudioInner({ formId }: { formId: number }) {
           {preview ? <EyeOff className="h-4 w-4" aria-hidden /> : <Eye className="h-4 w-4" aria-hidden />}
         </Button>
 
+        {/* Task 62 — the «ذخیره قالب» row carries the window caption cluster
+            (save · minimize · maximize · close): RTL flow puts the trio at
+            the visual window edge, Windows-caption order */}
         <span className="ms-auto flex items-center gap-1.5">
-          <span className="hidden font-mono text-[10px] text-muted-foreground md:inline" dir="ltr">{code}</span>
-          <Button type="button" size="sm" onClick={save} disabled={busy || !dirty} aria-label={t("dfb.studio.save")}>
+          <Button type="button" size="sm" data-window-btn onClick={save} disabled={busy || !dirty} aria-label={t("dfb.studio.save")}>
             {busy ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <Save className="h-4 w-4" aria-hidden />}
             <span className="hidden sm:inline">{t("dfb.studio.save")}</span>
           </Button>
-          <Button type="button" size="sm" variant="ghost" onClick={requestExit} aria-label={t("dfb.studio.exit")} title={t("dfb.studio.exit")}>
+          <Button type="button" size="sm" variant="ghost" data-window-btn onClick={chrome?.onMinimize} aria-label={t("common.minimize")} title={t("common.minimize")}>
+            <Minus className="h-4 w-4" aria-hidden />
+          </Button>
+          <Button type="button" size="sm" variant="ghost" data-window-btn onClick={chrome?.onToggleMaximize} aria-label={t("common.maximize")} title={t("common.maximize")}>
+            {winMaximized ? <Copy className="h-3.5 w-3.5 -scale-x-100" aria-hidden /> : <Square className="h-3.5 w-3.5" aria-hidden />}
+          </Button>
+          <Button type="button" size="sm" variant="ghost" data-window-btn onClick={requestExit} aria-label={t("dfb.studio.exit")} title={t("dfb.studio.exit")}>
             <X className="h-4 w-4" aria-hidden />
           </Button>
         </span>

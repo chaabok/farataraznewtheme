@@ -12,13 +12,17 @@ const TASKBAR_H = 52;
    (green gradient strip of SimpleFormTwoRowTabbed / SimpleTreeForm) becomes
    the drag handle and hosts the minimize/maximize/close caption buttons via
    WindowChrome. Extend this list when another window kind adopts the form
-   shell. Task 32 — BusinessStructureWindow adopts SimpleTreeForm. */
+   shell. Task 32 — BusinessStructureWindow adopts SimpleTreeForm.
+   Task 62 — the design studio (dfb-studio) joins: the owner asked for the
+   light title bar to be removed entirely and for minimize/maximize caption
+   buttons to live in the studio toolbar row (next to «ذخیره قالب»). */
 const CHROMELESS_KINDS: readonly WindowKind[] = [
   "form-demo",
   "tree-demo",
   "business-structure",
   "dfb-builder",
   "dfb-form",
+  "dfb-studio",
 ];
 
 /** Caption-button + drag API a chromeless host injects into its content. */
@@ -118,8 +122,6 @@ export function AppWindow({ win, title, icon, children }: AppWindowProps) {
   };
   const onResizePointerUp = () => (resizeRef.current = null);
 
-  if (win.minimized) return null;
-
   const maximized = win.maximized;
   const chromeless = CHROMELESS_KINDS.includes(win.kind);
   /* Task 28 — stable caption API for the chromeless form header */
@@ -139,6 +141,15 @@ export function AppWindow({ win, title, icon, children }: AppWindowProps) {
   const effX = clamp(win.x, 12, Math.max(12, vw - effW - 12));
   const effY = clamp(win.y, 12, Math.max(12, vh - TASKBAR_H - effH - 12));
 
+  const frameStyle: React.CSSProperties = maximized
+    ? { inset: 0, zIndex: win.z }
+    : { left: effX, top: effY, width: effW, height: effH, zIndex: win.z };
+  /* Task 62 — minimized windows stay MOUNTED (display:none) instead of
+     unmounting: in-window React state (design-studio undo history, unsaved
+     drafts) must survive a minimize → restore round-trip — Windows
+     semantics. The taskbar restore path flips `minimized` back to false. */
+  if (win.minimized) frameStyle.display = "none";
+
   return (
     <div
       className={cn(
@@ -153,9 +164,7 @@ export function AppWindow({ win, title, icon, children }: AppWindowProps) {
         /* Task 28 — the windows layer already stops at the taskbar
            (bottom: 52); a maximized window simply fills the layer, so the
            form footer sits flush on the desktop footer (no 52px gap). */
-        maximized
-          ? { inset: 0, zIndex: win.z }
-          : { left: effX, top: effY, width: effW, height: effH, zIndex: win.z }
+        frameStyle
       }
       onPointerDown={() => focusWindow(win.id)}
     >
