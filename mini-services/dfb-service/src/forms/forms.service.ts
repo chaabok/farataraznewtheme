@@ -778,6 +778,17 @@ export class FormsService {
       keyMap.set(cKey, BigInt(id));
       created.push({ dbId: Number(id), clientKey: cKey });
     }
+    /* Task 69 — همگام‌سازی ترجمه‌های عنوان تب: باند/تبی که دیگر در فرم نیست
+       (حذف با «حذف باند/تب») یتیم می‌شود؛ کلیدهای زنده = clientKeyهای همین ذخیره */
+    const liveCKeys = created.map((c) => c.clientKey).filter((k): k is string => Boolean(k));
+    const tabTrRows = await this.prisma.dfbTranslation.findMany({
+      where: { entityType: "Tab", entityRef: BigInt(formId) },
+      select: { id: true, fieldKey: true },
+    });
+    const staleTabTrIds = tabTrRows.filter((r) => !liveCKeys.includes(r.fieldKey)).map((r) => r.id);
+    if (staleTabTrIds.length > 0) {
+      await this.prisma.dfbTranslation.deleteMany({ where: { id: { in: staleTabTrIds } } });
+    }
     return created;
   }
 
