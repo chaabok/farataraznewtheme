@@ -6,13 +6,18 @@ import { persist } from "zustand/middleware";
 import {
   DEFAULT_LOCALE,
   dirOf,
+  LOCALES,
   type Locale,
 } from "@/i18n/config";
 import { getDict, type Dict, type DictKey } from "@/i18n/dictionaries";
 
 interface SettingsState {
   locale: Locale;
+  /** Task 70 — زبان‌های فعال سامانه (fa همیشه فعال است — زبان پایه)؛
+      سوییچر زبان و پنل‌های ترجمه فقط همین‌ها را نشان می‌دهند */
+  activeLocales: Locale[];
   setLocale: (l: Locale) => void;
+  toggleActiveLocale: (l: Locale) => void;
   t: (k: DictKey) => string;
   dir: () => "rtl" | "ltr";
 }
@@ -21,7 +26,19 @@ export const useSettings = create<SettingsState>()(
   persist(
     (set, get) => ({
       locale: DEFAULT_LOCALE,
+      activeLocales: [...LOCALES] as Locale[],
       setLocale: (l) => set({ locale: l }),
+      toggleActiveLocale: (l) =>
+        set((s) => {
+          if (l === "fa") return s; // زبان پایه همیشه فعال است
+          const has = s.activeLocales.includes(l);
+          const next = has
+            ? s.activeLocales.filter((x) => x !== l)
+            : ([...LOCALES] as Locale[]).filter(
+                (x) => x === l || s.activeLocales.includes(x),
+              );
+          return { activeLocales: next };
+        }),
       t: (k) => {
         const dict: Dict = getDict(get().locale);
         return dict[k as keyof Dict] ?? String(k);

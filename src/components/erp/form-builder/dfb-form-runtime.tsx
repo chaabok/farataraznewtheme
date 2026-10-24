@@ -25,7 +25,7 @@ import {
   fieldConfigItems, fieldItemsScript, rowsToItems, DFB_ITEM_FIELD_TYPES,
   type DfbFormDetail, type DfbFieldDef, type DfbFieldItem,
 } from "@/stores/dfb-store";
-import { useDfbTrMap } from "@/stores/dfb-translations";
+import { useDfbTrMap, dfbTransKey } from "@/stores/dfb-translations";
 
 /**
  * DfbFormRuntime (Task 45) — runs a DfbForm definition: renders the template
@@ -67,6 +67,11 @@ function RuntimeInner({ formId }: { formId: number }) {
   const [busy, setBusy] = React.useState(false);
   /* Task 53 — script prefill cache (re-applied after reset) */
   const scriptPrefillRef = React.useRef<Record<string, string>>({});
+  /* Task 70 — مقادیر پایهٔ رکورد بازشده (state — در رندر مقایسه می‌شود)؛
+     نمایشِ ترجمه فقط وقتی اعمال می‌شود که مقدار فعلی همان پایه باشد
+     (با اولین ویرایش کاربر، مقدار واقعی دیده می‌شود و ذخیره همیشه
+     مقدار پایه/ویرایش‌شده را می‌فرستد — ترجمه هرگز در EAV ذخیره نمی‌شود) */
+  const [baseValues, setBaseValues] = React.useState<Record<string, string | boolean>>({});
 
   const loadRecords = React.useCallback(async (d: DfbFormDetail) => {
     try {
@@ -201,12 +206,14 @@ function RuntimeInner({ formId }: { formId: number }) {
   const reset = React.useCallback(() => {
     setValues({ ...scriptPrefillRef.current }); // Task 53 — re-apply script prefill
     setCurrentDataId(null);
+    setBaseValues({}); // Task 70
   }, []);
 
   const openRecord = React.useCallback(
     (dataId: string) => {
       const rec = records.find((r) => String(r.dataId) === dataId);
       if (!rec) return;
+      setBaseValues(rec.values); // Task 70 — پایهٔ مقایسه برای overlay
       setValues(rec.values);
       setCurrentDataId(rec.dataId);
     },
@@ -259,6 +266,19 @@ function RuntimeInner({ formId }: { formId: number }) {
       merged.push({ value: it.value, label: trLabel(it) });
     }
     return merged.length > 0 ? merged : undefined;
+  };
+
+  /* Task 70 — نمایشِ ترجمهٔ دادهٔ واردشده در ران‌تایم: برای فیلد متنی رکوردِ
+     بازشده، اگر زبان فعلی ≠ fa و کاربر هنوز فیلد را ویرایش نکرده باشد،
+     ترجمهٔ زبان فعلی (Value:<dataId>:<fieldKey>) به‌جای مقدار پایه دیده می‌شود؛
+     بدون ترجمه = مقدار اصلی (زنجیرهٔ جایگزینی). با ویرایش، مقدار واقعی برمی‌گردد. */
+  const overlayValue = (f: DfbFieldDef): string | undefined => {
+    if (locale === "fa" || currentDataId == null) return undefined;
+    if (f.fieldType !== "text" && f.fieldType !== "textarea") return undefined;
+    const id = String(f.id);
+    if (values[id] !== String(baseValues[id] ?? "")) return undefined; // ویرایش‌شده
+    const tr = trMap?.[dfbTransKey("Value", currentDataId, f.fieldKey)];
+    return tr && tr.trim() ? tr : undefined;
   };
 
   const footerHandlers: Record<string, FormAction | undefined> = {
@@ -317,7 +337,7 @@ function RuntimeInner({ formId }: { formId: number }) {
       label: dfbFieldLabel(f, locale, trMap), // Task 68
       type: toShellType(f.fieldType),
       required: f.required,
-      value: f.fieldType === "checkbox" ? undefined : String(values[String(f.id)] ?? ""),
+      value: f.fieldType === "checkbox" ? undefined : overlayValue(f) ?? String(values[String(f.id)] ?? ""),
       checked: f.fieldType === "checkbox" ? Boolean(values[String(f.id)]) : undefined,
       readOnly: f.readOnly,
       widthPct: normalizeFieldWidth(f.widthSpan),
@@ -451,6 +471,7 @@ function RuntimeInner({ formId }: { formId: number }) {
   const openRecordByNode = (nodeId: string) => {
     const rec = records.find((r) => `r${r.dataId}` === nodeId);
     if (rec) {
+      setBaseValues(rec.values); // Task 70
       setValues(rec.values);
       setCurrentDataId(rec.dataId);
     } else {
@@ -477,7 +498,7 @@ function RuntimeInner({ formId }: { formId: number }) {
         label: dfbFieldLabel(f, locale, trMap), // Task 68
         type: toShellType(f.fieldType),
         required: f.required,
-        value: f.fieldType === "checkbox" ? undefined : String(values[String(f.id)] ?? ""),
+        value: f.fieldType === "checkbox" ? undefined : overlayValue(f) ?? String(values[String(f.id)] ?? ""),
         checked: f.fieldType === "checkbox" ? Boolean(values[String(f.id)]) : undefined,
         readOnly: f.readOnly,
         widthPct: normalizeFieldWidth(f.widthSpan),

@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useT } from "@/stores/settings-store";
+import { useT, useSettings } from "@/stores/settings-store";
 import { LOCALES, LOCALE_NAMES, type Locale } from "@/i18n/config";
 import {
   dfbTransKey,
@@ -36,8 +36,16 @@ import {
  *   · Option→ (Option، formRef، `<fieldKey>::<value>`)
  */
 
-const TR_LANGS = LOCALES.filter((l) => l !== "fa") as Locale[];
 const FLUSH_MS = 600;
+
+/** زبان‌های ترجمهٔ پنل = زبان‌های فعال منهای fa (Task 70 — تنظیم «زبان‌های فعال») */
+function useTranslationLangs(): Locale[] {
+  const activeLocales = useSettings((s) => s.activeLocales);
+  return React.useMemo(
+    () => (LOCALES as Locale[]).filter((l) => l !== "fa" && activeLocales.includes(l)),
+    [activeLocales],
+  );
+}
 
 export function DfbTranslationsBody({
   entityType,
@@ -52,17 +60,22 @@ export function DfbTranslationsBody({
   fieldKey: string;
   fallbackFa: string;
   /** کلید i18n عنوان پنل (پیش‌فرض: ترجمهٔ برچسب) */
-  labelKey?: "dfb.i18n.title" | "dfb.i18n.tabTitle" | "dfb.i18n.optionTitle";
+  labelKey?:
+    | "dfb.i18n.title"
+    | "dfb.i18n.tabTitle"
+    | "dfb.i18n.optionTitle"
+    | "dfb.i18n.valueTitle";
 }) {
   const t = useT();
   const [lang, setLang] = React.useState<Locale>("en");
+  const trLangs = useTranslationLangs();
   const byLang = useDfbTranslations((s) => s.byLang);
   const key = dfbTransKey(entityType, entityRef, fieldKey);
   const value = byLang[lang]?.[key] ?? "";
 
   const filled = React.useMemo(
-    () => TR_LANGS.filter((l) => (byLang[l]?.[key] ?? "").trim().length > 0).length,
-    [byLang, key],
+    () => trLangs.filter((l) => (byLang[l]?.[key] ?? "").trim().length > 0).length,
+    [byLang, key, trLangs],
   );
 
   const pendingRef = React.useRef<string | null>(null);
@@ -114,7 +127,7 @@ export function DfbTranslationsBody({
             className="ms-1 rounded-full bg-emerald-500/10 px-1.5 py-px font-mono text-[9px] text-emerald-600 dark:text-emerald-400"
             dir="ltr"
           >
-            {filled}/{TR_LANGS.length}
+            {filled}/{trLangs.length}
           </span>
         </Label>
         <Select value={lang} onValueChange={(v) => setLang(v as Locale)}>
@@ -126,7 +139,7 @@ export function DfbTranslationsBody({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {TR_LANGS.map((l) => {
+            {trLangs.map((l) => {
               const filledLang = (byLang[l]?.[key] ?? "").trim().length > 0;
               return (
                 <SelectItem key={l} value={l}>

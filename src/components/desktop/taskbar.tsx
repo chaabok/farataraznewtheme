@@ -101,6 +101,7 @@ export function Taskbar() {
   const t = useT();
   const locale = useSettings((s) => s.locale);
   const setLocale = useSettings((s) => s.setLocale);
+  const activeLocales = useSettings((s) => s.activeLocales); // Task 70
   const { windows, openWindow, focusWindow, minimizeWindow, startOpen, setStartOpen } =
     useDesktop();
   const pinned = useDesktop((s) => s.pinned);
@@ -248,7 +249,7 @@ export function Taskbar() {
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="max-h-72 overflow-y-auto scrollbar-slim">
-            {LOCALES.map((l) => (
+            {LOCALES.filter((l) => activeLocales.includes(l as Locale)).map((l) => (
               <DropdownMenuItem
                 key={l}
                 onClick={() => setLocale(l as Locale)}

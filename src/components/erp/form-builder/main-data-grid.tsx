@@ -112,9 +112,12 @@ const TINT_CLASS: Record<GridActionTint, string> = {
 };
 
 /** A small tinted icon tile in the grid's bottom action bar (the « chic »
-    colored buttons of the classic فهرست windows). */
+    colored buttons of the classic فهرست windows). Task 70 — extra <button>
+    props (aria-expanded, aria-haspopup, data-state …) are forwarded so the
+    button can also serve as a DropdownMenuTrigger (asChild). */
 export function GridActionButton({
   icon: Icon, label, tint, onClick, disabled, active,
+  ...rest
 }: {
   icon: React.ComponentType<{ className?: string }>;
   label: string;
@@ -122,7 +125,7 @@ export function GridActionButton({
   onClick?: () => void;
   disabled?: boolean;
   active?: boolean;
-}) {
+} & Omit<React.ComponentProps<"button">, "onClick" | "disabled">) {
   return (
     <button
       type="button"
@@ -130,6 +133,7 @@ export function GridActionButton({
       aria-label={label}
       disabled={disabled}
       onClick={onClick}
+      {...rest}
       className={cn(
         "flex h-8 w-8 items-center justify-center rounded-lg border border-border/60 bg-background shadow-sm",
         "transition-all duration-150 hover:-translate-y-px hover:bg-foreground/5 hover:shadow",

@@ -17,10 +17,11 @@ import { useSettings } from "@/stores/settings-store";
  *   · Field:<formRef>:<fieldKey>   (EntityRef = FormRef — پایدار در ذخیرهٔ مجدد)
  *   · Tab:<formRef>:<clientKey>    (Task 69 — ClientKey ذخیره‌شده در DfbFormTab)
  *   · Option:<formRef>:<fieldKey>::<value>  (Task 69 — آیتم‌های select/radio)
+ *   · Value:<dataId>:<fieldKey>    (Task 70 — دادهٔ واردشدهٔ کاربر، فقط فیلد متنی)
  * زنجیرهٔ جایگزینی: ترجمهٔ زبان فعلی → متن اصلی (fa) → *_En میراث.
  */
 
-export type DfbTransEntityType = "Menu" | "Form" | "Field" | "Tab" | "Option";
+export type DfbTransEntityType = "Menu" | "Form" | "Field" | "Tab" | "Option" | "Value";
 
 export interface DfbTranslationRow {
   entityType: DfbTransEntityType;
