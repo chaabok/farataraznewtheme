@@ -6,6 +6,7 @@ import { IdGenerationModule } from "./id-generation/id-generation.module";
 import { BusinessStructureModule } from "./business-structure/business-structure.module";
 import { AppRegistryModule } from "./app-registry/app-registry.module";
 import { SystemsModule } from "./systems/systems.module";
+import { SoftwareConfigModule } from "./software-config/software-config.module";
 import { HealthController } from "./health/health.controller";
 import { SeedModule } from "./seed/seed.module";
 
@@ -16,6 +17,7 @@ import { SeedModule } from "./seed/seed.module";
     BusinessStructureModule,
     AppRegistryModule,
     SystemsModule,
+    SoftwareConfigModule,
     SeedModule,
   ],
   controllers: [HealthController],

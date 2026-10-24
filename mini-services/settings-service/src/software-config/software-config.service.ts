@@ -1,0 +1,171 @@
+import { BadRequestException, Injectable, Logger, NotFoundException } from "@nestjs/common";
+import { PrismaService } from "../prisma/prisma.service";
+import { IdGenerationService } from "../id-generation/id-generation.service";
+import {
+  appBaseOnCreate,
+  appBaseOnUpdate,
+  HEAD_OFFICE_NODE_ID,
+  SYSTEM_ACTOR,
+} from "../../../_shared/app-base-entity";
+import {
+  SOFTWARE_CONFIG_APP_KEYS,
+  SOFTWARE_CONFIG_FIELDS,
+  UpsertSoftwareConfigDto,
+  type SoftwareConfigAppKey,
+} from "./software-config.dto";
+
+/**
+ * SoftwareConfig — Task 72 (تأیید مالک): «پیکربندی نرم افزارها» با رعایت
+ * کامل فیلدهای ارث‌بری AppBaseEntity (۱۲فیلدی): ID دستی از IDGeneration (§16)،
+ * Version با §2.5 auto-rowversion، و مهر Creator/CreationDate/CreateTime +
+ * زنجیرهٔ ساختار سازمانی روی هر ردیف (تا استقرار IAM = SYSTEM_ACTOR / دفتر
+ * مرکزی ID=1). خواندن فعلاً سراسری است؛ وقتی IAM وصل شود همین مسیر با
+ * baseDataScopeWhere دامنه‌گذاری می‌شود (قرارداد _shared/app-base-entity).
+ */
+@Injectable()
+export class SoftwareConfigService {
+  private readonly logger = new Logger(SoftwareConfigService.name);
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly idGen: IdGenerationService,
+  ) {}
+
+  /** فهرست نرم‌افزارهای دارای تب پیکربندی + شمار فیلدهای اعلام‌شدهٔ هر کدام. */
+  listApps() {
+    return {
+      items: SOFTWARE_CONFIG_APP_KEYS.map((appKey) => ({
+        appKey,
+        fieldCount: SOFTWARE_CONFIG_FIELDS[appKey].length,
+      })),
+    };
+  }
+
+  /** مقادیر ذخیره‌شدهٔ پیکربندی یک نرم‌افزار. */
+  async list(appKey: string) {
+    this.assertAppKey(appKey);
+    const rows = await this.prisma.softwareConfig.findMany({
+      where: { appKey },
+      orderBy: { configKey: "asc" },
+    });
+    return { appKey, items: rows.map((r) => this.toDto(r)) };
+  }
+
+  /**
+   * ذخیرهٔ دسته‌ای پیکربندی یک نرم‌افزار (فقط کلیدهای رجیستری؛ §2.3 مقدار
+   * رشته‌ای ≤۲۰۰۰ کاراکتر؛ مقدار خالی = حذف ردیف — الگوی ترجمهٔ Task 68).
+   */
+  async upsert(appKey: string, dto: UpsertSoftwareConfigDto) {
+    this.assertAppKey(appKey);
+    const allowed = SOFTWARE_CONFIG_FIELDS[appKey as SoftwareConfigAppKey] ?? [];
+    let saved = 0;
+    let deleted = 0;
+
+    for (const it of dto.items) {
+      const key = String(it.configKey ?? "").trim();
+      if (!allowed.includes(key)) {
+        throw new BadRequestException({
+          statusCode: 422,
+          message: `کلید پیکربندی «${key}» برای «${appKey}» هنوز در رجیستری فیلدها تعریف نشده است`,
+          messageKey: "common.error",
+        });
+      }
+
+      const raw = String(it.configValue ?? "");
+      const value = raw.trim() === "" ? "" : raw.trim().slice(0, 2000);
+
+      if (value === "") {
+        const res = await this.prisma.softwareConfig.deleteMany({
+          where: { appKey, configKey: key },
+        });
+        deleted += res.count;
+        continue;
+      }
+
+      /* §16 — find-then-create تا در ذخیرهٔ مجدد ID نسوزد؛ شکاف فقط در
+         مسیرهای رقابتی می‌سوزد که در این سرویس تک‌کاربره بی‌اثر است. */
+      const existing = await this.prisma.softwareConfig.findUnique({
+        where: {
+          appKey_configKey_businessStructureRef: {
+            appKey,
+            configKey: key,
+            businessStructureRef: HEAD_OFFICE_NODE_ID,
+          },
+        },
+      });
+
+      if (existing) {
+        await this.prisma.softwareConfig.update({
+          where: { id: existing.id },
+          data: { configValue: value, ...appBaseOnUpdate(SYSTEM_ACTOR) },
+        });
+      } else {
+        const newId = await this.idGen.generateNextId("SoftwareConfig");
+        await this.prisma.softwareConfig.create({
+          data: {
+            id: BigInt(newId),
+            appKey,
+            configKey: key,
+            configValue: value,
+            ...appBaseOnCreate(SYSTEM_ACTOR),
+          },
+        });
+      }
+      saved += 1;
+    }
+
+    return { appKey, saved, deleted };
+  }
+
+  private assertAppKey(appKey: string) {
+    if (!(SOFTWARE_CONFIG_APP_KEYS as readonly string[]).includes(appKey)) {
+      throw new NotFoundException({
+        statusCode: 404,
+        message: `software config "${appKey}" not found`,
+        messageKey: "common.error",
+      });
+    }
+  }
+
+  private toDto(r: {
+    id: bigint;
+    appKey: string;
+    configKey: string;
+    configValue: string | null;
+    version: number;
+    creator: string;
+    creationDate: string;
+    createTime: string;
+    lastModifier: string | null;
+    lastModificationDate: string | null;
+    lastModificationTime: string | null;
+    businessStructureRef: bigint;
+    companyRef: bigint | null;
+    branchRef: bigint | null;
+    agencyRef: bigint | null;
+    shopRef: bigint | null;
+    createdAt: Date;
+    updatedAt: Date;
+  }) {
+    return {
+      id: Number(r.id), // §2.4 BigInt → number (گارد 2^53 در مولد ID)
+      appKey: r.appKey,
+      configKey: r.configKey,
+      configValue: r.configValue ?? "",
+      version: r.version,
+      creator: r.creator,
+      creationDate: r.creationDate,
+      createTime: r.createTime,
+      lastModifier: r.lastModifier,
+      lastModificationDate: r.lastModificationDate,
+      lastModificationTime: r.lastModificationTime,
+      businessStructureRef: Number(r.businessStructureRef),
+      companyRef: r.companyRef == null ? null : Number(r.companyRef),
+      branchRef: r.branchRef == null ? null : Number(r.branchRef),
+      agencyRef: r.agencyRef == null ? null : Number(r.agencyRef),
+      shopRef: r.shopRef == null ? null : Number(r.shopRef),
+      createdAt: r.createdAt.toISOString(),
+      updatedAt: r.updatedAt.toISOString(),
+    };
+  }
+}

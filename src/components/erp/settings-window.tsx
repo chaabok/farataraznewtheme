@@ -13,6 +13,7 @@ import {
   Moon,
   MonitorCog,
   Network,
+  SlidersHorizontal,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
@@ -23,6 +24,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { BusinessStructureWindow } from "@/components/erp/business-structure/bs-window";
+import { SoftwareConfigBody } from "@/components/erp/settings/software-config-window";
 import { AppTile } from "@/components/desktop/app-tile";
 
 /* Task 35 — the Settings window hosts the BusinessStructure form as a
@@ -34,9 +36,13 @@ import { AppTile } from "@/components/desktop/app-tile";
 
    Task 37 — the userManagement catalog app moved into Settings the same way
    (owner request): launcher card on «home», sub-page is a §4.6 placeholder
-   (NO forms/fields — the multi-form content follows its analysis document). */
+   (NO forms/fields — the multi-form content follows its analysis document).
 
-type SettingsPage = "home" | "business-structure" | "user-management";
+   Task 72 — «پیکربندی نرم افزارها» hub (owner-approved consultation):
+   launcher card on «home»; sub-page = 7 per-software tabs (fields announced
+   gradually; full AppBaseEntity inheritance on SoftwareConfig rows). */
+
+type SettingsPage = "home" | "business-structure" | "user-management" | "software-config";
 
 export function SettingsWindow() {
   const t = useT();
@@ -74,6 +80,30 @@ export function SettingsWindow() {
         <div className="min-h-0 flex-1">
           <BusinessStructureWindow embedded onEmbeddedClose={() => setPage("home")} />
         </div>
+      </div>
+    );
+  }
+
+  if (page === "software-config") {
+    return (
+      <div className="flex h-full flex-col">
+        {/* slim sub-page bar: back to the settings home (Win-11 settings pattern) */}
+        <div className="flex h-10 shrink-0 items-center gap-1.5 border-b border-border/60 px-2">
+          <button
+            onClick={() => setPage("home")}
+            className="flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-xs font-medium text-foreground/80 transition-colors hover:bg-foreground/10 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
+          >
+            <BackIcon className="h-3.5 w-3.5" aria-hidden />
+            {t("settings.back")}
+          </button>
+          <span className="text-xs text-muted-foreground/50" aria-hidden>
+            /
+          </span>
+          <span className="truncate text-xs font-semibold text-foreground/90">
+            {t("settings.swConfig")}
+          </span>
+        </div>
+        <SoftwareConfigBody />
       </div>
     );
   }
@@ -261,6 +291,23 @@ export function SettingsWindow() {
           <span className="min-w-0 flex-1">
             <span className="block text-sm font-semibold">{t("app.userManagement")}</span>
             <span className="block text-xs text-muted-foreground">{t("settings.umDesc")}</span>
+          </span>
+          <ForwardIcon className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+        </button>
+
+        {/* Task 72 — software-configuration hub launcher (owner request):
+            ۷ تب per-software (عمومی/حسابداری/دریافت و پرداخت/انبار/فروش/
+            دارایی ثابت/حقوق)؛ فیلدها به‌مرور اعلان می‌شوند. */}
+        <button
+          onClick={() => setPage("software-config")}
+          className="flex w-full items-center gap-3 rounded-xl border border-border/70 bg-card/60 p-4 text-start transition-colors hover:bg-accent/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
+        >
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-teal-500 to-teal-700 text-white shadow-md">
+            <SlidersHorizontal className="h-5 w-5" aria-hidden />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-semibold">{t("settings.swConfig")}</span>
+            <span className="block text-xs text-muted-foreground">{t("settings.swConfigDesc")}</span>
           </span>
           <ForwardIcon className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
         </button>
