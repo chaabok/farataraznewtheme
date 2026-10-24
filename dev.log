@@ -77,3 +77,8 @@
  GET /api/advancedTools/queries 200 in 9ms (next.js: 1.0ms, application-code: 8ms)
  GET /api/advancedTools/forms/4 200 in 13ms (next.js: 0.9ms, application-code: 12ms)
  GET /api/advancedTools/forms/4/data 200 in 23ms (next.js: 8ms, application-code: 15ms)
+ GET / 200 in 42ms (next.js: 1.0ms, application-code: 41ms)
+ GET / 200 in 35ms (next.js: 1.0ms, application-code: 34ms)
+ GET /api/advancedTools/menus/tree 200 in 21ms (next.js: 8ms, application-code: 13ms)
+ GET /api/settings/app-registry 500 in 29ms (next.js: 10ms, application-code: 19ms)
+ GET /api/settings/app-registry 500 in 9ms (next.js: 0.9ms, application-code: 8ms)

@@ -2160,3 +2160,19 @@ Work Log:
 Stage Summary:
 - §0.9 به AGENTS.md افزوده شد (قانون پوش سورس+بانک اطلاعاتی به GitHub پس از هر تغییر).
 - مانع صریح: remote گیت‌هاب تنظیم نشده است؛ برای فعال‌شدن پوش، مالک باید آدرس remote (مثلاً git@github.com:user/repo.git یا HTTPS) را اعلام کند؛ commit محلی آماده است.
+
+---
+Task ID: 55
+Agent: Z.ai Code (main orchestrator)
+Task: مالک PAT گیت‌هاب را فرستاد — اجرای §0.9: تنظیم remote و پوش سورس + بانک اطلاعاتی به GitHub.
+
+Work Log:
+- توکن با API گیت‌هاب تأیید شد (login: chaabok / mostafa sharbati).
+- مخازن قابل‌دسترس بررسی شد؛ «farataraz» و «farataraznewtheme» هر دو امروز ساخته و خالی‌اند.
+- فرض صریح (§0.6): چون پروژه بازسازی فراتراز با تم جدید است و farataraznewtheme آخرین مخزن ساخته‌شده است، به‌عنوان مقصد انتخاب شد (جابه‌جایی به farataraz با یک دستور ممکن است).
+- db/custom.db و db/dfb.db از قبل ردیابی‌شده‌اند (§0.9 برقرار) و آخرین وضعیت‌شان در کامیت فعلی است.
+- remote = origin → https://github.com/chaabok/farataraznewtheme.git (توکن فقط در .git/config غیر-ردیابی‌شده ذخیره شد، نه در سورس).
+- push کامل ۴۹+ کامیت شاخهٔ main شامل سورس، AGENTS.md، worklog.md و دو فایل بانک اطلاعاتی.
+
+Stage Summary:
+- §0.9 از این پس فعال است: پس از هر تغییر سورس → commit + push به chaabok/farataraznewtheme (شامل db/*.db).
