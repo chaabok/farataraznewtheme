@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { FilePlus2, ListTree, Loader2, Plus, RefreshCw, Trash2 } from "lucide-react";
+import { FilePlus2, ListTree, Loader2, Plus, RefreshCw } from "lucide-react";
 import { useT, useSettings } from "@/stores/settings-store";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -333,16 +333,6 @@ function QueryDialogBody({ onClose, onSaved }: { onClose: () => void; onSaved: (
 /* 3) form wizard — template → identity/header/footer → fields         */
 /* ------------------------------------------------------------------ */
 
-interface WizardField {
-  key: string; // local uuid
-  label: string;
-  fieldType: string;
-  required: boolean;
-  widthSpan: number;
-  queryId: number | null;
-  queryFieldKey: string | null;
-}
-
 interface WizardTab {
   localId: string;
   title: string;
@@ -389,34 +379,12 @@ function WizardBody({
   const [footerButtons, setFooterButtons] = React.useState<string[]>(["save", "reset", "delete"]);
   const [tabs, setTabs] = React.useState<WizardTab[]>([]);
   const [newTabTitle, setNewTabTitle] = React.useState("");
-  const [fields, setFields] = React.useState<WizardField[]>([]);
-  const [queries, setQueries] = React.useState<Array<{ id: number; title: string; fields: Array<{ fieldName: string }> }>>([]);
   const [busy, setBusy] = React.useState(false);
 
-  React.useEffect(() => {
-    let alive = true;
-    dfbApi.get<{ items: Array<{ id: number; title: string; fields: Array<{ fieldName: string }> }> }>("queries")
-      .then((res) => {
-        if (alive) setQueries(res.items ?? []);
-      })
-      .catch(() => { /* query list optional */ });
-    return () => {
-      alive = false;
-    };
-  }, [step]);
-
-  const addField = () =>
-    setFields((f) => [
-      ...f,
-      {
-        key: `fld-${Date.now()}-${f.length}`,
-        label: "", fieldType: "text", required: false, widthSpan: 1,
-        queryId: null, queryFieldKey: null,
-      },
-    ]);
-
+  /* Task 47 — the wizard records only the form's basic info; field design
+     happens in the design studio that opens right after creation. */
   const submit = async () => {
-    if (!title.trim() || fields.length === 0 || fields.some((f) => !f.label.trim())) return;
+    if (!title.trim()) return;
     setBusy(true);
     try {
       const payload = {
@@ -430,16 +398,6 @@ function WizardBody({
         tabs: componentKey === "simpleTwoRowTabbed"
           ? tabs.map((tb, i) => ({ title: tb.title, orderIndex: i }))
           : undefined,
-        fields: fields.map((f, i) => ({
-          fieldKey: `f${i + 1}_${f.fieldType}`,
-          label: f.label.trim(),
-          fieldType: f.fieldType,
-          required: f.required,
-          widthSpan: f.widthSpan,
-          orderIndex: i,
-          queryRef: f.queryId ?? undefined,
-          queryFieldKey: f.queryFieldKey ?? undefined,
-        })),
       };
       /* dfb-service forms.create returns the created row itself (not {item}) */
       const res = await dfbApi.post<{ id: number }>("forms", payload);
@@ -460,7 +418,7 @@ function WizardBody({
           {t("dfb.createForm")} — {parentMenu.title}
         </DialogTitle>
         <DialogDescription>
-          {step === 1 ? t("dfb.wizard.step1") : step === 2 ? t("dfb.wizard.step2") : t("dfb.wizard.step3")}
+          {step === 1 ? t("dfb.wizard.step1") : t("dfb.wizard.step2")}
         </DialogDescription>
       </DialogHeader>
 
@@ -568,141 +526,19 @@ function WizardBody({
         </div>
       )}
 
-      {step === 3 && (
-        <div className="grid max-h-[60vh] gap-3 overflow-y-auto pe-1 scrollbar-slim">
-          <div className="flex items-center justify-between">
-            <Label>{t("dfb.fieldsSection")}</Label>
-            <Button type="button" variant="outline" size="sm" onClick={addField}>
-              <Plus className="h-3.5 w-3.5" /> {t("dfb.newField")}
-            </Button>
-          </div>
-          {fields.length === 0 && (
-            <p className="rounded-xl border border-dashed border-border/70 p-4 text-center text-xs text-muted-foreground">
-              {t("dfb.noFieldsYet")}
-            </p>
-          )}
-          <div className="grid gap-2">
-            {fields.map((f) => (
-              <div key={f.key} className="grid gap-2 rounded-xl border border-border/60 p-3 sm:grid-cols-12">
-                <div className="sm:col-span-4">
-                  <Label className="text-[11px] text-muted-foreground">{t("dfb.fieldLabel")}</Label>
-                  <Input
-                    value={f.label}
-                    onChange={(e) =>
-                      setFields((fs) => fs.map((x) => (x.key === f.key ? { ...x, label: e.target.value } : x)))
-                    }
-                    className="h-8"
-                  />
-                </div>
-                <div className="sm:col-span-2">
-                  <Label className="text-[11px] text-muted-foreground">{t("dfb.fieldType")}</Label>
-                  <Select
-                    value={f.fieldType}
-                    onValueChange={(v) =>
-                      setFields((fs) => fs.map((x) => (x.key === f.key ? { ...x, fieldType: v } : x)))
-                    }
-                  >
-                    <SelectTrigger className="h-8" aria-label={t("dfb.fieldType")}><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {FIELD_TYPE_OPTIONS.map((ft) => (
-                        <SelectItem key={ft} value={ft}>{t(`dfb.type.${ft}` as never)}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="sm:col-span-2">
-                  <Label className="text-[11px] text-muted-foreground">{t("dfb.width")}</Label>
-                  <Select
-                    value={String(f.widthSpan)}
-                    onValueChange={(v) =>
-                      setFields((fs) => fs.map((x) => (x.key === f.key ? { ...x, widthSpan: Number(v) } : x)))
-                    }
-                  >
-                    <SelectTrigger className="h-8" aria-label={t("dfb.width")}><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1">{t("dfb.widthHalf")}</SelectItem>
-                      <SelectItem value="2">{t("dfb.widthFull")}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="sm:col-span-3">
-                  <Label className="text-[11px] text-muted-foreground">{t("dfb.queryBind")}</Label>
-                  <Select
-                    value={f.queryId != null ? String(f.queryId) : "-"}
-                    onValueChange={(v) =>
-                      setFields((fs) =>
-                        fs.map((x) =>
-                          x.key === f.key
-                            ? { ...x, queryId: v === "-" ? null : Number(v), queryFieldKey: null }
-                            : x,
-                        ),
-                      )
-                    }
-                  >
-                    <SelectTrigger className="h-8" aria-label={t("dfb.queryBind")}><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="-">{t("dfb.noQuery")}</SelectItem>
-                      {queries.map((q) => (
-                        <SelectItem key={q.id} value={String(q.id)}>{q.title}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex items-end justify-between gap-1 sm:col-span-1">
-                  <label className="flex h-8 cursor-pointer items-center gap-1 text-xs" title={t("dfb.required")}>
-                    <Checkbox
-                      checked={f.required}
-                      onCheckedChange={(v) =>
-                        setFields((fs) => fs.map((x) => (x.key === f.key ? { ...x, required: Boolean(v) } : x)))
-                      }
-                      aria-label={t("dfb.required")}
-                    />
-                  </label>
-                  <Button
-                    type="button" variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-rose-600"
-                    aria-label={t("common.delete")}
-                    onClick={() => setFields((fs) => fs.filter((x) => x.key !== f.key))}
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
-                </div>
-                {(f.fieldType === "select" || f.fieldType === "lookup") && f.queryId != null && (
-                  <div className="sm:col-span-12">
-                    <Label className="text-[11px] text-muted-foreground">{t("dfb.queryValueColumn")}</Label>
-                    <Select
-                      value={f.queryFieldKey ?? "-"}
-                      onValueChange={(v) =>
-                        setFields((fs) => fs.map((x) => (x.key === f.key ? { ...x, queryFieldKey: v === "-" ? null : v } : x)))
-                      }
-                    >
-                      <SelectTrigger className="h-8" aria-label={t("dfb.queryValueColumn")}><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="-">{t("dfb.none")}</SelectItem>
-                        {(queries.find((q) => q.id === f.queryId)?.fields ?? []).map((qf) => (
-                          <SelectItem key={qf.fieldName} value={qf.fieldName}>{qf.fieldName}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
       <DialogFooter className="gap-2">
         {step > 1 && (
           <Button variant="outline" onClick={() => setStep(step - 1)}>{t("dfb.prev")}</Button>
         )}
-        {step < 3 ? (
+        {step < 2 ? (
           <Button variant="outline" onClick={() => setStep(step + 1)}>
             {t("dfb.next")}
           </Button>
         ) : (
-          <Button onClick={submit} disabled={busy || !title.trim() || fields.length === 0 || fields.some((f) => !f.label.trim())}>
+          /* Task 47 — creation hands over to the design studio */
+          <Button onClick={submit} disabled={busy || !title.trim()}>
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-            {t("dfb.createForm")}
+            {t("dfb.studio.createAndOpen")}
           </Button>
         )}
       </DialogFooter>

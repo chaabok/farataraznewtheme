@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { FileText, ListTree, Network, Plus, Sigma, Wrench } from "lucide-react";
+import { FileText, ListTree, Network, Palette, Plus, Sigma, Wrench } from "lucide-react";
 import { toast } from "sonner";
 import { useT, useSettings } from "@/stores/settings-store";
 import { useDesktop } from "@/stores/desktop-store";
@@ -382,6 +382,8 @@ export function FormBuilderWindow() {
           onSaved={(formId) => {
             reload();
             setSelectedId(`f${formId}`);
+            /* Task 47 — the design studio opens right after the basic info */
+            useDesktop.getState().openWindow("dfb-studio", String(formId));
           }}
         />
       )}
@@ -434,6 +436,14 @@ function FormDetailPanel({
         <Button type="button" size="sm" onClick={() => setAddFieldOpen(true)} disabled={!detail}>
           <Plus className="h-4 w-4" /> {t("dfb.addField")}
         </Button>
+        {!form.isSystem && (
+          <Button
+            type="button" size="sm" variant="outline"
+            onClick={() => useDesktop.getState().openWindow("dfb-studio", String(form.id))}
+          >
+            <Palette className="h-4 w-4" /> {t("dfb.studio.open")}
+          </Button>
+        )}
         {!form.isSystem && (
           <Button
             type="button" size="sm" variant="outline"

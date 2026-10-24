@@ -32,7 +32,14 @@ import { FieldCell, HeaderButton, NavButton } from "@/components/forms/form-prim
 /* Public API — SimpleFormTwoRowTabbed (Task 24)                        */
 /* ------------------------------------------------------------------ */
 
-export type SimpleFormFieldType = "text" | "number" | "select" | "lookup" | "checkbox";
+export type SimpleFormFieldType =
+  | "text"
+  | "number"
+  | "select"
+  | "lookup"
+  | "checkbox"
+  | "date" // Task 47 — rendered as an LTR YYYY/MM/DD input with a calendar chip
+  | "textarea"; // Task 47 — rendered as a small multi-line box
 
 export interface SimpleFormFieldOption {
   value: string;
@@ -85,6 +92,14 @@ export interface SimpleFormTwoRowTabbedProps {
   badge?: string;
   /** glyph inside the gradient header tile */
   icon?: React.ReactNode;
+
+  /* ----- Task 47 — design-studio theme hooks (all optional) -----
+     headerClassName: merged into the gradient header strip (theme palette);
+     titleClassName: merged into the header <h2> (title font size);
+     bodyStyle: inline style for the body wrapper (body font family). */
+  headerClassName?: string;
+  titleClassName?: string;
+  bodyStyle?: React.CSSProperties;
 
   /** the field rows — flows into a responsive 3-column grid (canonical two rows) */
   fields: SimpleFormField[];
@@ -203,6 +218,9 @@ export function SimpleFormTwoRowTabbed({
   title,
   badge,
   icon,
+  headerClassName,
+  titleClassName,
+  bodyStyle,
   fields,
   onFieldChange,
   labelScope = "container",
@@ -320,7 +338,10 @@ export function SimpleFormTwoRowTabbed({
           Task 28: the strip is also the drag handle of a chromeless host
           window and hosts the caption buttons [– □ ✕] (inline end). */}
       <header
-        className="relative flex h-11 shrink-0 select-none items-center gap-2.5 rtl:bg-gradient-to-l ltr:bg-gradient-to-r from-teal-600 via-teal-600 to-emerald-600 px-3 text-white"
+        className={cn(
+          "relative flex h-11 shrink-0 select-none items-center gap-2.5 rtl:bg-gradient-to-l ltr:bg-gradient-to-r from-teal-600 via-teal-600 to-emerald-600 px-3 text-white",
+          headerClassName,
+        )}
         onPointerDown={onHeaderDragStart}
         onPointerMove={onHeaderDragMove}
         onPointerUp={onHeaderDragEnd}
@@ -335,7 +356,7 @@ export function SimpleFormTwoRowTabbed({
             {icon}
           </span>
         )}
-        <h2 className="truncate text-sm font-bold tracking-tight drop-shadow-sm">{title}</h2>
+        <h2 className={cn("truncate text-sm font-bold tracking-tight drop-shadow-sm", titleClassName)}>{title}</h2>
         {badge && (
           <span className="rounded-full bg-white/15 px-2 py-0.5 text-[10px] font-medium text-white/90 ring-1 ring-inset ring-white/25">
             {badge}
@@ -420,7 +441,7 @@ export function SimpleFormTwoRowTabbed({
           request «بدنه تب‌ها را به فوتر بچسبانید»). The outer scroll only
           kicks in when the field block alone exceeds the body (tiny
           viewports); min-h-44 keeps the tabs section alive there. */}
-      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto scrollbar-slim">
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto scrollbar-slim" style={bodyStyle}>
         <div className="shrink-0 px-4 pb-2 pt-2.5">
           <div
             ref={fieldsGridRef}

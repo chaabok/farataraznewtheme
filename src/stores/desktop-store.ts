@@ -11,7 +11,8 @@ export type WindowKind =
   | "tree-demo"
   | "dfb-builder"
   | "dfb-menu"
-  | "dfb-form";
+  | "dfb-form"
+  | "dfb-studio";
 
 export interface WinState {
   id: string;
@@ -141,6 +142,9 @@ export const useDesktop = create<DesktopState>()(
            opens the real form builder + tree (dfb-builder) — and every future
            form of this menu (system or user-made) joins the same list
            automatically, straight from dfb.db. */
+        /* Task 47 — the design studio opens per form (appKey = form id) right
+           after the create-form wizard records the basic info, and from the
+           builder tree; one window instance per form. */
         if (kind === "app" && appKey === "advancedTools") {
           kind = "dfb-menu";
           appKey = "app:advancedTools";

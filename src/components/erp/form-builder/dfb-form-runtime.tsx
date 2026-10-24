@@ -16,6 +16,7 @@ import {
 } from "@/components/forms/simple-tree-form";
 import type { FormAction } from "@/components/forms/action-bar";
 import { useWindowChrome } from "@/components/desktop/app-window";
+import { dfbShellTheme, type DfbFormStyle } from "@/lib/dfb-theme";
 import {
   fetchFormDetail, executeQuery, saveFormData, loadFormData,
   type DfbFormDetail, type DfbFieldDef,
@@ -176,6 +177,14 @@ function RuntimeInner({ formId }: { formId: number }) {
   const header = detail.header ?? {};
   const footer = detail.footer ?? {};
   const footerButtons = Array.isArray(footer.buttons) ? (footer.buttons as string[]) : [];
+  /* Task 47 — design-studio shell style (theme / title size / font) applied
+     to the running form — what the owner designed is what runs */
+  const shellTheme = dfbShellTheme((header.style ?? null) as DfbFormStyle | null);
+
+  const toShellType = (ft: string): SimpleFormField["type"] =>
+    (["text", "number", "select", "lookup", "checkbox", "date", "textarea"].includes(ft)
+      ? ft
+      : "text") as SimpleFormField["type"];
 
   const footerHandlers: Record<string, FormAction | undefined> = {
     save,
@@ -206,9 +215,7 @@ function RuntimeInner({ formId }: { formId: number }) {
     const toSimpleField = (f: DfbFieldDef): SimpleFormField => ({
       id: String(f.id),
       label: f.label,
-      type: (["text", "number", "select", "lookup", "checkbox"].includes(f.fieldType)
-        ? f.fieldType
-        : "text") as SimpleFormField["type"],
+      type: toShellType(f.fieldType),
       required: f.required,
       value: f.fieldType === "checkbox" ? undefined : String(values[String(f.id)] ?? ""),
       checked: f.fieldType === "checkbox" ? Boolean(values[String(f.id)]) : undefined,
@@ -217,7 +224,7 @@ function RuntimeInner({ formId }: { formId: number }) {
         f.queryRef != null && queryOptions[f.queryRef]
           ? queryOptions[f.queryRef]
           : undefined,
-      ltr: f.fieldType === "number",
+      ltr: f.fieldType === "number" || f.fieldType === "date",
       disabled: busy,
     });
 
@@ -235,6 +242,9 @@ function RuntimeInner({ formId }: { formId: number }) {
         title={detail.title}
         badge={(header.badge as string) ?? undefined}
         icon={<FileText className="h-3.5 w-3.5" aria-hidden />}
+        headerClassName={shellTheme.headerClassName}
+        titleClassName={shellTheme.titleClassName}
+        bodyStyle={shellTheme.bodyStyle}
         fields={mainFields.map(toSimpleField)}
         onFieldChange={onFieldChange}
         tabs={tabs}
@@ -293,12 +303,13 @@ function RuntimeInner({ formId }: { formId: number }) {
       onSelect={(node) => openRecordByNode(node?.id ?? "")}
       badge={(header.badge as string) ?? undefined}
       icon={<Sigma className="h-3.5 w-3.5" aria-hidden />}
+      headerClassName={shellTheme.headerClassName}
+      titleClassName={shellTheme.titleClassName}
+      bodyStyle={shellTheme.bodyStyle}
       fields={treeFields.map((f) => ({
         id: String(f.id),
         label: f.label,
-        type: (["text", "number", "select", "lookup", "checkbox"].includes(f.fieldType)
-          ? f.fieldType
-          : "text") as SimpleFormField["type"],
+        type: toShellType(f.fieldType),
         required: f.required,
         value: f.fieldType === "checkbox" ? undefined : String(values[String(f.id)] ?? ""),
         checked: f.fieldType === "checkbox" ? Boolean(values[String(f.id)]) : undefined,

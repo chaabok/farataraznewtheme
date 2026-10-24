@@ -94,6 +94,11 @@ export interface SimpleTreeFormProps {
   /** glyph inside the gradient header tile */
   icon?: React.ReactNode;
 
+  /* ----- Task 47 — design-studio theme hooks (all optional) ----- */
+  headerClassName?: string;
+  titleClassName?: string;
+  bodyStyle?: React.CSSProperties;
+
   /** detail fields of the SELECTED node (legacy: نوع/کد/عنوان/عنوان لاتین/فعال) */
   fields: SimpleFormField[];
   onFieldChange?: (id: string, value: string | boolean) => void;
@@ -227,6 +232,9 @@ export function SimpleTreeForm({
   canDeleteBranch,
   addBranchLabel,
   deleteBranchLabel,
+  headerClassName,
+  titleClassName,
+  bodyStyle,
   onHeaderClose,
   onHeaderMaximize,
   onHeaderMinimize,
@@ -448,7 +456,10 @@ export function SimpleTreeForm({
         {/* 2a) gradient form header — drag handle + caption buttons
             (chromeless host contract, Task 28) */}
         <header
-          className="relative flex h-11 shrink-0 select-none items-center gap-2.5 rtl:bg-gradient-to-l ltr:bg-gradient-to-r from-teal-600 via-teal-600 to-emerald-600 px-3 text-white"
+          className={cn(
+            "relative flex h-11 shrink-0 select-none items-center gap-2.5 rtl:bg-gradient-to-l ltr:bg-gradient-to-r from-teal-600 via-teal-600 to-emerald-600 px-3 text-white",
+            headerClassName,
+          )}
           onPointerDown={onHeaderDragStart}
           onPointerMove={onHeaderDragMove}
           onPointerUp={onHeaderDragEnd}
@@ -463,7 +474,7 @@ export function SimpleTreeForm({
               {icon}
             </span>
           )}
-          <h2 className="truncate text-sm font-bold tracking-tight drop-shadow-sm">{detailTitle}</h2>
+          <h2 className={cn("truncate text-sm font-bold tracking-tight drop-shadow-sm", titleClassName)}>{detailTitle}</h2>
           {badge && (
             <span className="rounded-full bg-white/15 px-2 py-0.5 text-[10px] font-medium text-white/90 ring-1 ring-inset ring-white/25">
               {badge}
@@ -522,7 +533,7 @@ export function SimpleTreeForm({
         </div>
 
         {/* 2c) scrollable detail body — aligned field grid (or empty state) */}
-        <div className="min-h-0 flex-1 overflow-y-auto scrollbar-slim">
+        <div className="min-h-0 flex-1 overflow-y-auto scrollbar-slim" style={bodyStyle}>
           {selected ? (
             <div className="px-4 pb-2 pt-2.5">
               <div

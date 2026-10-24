@@ -3,9 +3,17 @@ import {
 } from "class-validator";
 import { Type } from "class-transformer";
 
+export class FormStyleDto {
+  @IsOptional() @IsString() @MaxLength(30) theme?: string; // teal | emerald | amber | violet | rose
+  @IsOptional() @IsString() @MaxLength(10) titleSize?: string; // sm | md | lg
+  @IsOptional() @IsString() @MaxLength(10) font?: string; // sans | serif | mono
+}
+
 export class FormHeaderDto {
   @IsOptional() badge?: string;
   @IsOptional() tone?: string; // gradient tailwind pair key, e.g. "teal-emerald"
+  /* Task 47 — design-studio shell style (theme / title font size / body font) */
+  @IsOptional() @ValidateNested() @Type(() => FormStyleDto) style?: FormStyleDto;
 }
 
 export class FormFooterDto {

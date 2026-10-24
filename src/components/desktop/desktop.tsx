@@ -38,6 +38,7 @@ import { TreeDemoWindow } from "@/components/erp/tree-demo-window";
 import { FormBuilderWindow } from "@/components/erp/form-builder/form-builder-window";
 import { DfbMenuWindow } from "@/components/erp/form-builder/dfb-menu-window";
 import { DfbFormRuntime } from "@/components/erp/form-builder/dfb-form-runtime";
+import { FormDesignStudio } from "@/components/erp/form-builder/dfb-studio";
 import { DfbGlyph } from "@/components/erp/form-builder/dfb-dialogs";
 import {
   useDfb, findMenuNode, findFormInTree, findMenuNodeByAppKey,
@@ -160,6 +161,22 @@ function resolveWindowMeta(
         </span>
       ),
       content: <DfbFormRuntime formId={formId} />,
+    };
+  }
+  /* Task 47 — the per-form design studio (استودیوی طراحی فرم) */
+  if (win.kind === "dfb-studio") {
+    const formId = Number(win.appKey ?? 0);
+    const form = findFormInTree(dfbTree, formId);
+    return {
+      title: form
+        ? `${t("dfb.studio.title")} — ${dfbFormTitle(form, locale)}`
+        : t("dfb.studio.title"),
+      icon: (
+        <span className="flex h-5 w-5 items-center justify-center rounded-md bg-gradient-to-br from-amber-500 to-orange-600 text-white">
+          <Wrench className="h-3 w-3" />
+        </span>
+      ),
+      content: <FormDesignStudio formId={formId} />,
     };
   }
   const meta = STATIC_WINDOWS[win.kind];

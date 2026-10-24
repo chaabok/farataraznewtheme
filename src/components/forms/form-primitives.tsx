@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Plus } from "lucide-react";
+import { CalendarDays, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -122,6 +122,81 @@ export function FieldCell({
         />
         <span className="whitespace-nowrap">{field.label}</span>
       </label>
+    );
+  }
+
+  /* Task 47 — textarea: same label unit, small multi-line box (row grows) */
+  if (type === "textarea") {
+    return (
+      <div data-form-cell className="flex min-w-0 items-start gap-2">
+        <span
+          data-form-label
+          className="flex shrink-0 items-center gap-0.5 whitespace-nowrap pt-0.5 text-xs text-muted-foreground"
+        >
+          <span className="w-[var(--label-w,auto)] shrink-0 text-end">
+            <span data-form-label-text className="inline-block whitespace-nowrap">
+              {field.label}
+            </span>
+          </span>
+          <span className="opacity-70" aria-hidden>
+            :
+          </span>
+          <span aria-hidden className={cn("text-rose-500", !field.required && "invisible")}>
+            *
+          </span>
+        </span>
+        <textarea
+          value={field.value ?? ""}
+          rows={2}
+          placeholder={field.placeholder}
+          readOnly={field.readOnly}
+          disabled={field.disabled}
+          aria-label={field.label}
+          onChange={(e) => onChange?.(field.id, e.target.value)}
+          className="min-h-10 min-w-0 flex-1 resize-y rounded-md border border-input bg-transparent px-2 py-1 text-xs shadow-xs outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:bg-background disabled:opacity-50"
+        />
+      </div>
+    );
+  }
+
+  /* Task 47 — date: LTR YYYY/MM/DD input with an inline calendar chip
+     (mirrors the design studio's date preview and the EAV string storage) */
+  if (type === "date") {
+    return (
+      <div data-form-cell className="flex min-w-0 items-center gap-2">
+        <span
+          data-form-label
+          className="flex shrink-0 items-center gap-0.5 whitespace-nowrap text-xs text-muted-foreground"
+        >
+          <span className="w-[var(--label-w,auto)] shrink-0 text-end">
+            <span data-form-label-text className="inline-block whitespace-nowrap">
+              {field.label}
+            </span>
+          </span>
+          <span className="opacity-70" aria-hidden>
+            :
+          </span>
+          <span aria-hidden className={cn("text-rose-500", !field.required && "invisible")}>
+            *
+          </span>
+        </span>
+        <div className="relative min-w-0 flex-1">
+          <Input
+            value={field.value ?? ""}
+            placeholder="YYYY/MM/DD"
+            readOnly={field.readOnly}
+            disabled={field.disabled}
+            aria-label={field.label}
+            dir="ltr"
+            onChange={(e) => onChange?.(field.id, e.target.value)}
+            className={cn(inputBase, "pe-7 text-start")}
+          />
+          <CalendarDays
+            aria-hidden
+            className="pointer-events-none absolute end-1.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground"
+          />
+        </div>
+      </div>
     );
   }
 
