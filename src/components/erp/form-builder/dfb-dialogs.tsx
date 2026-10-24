@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { FilePlus2, ListTree, Loader2, Plus, RefreshCw } from "lucide-react";
+import { FilePlus2, ListTree, Loader2, Plus } from "lucide-react";
 import { useT, useSettings } from "@/stores/settings-store";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -20,7 +20,7 @@ import { getIconKeyGlyph } from "@/lib/app-catalog";
 import { ACTION_BAR_KEYS } from "@/components/forms/action-bar";
 import { LatinInput } from "@/components/forms/latin-input";
 import {
-  dfbApi, type DfbMenuNode, type DfbTabDef, type DfbFieldDef,
+  dfbApi, type DfbMenuNode, type DfbFieldDef,
 } from "@/stores/dfb-store";
 import { cn } from "@/lib/utils";
 
@@ -340,8 +340,6 @@ interface WizardTab {
   title: string;
 }
 
-const FIELD_TYPE_OPTIONS = ["text", "number", "select", "lookup", "checkbox", "date", "textarea"] as const;
-
 /* Task 48 — owner rule «تمامی آیکون‌های اکشن بار بصورت پیش‌فرض»: new forms
    are created with the FULL legacy action bar; the user can still uncheck */
 const FOOTER_BUTTONS = ACTION_BAR_KEYS;
@@ -551,133 +549,9 @@ function WizardBody({
 }
 
 /* ------------------------------------------------------------------ */
-/* 4) add-field dialog — works on system forms too (IsCustom)          */
-/* ------------------------------------------------------------------ */
-
-export function DfbAddFieldDialog({
-  open, onOpenChange, form, onSaved,
-}: {
-  open: boolean;
-  onOpenChange: (v: boolean) => void;
-  form: { id: number; title: string; isSystem: boolean; tabs: DfbTabDef[]; fields: DfbFieldDef[] };
-  onSaved: () => void;
-}) {
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      {open && (
-        <AddFieldBody
-          form={form}
-          onClose={() => onOpenChange(false)}
-          onSaved={onSaved}
-        />
-      )}
-    </Dialog>
-  );
-}
-
-function AddFieldBody({
-  form, onClose, onSaved,
-}: {
-  form: { id: number; title: string; isSystem: boolean; tabs: DfbTabDef[]; fields: DfbFieldDef[] };
-  onClose: () => void;
-  onSaved: () => void;
-}) {
-  const t = useT();
-  const [label, setLabel] = React.useState("");
-  const [labelEn, setLabelEn] = React.useState("");
-  const [fieldType, setFieldType] = React.useState("text");
-  const [required, setRequired] = React.useState(false);
-  // Task 48 API contract: widthSpan is a PERCENT (25..100) — the legacy 1=half/
-  // 2=full values fail AddFieldDto validation (400). The dialog keeps the
-  // نیم‌عرض/تمام‌عرض labels and maps them to 50/100.
-  const [widthSpan, setWidthSpan] = React.useState(50);
-  const [busy, setBusy] = React.useState(false);
-
-  const submit = async () => {
-    if (!label.trim()) return;
-    setBusy(true);
-    try {
-      await dfbApi.post(`forms/${form.id}/fields`, {
-        fieldKey: `custom_${Date.now()}`,
-        label: label.trim(),
-        labelEn: labelEn.trim() || undefined,
-        fieldType,
-        required,
-        widthSpan,
-        orderIndex: form.fields.length,
-      });
-      toast.success(t("dfb.savedToast"));
-      onSaved();
-      onClose();
-    } catch {
-      toast.error(t("common.error"));
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  return (
-    <DialogContent className="max-w-md" dir="auto">
-      <DialogHeader>
-        <DialogTitle>
-          {t("dfb.addField")} — {form.title}
-        </DialogTitle>
-        <DialogDescription>
-          {form.isSystem ? t("dfb.addFieldSystemDesc") : t("dfb.addFieldDesc")}
-        </DialogDescription>
-      </DialogHeader>
-      <div className="grid gap-3">
-        <div className="grid gap-1.5">
-          <Label htmlFor="dfb-field-label">{t("dfb.fieldLabel")}</Label>
-          <Input id="dfb-field-label" value={label} onChange={(e) => setLabel(e.target.value)} />
-        </div>
-        <div className="grid grid-cols-2 gap-2">
-          <div className="grid gap-1.5">
-            <Label htmlFor="dfb-field-label-en">{t("dfb.fieldLabelEn")}</Label>
-            <Input id="dfb-field-label-en" dir="ltr" value={labelEn} onChange={(e) => setLabelEn(e.target.value)} />
-          </div>
-          <div className="grid gap-1.5">
-            <Label>{t("dfb.fieldType")}</Label>
-            <Select value={fieldType} onValueChange={setFieldType}>
-              <SelectTrigger aria-label={t("dfb.fieldType")}><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {FIELD_TYPE_OPTIONS.map((ft) => (
-                  <SelectItem key={ft} value={ft}>{t(`dfb.type.${ft}` as never)}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-        <div className="flex items-center gap-4">
-          <label className="flex cursor-pointer items-center gap-2 text-sm">
-            <Checkbox checked={required} onCheckedChange={(v) => setRequired(Boolean(v))} aria-label={t("dfb.required")} />
-            {t("dfb.required")}
-          </label>
-          <div className="flex items-center gap-2 text-sm">
-            <span className="text-muted-foreground">{t("dfb.width")}:</span>
-            <Select value={String(widthSpan)} onValueChange={(v) => setWidthSpan(Number(v))}>
-              <SelectTrigger className="h-8 w-32" aria-label={t("dfb.width")}><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="50">{t("dfb.widthHalf")}</SelectItem>
-                <SelectItem value="100">{t("dfb.widthFull")}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      </div>
-      <DialogFooter className="gap-2">
-        <Button variant="outline" onClick={onClose}>{t("common.cancel")}</Button>
-        <Button onClick={submit} disabled={busy || !label.trim()}>
-          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-          {t("common.save")}
-        </Button>
-      </DialogFooter>
-    </DialogContent>
-  );
-}
-
-/* ------------------------------------------------------------------ */
 /* 5) fields overview (detailExtra of the builder for a selected form)  */
+/* Task 67 — the builder's «افزودن فیلد» dialog was removed at the       */
+/* owner's request: field management lives in the design studio only.   */
 /* ------------------------------------------------------------------ */
 
 export function DfbFieldsOverview({ fields }: { fields: DfbFieldDef[] }) {

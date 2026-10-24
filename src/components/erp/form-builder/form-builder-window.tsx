@@ -20,7 +20,7 @@ import {
   type DfbMenuNode, type DfbFormDetail, type DfbFormSummary,
 } from "@/stores/dfb-store";
 import {
-  DfbGlyph, DfbMenuDialog, DfbFormWizard, DfbQueryDialog, DfbAddFieldDialog, DfbFieldsOverview,
+  DfbGlyph, DfbMenuDialog, DfbFormWizard, DfbQueryDialog, DfbFieldsOverview,
 } from "./dfb-dialogs";
 import { dfbApi } from "@/stores/dfb-store";
 
@@ -311,10 +311,6 @@ export function FormBuilderWindow() {
         <Button type="button" size="sm" variant="outline" onClick={() => setQueryDialogOpen(true)}>
           <Sigma className="h-4 w-4" /> {t("dfb.manageQueries")}
         </Button>
-        <span className="ms-auto flex items-center gap-1.5 text-[11px] text-muted-foreground">
-          <Wrench className="h-3.5 w-3.5" aria-hidden />
-          {t("dfb.builderNote")}
-        </span>
       </div>
 
       <div className="min-h-0 flex-1">
@@ -324,7 +320,6 @@ export function FormBuilderWindow() {
           nodes={nodes}
           selectedId={selectedId}
           onSelect={(node) => setSelectedId(node?.id ?? null)}
-          badge={t("dfb.builderBadge")}
           icon={<Wrench className="h-3.5 w-3.5" aria-hidden />}
           fields={fields}
           onFieldChange={onFieldChange}
@@ -414,7 +409,6 @@ function FormDetailPanel({
 }) {
   const t = useT();
   const [detail, setDetail] = React.useState<DfbFormDetail | null>(null);
-  const [addFieldOpen, setAddFieldOpen] = React.useState(false);
 
   React.useEffect(() => {
     let alive = true;
@@ -433,9 +427,6 @@ function FormDetailPanel({
   return (
     <div className="grid gap-2 pt-1">
       <div className="flex flex-wrap items-center gap-2">
-        <Button type="button" size="sm" onClick={() => setAddFieldOpen(true)} disabled={!detail}>
-          <Plus className="h-4 w-4" /> {t("dfb.addField")}
-        </Button>
         {!form.isSystem && (
           <Button
             type="button" size="sm" variant="outline"
@@ -478,16 +469,6 @@ function FormDetailPanel({
         {form.isSystem && <Badge variant="secondary" className="text-[10px]">{t("dfb.systemForm")}</Badge>}
       </div>
       {detail ? <DfbFieldsOverview fields={detail.fields} /> : null}
-      {detail && (
-        <DfbAddFieldDialog
-          open={addFieldOpen}
-          onOpenChange={setAddFieldOpen}
-          form={detail}
-          onSaved={() => {
-            fetchFormDetail(form.id).then((d) => setDetail(d)).catch(() => setDetail(null));
-          }}
-        />
-      )}
     </div>
   );
 }

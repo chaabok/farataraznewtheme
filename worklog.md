@@ -2386,3 +2386,21 @@ Work Log:
 Stage Summary:
 - هم‌گام‌سازی گیت‌هاب اکنون خودکار است: هر تغییر سورس یا دیتابیس حداکثر ۱۰ دقیقه بعد (یا فوری با POST /run-now) با بک‌آپ §0.9، کامیت پیام‌دار و پوش امن (fetch+rebase) به origin/main می‌رسد.
 - artifacts: mini-services/auto-push-service/{index.ts,package.json,db-state.json}، پورت 3010، لاگ /tmp/auto-push.log.
+
+---
+Task ID: 67
+Agent: Z.ai Code (main orchestrator)
+Task: درخواست مالک — «در فرمساز، اگر کاربر روی یک فرم کلیک کرد، آیتم‌هایی که در تصویر با فلش قرمز مشخص کردم را حذف کنید» (تصویر: جزئیات فرم «انواع وسیله نقلیه»).
+
+Work Log:
+- برش پیکسلی سه‌گانه (sharp): فلش ۱ = لینک آچار «ساخت آیکون، زیرمنو و فرم روی درختواره» (dfb.builderNote) در نوار بالای فرمساز؛ فلش ۲ = بج «فرمساز» (dfb.builderBadge) روی هدر فیروزه‌ای جزئیات فرم؛ فلش ۳ = دکمهٔ «افزودن فیلد» (dfb.addField) در ردیف اکشن‌های جزئیات فرم. خود هدر، خود آیکون آچارِ هدر و بقیهٔ دکمه‌ها (طراحی در استودیو/باز کردن فرم/فهرست رکوردها/حذف) هدف نبودند.
+- form-builder-window.tsx: spanِ builderNote از نوار بالا حذف (Wrench همچنان برای آیکون هدر استفاده می‌شود)؛ badge={t("dfb.builderBadge")} از SimpleTreeForm حذف؛ دکمهٔ «افزودن فیلد» + state addFieldOpen + رندر DfbAddFieldDialog + ایمپورت آن حذف شدند — مدیریت فیلد از این پس فقط در استودیو طراحی است.
+- dfb-dialogs.tsx: کامپوننت‌های یتیم DfbAddFieldDialog و AddFieldBody بطور کامل حذف شدند؛ ثابت یتیم FIELD_TYPE_OPTIONS حذف؛ ایمپورت‌های یتیم RefreshCw و type DfbTabDef حذف (DfbFieldDef در DfbFieldsOverview زنده است).
+- i18n: ۶ کلید یتیم × ۱۱ زبان = ۶۶ خط حذف (dfb.builderBadge، dfb.addFieldDesc، dfb.addFieldSystemDesc، dfb.fieldLabelEn، dfb.widthHalf، dfb.widthFull) — راستی‌آزمایی اسکریپتی ۱۱/۱۱ برای هر کلید؛ کلیدهای مشترک (dfb.addField، dfb.fieldLabel، dfb.fieldType، dfb.width، dfb.required) چون در استودیو زنده‌اند باقی ماندند (شمارش ۴۴ = ۴ کلید × ۱۱).
+- eslint سه فایل لمس‌شده = 0 خطا/0 هشدار.
+- E2E (agent-browser، 1280×800): دسکتاپ → ابزارهای پیشرفته → فرم‌ساز → درخت → کلیک f11 «انواع وسیله نقلیه»: ① نوار بالا فقط «افزودن آیکون اصلی» + «مدیریت گروه‌ها» (لینک آچار نیست) ② هدر = آیکون + «فرم: انواع وسیله نقلیه» بدون بج ③ اکشن‌ها = طراحی در استودیو/باز کردن فرم/فهرست رکوردها/حذف (بدون افزودن فیلد) — مطابق DOM: headerBadge=null، دکمه‌های حذف‌شده یافت نشدند ④ کلیک روی منوی m32 «حمل و ترابری» هم سالم (هدر منو بدون بج) ⑤ ریلود کامل + عبور دوبارهٔ مسیر = صفر خطای کنسول/صفحه.
+- خانه‌داری §0.9: بک‌آپ زمان‌دار پیش از push.
+
+Stage Summary:
+- نمای «کلیک روی فرم» در فرمساز مطابق سلیقهٔ مالک سبک شد: سه آیتم زائد حذف و کد یتیم (کامپوننت دیالوگ، state، ایمپورت، ثابت و ۶۶ خط i18n) کامل پاک‌سازی شد؛ افزودن فیلد صرفاً از استودیو طراحی فرم.
+- artifacts: form-builder-window.tsx، dfb-dialogs.tsx، dictionaries.ts؛ بدون تغییر دیتابیس.
