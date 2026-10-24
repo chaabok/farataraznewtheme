@@ -235,6 +235,40 @@ model DfbQueryField {
   @@map("DfbQueryField")
 }
 
+/// DfbTranslation — Task 68: جدول ترجمهٔ مرکزی ۱۱زبانه (مشاورهٔ تأییدشدهٔ مالک).
+/// هویت پایدار ترجمه با «کلید بیزینسی» است نه ID ردیف، چون در فرم‌های کاربر
+/// فیلدها در هر ذخیره از نو ساخته می‌شوند (replaceFields → ID تازه):
+///   · Menu  → EntityRef = DfbMenu.ID،  FieldKey = "Title"
+///   · Form  → EntityRef = DfbForm.ID،  FieldKey = "Title"
+///   · Field → EntityRef = DfbFormField.FormRef (پایدار)، FieldKey = FieldKey فیلد
+/// زبان پایه fa ترجمه نمی‌شود (متن اصلی Label/Title همان fa است)؛ ۱۰ زبان دیگر:
+/// en|tr|ar|hi|ps|ckb|pt|ko|fr|zh. نمایش: ترجمهٔ زبان فعلی → fa → Label_En.
+model DfbTranslation {
+  id                   BigInt   @id @map("ID")
+  entityType           String   @map("EntityType") // Menu | Form | Field
+  entityRef            BigInt   @map("EntityRef")
+  fieldKey             String   @map("FieldKey") // "Title" | FieldKey فیلد
+  lang                 String   @map("Lang") // en|tr|ar|hi|ps|ckb|pt|ko|fr|zh
+  value                String   @map("Value")
+  version              Int      @default(1) @map("Version")
+  creator              String   @map("Creator")
+  creationDate         String   @map("CreationDate")
+  createTime           String   @map("CreationTime")
+  lastModifier         String?  @map("LastModifier")
+  lastModificationDate String?  @map("LastModificationDate")
+  lastModificationTime String?  @map("LastModificationTime")
+  businessStructureRef BigInt   @map("BusinessStructureRef")
+  companyRef           BigInt?  @map("CompanyRef")
+  branchRef            BigInt?  @map("BranchRef")
+  agencyRef            BigInt?  @map("AgencyRef")
+  shopRef              BigInt?  @map("ShopRef")
+  createdAt            DateTime @default(now()) @map("CreatedAt")
+  updatedAt            DateTime @updatedAt @map("UpdatedAt")
+
+  @@unique([entityType, entityRef, fieldKey, lang])
+  @@map("DfbTranslation")
+}
+
 /// DfbFormData — هر رکورد ذخیره‌شدهٔ یک فرم پویا (یا رکورد خارجیِ فرم سیستمی از طریق ExternalKey).
 model DfbFormData {
   id                   BigInt   @id @map("ID")

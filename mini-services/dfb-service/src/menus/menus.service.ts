@@ -157,6 +157,10 @@ export class MenusService {
     const formCount = await this.prisma.dfbForm.count({ where: { menuRef: BigInt(id) } });
     if (formCount > 0) throw new BadRequestException("ابتدا فرم‌های این منو را حذف کنید");
     await this.prisma.dfbMenu.delete({ where: { id: BigInt(id) } });
+    /* Task 68 — ترجمه‌های این منو هم پاک می‌شوند */
+    await this.prisma.dfbTranslation.deleteMany({
+      where: { entityType: "Menu", entityRef: BigInt(id) },
+    });
     return { ok: true };
   }
 }

@@ -455,6 +455,10 @@ export class FormsService {
       await tx.dfbFormField.deleteMany({ where: { formRef: BigInt(id) } });
       await tx.dfbFormTab.deleteMany({ where: { formRef: BigInt(id) } });
       await tx.dfbForm.delete({ where: { id: BigInt(id) } });
+      /* Task 68 — ترجمه‌های فرم و فیلدهایش (EntityRef = formId) هم پاک می‌شوند */
+      await tx.dfbTranslation.deleteMany({
+        where: { entityRef: BigInt(id), entityType: { in: ["Form", "Field"] } },
+      });
     });
     this.logger.log(`DfbForm deleted ID=${id}`);
     return { ok: true };
@@ -503,6 +507,10 @@ export class FormsService {
     if (!field) throw new NotFoundException("فیلد یافت نشد");
     if (!field.isCustom) throw new BadRequestException("فیلد سیستمی حذف‌شدنی نیست");
     await this.prisma.dfbFormField.delete({ where: { id: BigInt(fieldId) } });
+    /* Task 68 — ترجمه‌های این فیلد (هویت پایدار: formRef + fieldKey) پاک می‌شوند */
+    await this.prisma.dfbTranslation.deleteMany({
+      where: { entityType: "Field", entityRef: field.formRef, fieldKey: field.fieldKey },
+    });
     return { ok: true };
   }
 
@@ -804,5 +812,15 @@ export class FormsService {
         },
       });
     }
+    /* Task 68 — همگام‌سازی ترجمه‌های فیلد: هویت ترجمه = (formRef، fieldKey)؛
+       کلیدهایی که دیگر در فرم نیستند (حذف فیلد) یتیم می‌شوند و پاک می‌شوند */
+    const liveKeys = fields.map((f) => f.fieldKey);
+    await this.prisma.dfbTranslation.deleteMany({
+      where: {
+        entityType: "Field",
+        entityRef: BigInt(formId),
+        ...(liveKeys.length > 0 ? { fieldKey: { notIn: liveKeys } } : {}),
+      },
+    });
   }
 }

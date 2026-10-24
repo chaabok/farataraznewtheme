@@ -78,6 +78,7 @@ export class SeedService implements OnModuleInit {
       "DfbQueryField",
       "DfbFormData",
       "DfbFormDataValue",
+      "DfbTranslation", // Task 68
     ]) {
       const exists = await this.prisma.iDGeneration.findUnique({ where: { tableName: table } });
       if (!exists) {
@@ -181,5 +182,105 @@ export class SeedService implements OnModuleInit {
         });
       }
     }
+
+    /* 4) Task 68 — ترجمه‌ها:
+       ۴الف) مهاجرت میراث: هر *_En موجود (Menu/Form/Field) → ردیف ترجمهٔ en
+       ۴ب) ترجمهٔ نمونهٔ مالک: عنوان‌های منو/فرم موجود به ۱۰ زبان غیر-fa
+       هر دو idempotent هستند (فقط وقتی ردیفی وجود ندارد ساخته می‌شود). */
+    const ensureTr = async (
+      entityType: string,
+      entityRef: bigint,
+      fieldKey: string,
+      lang: string,
+      value: string,
+    ): Promise<boolean> => {
+      const where = {
+        entityType_entityRef_fieldKey_lang: { entityType, entityRef, fieldKey, lang },
+      };
+      const exists = await this.prisma.dfbTranslation.findUnique({ where });
+      if (exists) return false;
+      await this.prisma.dfbTranslation.create({
+        data: {
+          id: BigInt(await this.idGen.generateNextId("DfbTranslation")),
+          entityType,
+          entityRef,
+          fieldKey,
+          lang,
+          value,
+          ...appBaseOnCreate(SYSTEM_ACTOR),
+        },
+      });
+      return true;
+    };
+
+    /* ۴الف — مهاجرت ستون‌های میراث Title_En / Label_En به ردیف‌های en */
+    const legacyMenus = await this.prisma.dfbMenu.findMany({ where: { titleEn: { not: null } } });
+    for (const m of legacyMenus) {
+      if ((m.titleEn ?? "").trim()) await ensureTr("Menu", m.id, "Title", "en", (m.titleEn ?? "").trim());
+    }
+    const legacyForms = await this.prisma.dfbForm.findMany({ where: { titleEn: { not: null } } });
+    for (const f of legacyForms) {
+      if ((f.titleEn ?? "").trim()) await ensureTr("Form", f.id, "Title", "en", (f.titleEn ?? "").trim());
+    }
+    const legacyFields = await this.prisma.dfbFormField.findMany({ where: { labelEn: { not: null } } });
+    for (const f of legacyFields) {
+      if ((f.labelEn ?? "").trim()) await ensureTr("Field", f.formRef, f.fieldKey, "en", (f.labelEn ?? "").trim());
+    }
+
+    /* ۴ب — ترجمهٔ نمونهٔ ۱۰زبانهٔ موجودیت‌های فعلی (مالک می‌تواند در استودیو ویرایش کند) */
+    const TRANSLATION_SEED: Array<{
+      entityType: "Menu" | "Form";
+      matchTitle: string;
+      values: Record<string, string>;
+    }> = [
+      {
+        entityType: "Form",
+        matchTitle: "انواع وسیله نقلیه",
+        values: {
+          en: "Vehicle Types", tr: "Araç Türleri", ar: "أنواع المركبات",
+          hi: "वाहन प्रकार", ps: "د نقلیو وسایطو ډولونه", ckb: "جۆرەکانی ئۆتۆمبێل",
+          pt: "Tipos de Veículos", ko: "차량 유형", fr: "Types de véhicules", zh: "车辆类型",
+        },
+      },
+      {
+        entityType: "Menu",
+        matchTitle: "حمل و ترابری",
+        values: {
+          en: "Transportation", tr: "Ulaşım", ar: "النقل والمواصلات",
+          hi: "परिवहन", ps: "ترانسپورت", ckb: "گواسترەوە",
+          pt: "Transporte", ko: "운송", fr: "Transport", zh: "交通运输",
+        },
+      },
+      {
+        entityType: "Form",
+        matchTitle: "ساختار کسب و کار",
+        values: {
+          en: "Business Structure", tr: "İş Yapısı", ar: "هيكل الأعمال",
+          hi: "व्यावसायिक संरचना", ps: "د سوداګرۍ جوړښت", ckb: "پێکهاتەی بازرگانی",
+          pt: "Estrutura de Negócios", ko: "비즈니스 구조", fr: "Structure commerciale", zh: "业务结构",
+        },
+      },
+      {
+        entityType: "Form",
+        matchTitle: "فرمساز",
+        values: {
+          en: "Form Builder", tr: "Form Oluşturucu", ar: "منشئ النماذج",
+          hi: "फ़ॉर्म बिल्डर", ps: "فورم جوړونکی", ckb: "د فۆرم سازەکەر",
+          pt: "Criador de Formulários", ko: "폼 빌더", fr: "Créateur de formulaires", zh: "表单构建器",
+        },
+      },
+    ];
+    let seededTr = 0;
+    for (const s of TRANSLATION_SEED) {
+      const row =
+        s.entityType === "Menu"
+          ? await this.prisma.dfbMenu.findFirst({ where: { title: s.matchTitle } })
+          : await this.prisma.dfbForm.findFirst({ where: { title: s.matchTitle } });
+      if (!row) continue;
+      for (const [lang, value] of Object.entries(s.values)) {
+        if (await ensureTr(s.entityType, row.id, "Title", lang, value)) seededTr++;
+      }
+    }
+    if (seededTr > 0) this.logger.log(`seeded ${seededTr} demo translation rows (Task 68)`);
   }
 }

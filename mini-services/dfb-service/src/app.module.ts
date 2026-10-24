@@ -6,6 +6,7 @@ import { IdGenerationModule } from "./id-generation/id-generation.module";
 import { MenusModule } from "./menus/menus.module";
 import { FormsModule } from "./forms/forms.module";
 import { QueriesModule } from "./queries/queries.module";
+import { TranslationsModule } from "./translations/translations.module";
 import { HealthController } from "./health/health.controller";
 import { SeedModule } from "./seed/seed.module";
 
@@ -16,6 +17,7 @@ import { SeedModule } from "./seed/seed.module";
     MenusModule,
     FormsModule,
     QueriesModule,
+    TranslationsModule,
     SeedModule,
   ],
   controllers: [HealthController],

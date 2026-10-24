@@ -18,7 +18,8 @@ export type TableKey =
   | "DfbQuery"
   | "DfbQueryField"
   | "DfbFormData"
-  | "DfbFormDataValue";
+  | "DfbFormDataValue"
+  | "DfbTranslation";
 
 export const TABLE_REGISTRY: Record<TableKey, TableEntry> = {
   IDGeneration: { canonical: "IDGeneration", pk: "IDGenerationID" },
@@ -30,6 +31,7 @@ export const TABLE_REGISTRY: Record<TableKey, TableEntry> = {
   DfbQueryField: { canonical: "DfbQueryField", pk: "ID" },
   DfbFormData: { canonical: "DfbFormData", pk: "ID" },
   DfbFormDataValue: { canonical: "DfbFormDataValue", pk: "ID" },
+  DfbTranslation: { canonical: "DfbTranslation", pk: "ID" }, // Task 68
 };
 
 export function resolveEntry(key: string): TableEntry {
