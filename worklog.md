@@ -2125,3 +2125,23 @@ Work Log:
 
 Stage Summary:
 - دو گزارش مالک در تسک ۵۲ برطرف و اثبات‌شدە شد: (۱) «عنوان عناصر طراحی» دیگر در پیش‌نمایش و اجرا دیده نمی‌شود — باند‌ها از نگاشت تب حذف و تب‌های «افزودن تب» در یک نوارِ تختِ واحد (عین نمونه فرم) با عنوان‌های locale-آگاه رندر می‌شوند؛ ماشینری دو-نوارِ تسک ۵۰/۵۱ از قالب بازنشسته شد (نیروی محرکه: اصلاح صریح مالک). (۲) ارتفاع بدنهٔ فرم در پیش‌نمایش ثابت شد (پوستهٔ مقید h-[min(70vh,640px)]) و با انبوه سطرها فقط گرید اسکرول داخلی می‌گیرد — هم در پیش‌نمایش و هم در پنجرهٔ اجرا (652px ثابت با ۲۴ سطر). مدل داده/ذخیره‌سازی (ParentRef/TabKind) دست‌نخورده؛ lint/tsc/E2E/موبایل/کنسول پاک؛ ثبت در worklog انجام شد.
+
+---
+Task ID: 53
+Agent: Z.ai Code (main orchestrator)
+Task: درخواست مالک (۳ نیازمندی) — «۱) یک باند در استودیو طراحی قرار دهید که مختص و ویژه فوتر فرم می باشد و این باند همیشه در انتهای فرم باید نمایش داده شود؛ ۲) توی استودیو طراحی امکان افزودن لاین، باکس، دایره و یک سری شیپ ها که توی طراحی فرم ها کاربرد دارد را در جعبه ابزار قرار دهید؛ ۳) یک نوع فیلد از نوع اسکریپت نویسی — کاربر اسکریپت بنویسد و داده های خودش را از بانک اطلاعاتی دریافت کند؛ سپس فیلدهای واکشی‌شده قابل انتخاب باشند و فیلدهای انتخاب‌شده در فرم از طریق فیلدها استفاده شوند.»
+
+Work Log:
+- §0.1 بازخوانی AGENTS.md + worklog (آخرین: Task 52). §0.4 درخواست صریح مالک؛ §0.6 فرض‌ها: باند فوتر = باند ثابت همیشه-آخر (غیرقابل حذف/جابه‌جایی، Section="footer" روی DfbFormField — ستون موجود)، شیپ‌ها = انواع فیلد ایستا (بدون مقدار EAV)، فیلد اسکریپت = عنصر منبع‌داده + فیلدهای برگرفته (ConfigJson {bindScript,bindField}) که فیلد واقعی فرم می‌شوند و ران‌تایم از سطر اول اسکریپت پیش‌پر می‌کند.
+- backend (dfb-service :3003): DfbFormField.ConfigJson (String? — پیش‌آیند §2.3 HeaderJson) + db:push؛ FIELD_TYPES += script|line|box|circle|oval؛ FieldInputDto/AddFieldDto.configJson؛ POST advancedTools/forms/script/execute (RunScriptDto) — AsyncFunction با فقط هندل فقط-خواندنی db.table(<whitelist 8 جدول Dfb>).findMany({where,take≤200,orderBy})، خروجی = {ok,fields[],rowCount,rows≤50}؛ ذخیره configJson در findOne/addField/replaceFields. تست دودی: اجرای اسکریپت با BFF → ۳ ردیف DfbMenu، فیلدها ["ID","Title"].
+- قالب (simple-form-two-row-tabbed + form-primitives): SimpleFormFieldType += ۵ نوع؛ FieldCell رندر ایستای شیپ‌ها (خط/باکس/دایره/بیضی) + استریپ اسکریپت (Braces + db chip)؛ پراپ footerFields → زون shrink-0 بیرون از بدنه اسکرول، همیشه چسبیده به انتهای فرم، با scope تراز لیبل مستقل (footerGridRef).
+- استودیو (dfb-studio): StudioState.footer (tabKind=3، خارج از banks ترتیب‌پذیر)؛ findContainer("footer") + allFieldsOf شامل فوتر؛ buildBanks → {banks, footer}؛ پالت: گروه «اشکال طراحی» (۴ تایل) + تایل اسکریپت؛ FieldPreview مینی‌رندر شیپ/اسکریپت؛ FooterBandCanvas — بنفش خط‌چین، چیپ قفل «همیشه در انتهای فرم»، drop-target، همیشه بعد از همه باندها؛ ذخیره: فیلدهای فوتر آخر + section:"footer" + configJson؛ فیلد اسکریپت fieldKey پایدار از لحظه ساخت (script_xxx)؛ ریل اسکریپت: ادیتور (ltr mono) + «اجرا و واکشی» + چک‌باکس فیلدهای واکشی‌شده + «افزودن فیلدهای انتخاب‌شده به فرم» (فیلدهای واقعی متصل، ضدتکرار) + نوت bind روی فیلدهای برگرفته؛ previewSave/preview فقط فیلدهای ورودی (isDfbInputField) در اعتبارسنجی/EAV؛ پیش‌نمایش: runPreviewScripts پیش‌پر فیلدهای متصل (باز هم در reset).
+- ران‌تایم (dfb-form-runtime): footerBandFields → footerFields پراپ (ساده + درختی: الحاق به انتهای فیلدها)؛ save/missing فقط input types و فیلدهای فوتر ذخیره می‌شوند؛ پیش‌پر اسکریپت هنگام لود (scriptPrefillRef، reset هم دوباره اعمال می‌کند).
+- i18n: ۲۲ کلید جدید × ۱۱ زبان (fa,en,tr,ar,hi,ps,ckb,pt,ko,fr,zh) — dfb.type.{line,box,circle,oval,script} + dfb.studio.{footerBand,footerBandChip,footerBandHint,shapesGroup,scriptEditor,scriptHint,scriptRun,scriptEmpty,scriptRows,scriptExecError,scriptFetched,scriptFetchedEmpty,scriptAddSelected,scriptAdded,scriptNone,scriptAlready,scriptBindNote}.
+- رفع خرابی جانبی: یک MultiEdit ناقص importهای app-base-entity/serialize را از forms.service حذف کرده بود (بازیابی شد)؛ پورت 3003/3000 توسط پروسه کهنه گرفته بود (kill با PID).
+- تست: lint = 0 خطا/0 هشدار؛ API regression (ساخت فرم تست → ذخیره فیلد footer/شکل/اسکریپت/متصل → خواندن → EAV save شامل فیلد فوتر → حذف فرم تست)؛ E2E مرورگری در ادامه.
+
+Stage Summary:
+- «باند فوتر» در استودیو/پیش‌نمایش/ران‌تایم همیشه انتهای فرم است (Section="footer").
+- جعبه‌ابزار: خط/باکس/دایره/بیضی (ایستا، بدون EAV) + فیلد «اسکریپت» با اجرای سندباکس‌شده و انتخاب فیلدهای واکشی‌شده به‌صورت فیلدهای واقعی فرم (ConfigJson).
+- artifacts: schema+ endpoint جدید، footer zone قالب، FooterBandCanvas، ریل اسکریپت، ۲۴۲ خط i18n.
