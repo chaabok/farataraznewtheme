@@ -69,6 +69,9 @@ export interface SimpleFormField {
   onLookup?: () => void;
   /** Task 32 — renders the input LTR (latin titles/codes inside the RTL shell) */
   ltr?: boolean;
+  /** Task 70 — called when the user focuses the field: the runtime uses it
+      to reveal the BASE value under a translation overlay before editing */
+  onRevealFocus?: () => void;
   disabled?: boolean;
   readOnly?: boolean;
   /** Task 48 — width percent of the flow row (25..100, step 5); dfb-designed

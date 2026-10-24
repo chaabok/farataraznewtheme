@@ -72,6 +72,11 @@ function RuntimeInner({ formId }: { formId: number }) {
      (با اولین ویرایش کاربر، مقدار واقعی دیده می‌شود و ذخیره همیشه
      مقدار پایه/ویرایش‌شده را می‌فرستد — ترجمه هرگز در EAV ذخیره نمی‌شود) */
   const [baseValues, setBaseValues] = React.useState<Record<string, string | boolean>>({});
+  /* Task 70 — فیلدهایی که کاربر روی آن‌ها فوکوس کرده (مقدار پایه آشکار می‌شود) */
+  const [revealedIds, setRevealedIds] = React.useState<ReadonlySet<string>>(new Set());
+  const revealField = React.useCallback((id: string) => {
+    setRevealedIds((s) => (s.has(id) ? s : new Set(s).add(id)));
+  }, []);
 
   const loadRecords = React.useCallback(async (d: DfbFormDetail) => {
     try {
@@ -207,6 +212,7 @@ function RuntimeInner({ formId }: { formId: number }) {
     setValues({ ...scriptPrefillRef.current }); // Task 53 — re-apply script prefill
     setCurrentDataId(null);
     setBaseValues({}); // Task 70
+    setRevealedIds(new Set()); // Task 70
   }, []);
 
   const openRecord = React.useCallback(
@@ -214,6 +220,7 @@ function RuntimeInner({ formId }: { formId: number }) {
       const rec = records.find((r) => String(r.dataId) === dataId);
       if (!rec) return;
       setBaseValues(rec.values); // Task 70 — پایهٔ مقایسه برای overlay
+      setRevealedIds(new Set()); // Task 70
       setValues(rec.values);
       setCurrentDataId(rec.dataId);
     },
@@ -276,6 +283,7 @@ function RuntimeInner({ formId }: { formId: number }) {
     if (locale === "fa" || currentDataId == null) return undefined;
     if (f.fieldType !== "text" && f.fieldType !== "textarea") return undefined;
     const id = String(f.id);
+    if (revealedIds.has(id)) return undefined; // کاربر فوکوس کرده — مقدار پایه
     if (values[id] !== String(baseValues[id] ?? "")) return undefined; // ویرایش‌شده
     const tr = trMap?.[dfbTransKey("Value", currentDataId, f.fieldKey)];
     return tr && tr.trim() ? tr : undefined;
@@ -342,6 +350,7 @@ function RuntimeInner({ formId }: { formId: number }) {
       readOnly: f.readOnly,
       widthPct: normalizeFieldWidth(f.widthSpan),
       options: resolveFieldOptions(f),
+      onRevealFocus: f.fieldType === "text" || f.fieldType === "textarea" ? () => revealField(String(f.id)) : undefined, // Task 70
       ltr: f.fieldType === "number" || f.fieldType === "date",
       disabled: busy,
     });
@@ -472,6 +481,7 @@ function RuntimeInner({ formId }: { formId: number }) {
     const rec = records.find((r) => `r${r.dataId}` === nodeId);
     if (rec) {
       setBaseValues(rec.values); // Task 70
+      setRevealedIds(new Set()); // Task 70
       setValues(rec.values);
       setCurrentDataId(rec.dataId);
     } else {
@@ -503,6 +513,7 @@ function RuntimeInner({ formId }: { formId: number }) {
         readOnly: f.readOnly,
         widthPct: normalizeFieldWidth(f.widthSpan),
         options: resolveFieldOptions(f),
+        onRevealFocus: f.fieldType === "text" || f.fieldType === "textarea" ? () => revealField(String(f.id)) : undefined, // Task 70
       }))}
       onFieldChange={onFieldChange}
       onSave={save}

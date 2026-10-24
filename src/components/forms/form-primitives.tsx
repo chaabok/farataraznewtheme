@@ -358,6 +358,7 @@ export function FieldCell({
           readOnly={field.readOnly}
           disabled={field.disabled}
           aria-label={field.label}
+          onFocus={field.onRevealFocus} // Task 70 — reveal base value under overlay
           onChange={(e) => onChange?.(field.id, e.target.value)}
           className="min-h-10 min-w-0 flex-1 resize-y rounded-md border border-input bg-transparent px-2 py-1 text-xs shadow-xs outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:bg-background disabled:opacity-50"
         />
@@ -496,6 +497,7 @@ export function FieldCell({
             disabled={field.disabled}
             aria-label={field.label}
             dir={field.ltr ? "ltr" : undefined}
+            onFocus={field.onRevealFocus} // Task 70 — reveal base value under overlay
             onChange={(e) => onChange?.(field.id, e.target.value)}
             className={cn(inputBase, field.ltr && "text-start", field.suffixChip && "pe-16")}
           />
