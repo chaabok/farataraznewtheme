@@ -15,10 +15,12 @@ import {
   type SimpleTreeFormNode,
 } from "@/components/forms/simple-tree-form";
 import type { FormAction } from "@/components/forms/action-bar";
+import { ACTION_BAR_KEYS } from "@/components/forms/action-bar";
 import { useWindowChrome } from "@/components/desktop/app-window";
-import { dfbShellTheme, type DfbFormStyle } from "@/lib/dfb-theme";
+import { dfbShellTheme, dfbBankAlign, type DfbFormStyle } from "@/lib/dfb-theme";
 import {
-  fetchFormDetail, executeQuery, saveFormData, loadFormData,
+  fetchFormDetail, saveFormData, loadFormData,
+  fetchQueryOptionsForFields, normalizeFieldWidth, widthMinWidthClass,
   type DfbFormDetail, type DfbFieldDef,
 } from "@/stores/dfb-store";
 
@@ -83,35 +85,10 @@ function RuntimeInner({ formId }: { formId: number }) {
         if (!alive) return;
         setDetail(d);
         await loadRecords(d);
-        /* fetch options for query-bound select/lookup fields */
-        const bound = d.fields.filter((f) => f.queryRef != null && (f.fieldType === "select" || f.fieldType === "lookup"));
-        const results = await Promise.all(
-          bound.map(async (f) => {
-            try {
-              const rows = await executeQuery(f.queryRef!);
-              /* value column: the bound queryFieldKey when present in the
-                 response, otherwise the query's first selected column —
-                 label prefers a Title-ish column (displayColumn semantics) */
-              const keys = rows.length ? Object.keys(rows[0]) : [];
-              const valKey =
-                f.queryFieldKey && keys.includes(f.queryFieldKey)
-                  ? f.queryFieldKey
-                  : (keys[0] ?? "ID");
-              const labelKey =
-                keys.find((k) => k !== valKey && /title|label|name/i.test(k)) ?? valKey;
-              const options = rows
-                .map((r) => ({
-                  value: String(r[valKey] ?? ""),
-                  label: String(r[labelKey] ?? r[valKey] ?? ""),
-                }))
-                .filter((o) => o.value !== "");
-              return [f.queryRef!, options] as const;
-            } catch {
-              return [f.queryRef!, []] as const;
-            }
-          }),
-        );
-        if (alive) setQueryOptions(Object.fromEntries(results));
+        /* fetch options for query-bound select/lookup fields (shared helper,
+           Task 48 — same mapping the studio preview uses) */
+        const options = await fetchQueryOptionsForFields(d.fields);
+        if (alive) setQueryOptions(options);
       })
       .catch(() => {
         if (alive) setError(true);
@@ -176,10 +153,17 @@ function RuntimeInner({ formId }: { formId: number }) {
 
   const header = detail.header ?? {};
   const footer = detail.footer ?? {};
-  const footerButtons = Array.isArray(footer.buttons) ? (footer.buttons as string[]) : [];
+  /* Task 48 — owner rule «تمامی آیکون‌های اکشن بار بصورت پیش‌فرض»: a form
+     without a stored (or with an empty) button list renders the FULL
+     legacy action bar; stored subsets are honored through the allowlist */
+  const storedButtons = Array.isArray(footer.buttons)
+    ? (footer.buttons as string[]).filter((b) => (ACTION_BAR_KEYS as readonly string[]).includes(b))
+    : [];
+  const footerButtons = storedButtons.length > 0 ? storedButtons : [...ACTION_BAR_KEYS];
   /* Task 47 — design-studio shell style (theme / title size / font) applied
      to the running form — what the owner designed is what runs */
-  const shellTheme = dfbShellTheme((header.style ?? null) as DfbFormStyle | null);
+  const shellStyle = (header.style ?? null) as DfbFormStyle | null;
+  const shellTheme = dfbShellTheme(shellStyle);
 
   const toShellType = (ft: string): SimpleFormField["type"] =>
     (["text", "number", "select", "lookup", "checkbox", "date", "textarea"].includes(ft)
@@ -197,6 +181,12 @@ function RuntimeInner({ formId }: { formId: number }) {
       await save();
       closeThisWindow();
     },
+    /* Task 48 — full action bar: copy keeps the entered values but detaches
+       the record so saving stores it as a NEW row */
+    copy: async () => {
+      setCurrentDataId(null);
+      toast.info(t("abar.copy"));
+    },
     delete: async () => {
       if (currentDataId == null) {
         toast.info(t("dfb.noRecordSelected"));
@@ -204,6 +194,23 @@ function RuntimeInner({ formId }: { formId: number }) {
       }
       reset();
       toast.success(t("abar.resetToast"));
+    },
+    deleteNew: async () => {
+      if (currentDataId == null) {
+        toast.info(t("dfb.noRecordSelected"));
+        return;
+      }
+      reset();
+      toast.success(t("abar.resetToast"));
+    },
+    deleteClose: async () => {
+      if (currentDataId == null) {
+        toast.info(t("dfb.noRecordSelected"));
+        return;
+      }
+      reset();
+      toast.success(t("abar.resetToast"));
+      closeThisWindow();
     },
     print: () => window.print(),
   };
@@ -220,6 +227,7 @@ function RuntimeInner({ formId }: { formId: number }) {
       value: f.fieldType === "checkbox" ? undefined : String(values[String(f.id)] ?? ""),
       checked: f.fieldType === "checkbox" ? Boolean(values[String(f.id)]) : undefined,
       readOnly: f.readOnly,
+      widthPct: normalizeFieldWidth(f.widthSpan),
       options:
         f.queryRef != null && queryOptions[f.queryRef]
           ? queryOptions[f.queryRef]
@@ -233,7 +241,12 @@ function RuntimeInner({ formId }: { formId: number }) {
       return {
         id: String(tb.id),
         label: tb.title,
-        columns: tabFields.map((f) => ({ id: String(f.id), label: f.label })),
+        columns: tabFields.map((f) => ({
+          id: String(f.id),
+          label: f.label,
+          required: f.required,
+          minWidth: widthMinWidthClass(normalizeFieldWidth(f.widthSpan)),
+        })),
       };
     });
 
@@ -248,11 +261,16 @@ function RuntimeInner({ formId }: { formId: number }) {
         fields={mainFields.map(toSimpleField)}
         onFieldChange={onFieldChange}
         tabs={tabs}
+        actions={footerButtons}
+        fieldsAlign={dfbBankAlign(shellStyle, "main")}
         onSave={footerButtons.includes("save") ? save : undefined}
         onReset={footerButtons.includes("reset") ? footerHandlers.reset : undefined}
         onSaveNew={footerButtons.includes("saveNew") ? footerHandlers.saveNew : undefined}
         onSaveClose={footerButtons.includes("saveClose") ? footerHandlers.saveClose : undefined}
+        onCopy={footerButtons.includes("copy") ? footerHandlers.copy : undefined}
         onDelete={footerButtons.includes("delete") ? footerHandlers.delete : undefined}
+        onDeleteNew={footerButtons.includes("deleteNew") ? footerHandlers.deleteNew : undefined}
+        onDeleteClose={footerButtons.includes("deleteClose") ? footerHandlers.deleteClose : undefined}
         onPrint={footerButtons.includes("print") ? footerHandlers.print : undefined}
         onClose={closeThisWindow}
         onHeaderClose={closeThisWindow}
@@ -306,6 +324,8 @@ function RuntimeInner({ formId }: { formId: number }) {
       headerClassName={shellTheme.headerClassName}
       titleClassName={shellTheme.titleClassName}
       bodyStyle={shellTheme.bodyStyle}
+      actions={footerButtons}
+      fieldsAlign={dfbBankAlign(shellStyle, "main")}
       fields={treeFields.map((f) => ({
         id: String(f.id),
         label: f.label,
@@ -314,12 +334,18 @@ function RuntimeInner({ formId }: { formId: number }) {
         value: f.fieldType === "checkbox" ? undefined : String(values[String(f.id)] ?? ""),
         checked: f.fieldType === "checkbox" ? Boolean(values[String(f.id)]) : undefined,
         readOnly: f.readOnly,
+        widthPct: normalizeFieldWidth(f.widthSpan),
         options:
           f.queryRef != null && queryOptions[f.queryRef] ? queryOptions[f.queryRef] : undefined,
       }))}
       onFieldChange={onFieldChange}
       onSave={save}
       onReset={reset}
+      onCopy={footerButtons.includes("copy") ? footerHandlers.copy : undefined}
+      onDelete={footerButtons.includes("delete") ? footerHandlers.delete : undefined}
+      onDeleteNew={footerButtons.includes("deleteNew") ? footerHandlers.deleteNew : undefined}
+      onDeleteClose={footerButtons.includes("deleteClose") ? footerHandlers.deleteClose : undefined}
+      onPrint={footerButtons.includes("print") ? footerHandlers.print : undefined}
       onClose={closeThisWindow}
       onHeaderClose={closeThisWindow}
       onHeaderMinimize={chrome?.onMinimize}

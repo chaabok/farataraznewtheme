@@ -182,6 +182,63 @@ export async function executeQuery(id: number): Promise<Record<string, unknown>[
   return res.rows ?? [];
 }
 
+/* ------------------- Task 48 — width percent (WidthSpan) ------------------
+   DfbFormField.WidthSpan stores a PERCENT (25..100, step 5). Legacy rows
+   used 1 = half / 2 = full → normalized here so pre-migration data and
+   unmigrated snapshots keep their designed layout. */
+export const DFB_WIDTH_MIN = 25;
+export const DFB_WIDTH_MAX = 100;
+
+export function normalizeFieldWidth(v: number | null | undefined): number {
+  const n = Math.round(Number(v ?? 50));
+  if (!Number.isFinite(n)) return 50;
+  if (n < DFB_WIDTH_MIN) return n <= 1 ? 50 : 100; // legacy 1=half, 2=full
+  return Math.min(DFB_WIDTH_MAX, Math.max(DFB_WIDTH_MIN, n));
+}
+
+/** maps a stored width to a tailwind min-width hint for tab TABLE columns */
+export function widthMinWidthClass(pct: number): string {
+  return pct >= 100 ? "min-w-72" : pct >= 75 ? "min-w-56" : pct >= 50 ? "min-w-40" : "min-w-28";
+}
+
+/**
+ * Task 48 — shared query-option loader (runtime + studio preview):
+ * executes every select/lookup field's bound query and maps rows to
+ * {value,label} options with the same smart column mapping the runtime
+ * used before (bound queryFieldKey = value; Title-ish column = label).
+ */
+export async function fetchQueryOptionsForFields(
+  fields: Array<{ queryRef: number | null; queryFieldKey: string | null; fieldType: string }>,
+): Promise<Record<number, Array<{ value: string; label: string }>>> {
+  const bound = fields.filter(
+    (f) => f.queryRef != null && (f.fieldType === "select" || f.fieldType === "lookup"),
+  );
+  const results = await Promise.all(
+    bound.map(async (f) => {
+      try {
+        const rows = await executeQuery(f.queryRef!);
+        const keys = rows.length ? Object.keys(rows[0]) : [];
+        const valKey =
+          f.queryFieldKey && keys.includes(f.queryFieldKey)
+            ? f.queryFieldKey
+            : (keys[0] ?? "ID");
+        const labelKey =
+          keys.find((k) => k !== valKey && /title|label|name/i.test(k)) ?? valKey;
+        const options = rows
+          .map((r) => ({
+            value: String(r[valKey] ?? ""),
+            label: String(r[labelKey] ?? r[valKey] ?? ""),
+          }))
+          .filter((o) => o.value !== "");
+        return [f.queryRef!, options] as const;
+      } catch {
+        return [f.queryRef!, []] as const;
+      }
+    }),
+  );
+  return Object.fromEntries(results);
+}
+
 export async function saveFormData(
   formId: number,
   values: Record<string, string | boolean | null>,

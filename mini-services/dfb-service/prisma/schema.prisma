@@ -141,7 +141,7 @@ model DfbFormField {
   required             Boolean  @default(false) @map("Required")
   readOnly             Boolean  @default(false) @map("ReadOnly")
   orderIndex           Int      @default(0) @map("OrderIndex")
-  widthSpan            Int      @default(1) @map("WidthSpan") // 1|2 (گرید دو ردیفه)
+  widthSpan            Int      @default(50) @map("WidthSpan") // Task 48: درصدی 25..100 (گام ۵٪) — قدیمی 1=نصف/2=تمام سمت کلاینت نرمال می‌شود
   defaultValue         String?  @map("DefaultValue")
   queryRef             BigInt?  @map("QueryRef")
   queryFieldKey        String?  @map("QueryFieldKey")

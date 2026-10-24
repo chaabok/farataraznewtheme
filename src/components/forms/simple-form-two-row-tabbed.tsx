@@ -26,7 +26,7 @@ import { useAlignedLabels, type AlignedLabelsScope } from "@/components/forms/us
 /* Task 30 — HeaderButton/NavButton/FieldCell moved verbatim to the shared
    form-primitives module so SimpleTreeForm reuses the identical visual
    contract (Task 25.1 label markup, Task 27 metrics, Task 26 RTL classes). */
-import { FieldCell, HeaderButton, NavButton } from "@/components/forms/form-primitives";
+import { FieldCell, FlowFieldGrid, HeaderButton, NavButton } from "@/components/forms/form-primitives";
 
 /* ------------------------------------------------------------------ */
 /* Public API — SimpleFormTwoRowTabbed (Task 24)                        */
@@ -65,6 +65,9 @@ export interface SimpleFormField {
   ltr?: boolean;
   disabled?: boolean;
   readOnly?: boolean;
+  /** Task 48 — width percent of the flow row (25..100, step 5); dfb-designed
+      forms map DfbFormField.WidthSpan here. Omitted = legacy fixed grid. */
+  widthPct?: number;
 }
 
 export interface SimpleFormGridColumn {
@@ -145,6 +148,12 @@ export interface SimpleFormTwoRowTabbedProps {
   canCopy?: boolean;
   canDelete?: boolean;
   canPrint?: boolean;
+  /** Task 48 — allowlist of visible action-bar icons (stored form config);
+      omitted = all ten icons (legacy default) */
+  actions?: readonly string[];
+  /** Task 48 — bank-level horizontal alignment of the field flow
+      (persisted in the form's headerJson.style.bankAlign) */
+  fieldsAlign?: "start" | "center" | "end";
 
   /* ----- OPTIONAL chromeless-window header controls (Task 28) -----
      When hosted by a chromeless window (no light title bar) the green
@@ -250,6 +259,8 @@ export function SimpleFormTwoRowTabbed({
   canCopy = true,
   canDelete = true,
   canPrint = true,
+  actions,
+  fieldsAlign,
   onHeaderClose,
   onHeaderMaximize,
   onHeaderMinimize,
@@ -285,6 +296,11 @@ export function SimpleFormTwoRowTabbed({
 
   const hasTabs = tabsProp.length > 0;
   const hasNav = Boolean(onFirst || onPrev || onNext || onLast);
+
+  /* Task 48 — flow mode when the dfb design supplies widths/alignment;
+     legacy consumers (no widthPct, no fieldsAlign) keep the fixed grid */
+  const flowMode =
+    Boolean(fieldsAlign && fieldsAlign !== "start") || fields.some((f) => f.widthPct != null);
 
   const commitRows = (tabId: string, rows: Record<string, string>[]) => {
     setRowsByTab((prev) => ({ ...prev, [tabId]: rows }));
@@ -412,6 +428,7 @@ export function SimpleFormTwoRowTabbed({
           canCopy={canCopy}
           canDelete={canDelete}
           canPrint={canPrint}
+          actions={actions}
         />
         {/* Task 26 — per-button RTL flip (NOT on the group): the RTL flex
             flow already puts «اولین» at the reading start (right edge), and
@@ -443,14 +460,23 @@ export function SimpleFormTwoRowTabbed({
           viewports); min-h-44 keeps the tabs section alive there. */}
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto scrollbar-slim" style={bodyStyle}>
         <div className="shrink-0 px-4 pb-2 pt-2.5">
-          <div
-            ref={fieldsGridRef}
-            className="grid grid-cols-1 gap-x-5 gap-y-2 sm:grid-cols-2 lg:grid-cols-3"
-          >
-            {fields.map((f) => (
-              <FieldCell key={f.id} field={f} onChange={onFieldChange} />
-            ))}
-          </div>
+          {flowMode ? (
+            <FlowFieldGrid
+              fields={fields}
+              onFieldChange={onFieldChange}
+              gridRef={fieldsGridRef}
+              align={fieldsAlign}
+            />
+          ) : (
+            <div
+              ref={fieldsGridRef}
+              className="grid grid-cols-1 gap-x-5 gap-y-2 sm:grid-cols-2 lg:grid-cols-3"
+            >
+              {fields.map((f) => (
+                <FieldCell key={f.id} field={f} onChange={onFieldChange} />
+              ))}
+            </div>
+          )}
         </div>
 
         {hasTabs && (

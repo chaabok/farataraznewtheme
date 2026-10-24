@@ -2,9 +2,10 @@
 
 import * as React from "react";
 import {
-  AlignLeft, ArrowDown, ArrowUp, CalendarDays, Check, ChevronDown, Copy, Eye, EyeOff,
-  FileText, Hash, History, Layers, ListTree, Loader2, Palette, PencilLine, Plus,
-  RotateCcw, Save, Search, SlidersHorizontal, Square, Trash2, Type, X,
+  AlignCenterHorizontal, AlignEndHorizontal, AlignLeft, AlignStartHorizontal, ArrowDown, ArrowUp,
+  CalendarDays, Check, ChevronDown, Copy, Eye, EyeOff, FileText, Hash, History, Layers, List,
+  ListTree, Loader2, MoveHorizontal, Palette, PencilLine, Plus, RotateCcw, Save, Search,
+  SlidersHorizontal, Square, Trash2, Type, X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useT } from "@/stores/settings-store";
@@ -22,9 +23,17 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
-  fetchFormDetail, dfbApi, type DfbFormDetail,
+  fetchFormDetail, dfbApi, saveFormData, loadFormData,
+  fetchQueryOptionsForFields, normalizeFieldWidth,
+  type DfbFormDetail,
 } from "@/stores/dfb-store";
-import { DFB_THEME_SWATCHES, dfbShellTheme, type DfbFormStyle } from "@/lib/dfb-theme";
+import {
+  DFB_THEME_SWATCHES, dfbShellTheme, dfbBankAlign,
+  type DfbFormStyle, type DfbBankAlign,
+} from "@/lib/dfb-theme";
+import { ACTION_BAR_KEYS, FormActionBar } from "@/components/forms/action-bar";
+import { FlowFieldGrid } from "@/components/forms/form-primitives";
+import type { SimpleFormField } from "@/components/forms/simple-form-two-row-tabbed";
 import { cn } from "@/lib/utils";
 
 /**
@@ -37,6 +46,14 @@ import { cn } from "@/lib/utils";
  * binding) and the field toolbox. Undo/redo history, preview mode and a
  * two-phase save (tabs → fresh tab ids → fields) keep it professional and
  * safe. Everything persists to the Dfb schema via dfb-service.
+ *
+ * Task 48 — پنج نیازمندی مالک:
+ *  1) new forms carry the FULL legacy action bar (footerButtons = all keys);
+ *  2) preview hides the design bands — only the fields flow under the shell;
+ *  3) bank field alignment (start/center/end, persisted in style.bankAlign)
+ *     + «هم‌عرض کردن» equalize command;
+ *  4) field width resize with the mouse (WidthSpan = percent 25..100);
+ *  5) preview is a LIVE runtime: real inputs + working action bar (EAV save).
  */
 
 /* ------------------------------- model ------------------------------- */
@@ -49,7 +66,9 @@ interface StudioField {
   fieldType: string;
   required: boolean;
   readOnly: boolean;
-  widthSpan: number; // 1 = half, 2 = full (server Min(1))
+  /** Task 48 — width percent of the flow row (25..100, step 5); legacy
+      1=half/2=full rows normalize to 50/100 (normalizeFieldWidth) */
+  widthSpan: number;
   queryRef: number | null;
   queryFieldKey: string | null;
 }
@@ -75,9 +94,21 @@ interface StudioState {
   banks: StudioBank[];
 }
 
-const FOOTER_KEYS = ["save", "saveNew", "saveClose", "reset", "delete", "print"] as const;
-
 const clone = (s: StudioState): StudioState => JSON.parse(JSON.stringify(s)) as StudioState;
+
+/** Task 48 — stored footer buttons → visible action-bar keys; missing/empty
+    config = the FULL legacy action bar (owner default rule) */
+function storedFooterButtons(footer: Record<string, unknown>): string[] {
+  const raw = footer.buttons;
+  const list = Array.isArray(raw)
+    ? (raw as string[]).filter((b) => (ACTION_BAR_KEYS as readonly string[]).includes(b))
+    : [];
+  return list.length > 0 ? list : [...ACTION_BAR_KEYS];
+}
+
+/** Task 48 — stable bank-alignment key: "main" | "tab{i}" (tab ORDER index,
+    immune to tab-id regeneration on save) */
+const alignKeyForBank = (bankIndex: number) => (bankIndex === 0 ? "main" : `tab${bankIndex - 1}`);
 
 let keySeq = 0;
 const nextKey = (p: string) => `${p}-${Date.now().toString(36)}-${keySeq++}`;
@@ -99,8 +130,18 @@ const FOOTER_TILE: Record<string, { icon: typeof Save; tile: string }> = {
   saveClose: { icon: X, tile: "from-teal-600 to-cyan-700" },
   reset: { icon: RotateCcw, tile: "from-amber-500 to-orange-600" },
   delete: { icon: Trash2, tile: "from-rose-500 to-red-600" },
+  deleteNew: { icon: Trash2, tile: "from-red-500 to-rose-600" },
+  deleteClose: { icon: X, tile: "from-rose-600 to-red-700" },
+  copy: { icon: Copy, tile: "from-violet-500 to-violet-600" },
   print: { icon: FileText, tile: "from-violet-500 to-purple-600" },
+  list: { icon: List, tile: "from-teal-500 to-cyan-600" },
 };
+
+const ALIGN_OPTIONS: Array<{ key: DfbBankAlign; icon: typeof AlignStartHorizontal; labelKey: string }> = [
+  { key: "start", icon: AlignStartHorizontal, labelKey: "dfb.studio.alignStart" },
+  { key: "center", icon: AlignCenterHorizontal, labelKey: "dfb.studio.alignCenter" },
+  { key: "end", icon: AlignEndHorizontal, labelKey: "dfb.studio.alignEnd" },
+];
 
 type DragPayload =
   | { kind: "add"; fieldType: string }
@@ -178,7 +219,7 @@ function StudioInner({ formId }: { formId: number }) {
             fieldType: f.fieldType,
             required: f.required,
             readOnly: f.readOnly,
-            widthSpan: f.widthSpan >= 2 ? 2 : 1,
+            widthSpan: normalizeFieldWidth(f.widthSpan),
             queryRef: f.queryRef,
             queryFieldKey: f.queryFieldKey,
           });
@@ -188,9 +229,7 @@ function StudioInner({ formId }: { formId: number }) {
             title: d.title,
             titleEn: d.titleEn ?? "",
             badge: typeof header.badge === "string" ? header.badge : "",
-            footerButtons: Array.isArray(footer.buttons)
-              ? (footer.buttons as string[]).filter((b) => (FOOTER_KEYS as readonly string[]).includes(b))
-              : ["save", "reset", "delete"],
+            footerButtons: storedFooterButtons(footer),
             style,
           },
           banks: [main, ...tabBanks],
@@ -221,6 +260,21 @@ function StudioInner({ formId }: { formId: number }) {
   const [metaOpen, setMetaOpen] = React.useState(false);
   const [exitConfirm, setExitConfirm] = React.useState(false);
 
+  /* Task 48 — LIVE preview state: real inputs (data entry) + records list +
+     query options; loaded lazily the first time preview opens */
+  const [previewValues, setPreviewValues] = React.useState<Record<string, string | boolean>>({});
+  const [previewDataId, setPreviewDataId] = React.useState<number | null>(null);
+  const [previewRecords, setPreviewRecords] = React.useState<
+    Array<{ dataId: number; values: Record<string, string | boolean> }>
+  >([]);
+  const [previewOptions, setPreviewOptions] = React.useState<
+    Record<number, Array<{ value: string; label: string }>>
+  >({});
+  const [previewExtrasLoaded, setPreviewExtrasLoaded] = React.useState(false);
+
+  /* Task 48 — bank resize gesture: live width of the dragged field card */
+  const [resizing, setResizing] = React.useState<{ key: string; pct: number } | null>(null);
+
   const [queries, setQueries] = React.useState<Array<{ id: number; title: string; fields: Array<{ fieldName: string }> }>>([]);
   React.useEffect(() => {
     let alive = true;
@@ -244,6 +298,144 @@ function StudioInner({ formId }: { formId: number }) {
     return null;
   }, [state, selectedFieldKey]);
 
+  /* ---------------- Task 48 — alignment / equalize commands ---------------- */
+  const setBankAlign = React.useCallback(
+    (bankIndex: number, a: DfbBankAlign) => {
+      commit((d) => {
+        d.shell.style.bankAlign = { ...(d.shell.style.bankAlign ?? {}), [alignKeyForBank(bankIndex)]: a };
+      });
+    },
+    [commit],
+  );
+
+  const equalizeBank = React.useCallback(
+    (bankKey: string) => {
+      commit((d) => {
+        const bank = d.banks.find((b) => b.key === bankKey);
+        if (!bank || bank.fields.length === 0) return;
+        const counts = new Map<number, number>();
+        for (const f of bank.fields) counts.set(f.widthSpan, (counts.get(f.widthSpan) ?? 0) + 1);
+        let best = bank.fields[0].widthSpan;
+        let bestN = 0;
+        for (const [w, n] of counts) {
+          if (n > bestN || (n === bestN && w === 50)) {
+            best = w;
+            bestN = n;
+          }
+        }
+        for (const f of bank.fields) f.widthSpan = best;
+      });
+    },
+    [commit],
+  );
+
+  /* ---------------- Task 48 — LIVE preview data entry ---------------- */
+
+  const mapLoadedRecords = React.useCallback(
+    (
+      items: Awaited<ReturnType<typeof loadFormData>>,
+      fields: StudioField[],
+    ): Array<{ dataId: number; values: Record<string, string | boolean> }> =>
+      items.map((it) => ({
+        dataId: it.dataId,
+        values: Object.fromEntries(
+          it.values.map((v) => {
+            const fld = fields.find((f) => f.id === v.fieldRef);
+            const isBool = fld?.fieldType === "checkbox";
+            return [fld ? fld.key : String(v.fieldRef), isBool ? v.value === "1" : (v.value ?? "")];
+          }),
+        ),
+      })),
+    [],
+  );
+
+  const togglePreview = React.useCallback(() => {
+    const next = !preview;
+    setPreview(next);
+    if (next && !previewExtrasLoaded && state) {
+      setPreviewExtrasLoaded(true);
+      const fields = state.banks.flatMap((b) => b.fields);
+      fetchQueryOptionsForFields(
+        fields.map((f) => ({ queryRef: f.queryRef, queryFieldKey: f.queryFieldKey, fieldType: f.fieldType })),
+      )
+        .then(setPreviewOptions)
+        .catch(() => { /* options are best-effort */ });
+      loadFormData(formId)
+        .then((items) => setPreviewRecords(mapLoadedRecords(items, fields)))
+        .catch(() => { /* record list is best-effort */ });
+    }
+  }, [preview, previewExtrasLoaded, state, formId, mapLoadedRecords]);
+
+  const previewSave = React.useCallback(async () => {
+    if (!state || busy) return;
+    const fields = state.banks.flatMap((b) => b.fields);
+    const missing = fields.filter(
+      (f) => f.id != null && f.required &&
+        (previewValues[f.key] === undefined || previewValues[f.key] === ""),
+    );
+    if (missing.length > 0) {
+      toast.error(`${t("dfb.requiredFieldsMissing")}: ${missing.map((m) => m.label).join("، ")}`);
+      return;
+    }
+    const unsaved = fields.filter(
+      (f) => f.id == null && previewValues[f.key] !== undefined && previewValues[f.key] !== "",
+    );
+    if (unsaved.length > 0) toast.info(t("dfb.studio.unsavedFieldsHint"));
+    const payload: Record<string, string | boolean | null> = {};
+    for (const f of fields) {
+      if (f.id == null) continue;
+      const v = previewValues[f.key];
+      if (v === undefined) continue;
+      payload[String(f.id)] = f.fieldType === "checkbox" ? Boolean(v) : String(v);
+    }
+    setBusy(true);
+    try {
+      const res = await saveFormData(formId, payload);
+      setPreviewDataId(res.dataId);
+      toast.success(t("abar.savedToast"));
+      const items = await loadFormData(formId);
+      setPreviewRecords(mapLoadedRecords(items, fields));
+    } catch {
+      toast.error(t("common.error"));
+    } finally {
+      setBusy(false);
+    }
+  }, [state, busy, previewValues, formId, t, mapLoadedRecords]);
+
+  const previewReset = React.useCallback(() => {
+    setPreviewValues({});
+    setPreviewDataId(null);
+  }, []);
+
+  const previewCopy = React.useCallback(() => {
+    setPreviewDataId(null);
+    toast.info(t("abar.copy"));
+  }, [t]);
+
+  const previewOpenRecord = React.useCallback(
+    (dataId: string) => {
+      const rec = previewRecords.find((r) => String(r.dataId) === dataId);
+      if (!rec) return;
+      setPreviewValues(rec.values);
+      setPreviewDataId(rec.dataId);
+    },
+    [previewRecords],
+  );
+
+  const previewDelete = React.useCallback(() => {
+    if (previewDataId == null) {
+      toast.info(t("dfb.noRecordSelected"));
+      return;
+    }
+    previewReset();
+    toast.success(t("abar.resetToast"));
+  }, [previewDataId, previewReset, t]);
+
+  const previewSaveClose = React.useCallback(async () => {
+    await previewSave();
+    setPreview(false);
+  }, [previewSave]);
+
   /* --------------------------- mutations --------------------------- */
   const addField = React.useCallback(
     (bankKey: string, fieldType: string, beforeFieldKey?: string | null) => {
@@ -257,7 +449,7 @@ function StudioInner({ formId }: { formId: number }) {
           fieldType,
           required: false,
           readOnly: false,
-          widthSpan: 1,
+          widthSpan: 50,
           queryRef: null,
           queryFieldKey: null,
         };
@@ -410,7 +602,10 @@ function StudioInner({ formId }: { formId: number }) {
     setBusy(true);
     try {
       const style = state.shell.style;
-      const hasStyle = Boolean(style.theme || style.titleSize || style.font);
+      const hasStyle = Boolean(
+        style.theme || style.titleSize || style.font ||
+        (style.bankAlign && Object.keys(style.bankAlign).length > 0),
+      );
       const metaPayload: Record<string, unknown> = {
         title: state.shell.title.trim(),
         titleEn: state.shell.titleEn.trim() || undefined,
@@ -472,7 +667,7 @@ function StudioInner({ formId }: { formId: number }) {
           fieldType: f.fieldType,
           required: f.required,
           readOnly: f.readOnly,
-          widthSpan: f.widthSpan >= 2 ? 2 : 1,
+          widthSpan: normalizeFieldWidth(f.widthSpan),
           queryRef: f.queryRef,
           queryFieldKey: f.queryFieldKey,
         });
@@ -551,7 +746,7 @@ function StudioInner({ formId }: { formId: number }) {
         </Button>
         <Button
           type="button" size="sm" variant={preview ? "secondary" : "ghost"}
-          onClick={() => setPreview((p) => !p)}
+          onClick={togglePreview}
           aria-label={preview ? t("dfb.studio.editMode") : t("dfb.studio.preview")}
           title={preview ? t("dfb.studio.editMode") : t("dfb.studio.preview")}
         >
@@ -601,69 +796,100 @@ function StudioInner({ formId }: { formId: number }) {
                 </span>
                 <span aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-white/25" />
               </header>
-              {/* shell action strip (footer buttons as decorative tiles) */}
-              <div className="flex flex-wrap items-center gap-1.5 border-b border-border/60 bg-muted/40 px-3 py-2" aria-hidden>
-                {state.shell.footerButtons.map((b) => {
-                  const tile = FOOTER_TILE[b] ?? FOOTER_TILE.save;
-                  const Icon = tile.icon;
-                  return (
-                    <span
-                      key={b}
-                      className={cn("flex h-6 w-6 items-center justify-center rounded-lg bg-gradient-to-br text-white shadow-sm", tile.tile)}
-                    >
-                      <Icon className="h-3 w-3" />
+              {/* Task 48 — preview = the RUNNING form minus design bands:
+                  real action bar + interactive field flow (data entry) */}
+              {preview ? (
+                <PreviewCanvas
+                  state={state}
+                  values={previewValues}
+                  options={previewOptions}
+                  records={previewRecords}
+                  dataId={previewDataId}
+                  align={dfbBankAlign(state.shell.style, "main")}
+                  busy={busy}
+                  onFieldChange={(key, v) => setPreviewValues((pv) => ({ ...pv, [key]: v }))}
+                  onSave={previewSave}
+                  onSaveClose={previewSaveClose}
+                  onReset={previewReset}
+                  onCopy={previewCopy}
+                  onDelete={previewDelete}
+                  onPrint={() => window.print()}
+                  onExitPreview={() => setPreview(false)}
+                  onOpenRecord={previewOpenRecord}
+                />
+              ) : (
+                <>
+                  {/* shell action strip (footer buttons as decorative tiles) */}
+                  <div className="flex flex-wrap items-center gap-1.5 border-b border-border/60 bg-muted/40 px-3 py-2" aria-hidden>
+                    {state.shell.footerButtons.map((b) => {
+                      const tile = FOOTER_TILE[b] ?? FOOTER_TILE.save;
+                      const Icon = tile.icon;
+                      return (
+                        <span
+                          key={b}
+                          className={cn("flex h-6 w-6 items-center justify-center rounded-lg bg-gradient-to-br text-white shadow-sm", tile.tile)}
+                        >
+                          <Icon className="h-3 w-3" />
+                        </span>
+                      );
+                    })}
+                    <span className="rounded-md border border-border/60 bg-background/60 px-1.5 py-0.5 text-[9px] text-muted-foreground">
+                      {t("dfb.studio.editMode")}
                     </span>
-                  );
-                })}
-                <span className="rounded-md border border-border/60 bg-background/60 px-1.5 py-0.5 text-[9px] text-muted-foreground">
-                  {preview ? t("dfb.studio.preview") : t("dfb.studio.editMode")}
-                </span>
-              </div>
-              {/* shell body (font) */}
-              <div className="p-3 sm:p-4" style={theme.bodyStyle}>
-                {state.banks.map((bank, bi) => (
-                  <BankCanvas
-                    key={bank.key}
-                    bank={bank}
-                    index={bi}
-                    isMain={bi === 0}
-                    active={activeBankKey === bank.key}
-                    preview={preview}
-                    selectedFieldKey={selectedFieldKey}
-                    isSystem={isSystem}
-                    onSelectBank={() => setActiveBankKey(bank.key)}
-                    onSelectField={(k) => {
-                      setActiveBankKey(bank.key);
-                      setSelectedFieldKey(k);
-                    }}
-                    onAddField={() => addField(bank.key, paletteType)}
-                    onMoveFieldDir={(k, dir) => moveFieldDir(bank.key, k, dir)}
-                    onRemoveField={(k) => removeField(bank.key, k)}
-                    onMoveBank={(dir) => moveBankDir(bank.key, dir)}
-                    onRemoveBank={() => removeBank(bank.key)}
-                    onDragStartField={(fieldKey) => {
-                      dragRef.current = { kind: "move", fromBank: bank.key, fieldKey };
-                    }}
-                    onDropInBank={(beforeKey) => {
-                      const p = dragRef.current;
-                      if (!p) return;
-                      if (p.kind === "add") addField(bank.key, p.fieldType, beforeKey);
-                      else reorderField(p.fromBank, p.fieldKey, bank.key, beforeKey);
-                      dragRef.current = null;
-                    }}
-                  />
-                ))}
-                {!isSystem && (
-                  <button
-                    type="button"
-                    onClick={addBank}
-                    className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-teal-600/50 bg-teal-500/5 px-4 py-3 text-sm font-medium text-teal-700 transition-all hover:border-teal-600 hover:bg-teal-500/10 hover:shadow-md dark:text-teal-400"
-                  >
-                    <Layers className="h-4 w-4" aria-hidden />
-                    {t("dfb.studio.addBank")}
-                  </button>
-                )}
-              </div>
+                  </div>
+                  {/* shell body (font) */}
+                  <div className="p-3 sm:p-4" style={theme.bodyStyle}>
+                    {state.banks.map((bank, bi) => (
+                      <BankCanvas
+                        key={bank.key}
+                        bank={bank}
+                        index={bi}
+                        isMain={bi === 0}
+                        active={activeBankKey === bank.key}
+                        align={dfbBankAlign(state.shell.style, alignKeyForBank(bi))}
+                        resizing={resizing}
+                        onResizeLive={setResizing}
+                        onResizeCommit={(fieldKey, pct) => {
+                          setResizing(null);
+                          updateField(fieldKey, { widthSpan: pct });
+                        }}
+                        selectedFieldKey={selectedFieldKey}
+                        isSystem={isSystem}
+                        onSelectBank={() => setActiveBankKey(bank.key)}
+                        onSelectField={(k) => {
+                          setActiveBankKey(bank.key);
+                          setSelectedFieldKey(k);
+                        }}
+                        onAddField={() => addField(bank.key, paletteType)}
+                        onMoveFieldDir={(k, dir) => moveFieldDir(bank.key, k, dir)}
+                        onRemoveField={(k) => removeField(bank.key, k)}
+                        onMoveBank={(dir) => moveBankDir(bank.key, dir)}
+                        onRemoveBank={() => removeBank(bank.key)}
+                        onDragStartField={(fieldKey) => {
+                          dragRef.current = { kind: "move", fromBank: bank.key, fieldKey };
+                        }}
+                        onDropInBank={(beforeKey) => {
+                          const p = dragRef.current;
+                          if (!p) return;
+                          if (p.kind === "add") addField(bank.key, p.fieldType, beforeKey);
+                          else reorderField(p.fromBank, p.fieldKey, bank.key, beforeKey);
+                          dragRef.current = null;
+                        }}
+                      />
+                    ))}
+                    {!isSystem && (
+                      <button
+                        type="button"
+                        onClick={addBank}
+                        className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-teal-600/50 bg-teal-500/5 px-4 py-3 text-sm font-medium text-teal-700 transition-all hover:border-teal-600 hover:bg-teal-500/10 hover:shadow-md dark:text-teal-400"
+                      >
+                        <Layers className="h-4 w-4" aria-hidden />
+                        {t("dfb.studio.addBank")}
+                      </button>
+                    )}
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </ScrollArea>
@@ -675,6 +901,13 @@ function StudioInner({ formId }: { formId: number }) {
         >
           <ScrollArea className="min-h-0 flex-1">
             <div className="grid gap-4 p-4">
+              {/* Task 48 — preview hint (data entry mode) */}
+              {preview && (
+                <p className="rounded-xl border border-teal-600/40 bg-teal-500/5 p-2.5 text-[11px] leading-relaxed text-teal-700 dark:text-teal-400">
+                  {t("dfb.studio.previewHint")}
+                </p>
+              )}
+
               {/* palette */}
               {!isSystem && !preview && (
                 <section aria-label={t("dfb.studio.palette")} className="grid gap-2">
@@ -814,6 +1047,48 @@ function StudioInner({ formId }: { formId: number }) {
                       </SelectContent>
                     </Select>
                   </div>
+                  {/* Task 48 — bank field alignment (start/center/end, persisted
+                      in headerJson.style.bankAlign) + equalize-widths command */}
+                  {!isSystem && (
+                    <div className="grid gap-1.5">
+                      <Label className="text-[11px] text-muted-foreground">{t("dfb.studio.align")}</Label>
+                      <div className="flex items-center gap-1 rounded-xl border border-border/60 p-1">
+                        {ALIGN_OPTIONS.map((opt) => {
+                          const Icon = opt.icon;
+                          const on = dfbBankAlign(state.shell.style, alignKeyForBank(activeBankIndex)) === opt.key;
+                          return (
+                            <button
+                              key={opt.key}
+                              type="button"
+                              aria-pressed={on}
+                              title={t(opt.labelKey as never)}
+                              aria-label={t(opt.labelKey as never)}
+                              onClick={() => setBankAlign(activeBankIndex, opt.key)}
+                              className={cn(
+                                "flex h-7 flex-1 items-center justify-center rounded-lg transition-colors",
+                                on
+                                  ? "bg-teal-500/15 text-teal-700 ring-1 ring-teal-500/40 dark:text-teal-400"
+                                  : "text-muted-foreground hover:bg-foreground/5",
+                              )}
+                            >
+                              <Icon className="h-4 w-4" aria-hidden />
+                            </button>
+                          );
+                        })}
+                        <span aria-hidden className="mx-0.5 h-5 w-px bg-border" />
+                        <button
+                          type="button"
+                          title={t("dfb.studio.equalize")}
+                          aria-label={t("dfb.studio.equalize")}
+                          onClick={() => equalizeBank(activeBank.key)}
+                          className="flex h-7 flex-1 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-foreground/5"
+                        >
+                          <MoveHorizontal className="h-4 w-4" aria-hidden />
+                        </button>
+                      </div>
+                      <p className="text-[11px] leading-relaxed text-muted-foreground/90">{t("dfb.studio.alignHint")}</p>
+                    </div>
+                  )}
                   {activeBank.key !== "main" && (
                     <div className="flex items-center gap-1.5">
                       <Button type="button" size="sm" variant="outline" className="h-8 flex-1" onClick={() => moveBankDir(activeBank.key, -1)} disabled={activeBankIndex <= 1}>
@@ -880,8 +1155,11 @@ function StudioInner({ formId }: { formId: number }) {
                           >
                             <SelectTrigger aria-label={t("dfb.width")} className="h-8"><SelectValue /></SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="1">{t("dfb.widthHalf")}</SelectItem>
-                              <SelectItem value="2">{t("dfb.widthFull")}</SelectItem>
+                              {[25, 50, 75, 100].map((w) => (
+                                <SelectItem key={w} value={String(w)}>
+                                  <span dir="ltr" className="font-mono">{w}%</span>
+                                </SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                         </div>
@@ -1005,7 +1283,8 @@ function StudioInner({ formId }: { formId: number }) {
 const dragRef: { current: DragPayload | null } = { current: null };
 
 function BankCanvas({
-  bank, index, isMain, active, preview, selectedFieldKey, isSystem,
+  bank, index, isMain, active, align, resizing, onResizeLive, onResizeCommit,
+  selectedFieldKey, isSystem,
   onSelectBank, onSelectField, onAddField, onMoveFieldDir, onRemoveField,
   onMoveBank, onRemoveBank, onDragStartField, onDropInBank,
 }: {
@@ -1013,7 +1292,12 @@ function BankCanvas({
   index: number;
   isMain: boolean;
   active: boolean;
-  preview: boolean;
+  /** Task 48 — bank-level horizontal alignment (persists in style.bankAlign) */
+  align: DfbBankAlign;
+  /** Task 48 — live width of the field being resized with the mouse */
+  resizing: { key: string; pct: number } | null;
+  onResizeLive: (r: { key: string; pct: number } | null) => void;
+  onResizeCommit: (fieldKey: string, pct: number) => void;
   selectedFieldKey: string | null;
   isSystem: boolean;
   onSelectBank: () => void;
@@ -1063,7 +1347,7 @@ function BankCanvas({
           </span>
         </button>
         <Badge variant="outline" className="font-mono text-[9px]" dir="ltr">100%</Badge>
-        {!preview && !isSystem && (
+        {!isSystem && (
           <span className="ms-auto flex items-center gap-1">
             <Button type="button" size="sm" variant="outline" className="h-6 px-2 text-[11px]" onClick={onAddField} title={t("dfb.addField")}>
               <Plus className="h-3 w-3" aria-hidden /> {t("dfb.addField")}
@@ -1085,28 +1369,58 @@ function BankCanvas({
         )}
       </div>
 
-      {/* fields */}
+      {/* fields — Task 48 flow layout: per-field width % + bank alignment */}
       {bank.fields.length === 0 ? (
         <p className="rounded-xl border border-dashed border-border/60 px-3 py-5 text-center text-[11px] text-muted-foreground">
           {t("dfb.studio.emptyBankHint")}
         </p>
       ) : (
-        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-          {bank.fields.map((f, fi) => (
-            <FieldCard
-              key={f.key}
-              field={f}
-              order={fi + 1}
-              selected={selectedFieldKey === f.key}
-              preview={preview}
-              isSystem={isSystem}
-              onSelect={() => onSelectField(f.key)}
-              onMoveDir={(dir) => onMoveFieldDir(f.key, dir)}
-              onRemove={() => onRemoveField(f.key)}
-              onDragStart={() => onDragStartField(f.key)}
-              onDropBefore={() => onDropInBank(f.key)}
-            />
-          ))}
+        <div
+          data-flow-container
+          className={cn(
+            "flex flex-wrap",
+            align === "center" && "justify-center",
+            align === "end" && "justify-end",
+          )}
+        >
+          {bank.fields.map((f, fi) => {
+            const pct = resizing && resizing.key === f.key ? resizing.pct : f.widthSpan;
+            return (
+              <div
+                key={f.key}
+                className="relative box-border min-w-0 px-2.5 pb-2.5"
+                style={{ width: `${pct}%` }}
+              >
+                {resizing && resizing.key === f.key && (
+                  <span
+                    dir="ltr"
+                    className="absolute end-3 top-1 z-20 rounded-md bg-teal-600 px-1.5 py-0.5 font-mono text-[9px] text-white shadow"
+                  >
+                    {resizing.pct}%
+                  </span>
+                )}
+                <FieldCard
+                  field={f}
+                  order={fi + 1}
+                  selected={selectedFieldKey === f.key}
+                  preview={false}
+                  isSystem={isSystem}
+                  onSelect={() => onSelectField(f.key)}
+                  onMoveDir={(dir) => onMoveFieldDir(f.key, dir)}
+                  onRemove={() => onRemoveField(f.key)}
+                  onDragStart={() => onDragStartField(f.key)}
+                  onDropBefore={() => onDropInBank(f.key)}
+                />
+                {!isSystem && (
+                  <FieldResizeHandle
+                    basePct={f.widthSpan}
+                    onLive={(p) => onResizeLive({ key: f.key, pct: p })}
+                    onCommit={(p) => onResizeCommit(f.key, p)}
+                  />
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
@@ -1137,6 +1451,73 @@ function MiniIconBtn({
       )}
     >
       {children}
+    </button>
+  );
+}
+
+/**
+ * Task 48 — mouse width-resize handle on a field card's inline-END edge.
+ * Dragging outward widens, inward narrows; snapped to 5% steps within
+ * 25..100 (the WidthSpan percent model). RTL-aware (the inline end sits on
+ * the LEFT edge in RTL, so the drag sign flips). The live width renders on
+ * the card (chip) while the gesture runs; ONE undo snapshot commits on
+ * pointerup.
+ */
+function FieldResizeHandle({
+  basePct, onLive, onCommit,
+}: {
+  basePct: number;
+  onLive: (pct: number) => void;
+  onCommit: (pct: number) => void;
+}) {
+  const t = useT();
+  const start = React.useRef<{ x: number; base: number; sign: number; rowW: number } | null>(null);
+  const lastPct = React.useRef(basePct);
+  const snap = (p: number) => Math.min(100, Math.max(25, Math.round(p / 5) * 5));
+
+  return (
+    <button
+      type="button"
+      aria-label={t("dfb.width")}
+      title={t("dfb.width")}
+      onPointerDown={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const dir = getComputedStyle(e.currentTarget).direction;
+        const row = e.currentTarget.closest("[data-flow-container]");
+        start.current = {
+          x: e.clientX,
+          base: basePct,
+          sign: dir === "rtl" ? -1 : 1,
+          rowW: row ? row.clientWidth : 0,
+        };
+        lastPct.current = basePct;
+        e.currentTarget.setPointerCapture(e.pointerId);
+      }}
+      onPointerMove={(e) => {
+        const s = start.current;
+        if (!s || s.rowW <= 0) return;
+        const dx = e.clientX - s.x;
+        const pct = snap(s.base + (dx * s.sign * 100) / s.rowW);
+        if (pct !== lastPct.current) {
+          lastPct.current = pct;
+          onLive(pct);
+        }
+      }}
+      onPointerUp={() => {
+        if (!start.current) return;
+        start.current = null;
+        onCommit(lastPct.current);
+      }}
+      onPointerCancel={() => {
+        if (!start.current) return;
+        start.current = null;
+        onCommit(lastPct.current);
+      }}
+      onClick={(e) => e.stopPropagation()}
+      className="group absolute end-0 top-1/2 z-10 flex h-12 w-2.5 -translate-y-1/2 cursor-ew-resize items-center justify-center rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring"
+    >
+      <span className="h-9 w-1 rounded-full bg-border transition-colors group-hover:bg-teal-500/80" aria-hidden />
     </button>
   );
 }
@@ -1198,7 +1579,6 @@ function FieldCard({
         !preview && "cursor-pointer hover:border-foreground/25 hover:shadow-md",
         selected && "border-teal-500/60 ring-2 ring-teal-500/40",
         dropBefore && "border-t-2 border-t-teal-500",
-        field.widthSpan >= 2 && "sm:col-span-2",
       )}
     >
       {!preview && (
@@ -1282,6 +1662,87 @@ function FieldPreview({ field }: { field: StudioField }) {
   );
 }
 
+/**
+ * Task 48 — LIVE preview body (owner requirements 2 + 5): the design bands
+ * (dashed bank containers, bank titles, count chips, add-buttons) are NOT
+ * rendered — only the fields flow under the shell, using the SAME FieldCell
+ * the runtime uses, with the designed widths (WidthSpan percent) and bank
+ * alignment. The REAL action bar rides on top: data entry saves to the EAV
+ * store exactly like the running form (fields must have DB ids).
+ */
+function PreviewCanvas({
+  state, values, options, records, dataId, align, busy,
+  onFieldChange, onSave, onSaveClose, onReset, onCopy, onDelete, onPrint,
+  onExitPreview, onOpenRecord,
+}: {
+  state: StudioState;
+  values: Record<string, string | boolean>;
+  options: Record<number, Array<{ value: string; label: string }>>;
+  records: Array<{ dataId: number; values: Record<string, string | boolean> }>;
+  dataId: number | null;
+  align: DfbBankAlign;
+  busy: boolean;
+  onFieldChange: (key: string, value: string | boolean) => void;
+  onSave: () => void | Promise<void>;
+  onSaveClose: () => void | Promise<void>;
+  onReset: () => void;
+  onCopy: () => void;
+  onDelete: () => void;
+  onPrint: () => void;
+  onExitPreview: () => void;
+  onOpenRecord: (dataId: string) => void;
+}) {
+  const t = useT();
+  const toSimple = (f: StudioField): SimpleFormField => ({
+    id: f.key,
+    label: f.label,
+    type: (FIELD_TYPE_META[f.fieldType] ? f.fieldType : "text") as SimpleFormField["type"],
+    required: f.required,
+    value: f.fieldType === "checkbox" ? undefined : String(values[f.key] ?? ""),
+    checked: f.fieldType === "checkbox" ? Boolean(values[f.key]) : undefined,
+    readOnly: f.readOnly,
+    widthPct: f.widthSpan,
+    options: f.queryRef != null ? options[f.queryRef] : undefined,
+    ltr: f.fieldType === "number" || f.fieldType === "date",
+    disabled: busy,
+  });
+
+  return (
+    <>
+      {/* real action bar (configured keys only — owner rule Task 48) */}
+      <div className="flex flex-wrap items-center gap-1.5 border-b border-border/60 bg-muted/40 px-3 py-2">
+        <FormActionBar
+          className="min-w-0 flex-1"
+          actions={state.shell.footerButtons}
+          onReset={onReset}
+          onSave={onSave}
+          onSaveClose={onSaveClose}
+          onCopy={onCopy}
+          onDelete={onDelete}
+          onPrint={onPrint}
+          onClose={onExitPreview}
+          listItems={records.map((r) => ({ id: String(r.dataId), title: String(r.dataId) }))}
+          onOpenListItem={(item) => onOpenRecord(item.id)}
+          canSave={!busy}
+        />
+        <Badge variant="outline" className="text-[9px]">{t("dfb.studio.preview")}</Badge>
+        {dataId != null && (
+          <span className="font-mono text-[9px] text-muted-foreground" dir="ltr">#{dataId}</span>
+        )}
+      </div>
+      {/* fields only — no bands */}
+      <div className="px-4 pb-3 pt-2.5" style={dfbShellTheme(state.shell.style).bodyStyle}>
+        <FlowFieldGrid
+          fields={state.banks.flatMap((b) => b.fields).map(toSimple)}
+          onFieldChange={onFieldChange}
+          idPrefix="dfbprev"
+          align={align}
+        />
+      </div>
+    </>
+  );
+}
+
 /* --------------------------- meta dialog --------------------------- */
 
 function StudioMetaDialog({
@@ -1302,7 +1763,7 @@ function StudioMetaDialog({
       d.shell.title = title.trim() || d.shell.title;
       d.shell.titleEn = titleEn.trim();
       d.shell.badge = badge.trim();
-      d.shell.footerButtons = FOOTER_KEYS.filter((k) => buttons.includes(k));
+      d.shell.footerButtons = ACTION_BAR_KEYS.filter((k) => buttons.includes(k));
     });
     onClose();
   };
@@ -1329,7 +1790,7 @@ function StudioMetaDialog({
           <div className="grid gap-1.5">
             <Label>{t("dfb.footerButtons")}</Label>
             <div className="flex flex-wrap gap-2 rounded-xl border border-border/60 p-2.5">
-              {FOOTER_KEYS.map((b) => (
+              {ACTION_BAR_KEYS.map((b) => (
                 <label key={b} className="flex cursor-pointer items-center gap-1.5 rounded-lg px-2 py-1 text-xs hover:bg-foreground/5">
                   <Checkbox
                     checked={buttons.includes(b)}

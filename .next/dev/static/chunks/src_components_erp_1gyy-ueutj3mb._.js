@@ -1502,11 +1502,13 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$s
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$dialog$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/components/ui/dialog.tsx [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/components/ui/select.tsx [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$app$2d$catalog$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/lib/app-catalog.ts [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$forms$2f$action$2d$bar$2f$index$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$locals$3e$__ = __turbopack_context__.i("[project]/src/components/forms/action-bar/index.ts [app-client] (ecmascript) <locals>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$dfb$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/stores/dfb-store.ts [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$utils$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/lib/utils.ts [app-client] (ecmascript)");
 ;
 var _s = __turbopack_context__.k.signature(), _s1 = __turbopack_context__.k.signature(), _s2 = __turbopack_context__.k.signature(), _s3 = __turbopack_context__.k.signature(), _s4 = __turbopack_context__.k.signature();
 "use client";
+;
 ;
 ;
 ;
@@ -1533,12 +1535,12 @@ function DfbGlyph({ iconKey, className, iconClass, style }) {
             className: iconClass ?? "h-5 w-5"
         }, void 0, false, {
             fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-            lineNumber: 44,
+            lineNumber: 45,
             columnNumber: 7
         }, this)
     }, void 0, false, {
         fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-        lineNumber: 35,
+        lineNumber: 36,
         columnNumber: 5
     }, this);
 }
@@ -1591,17 +1593,17 @@ function IconPicker({ value, onChange }) {
                     iconClass: "h-3.5 w-3.5"
                 }, void 0, false, {
                     fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                    lineNumber: 75,
+                    lineNumber: 76,
                     columnNumber: 11
                 }, this)
             }, k, false, {
                 fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                lineNumber: 64,
+                lineNumber: 65,
                 columnNumber: 9
             }, this))
     }, void 0, false, {
         fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-        lineNumber: 62,
+        lineNumber: 63,
         columnNumber: 5
     }, this);
 }
@@ -1618,12 +1620,12 @@ function DfbMenuDialog({ open, onOpenChange, parent, onSaved }) {
             onSaved: onSaved
         }, void 0, false, {
             fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-            lineNumber: 100,
+            lineNumber: 101,
             columnNumber: 9
         }, this)
     }, void 0, false, {
         fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-        lineNumber: 98,
+        lineNumber: 99,
         columnNumber: 5
     }, this);
 }
@@ -1665,20 +1667,20 @@ function MenuDialogBody({ isIcon, parentTitle, parentRef, onClose, onSaved }) {
                         children: isIcon ? t("dfb.addMainIcon") : `${t("dfb.addSubMenu")} — ${parentTitle}`
                     }, void 0, false, {
                         fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                        lineNumber: 151,
+                        lineNumber: 152,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$dialog$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["DialogDescription"], {
                         children: t("dfb.menuDialogDesc")
                     }, void 0, false, {
                         fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                        lineNumber: 154,
+                        lineNumber: 155,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                lineNumber: 150,
+                lineNumber: 151,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1692,7 +1694,7 @@ function MenuDialogBody({ isIcon, parentTitle, parentRef, onClose, onSaved }) {
                                 children: t("dfb.menuTitle")
                             }, void 0, false, {
                                 fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                lineNumber: 158,
+                                lineNumber: 159,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
@@ -1701,13 +1703,13 @@ function MenuDialogBody({ isIcon, parentTitle, parentRef, onClose, onSaved }) {
                                 onChange: (e)=>setTitle(e.target.value)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                lineNumber: 159,
+                                lineNumber: 160,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                        lineNumber: 157,
+                        lineNumber: 158,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1718,7 +1720,7 @@ function MenuDialogBody({ isIcon, parentTitle, parentRef, onClose, onSaved }) {
                                 children: t("dfb.menuTitleEn")
                             }, void 0, false, {
                                 fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                lineNumber: 162,
+                                lineNumber: 163,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
@@ -1728,13 +1730,13 @@ function MenuDialogBody({ isIcon, parentTitle, parentRef, onClose, onSaved }) {
                                 onChange: (e)=>setTitleEn(e.target.value)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                lineNumber: 163,
+                                lineNumber: 164,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                        lineNumber: 161,
+                        lineNumber: 162,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1744,7 +1746,7 @@ function MenuDialogBody({ isIcon, parentTitle, parentRef, onClose, onSaved }) {
                                 children: t("dfb.iconKey")
                             }, void 0, false, {
                                 fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                lineNumber: 166,
+                                lineNumber: 167,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(IconPicker, {
@@ -1752,19 +1754,19 @@ function MenuDialogBody({ isIcon, parentTitle, parentRef, onClose, onSaved }) {
                                 onChange: setIconKey
                             }, void 0, false, {
                                 fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                lineNumber: 167,
+                                lineNumber: 168,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                        lineNumber: 165,
+                        lineNumber: 166,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                lineNumber: 156,
+                lineNumber: 157,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$dialog$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["DialogFooter"], {
@@ -1776,7 +1778,7 @@ function MenuDialogBody({ isIcon, parentTitle, parentRef, onClose, onSaved }) {
                         children: t("common.cancel")
                     }, void 0, false, {
                         fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                        lineNumber: 171,
+                        lineNumber: 172,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -1787,32 +1789,32 @@ function MenuDialogBody({ isIcon, parentTitle, parentRef, onClose, onSaved }) {
                                 className: "h-4 w-4 animate-spin"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                lineNumber: 173,
+                                lineNumber: 174,
                                 columnNumber: 19
                             }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$plus$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Plus$3e$__["Plus"], {
                                 className: "h-4 w-4"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                lineNumber: 173,
+                                lineNumber: 174,
                                 columnNumber: 66
                             }, this),
                             t("common.save")
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                        lineNumber: 172,
+                        lineNumber: 173,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                lineNumber: 170,
+                lineNumber: 171,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-        lineNumber: 149,
+        lineNumber: 150,
         columnNumber: 5
     }, this);
 }
@@ -1831,12 +1833,12 @@ function DfbQueryDialog({ open, onOpenChange, onSaved }) {
             onSaved: onSaved
         }, void 0, false, {
             fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-            lineNumber: 201,
+            lineNumber: 202,
             columnNumber: 16
         }, this)
     }, void 0, false, {
         fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-        lineNumber: 200,
+        lineNumber: 201,
         columnNumber: 5
     }, this);
 }
@@ -1904,20 +1906,20 @@ function QueryDialogBody({ onClose, onSaved }) {
                         children: t("dfb.createQuery")
                     }, void 0, false, {
                         fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                        lineNumber: 255,
+                        lineNumber: 256,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$dialog$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["DialogDescription"], {
                         children: t("dfb.queryDialogDesc")
                     }, void 0, false, {
                         fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                        lineNumber: 256,
+                        lineNumber: 257,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                lineNumber: 254,
+                lineNumber: 255,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1931,7 +1933,7 @@ function QueryDialogBody({ onClose, onSaved }) {
                                 children: t("dfb.queryTitle")
                             }, void 0, false, {
                                 fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                lineNumber: 260,
+                                lineNumber: 261,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
@@ -1940,13 +1942,13 @@ function QueryDialogBody({ onClose, onSaved }) {
                                 onChange: (e)=>setTitle(e.target.value)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                lineNumber: 261,
+                                lineNumber: 262,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                        lineNumber: 259,
+                        lineNumber: 260,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1956,7 +1958,7 @@ function QueryDialogBody({ onClose, onSaved }) {
                                 children: t("dfb.queryTable")
                             }, void 0, false, {
                                 fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                lineNumber: 264,
+                                lineNumber: 265,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Select"], {
@@ -1971,12 +1973,12 @@ function QueryDialogBody({ onClose, onSaved }) {
                                         "aria-label": t("dfb.queryTable"),
                                         children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectValue"], {}, void 0, false, {
                                             fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                            lineNumber: 266,
+                                            lineNumber: 267,
                                             columnNumber: 61
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                        lineNumber: 266,
+                                        lineNumber: 267,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectContent"], {
@@ -1985,24 +1987,24 @@ function QueryDialogBody({ onClose, onSaved }) {
                                                 children: isLtr ? m.labelEn : m.labelFa
                                             }, m.key, false, {
                                                 fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                                lineNumber: 269,
+                                                lineNumber: 270,
                                                 columnNumber: 17
                                             }, this))
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                        lineNumber: 267,
+                                        lineNumber: 268,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                lineNumber: 265,
+                                lineNumber: 266,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                        lineNumber: 263,
+                        lineNumber: 264,
                         columnNumber: 9
                     }, this),
                     table && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2012,7 +2014,7 @@ function QueryDialogBody({ onClose, onSaved }) {
                                 children: t("dfb.queryColumns")
                             }, void 0, false, {
                                 fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                lineNumber: 276,
+                                lineNumber: 277,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2029,7 +2031,7 @@ function QueryDialogBody({ onClose, onSaved }) {
                                                 "aria-label": c.name
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                                lineNumber: 283,
+                                                lineNumber: 284,
                                                 columnNumber: 19
                                             }, this),
                                             isLtr ? c.labelEn : c.labelFa,
@@ -2039,24 +2041,24 @@ function QueryDialogBody({ onClose, onSaved }) {
                                                 children: c.name
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                                lineNumber: 291,
+                                                lineNumber: 292,
                                                 columnNumber: 19
                                             }, this)
                                         ]
                                     }, c.name, true, {
                                         fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                        lineNumber: 279,
+                                        lineNumber: 280,
                                         columnNumber: 17
                                     }, this))
                             }, void 0, false, {
                                 fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                lineNumber: 277,
+                                lineNumber: 278,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                        lineNumber: 275,
+                        lineNumber: 276,
                         columnNumber: 11
                     }, this),
                     table && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2069,7 +2071,7 @@ function QueryDialogBody({ onClose, onSaved }) {
                                         children: t("dfb.filterColumn")
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                        lineNumber: 300,
+                                        lineNumber: 301,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Select"], {
@@ -2082,12 +2084,12 @@ function QueryDialogBody({ onClose, onSaved }) {
                                                     placeholder: t("dfb.none")
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                                    lineNumber: 302,
+                                                    lineNumber: 303,
                                                     columnNumber: 67
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                                lineNumber: 302,
+                                                lineNumber: 303,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectContent"], {
@@ -2097,7 +2099,7 @@ function QueryDialogBody({ onClose, onSaved }) {
                                                         children: t("dfb.none")
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                                        lineNumber: 304,
+                                                        lineNumber: 305,
                                                         columnNumber: 19
                                                     }, this),
                                                     table.columns.map((c)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectItem"], {
@@ -2105,25 +2107,25 @@ function QueryDialogBody({ onClose, onSaved }) {
                                                             children: c.name
                                                         }, c.name, false, {
                                                             fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                                            lineNumber: 306,
+                                                            lineNumber: 307,
                                                             columnNumber: 21
                                                         }, this))
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                                lineNumber: 303,
+                                                lineNumber: 304,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                        lineNumber: 301,
+                                        lineNumber: 302,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                lineNumber: 299,
+                                lineNumber: 300,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2134,7 +2136,7 @@ function QueryDialogBody({ onClose, onSaved }) {
                                         children: t("dfb.filterValue")
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                        lineNumber: 312,
+                                        lineNumber: 313,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
@@ -2144,25 +2146,25 @@ function QueryDialogBody({ onClose, onSaved }) {
                                         onChange: (e)=>setFilterValue(e.target.value)
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                        lineNumber: 313,
+                                        lineNumber: 314,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                lineNumber: 311,
+                                lineNumber: 312,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                        lineNumber: 298,
+                        lineNumber: 299,
                         columnNumber: 11
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                lineNumber: 258,
+                lineNumber: 259,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$dialog$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["DialogFooter"], {
@@ -2174,7 +2176,7 @@ function QueryDialogBody({ onClose, onSaved }) {
                         children: t("common.cancel")
                     }, void 0, false, {
                         fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                        lineNumber: 322,
+                        lineNumber: 323,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -2185,32 +2187,32 @@ function QueryDialogBody({ onClose, onSaved }) {
                                 className: "h-4 w-4 animate-spin"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                lineNumber: 324,
+                                lineNumber: 325,
                                 columnNumber: 19
                             }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$plus$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Plus$3e$__["Plus"], {
                                 className: "h-4 w-4"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                lineNumber: 324,
+                                lineNumber: 325,
                                 columnNumber: 66
                             }, this),
                             t("dfb.createQuery")
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                        lineNumber: 323,
+                        lineNumber: 324,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                lineNumber: 321,
+                lineNumber: 322,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-        lineNumber: 253,
+        lineNumber: 254,
         columnNumber: 5
     }, this);
 }
@@ -2230,14 +2232,8 @@ const FIELD_TYPE_OPTIONS = [
     "date",
     "textarea"
 ];
-const FOOTER_BUTTONS = [
-    "save",
-    "saveNew",
-    "saveClose",
-    "reset",
-    "delete",
-    "print"
-];
+/* Task 48 — owner rule «تمامی آیکون‌های اکشن بار بصورت پیش‌فرض»: new forms
+   are created with the FULL legacy action bar; the user can still uncheck */ const FOOTER_BUTTONS = __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$forms$2f$action$2d$bar$2f$index$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$locals$3e$__["ACTION_BAR_KEYS"];
 function DfbFormWizard({ open, onOpenChange, parentMenu, onSaved }) {
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$dialog$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Dialog"], {
         open: open,
@@ -2248,12 +2244,12 @@ function DfbFormWizard({ open, onOpenChange, parentMenu, onSaved }) {
             onSaved: onSaved
         }, void 0, false, {
             fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-            lineNumber: 356,
+            lineNumber: 359,
             columnNumber: 9
         }, this)
     }, void 0, false, {
         fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-        lineNumber: 354,
+        lineNumber: 357,
         columnNumber: 5
     }, this);
 }
@@ -2267,9 +2263,7 @@ function WizardBody({ parentMenu, onClose, onSaved }) {
     const [titleEn, setTitleEn] = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"]("");
     const [badge, setBadge] = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"]("");
     const [footerButtons, setFooterButtons] = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"]([
-        "save",
-        "reset",
-        "delete"
+        ...__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$forms$2f$action$2d$bar$2f$index$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$locals$3e$__["ACTION_BAR_KEYS"]
     ]);
     const [tabs, setTabs] = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"]([]);
     const [newTabTitle, setNewTabTitle] = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"]("");
@@ -2320,20 +2314,20 @@ function WizardBody({ parentMenu, onClose, onSaved }) {
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                        lineNumber: 417,
+                        lineNumber: 420,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$dialog$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["DialogDescription"], {
                         children: step === 1 ? t("dfb.wizard.step1") : t("dfb.wizard.step2")
                     }, void 0, false, {
                         fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                        lineNumber: 420,
+                        lineNumber: 423,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                lineNumber: 416,
+                lineNumber: 419,
                 columnNumber: 7
             }, this),
             step === 1 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2355,12 +2349,12 @@ function WizardBody({ parentMenu, onClose, onSaved }) {
                                     "aria-hidden": true
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                    lineNumber: 434,
+                                    lineNumber: 437,
                                     columnNumber: 15
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                lineNumber: 433,
+                                lineNumber: 436,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2368,7 +2362,7 @@ function WizardBody({ parentMenu, onClose, onSaved }) {
                                 children: t("dfb.template.simple")
                             }, void 0, false, {
                                 fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                lineNumber: 436,
+                                lineNumber: 439,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2376,13 +2370,13 @@ function WizardBody({ parentMenu, onClose, onSaved }) {
                                 children: t("dfb.template.simpleDesc")
                             }, void 0, false, {
                                 fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                lineNumber: 437,
+                                lineNumber: 440,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                        lineNumber: 427,
+                        lineNumber: 430,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2401,12 +2395,12 @@ function WizardBody({ parentMenu, onClose, onSaved }) {
                                     "aria-hidden": true
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                    lineNumber: 448,
+                                    lineNumber: 451,
                                     columnNumber: 15
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                lineNumber: 447,
+                                lineNumber: 450,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2414,7 +2408,7 @@ function WizardBody({ parentMenu, onClose, onSaved }) {
                                 children: t("dfb.template.tree")
                             }, void 0, false, {
                                 fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                lineNumber: 450,
+                                lineNumber: 453,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2422,19 +2416,19 @@ function WizardBody({ parentMenu, onClose, onSaved }) {
                                 children: t("dfb.template.treeDesc")
                             }, void 0, false, {
                                 fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                lineNumber: 451,
+                                lineNumber: 454,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                        lineNumber: 441,
+                        lineNumber: 444,
                         columnNumber: 11
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                lineNumber: 426,
+                lineNumber: 429,
                 columnNumber: 9
             }, this),
             step === 2 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2448,7 +2442,7 @@ function WizardBody({ parentMenu, onClose, onSaved }) {
                                 children: t("dfb.formTitle")
                             }, void 0, false, {
                                 fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                lineNumber: 461,
+                                lineNumber: 464,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
@@ -2457,13 +2451,13 @@ function WizardBody({ parentMenu, onClose, onSaved }) {
                                 onChange: (e)=>setTitle(e.target.value)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                lineNumber: 462,
+                                lineNumber: 465,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                        lineNumber: 460,
+                        lineNumber: 463,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2477,7 +2471,7 @@ function WizardBody({ parentMenu, onClose, onSaved }) {
                                         children: t("dfb.formTitleEn")
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                        lineNumber: 466,
+                                        lineNumber: 469,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
@@ -2487,13 +2481,13 @@ function WizardBody({ parentMenu, onClose, onSaved }) {
                                         onChange: (e)=>setTitleEn(e.target.value)
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                        lineNumber: 467,
+                                        lineNumber: 470,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                lineNumber: 465,
+                                lineNumber: 468,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2504,7 +2498,7 @@ function WizardBody({ parentMenu, onClose, onSaved }) {
                                         children: t("dfb.badgeLabel")
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                        lineNumber: 470,
+                                        lineNumber: 473,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
@@ -2513,19 +2507,19 @@ function WizardBody({ parentMenu, onClose, onSaved }) {
                                         onChange: (e)=>setBadge(e.target.value)
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                        lineNumber: 471,
+                                        lineNumber: 474,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                lineNumber: 469,
+                                lineNumber: 472,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                        lineNumber: 464,
+                        lineNumber: 467,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2535,7 +2529,7 @@ function WizardBody({ parentMenu, onClose, onSaved }) {
                                 children: t("dfb.footerButtons")
                             }, void 0, false, {
                                 fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                lineNumber: 475,
+                                lineNumber: 478,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2552,25 +2546,25 @@ function WizardBody({ parentMenu, onClose, onSaved }) {
                                                 "aria-label": t(`dfb.btn.${b}`)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                                lineNumber: 479,
+                                                lineNumber: 482,
                                                 columnNumber: 19
                                             }, this),
                                             t(`dfb.btn.${b}`)
                                         ]
                                     }, b, true, {
                                         fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                        lineNumber: 478,
+                                        lineNumber: 481,
                                         columnNumber: 17
                                     }, this))
                             }, void 0, false, {
                                 fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                lineNumber: 476,
+                                lineNumber: 479,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                        lineNumber: 474,
+                        lineNumber: 477,
                         columnNumber: 11
                     }, this),
                     componentKey === "simpleTwoRowTabbed" && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2580,7 +2574,7 @@ function WizardBody({ parentMenu, onClose, onSaved }) {
                                 children: t("dfb.tabsSection")
                             }, void 0, false, {
                                 fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                lineNumber: 493,
+                                lineNumber: 496,
                                 columnNumber: 15
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2599,13 +2593,13 @@ function WizardBody({ parentMenu, onClose, onSaved }) {
                                                     children: "×"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                                    lineNumber: 498,
+                                                    lineNumber: 501,
                                                     columnNumber: 21
                                                 }, this)
                                             ]
                                         }, tb.localId, true, {
                                             fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                            lineNumber: 496,
+                                            lineNumber: 499,
                                             columnNumber: 19
                                         }, this)),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
@@ -2615,7 +2609,7 @@ function WizardBody({ parentMenu, onClose, onSaved }) {
                                         className: "h-8 w-40"
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                        lineNumber: 507,
+                                        lineNumber: 510,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -2639,7 +2633,7 @@ function WizardBody({ parentMenu, onClose, onSaved }) {
                                                 className: "h-3.5 w-3.5"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                                lineNumber: 521,
+                                                lineNumber: 524,
                                                 columnNumber: 19
                                             }, this),
                                             " ",
@@ -2647,25 +2641,25 @@ function WizardBody({ parentMenu, onClose, onSaved }) {
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                        lineNumber: 513,
+                                        lineNumber: 516,
                                         columnNumber: 17
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                lineNumber: 494,
+                                lineNumber: 497,
                                 columnNumber: 15
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                        lineNumber: 492,
+                        lineNumber: 495,
                         columnNumber: 13
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                lineNumber: 459,
+                lineNumber: 462,
                 columnNumber: 9
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$dialog$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["DialogFooter"], {
@@ -2677,7 +2671,7 @@ function WizardBody({ parentMenu, onClose, onSaved }) {
                         children: t("dfb.prev")
                     }, void 0, false, {
                         fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                        lineNumber: 531,
+                        lineNumber: 534,
                         columnNumber: 11
                     }, this),
                     step < 2 ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -2686,7 +2680,7 @@ function WizardBody({ parentMenu, onClose, onSaved }) {
                         children: t("dfb.next")
                     }, void 0, false, {
                         fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                        lineNumber: 534,
+                        lineNumber: 537,
                         columnNumber: 11
                     }, this) : /* Task 47 — creation hands over to the design studio */ /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
                         onClick: submit,
@@ -2696,36 +2690,36 @@ function WizardBody({ parentMenu, onClose, onSaved }) {
                                 className: "h-4 w-4 animate-spin"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                lineNumber: 540,
+                                lineNumber: 543,
                                 columnNumber: 21
                             }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$plus$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Plus$3e$__["Plus"], {
                                 className: "h-4 w-4"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                lineNumber: 540,
+                                lineNumber: 543,
                                 columnNumber: 68
                             }, this),
                             t("dfb.studio.createAndOpen")
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                        lineNumber: 539,
+                        lineNumber: 542,
                         columnNumber: 11
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                lineNumber: 529,
+                lineNumber: 532,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-        lineNumber: 415,
+        lineNumber: 418,
         columnNumber: 5
     }, this);
 }
-_s2(WizardBody, "7dS38WWlzdzISEQIn3Kkg6WA3TE=", false, function() {
+_s2(WizardBody, "qplbz8MMuFrIV+objNbar1uidVg=", false, function() {
     return [
         __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$settings$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useT"]
     ];
@@ -2741,12 +2735,12 @@ function DfbAddFieldDialog({ open, onOpenChange, form, onSaved }) {
             onSaved: onSaved
         }, void 0, false, {
             fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-            lineNumber: 564,
+            lineNumber: 567,
             columnNumber: 9
         }, this)
     }, void 0, false, {
         fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-        lineNumber: 562,
+        lineNumber: 565,
         columnNumber: 5
     }, this);
 }
@@ -2796,20 +2790,20 @@ function AddFieldBody({ form, onClose, onSaved }) {
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                        lineNumber: 615,
+                        lineNumber: 618,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$dialog$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["DialogDescription"], {
                         children: form.isSystem ? t("dfb.addFieldSystemDesc") : t("dfb.addFieldDesc")
                     }, void 0, false, {
                         fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                        lineNumber: 618,
+                        lineNumber: 621,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                lineNumber: 614,
+                lineNumber: 617,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2823,7 +2817,7 @@ function AddFieldBody({ form, onClose, onSaved }) {
                                 children: t("dfb.fieldLabel")
                             }, void 0, false, {
                                 fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                lineNumber: 624,
+                                lineNumber: 627,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
@@ -2832,13 +2826,13 @@ function AddFieldBody({ form, onClose, onSaved }) {
                                 onChange: (e)=>setLabel(e.target.value)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                lineNumber: 625,
+                                lineNumber: 628,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                        lineNumber: 623,
+                        lineNumber: 626,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2852,7 +2846,7 @@ function AddFieldBody({ form, onClose, onSaved }) {
                                         children: t("dfb.fieldLabelEn")
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                        lineNumber: 629,
+                                        lineNumber: 632,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
@@ -2862,13 +2856,13 @@ function AddFieldBody({ form, onClose, onSaved }) {
                                         onChange: (e)=>setLabelEn(e.target.value)
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                        lineNumber: 630,
+                                        lineNumber: 633,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                lineNumber: 628,
+                                lineNumber: 631,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2878,7 +2872,7 @@ function AddFieldBody({ form, onClose, onSaved }) {
                                         children: t("dfb.fieldType")
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                        lineNumber: 633,
+                                        lineNumber: 636,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Select"], {
@@ -2889,12 +2883,12 @@ function AddFieldBody({ form, onClose, onSaved }) {
                                                 "aria-label": t("dfb.fieldType"),
                                                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectValue"], {}, void 0, false, {
                                                     fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                                    lineNumber: 635,
+                                                    lineNumber: 638,
                                                     columnNumber: 62
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                                lineNumber: 635,
+                                                lineNumber: 638,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectContent"], {
@@ -2903,30 +2897,30 @@ function AddFieldBody({ form, onClose, onSaved }) {
                                                         children: t(`dfb.type.${ft}`)
                                                     }, ft, false, {
                                                         fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                                        lineNumber: 638,
+                                                        lineNumber: 641,
                                                         columnNumber: 19
                                                     }, this))
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                                lineNumber: 636,
+                                                lineNumber: 639,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                        lineNumber: 634,
+                                        lineNumber: 637,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                lineNumber: 632,
+                                lineNumber: 635,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                        lineNumber: 627,
+                        lineNumber: 630,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2941,14 +2935,14 @@ function AddFieldBody({ form, onClose, onSaved }) {
                                         "aria-label": t("dfb.required")
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                        lineNumber: 646,
+                                        lineNumber: 649,
                                         columnNumber: 13
                                     }, this),
                                     t("dfb.required")
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                lineNumber: 645,
+                                lineNumber: 648,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2962,7 +2956,7 @@ function AddFieldBody({ form, onClose, onSaved }) {
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                        lineNumber: 650,
+                                        lineNumber: 653,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Select"], {
@@ -2974,12 +2968,12 @@ function AddFieldBody({ form, onClose, onSaved }) {
                                                 "aria-label": t("dfb.width"),
                                                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectValue"], {}, void 0, false, {
                                                     fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                                    lineNumber: 652,
+                                                    lineNumber: 655,
                                                     columnNumber: 79
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                                lineNumber: 652,
+                                                lineNumber: 655,
                                                 columnNumber: 15
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectContent"], {
@@ -2989,7 +2983,7 @@ function AddFieldBody({ form, onClose, onSaved }) {
                                                         children: t("dfb.widthHalf")
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                                        lineNumber: 654,
+                                                        lineNumber: 657,
                                                         columnNumber: 17
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectItem"], {
@@ -2997,37 +2991,37 @@ function AddFieldBody({ form, onClose, onSaved }) {
                                                         children: t("dfb.widthFull")
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                                        lineNumber: 655,
+                                                        lineNumber: 658,
                                                         columnNumber: 17
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                                lineNumber: 653,
+                                                lineNumber: 656,
                                                 columnNumber: 15
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                        lineNumber: 651,
+                                        lineNumber: 654,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                lineNumber: 649,
+                                lineNumber: 652,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                        lineNumber: 644,
+                        lineNumber: 647,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                lineNumber: 622,
+                lineNumber: 625,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$dialog$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["DialogFooter"], {
@@ -3039,7 +3033,7 @@ function AddFieldBody({ form, onClose, onSaved }) {
                         children: t("common.cancel")
                     }, void 0, false, {
                         fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                        lineNumber: 662,
+                        lineNumber: 665,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -3050,32 +3044,32 @@ function AddFieldBody({ form, onClose, onSaved }) {
                                 className: "h-4 w-4 animate-spin"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                lineNumber: 664,
+                                lineNumber: 667,
                                 columnNumber: 19
                             }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$refresh$2d$cw$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__RefreshCw$3e$__["RefreshCw"], {
                                 className: "h-4 w-4"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                                lineNumber: 664,
+                                lineNumber: 667,
                                 columnNumber: 66
                             }, this),
                             t("common.save")
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                        lineNumber: 663,
+                        lineNumber: 666,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                lineNumber: 661,
+                lineNumber: 664,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-        lineNumber: 613,
+        lineNumber: 616,
         columnNumber: 5
     }, this);
 }
@@ -3094,7 +3088,7 @@ function DfbFieldsOverview({ fields }) {
             children: t("dfb.noFieldsYet")
         }, void 0, false, {
             fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-            lineNumber: 679,
+            lineNumber: 682,
             columnNumber: 12
         }, this);
     }
@@ -3111,7 +3105,7 @@ function DfbFieldsOverview({ fields }) {
                             children: f.fieldType
                         }, void 0, false, {
                             fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                            lineNumber: 686,
+                            lineNumber: 689,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -3119,7 +3113,7 @@ function DfbFieldsOverview({ fields }) {
                             children: f.label
                         }, void 0, false, {
                             fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                            lineNumber: 687,
+                            lineNumber: 690,
                             columnNumber: 13
                         }, this),
                         f.required && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$badge$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Badge"], {
@@ -3128,7 +3122,7 @@ function DfbFieldsOverview({ fields }) {
                             children: t("dfb.required")
                         }, void 0, false, {
                             fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                            lineNumber: 688,
+                            lineNumber: 691,
                             columnNumber: 28
                         }, this),
                         f.queryRef != null && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$badge$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Badge"], {
@@ -3137,7 +3131,7 @@ function DfbFieldsOverview({ fields }) {
                             children: t("dfb.queryBound")
                         }, void 0, false, {
                             fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                            lineNumber: 689,
+                            lineNumber: 692,
                             columnNumber: 36
                         }, this),
                         f.isCustom && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$badge$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Badge"], {
@@ -3146,23 +3140,23 @@ function DfbFieldsOverview({ fields }) {
                             children: t("dfb.customField")
                         }, void 0, false, {
                             fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                            lineNumber: 690,
+                            lineNumber: 693,
                             columnNumber: 28
                         }, this)
                     ]
                 }, f.id, true, {
                     fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-                    lineNumber: 685,
+                    lineNumber: 688,
                     columnNumber: 11
                 }, this))
         }, void 0, false, {
             fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-            lineNumber: 683,
+            lineNumber: 686,
             columnNumber: 7
         }, this)
     }, void 0, false, {
         fileName: "[project]/src/components/erp/form-builder/dfb-dialogs.tsx",
-        lineNumber: 682,
+        lineNumber: 685,
         columnNumber: 5
     }, this);
 }
@@ -3204,6 +3198,7 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$settings$2d
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$desktop$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/stores/desktop-store.ts [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$forms$2f$simple$2d$form$2d$two$2d$row$2d$tabbed$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/components/forms/simple-form-two-row-tabbed.tsx [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$forms$2f$simple$2d$tree$2d$form$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/components/forms/simple-tree-form.tsx [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$forms$2f$action$2d$bar$2f$index$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$locals$3e$__ = __turbopack_context__.i("[project]/src/components/forms/action-bar/index.ts [app-client] (ecmascript) <locals>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$desktop$2f$app$2d$window$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/components/desktop/app-window.tsx [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$dfb$2d$theme$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/lib/dfb-theme.ts [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$dfb$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/stores/dfb-store.ts [app-client] (ecmascript)");
@@ -3220,13 +3215,14 @@ var _s = __turbopack_context__.k.signature();
 ;
 ;
 ;
+;
 function DfbFormRuntime({ formId }) {
     /* keyed by formId: each open definition mounts fresh state (no
      setState-in-effect resets — react-hooks/set-state-in-effect) */ return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(RuntimeInner, {
         formId: formId
     }, formId, false, {
         fileName: "[project]/src/components/erp/form-builder/dfb-form-runtime.tsx",
-        lineNumber: 35,
+        lineNumber: 37,
         columnNumber: 10
     }, this);
 }
@@ -3290,41 +3286,9 @@ function RuntimeInner({ formId }) {
                     if (!alive) return;
                     setDetail(d);
                     await loadRecords(d);
-                    /* fetch options for query-bound select/lookup fields */ const bound = d.fields.filter({
-                        "RuntimeInner.useEffect.bound": (f)=>f.queryRef != null && (f.fieldType === "select" || f.fieldType === "lookup")
-                    }["RuntimeInner.useEffect.bound"]);
-                    const results = await Promise.all(bound.map({
-                        "RuntimeInner.useEffect": async (f)=>{
-                            try {
-                                const rows = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$dfb$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["executeQuery"])(f.queryRef);
-                                /* value column: the bound queryFieldKey when present in the
-                 response, otherwise the query's first selected column —
-                 label prefers a Title-ish column (displayColumn semantics) */ const keys = rows.length ? Object.keys(rows[0]) : [];
-                                const valKey = f.queryFieldKey && keys.includes(f.queryFieldKey) ? f.queryFieldKey : keys[0] ?? "ID";
-                                const labelKey = keys.find({
-                                    "RuntimeInner.useEffect": (k)=>k !== valKey && /title|label|name/i.test(k)
-                                }["RuntimeInner.useEffect"]) ?? valKey;
-                                const options = rows.map({
-                                    "RuntimeInner.useEffect.options": (r)=>({
-                                            value: String(r[valKey] ?? ""),
-                                            label: String(r[labelKey] ?? r[valKey] ?? "")
-                                        })
-                                }["RuntimeInner.useEffect.options"]).filter({
-                                    "RuntimeInner.useEffect.options": (o)=>o.value !== ""
-                                }["RuntimeInner.useEffect.options"]);
-                                return [
-                                    f.queryRef,
-                                    options
-                                ];
-                            } catch  {
-                                return [
-                                    f.queryRef,
-                                    []
-                                ];
-                            }
-                        }
-                    }["RuntimeInner.useEffect"]));
-                    if (alive) setQueryOptions(Object.fromEntries(results));
+                    /* fetch options for query-bound select/lookup fields (shared helper,
+           Task 48 — same mapping the studio preview uses) */ const options = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$dfb$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["fetchQueryOptionsForFields"])(d.fields);
+                    if (alive) setQueryOptions(options);
                 }
             }["RuntimeInner.useEffect"]).catch({
                 "RuntimeInner.useEffect": ()=>{
@@ -3412,7 +3376,7 @@ function RuntimeInner({ formId }) {
             children: t("dfb.formNotFound")
         }, void 0, false, {
             fileName: "[project]/src/components/erp/form-builder/dfb-form-runtime.tsx",
-            lineNumber: 171,
+            lineNumber: 148,
             columnNumber: 12
         }, this);
     }
@@ -3422,15 +3386,21 @@ function RuntimeInner({ formId }) {
             children: t("common.loading")
         }, void 0, false, {
             fileName: "[project]/src/components/erp/form-builder/dfb-form-runtime.tsx",
-            lineNumber: 174,
+            lineNumber: 151,
             columnNumber: 12
         }, this);
     }
     const header = detail.header ?? {};
     const footer = detail.footer ?? {};
-    const footerButtons = Array.isArray(footer.buttons) ? footer.buttons : [];
+    /* Task 48 — owner rule «تمامی آیکون‌های اکشن بار بصورت پیش‌فرض»: a form
+     without a stored (or with an empty) button list renders the FULL
+     legacy action bar; stored subsets are honored through the allowlist */ const storedButtons = Array.isArray(footer.buttons) ? footer.buttons.filter((b)=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$forms$2f$action$2d$bar$2f$index$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$locals$3e$__["ACTION_BAR_KEYS"].includes(b)) : [];
+    const footerButtons = storedButtons.length > 0 ? storedButtons : [
+        ...__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$forms$2f$action$2d$bar$2f$index$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$locals$3e$__["ACTION_BAR_KEYS"]
+    ];
     /* Task 47 — design-studio shell style (theme / title size / font) applied
-     to the running form — what the owner designed is what runs */ const shellTheme = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$dfb$2d$theme$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["dfbShellTheme"])(header.style ?? null);
+     to the running form — what the owner designed is what runs */ const shellStyle = header.style ?? null;
+    const shellTheme = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$dfb$2d$theme$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["dfbShellTheme"])(shellStyle);
     const toShellType = (ft)=>[
             "text",
             "number",
@@ -3451,6 +3421,11 @@ function RuntimeInner({ formId }) {
             await save();
             closeThisWindow();
         },
+        /* Task 48 — full action bar: copy keeps the entered values but detaches
+       the record so saving stores it as a NEW row */ copy: async ()=>{
+            setCurrentDataId(null);
+            __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$sonner$2f$dist$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["toast"].info(t("abar.copy"));
+        },
         delete: async ()=>{
             if (currentDataId == null) {
                 __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$sonner$2f$dist$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["toast"].info(t("dfb.noRecordSelected"));
@@ -3458,6 +3433,23 @@ function RuntimeInner({ formId }) {
             }
             reset();
             __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$sonner$2f$dist$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["toast"].success(t("abar.resetToast"));
+        },
+        deleteNew: async ()=>{
+            if (currentDataId == null) {
+                __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$sonner$2f$dist$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["toast"].info(t("dfb.noRecordSelected"));
+                return;
+            }
+            reset();
+            __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$sonner$2f$dist$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["toast"].success(t("abar.resetToast"));
+        },
+        deleteClose: async ()=>{
+            if (currentDataId == null) {
+                __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$sonner$2f$dist$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["toast"].info(t("dfb.noRecordSelected"));
+                return;
+            }
+            reset();
+            __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$sonner$2f$dist$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["toast"].success(t("abar.resetToast"));
+            closeThisWindow();
         },
         print: ()=>window.print()
     };
@@ -3472,6 +3464,7 @@ function RuntimeInner({ formId }) {
                 value: f.fieldType === "checkbox" ? undefined : String(values[String(f.id)] ?? ""),
                 checked: f.fieldType === "checkbox" ? Boolean(values[String(f.id)]) : undefined,
                 readOnly: f.readOnly,
+                widthPct: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$dfb$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["normalizeFieldWidth"])(f.widthSpan),
                 options: f.queryRef != null && queryOptions[f.queryRef] ? queryOptions[f.queryRef] : undefined,
                 ltr: f.fieldType === "number" || f.fieldType === "date",
                 disabled: busy
@@ -3483,7 +3476,9 @@ function RuntimeInner({ formId }) {
                 label: tb.title,
                 columns: tabFields.map((f)=>({
                         id: String(f.id),
-                        label: f.label
+                        label: f.label,
+                        required: f.required,
+                        minWidth: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$dfb$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["widthMinWidthClass"])((0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$dfb$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["normalizeFieldWidth"])(f.widthSpan))
                     }))
             };
         });
@@ -3495,7 +3490,7 @@ function RuntimeInner({ formId }) {
                 "aria-hidden": true
             }, void 0, false, {
                 fileName: "[project]/src/components/erp/form-builder/dfb-form-runtime.tsx",
-                lineNumber: 244,
+                lineNumber: 257,
                 columnNumber: 15
             }, this),
             headerClassName: shellTheme.headerClassName,
@@ -3504,11 +3499,16 @@ function RuntimeInner({ formId }) {
             fields: mainFields.map(toSimpleField),
             onFieldChange: onFieldChange,
             tabs: tabs,
+            actions: footerButtons,
+            fieldsAlign: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$dfb$2d$theme$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["dfbBankAlign"])(shellStyle, "main"),
             onSave: footerButtons.includes("save") ? save : undefined,
             onReset: footerButtons.includes("reset") ? footerHandlers.reset : undefined,
             onSaveNew: footerButtons.includes("saveNew") ? footerHandlers.saveNew : undefined,
             onSaveClose: footerButtons.includes("saveClose") ? footerHandlers.saveClose : undefined,
+            onCopy: footerButtons.includes("copy") ? footerHandlers.copy : undefined,
             onDelete: footerButtons.includes("delete") ? footerHandlers.delete : undefined,
+            onDeleteNew: footerButtons.includes("deleteNew") ? footerHandlers.deleteNew : undefined,
+            onDeleteClose: footerButtons.includes("deleteClose") ? footerHandlers.deleteClose : undefined,
             onPrint: footerButtons.includes("print") ? footerHandlers.print : undefined,
             onClose: closeThisWindow,
             onHeaderClose: closeThisWindow,
@@ -3530,7 +3530,7 @@ function RuntimeInner({ formId }) {
             onOpenListItem: (item)=>openRecord(item.id)
         }, void 0, false, {
             fileName: "[project]/src/components/erp/form-builder/dfb-form-runtime.tsx",
-            lineNumber: 241,
+            lineNumber: 254,
             columnNumber: 7
         }, this);
     }
@@ -3566,12 +3566,14 @@ function RuntimeInner({ formId }) {
             "aria-hidden": true
         }, void 0, false, {
             fileName: "[project]/src/components/erp/form-builder/dfb-form-runtime.tsx",
-            lineNumber: 305,
+            lineNumber: 323,
             columnNumber: 13
         }, this),
         headerClassName: shellTheme.headerClassName,
         titleClassName: shellTheme.titleClassName,
         bodyStyle: shellTheme.bodyStyle,
+        actions: footerButtons,
+        fieldsAlign: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$dfb$2d$theme$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["dfbBankAlign"])(shellStyle, "main"),
         fields: treeFields.map((f)=>({
                 id: String(f.id),
                 label: f.label,
@@ -3580,11 +3582,17 @@ function RuntimeInner({ formId }) {
                 value: f.fieldType === "checkbox" ? undefined : String(values[String(f.id)] ?? ""),
                 checked: f.fieldType === "checkbox" ? Boolean(values[String(f.id)]) : undefined,
                 readOnly: f.readOnly,
+                widthPct: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$dfb$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["normalizeFieldWidth"])(f.widthSpan),
                 options: f.queryRef != null && queryOptions[f.queryRef] ? queryOptions[f.queryRef] : undefined
             })),
         onFieldChange: onFieldChange,
         onSave: save,
         onReset: reset,
+        onCopy: footerButtons.includes("copy") ? footerHandlers.copy : undefined,
+        onDelete: footerButtons.includes("delete") ? footerHandlers.delete : undefined,
+        onDeleteNew: footerButtons.includes("deleteNew") ? footerHandlers.deleteNew : undefined,
+        onDeleteClose: footerButtons.includes("deleteClose") ? footerHandlers.deleteClose : undefined,
+        onPrint: footerButtons.includes("print") ? footerHandlers.print : undefined,
         onClose: closeThisWindow,
         onHeaderClose: closeThisWindow,
         onHeaderMinimize: chrome?.onMinimize,
@@ -3600,7 +3608,7 @@ function RuntimeInner({ formId }) {
         canSave: !busy
     }, void 0, false, {
         fileName: "[project]/src/components/erp/form-builder/dfb-form-runtime.tsx",
-        lineNumber: 298,
+        lineNumber: 316,
         columnNumber: 5
     }, this);
 }
@@ -4055,7 +4063,10 @@ __turbopack_context__.s([
 ]);
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/compiled/react/jsx-dev-runtime.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/compiled/react/index.js [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$align$2d$center$2d$horizontal$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__AlignCenterHorizontal$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/align-center-horizontal.js [app-client] (ecmascript) <export default as AlignCenterHorizontal>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$align$2d$end$2d$horizontal$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__AlignEndHorizontal$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/align-end-horizontal.js [app-client] (ecmascript) <export default as AlignEndHorizontal>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$align$2d$left$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__AlignLeft$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/align-left.js [app-client] (ecmascript) <export default as AlignLeft>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$align$2d$start$2d$horizontal$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__AlignStartHorizontal$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/align-start-horizontal.js [app-client] (ecmascript) <export default as AlignStartHorizontal>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$arrow$2d$down$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__ArrowDown$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/arrow-down.js [app-client] (ecmascript) <export default as ArrowDown>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$arrow$2d$up$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__ArrowUp$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/arrow-up.js [app-client] (ecmascript) <export default as ArrowUp>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$calendar$2d$days$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__CalendarDays$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/calendar-days.js [app-client] (ecmascript) <export default as CalendarDays>");
@@ -4068,8 +4079,10 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$re
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$hash$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Hash$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/hash.js [app-client] (ecmascript) <export default as Hash>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$history$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__History$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/history.js [app-client] (ecmascript) <export default as History>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$layers$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Layers$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/layers.js [app-client] (ecmascript) <export default as Layers>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$list$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__List$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/list.js [app-client] (ecmascript) <export default as List>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$list$2d$tree$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__ListTree$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/list-tree.js [app-client] (ecmascript) <export default as ListTree>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$loader$2d$circle$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Loader2$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/loader-circle.js [app-client] (ecmascript) <export default as Loader2>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$move$2d$horizontal$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__MoveHorizontal$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/move-horizontal.js [app-client] (ecmascript) <export default as MoveHorizontal>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$palette$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Palette$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/palette.js [app-client] (ecmascript) <export default as Palette>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$pencil$2d$line$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__PencilLine$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/pencil-line.js [app-client] (ecmascript) <export default as PencilLine>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$plus$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Plus$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/plus.js [app-client] (ecmascript) <export default as Plus>");
@@ -4094,9 +4107,12 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$d
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/components/ui/select.tsx [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$dfb$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/stores/dfb-store.ts [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$dfb$2d$theme$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/lib/dfb-theme.ts [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$forms$2f$action$2d$bar$2f$index$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$locals$3e$__ = __turbopack_context__.i("[project]/src/components/forms/action-bar/index.ts [app-client] (ecmascript) <locals>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$forms$2f$action$2d$bar$2f$form$2d$action$2d$bar$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/components/forms/action-bar/form-action-bar.tsx [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$forms$2f$form$2d$primitives$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/components/forms/form-primitives.tsx [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$utils$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/lib/utils.ts [app-client] (ecmascript)");
 ;
-var _s = __turbopack_context__.k.signature(), _s1 = __turbopack_context__.k.signature(), _s2 = __turbopack_context__.k.signature(), _s3 = __turbopack_context__.k.signature();
+var _s = __turbopack_context__.k.signature(), _s1 = __turbopack_context__.k.signature(), _s2 = __turbopack_context__.k.signature(), _s3 = __turbopack_context__.k.signature(), _s4 = __turbopack_context__.k.signature(), _s5 = __turbopack_context__.k.signature();
 "use client";
 ;
 ;
@@ -4114,15 +4130,19 @@ var _s = __turbopack_context__.k.signature(), _s1 = __turbopack_context__.k.sign
 ;
 ;
 ;
-const FOOTER_KEYS = [
-    "save",
-    "saveNew",
-    "saveClose",
-    "reset",
-    "delete",
-    "print"
-];
+;
+;
 const clone = (s)=>JSON.parse(JSON.stringify(s));
+/** Task 48 — stored footer buttons → visible action-bar keys; missing/empty
+    config = the FULL legacy action bar (owner default rule) */ function storedFooterButtons(footer) {
+    const raw = footer.buttons;
+    const list = Array.isArray(raw) ? raw.filter((b)=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$forms$2f$action$2d$bar$2f$index$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$locals$3e$__["ACTION_BAR_KEYS"].includes(b)) : [];
+    return list.length > 0 ? list : [
+        ...__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$forms$2f$action$2d$bar$2f$index$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$locals$3e$__["ACTION_BAR_KEYS"]
+    ];
+}
+/** Task 48 — stable bank-alignment key: "main" | "tab{i}" (tab ORDER index,
+    immune to tab-id regeneration on save) */ const alignKeyForBank = (bankIndex)=>bankIndex === 0 ? "main" : `tab${bankIndex - 1}`;
 let keySeq = 0;
 const nextKey = (p)=>`${p}-${Date.now().toString(36)}-${keySeq++}`;
 const FIELD_TYPE_META = {
@@ -4178,17 +4198,50 @@ const FOOTER_TILE = {
         icon: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$trash$2d$2$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Trash2$3e$__["Trash2"],
         tile: "from-rose-500 to-red-600"
     },
+    deleteNew: {
+        icon: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$trash$2d$2$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Trash2$3e$__["Trash2"],
+        tile: "from-red-500 to-rose-600"
+    },
+    deleteClose: {
+        icon: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$x$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__X$3e$__["X"],
+        tile: "from-rose-600 to-red-700"
+    },
+    copy: {
+        icon: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$copy$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Copy$3e$__["Copy"],
+        tile: "from-violet-500 to-violet-600"
+    },
     print: {
         icon: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$file$2d$text$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__FileText$3e$__["FileText"],
         tile: "from-violet-500 to-purple-600"
+    },
+    list: {
+        icon: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$list$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__List$3e$__["List"],
+        tile: "from-teal-500 to-cyan-600"
     }
 };
+const ALIGN_OPTIONS = [
+    {
+        key: "start",
+        icon: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$align$2d$start$2d$horizontal$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__AlignStartHorizontal$3e$__["AlignStartHorizontal"],
+        labelKey: "dfb.studio.alignStart"
+    },
+    {
+        key: "center",
+        icon: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$align$2d$center$2d$horizontal$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__AlignCenterHorizontal$3e$__["AlignCenterHorizontal"],
+        labelKey: "dfb.studio.alignCenter"
+    },
+    {
+        key: "end",
+        icon: __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$align$2d$end$2d$horizontal$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__AlignEndHorizontal$3e$__["AlignEndHorizontal"],
+        labelKey: "dfb.studio.alignEnd"
+    }
+];
 function FormDesignStudio({ formId }) {
     /* keyed per form: every open definition mounts fresh (no setState-in-effect) */ return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(StudioInner, {
         formId: formId
     }, formId, false, {
         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-        lineNumber: 113,
+        lineNumber: 154,
         columnNumber: 10
     }, this);
 }
@@ -4285,7 +4338,7 @@ function StudioInner({ formId }) {
                             fieldType: f.fieldType,
                             required: f.required,
                             readOnly: f.readOnly,
-                            widthSpan: f.widthSpan >= 2 ? 2 : 1,
+                            widthSpan: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$dfb$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["normalizeFieldWidth"])(f.widthSpan),
                             queryRef: f.queryRef,
                             queryFieldKey: f.queryFieldKey
                         });
@@ -4295,13 +4348,7 @@ function StudioInner({ formId }) {
                             title: d.title,
                             titleEn: d.titleEn ?? "",
                             badge: typeof header.badge === "string" ? header.badge : "",
-                            footerButtons: Array.isArray(footer.buttons) ? footer.buttons.filter({
-                                "StudioInner.useEffect": (b)=>FOOTER_KEYS.includes(b)
-                            }["StudioInner.useEffect"]) : [
-                                "save",
-                                "reset",
-                                "delete"
-                            ],
+                            footerButtons: storedFooterButtons(footer),
                             style
                         },
                         banks: [
@@ -4344,6 +4391,13 @@ function StudioInner({ formId }) {
     const [busy, setBusy] = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"](false);
     const [metaOpen, setMetaOpen] = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"](false);
     const [exitConfirm, setExitConfirm] = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"](false);
+    /* Task 48 — LIVE preview state: real inputs (data entry) + records list +
+     query options; loaded lazily the first time preview opens */ const [previewValues, setPreviewValues] = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"]({});
+    const [previewDataId, setPreviewDataId] = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"](null);
+    const [previewRecords, setPreviewRecords] = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"]([]);
+    const [previewOptions, setPreviewOptions] = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"]({});
+    const [previewExtrasLoaded, setPreviewExtrasLoaded] = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"](false);
+    /* Task 48 — bank resize gesture: live width of the dragged field card */ const [resizing, setResizing] = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"](null);
     const [queries, setQueries] = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"]([]);
     __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"]({
         "StudioInner.useEffect": ()=>{
@@ -4378,6 +4432,191 @@ function StudioInner({ formId }) {
         state,
         selectedFieldKey
     ]);
+    /* ---------------- Task 48 — alignment / equalize commands ---------------- */ const setBankAlign = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useCallback"]({
+        "StudioInner.useCallback[setBankAlign]": (bankIndex, a)=>{
+            commit({
+                "StudioInner.useCallback[setBankAlign]": (d)=>{
+                    d.shell.style.bankAlign = {
+                        ...d.shell.style.bankAlign ?? {},
+                        [alignKeyForBank(bankIndex)]: a
+                    };
+                }
+            }["StudioInner.useCallback[setBankAlign]"]);
+        }
+    }["StudioInner.useCallback[setBankAlign]"], [
+        commit
+    ]);
+    const equalizeBank = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useCallback"]({
+        "StudioInner.useCallback[equalizeBank]": (bankKey)=>{
+            commit({
+                "StudioInner.useCallback[equalizeBank]": (d)=>{
+                    const bank = d.banks.find({
+                        "StudioInner.useCallback[equalizeBank].bank": (b)=>b.key === bankKey
+                    }["StudioInner.useCallback[equalizeBank].bank"]);
+                    if (!bank || bank.fields.length === 0) return;
+                    const counts = new Map();
+                    for (const f of bank.fields)counts.set(f.widthSpan, (counts.get(f.widthSpan) ?? 0) + 1);
+                    let best = bank.fields[0].widthSpan;
+                    let bestN = 0;
+                    for (const [w, n] of counts){
+                        if (n > bestN || n === bestN && w === 50) {
+                            best = w;
+                            bestN = n;
+                        }
+                    }
+                    for (const f of bank.fields)f.widthSpan = best;
+                }
+            }["StudioInner.useCallback[equalizeBank]"]);
+        }
+    }["StudioInner.useCallback[equalizeBank]"], [
+        commit
+    ]);
+    /* ---------------- Task 48 — LIVE preview data entry ---------------- */ const mapLoadedRecords = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useCallback"]({
+        "StudioInner.useCallback[mapLoadedRecords]": (items, fields)=>items.map({
+                "StudioInner.useCallback[mapLoadedRecords]": (it)=>({
+                        dataId: it.dataId,
+                        values: Object.fromEntries(it.values.map({
+                            "StudioInner.useCallback[mapLoadedRecords]": (v)=>{
+                                const fld = fields.find({
+                                    "StudioInner.useCallback[mapLoadedRecords].fld": (f)=>f.id === v.fieldRef
+                                }["StudioInner.useCallback[mapLoadedRecords].fld"]);
+                                const isBool = fld?.fieldType === "checkbox";
+                                return [
+                                    fld ? fld.key : String(v.fieldRef),
+                                    isBool ? v.value === "1" : v.value ?? ""
+                                ];
+                            }
+                        }["StudioInner.useCallback[mapLoadedRecords]"]))
+                    })
+            }["StudioInner.useCallback[mapLoadedRecords]"])
+    }["StudioInner.useCallback[mapLoadedRecords]"], []);
+    const togglePreview = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useCallback"]({
+        "StudioInner.useCallback[togglePreview]": ()=>{
+            const next = !preview;
+            setPreview(next);
+            if (next && !previewExtrasLoaded && state) {
+                setPreviewExtrasLoaded(true);
+                const fields = state.banks.flatMap({
+                    "StudioInner.useCallback[togglePreview].fields": (b)=>b.fields
+                }["StudioInner.useCallback[togglePreview].fields"]);
+                (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$dfb$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["fetchQueryOptionsForFields"])(fields.map({
+                    "StudioInner.useCallback[togglePreview]": (f)=>({
+                            queryRef: f.queryRef,
+                            queryFieldKey: f.queryFieldKey,
+                            fieldType: f.fieldType
+                        })
+                }["StudioInner.useCallback[togglePreview]"])).then(setPreviewOptions).catch({
+                    "StudioInner.useCallback[togglePreview]": ()=>{}
+                }["StudioInner.useCallback[togglePreview]"]);
+                (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$dfb$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["loadFormData"])(formId).then({
+                    "StudioInner.useCallback[togglePreview]": (items)=>setPreviewRecords(mapLoadedRecords(items, fields))
+                }["StudioInner.useCallback[togglePreview]"]).catch({
+                    "StudioInner.useCallback[togglePreview]": ()=>{}
+                }["StudioInner.useCallback[togglePreview]"]);
+            }
+        }
+    }["StudioInner.useCallback[togglePreview]"], [
+        preview,
+        previewExtrasLoaded,
+        state,
+        formId,
+        mapLoadedRecords
+    ]);
+    const previewSave = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useCallback"]({
+        "StudioInner.useCallback[previewSave]": async ()=>{
+            if (!state || busy) return;
+            const fields = state.banks.flatMap({
+                "StudioInner.useCallback[previewSave].fields": (b)=>b.fields
+            }["StudioInner.useCallback[previewSave].fields"]);
+            const missing = fields.filter({
+                "StudioInner.useCallback[previewSave].missing": (f)=>f.id != null && f.required && (previewValues[f.key] === undefined || previewValues[f.key] === "")
+            }["StudioInner.useCallback[previewSave].missing"]);
+            if (missing.length > 0) {
+                __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$sonner$2f$dist$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["toast"].error(`${t("dfb.requiredFieldsMissing")}: ${missing.map({
+                    "StudioInner.useCallback[previewSave]": (m)=>m.label
+                }["StudioInner.useCallback[previewSave]"]).join("، ")}`);
+                return;
+            }
+            const unsaved = fields.filter({
+                "StudioInner.useCallback[previewSave].unsaved": (f)=>f.id == null && previewValues[f.key] !== undefined && previewValues[f.key] !== ""
+            }["StudioInner.useCallback[previewSave].unsaved"]);
+            if (unsaved.length > 0) __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$sonner$2f$dist$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["toast"].info(t("dfb.studio.unsavedFieldsHint"));
+            const payload = {};
+            for (const f of fields){
+                if (f.id == null) continue;
+                const v = previewValues[f.key];
+                if (v === undefined) continue;
+                payload[String(f.id)] = f.fieldType === "checkbox" ? Boolean(v) : String(v);
+            }
+            setBusy(true);
+            try {
+                const res = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$dfb$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["saveFormData"])(formId, payload);
+                setPreviewDataId(res.dataId);
+                __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$sonner$2f$dist$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["toast"].success(t("abar.savedToast"));
+                const items = await (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$dfb$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["loadFormData"])(formId);
+                setPreviewRecords(mapLoadedRecords(items, fields));
+            } catch  {
+                __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$sonner$2f$dist$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["toast"].error(t("common.error"));
+            } finally{
+                setBusy(false);
+            }
+        }
+    }["StudioInner.useCallback[previewSave]"], [
+        state,
+        busy,
+        previewValues,
+        formId,
+        t,
+        mapLoadedRecords
+    ]);
+    const previewReset = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useCallback"]({
+        "StudioInner.useCallback[previewReset]": ()=>{
+            setPreviewValues({});
+            setPreviewDataId(null);
+        }
+    }["StudioInner.useCallback[previewReset]"], []);
+    const previewCopy = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useCallback"]({
+        "StudioInner.useCallback[previewCopy]": ()=>{
+            setPreviewDataId(null);
+            __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$sonner$2f$dist$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["toast"].info(t("abar.copy"));
+        }
+    }["StudioInner.useCallback[previewCopy]"], [
+        t
+    ]);
+    const previewOpenRecord = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useCallback"]({
+        "StudioInner.useCallback[previewOpenRecord]": (dataId)=>{
+            const rec = previewRecords.find({
+                "StudioInner.useCallback[previewOpenRecord].rec": (r)=>String(r.dataId) === dataId
+            }["StudioInner.useCallback[previewOpenRecord].rec"]);
+            if (!rec) return;
+            setPreviewValues(rec.values);
+            setPreviewDataId(rec.dataId);
+        }
+    }["StudioInner.useCallback[previewOpenRecord]"], [
+        previewRecords
+    ]);
+    const previewDelete = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useCallback"]({
+        "StudioInner.useCallback[previewDelete]": ()=>{
+            if (previewDataId == null) {
+                __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$sonner$2f$dist$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["toast"].info(t("dfb.noRecordSelected"));
+                return;
+            }
+            previewReset();
+            __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$sonner$2f$dist$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["toast"].success(t("abar.resetToast"));
+        }
+    }["StudioInner.useCallback[previewDelete]"], [
+        previewDataId,
+        previewReset,
+        t
+    ]);
+    const previewSaveClose = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useCallback"]({
+        "StudioInner.useCallback[previewSaveClose]": async ()=>{
+            await previewSave();
+            setPreview(false);
+        }
+    }["StudioInner.useCallback[previewSaveClose]"], [
+        previewSave
+    ]);
     /* --------------------------- mutations --------------------------- */ const addField = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useCallback"]({
         "StudioInner.useCallback[addField]": (bankKey, fieldType, beforeFieldKey)=>{
             if (isSystem) return;
@@ -4393,7 +4632,7 @@ function StudioInner({ formId }) {
                         fieldType,
                         required: false,
                         readOnly: false,
-                        widthSpan: 1,
+                        widthSpan: 50,
                         queryRef: null,
                         queryFieldKey: null
                     };
@@ -4621,7 +4860,7 @@ function StudioInner({ formId }) {
             setBusy(true);
             try {
                 const style = state.shell.style;
-                const hasStyle = Boolean(style.theme || style.titleSize || style.font);
+                const hasStyle = Boolean(style.theme || style.titleSize || style.font || style.bankAlign && Object.keys(style.bankAlign).length > 0);
                 const metaPayload = {
                     title: state.shell.title.trim(),
                     titleEn: state.shell.titleEn.trim() || undefined,
@@ -4703,7 +4942,7 @@ function StudioInner({ formId }) {
                         fieldType: f.fieldType,
                         required: f.required,
                         readOnly: f.readOnly,
-                        widthSpan: f.widthSpan >= 2 ? 2 : 1,
+                        widthSpan: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$dfb$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["normalizeFieldWidth"])(f.widthSpan),
                         queryRef: f.queryRef,
                         queryFieldKey: f.queryFieldKey
                     });
@@ -4759,14 +4998,14 @@ function StudioInner({ formId }) {
                     "aria-hidden": true
                 }, void 0, false, {
                     fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                    lineNumber: 509,
+                    lineNumber: 704,
                     columnNumber: 9
                 }, this),
                 t("common.loading")
             ]
         }, void 0, true, {
             fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-            lineNumber: 508,
+            lineNumber: 703,
             columnNumber: 7
         }, this);
     }
@@ -4776,7 +5015,7 @@ function StudioInner({ formId }) {
             children: t("dfb.formNotFound")
         }, void 0, false, {
             fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-            lineNumber: 515,
+            lineNumber: 710,
             columnNumber: 12
         }, this);
     }
@@ -4798,14 +5037,14 @@ function StudioInner({ formId }) {
                                 "aria-hidden": true
                             }, void 0, false, {
                                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                lineNumber: 528,
+                                lineNumber: 723,
                                 columnNumber: 11
                             }, this),
                             t("dfb.studio.title")
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                        lineNumber: 527,
+                        lineNumber: 722,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$badge$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Badge"], {
@@ -4814,7 +5053,7 @@ function StudioInner({ formId }) {
                         children: state.shell.title
                     }, void 0, false, {
                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                        lineNumber: 531,
+                        lineNumber: 726,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$badge$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Badge"], {
@@ -4827,14 +5066,14 @@ function StudioInner({ formId }) {
                                     "aria-hidden": true
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                    lineNumber: 534,
+                                    lineNumber: 729,
                                     columnNumber: 15
                                 }, this),
                                 t("dfb.template.tree")
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                            lineNumber: 534,
+                            lineNumber: 729,
                             columnNumber: 13
                         }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
                             children: [
@@ -4843,19 +5082,19 @@ function StudioInner({ formId }) {
                                     "aria-hidden": true
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                    lineNumber: 536,
+                                    lineNumber: 731,
                                     columnNumber: 15
                                 }, this),
                                 t("dfb.template.simple")
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                            lineNumber: 536,
+                            lineNumber: 731,
                             columnNumber: 13
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                        lineNumber: 532,
+                        lineNumber: 727,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -4863,7 +5102,7 @@ function StudioInner({ formId }) {
                         "aria-hidden": true
                     }, void 0, false, {
                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                        lineNumber: 540,
+                        lineNumber: 735,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -4876,7 +5115,7 @@ function StudioInner({ formId }) {
                                 className: "h-3.5 w-3.5"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                lineNumber: 543,
+                                lineNumber: 738,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -4884,13 +5123,13 @@ function StudioInner({ formId }) {
                                 children: t("dfb.studio.meta")
                             }, void 0, false, {
                                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                lineNumber: 544,
+                                lineNumber: 739,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                        lineNumber: 542,
+                        lineNumber: 737,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -4906,12 +5145,12 @@ function StudioInner({ formId }) {
                             "aria-hidden": true
                         }, void 0, false, {
                             fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                            lineNumber: 547,
+                            lineNumber: 742,
                             columnNumber: 11
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                        lineNumber: 546,
+                        lineNumber: 741,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -4927,19 +5166,19 @@ function StudioInner({ formId }) {
                             "aria-hidden": true
                         }, void 0, false, {
                             fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                            lineNumber: 550,
+                            lineNumber: 745,
                             columnNumber: 11
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                        lineNumber: 549,
+                        lineNumber: 744,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
                         type: "button",
                         size: "sm",
                         variant: preview ? "secondary" : "ghost",
-                        onClick: ()=>setPreview((p)=>!p),
+                        onClick: togglePreview,
                         "aria-label": preview ? t("dfb.studio.editMode") : t("dfb.studio.preview"),
                         title: preview ? t("dfb.studio.editMode") : t("dfb.studio.preview"),
                         children: preview ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$eye$2d$off$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__EyeOff$3e$__["EyeOff"], {
@@ -4947,19 +5186,19 @@ function StudioInner({ formId }) {
                             "aria-hidden": true
                         }, void 0, false, {
                             fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                            lineNumber: 558,
+                            lineNumber: 753,
                             columnNumber: 22
                         }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$eye$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Eye$3e$__["Eye"], {
                             className: "h-4 w-4",
                             "aria-hidden": true
                         }, void 0, false, {
                             fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                            lineNumber: 558,
+                            lineNumber: 753,
                             columnNumber: 67
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                        lineNumber: 552,
+                        lineNumber: 747,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -4971,7 +5210,7 @@ function StudioInner({ formId }) {
                                 children: code
                             }, void 0, false, {
                                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                lineNumber: 562,
+                                lineNumber: 757,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -4986,14 +5225,14 @@ function StudioInner({ formId }) {
                                         "aria-hidden": true
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                        lineNumber: 564,
+                                        lineNumber: 759,
                                         columnNumber: 21
                                     }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$save$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Save$3e$__["Save"], {
                                         className: "h-4 w-4",
                                         "aria-hidden": true
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                        lineNumber: 564,
+                                        lineNumber: 759,
                                         columnNumber: 80
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -5001,13 +5240,13 @@ function StudioInner({ formId }) {
                                         children: t("dfb.studio.save")
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                        lineNumber: 565,
+                                        lineNumber: 760,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                lineNumber: 563,
+                                lineNumber: 758,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -5022,24 +5261,24 @@ function StudioInner({ formId }) {
                                     "aria-hidden": true
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                    lineNumber: 568,
+                                    lineNumber: 763,
                                     columnNumber: 13
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                lineNumber: 567,
+                                lineNumber: 762,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                        lineNumber: 561,
+                        lineNumber: 756,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                lineNumber: 526,
+                lineNumber: 721,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5062,12 +5301,12 @@ function StudioInner({ formId }) {
                                                     className: "h-3.5 w-3.5"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                    lineNumber: 588,
+                                                    lineNumber: 783,
                                                     columnNumber: 19
                                                 }, this)
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                lineNumber: 587,
+                                                lineNumber: 782,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
@@ -5075,7 +5314,7 @@ function StudioInner({ formId }) {
                                                 children: state.shell.title
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                lineNumber: 590,
+                                                lineNumber: 785,
                                                 columnNumber: 17
                                             }, this),
                                             state.shell.badge && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -5083,7 +5322,7 @@ function StudioInner({ formId }) {
                                                 children: state.shell.badge
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                lineNumber: 594,
+                                                lineNumber: 789,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -5096,12 +5335,12 @@ function StudioInner({ formId }) {
                                                             className: "h-3 w-3"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                            lineNumber: 599,
+                                                            lineNumber: 794,
                                                             columnNumber: 89
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                        lineNumber: 599,
+                                                        lineNumber: 794,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -5110,18 +5349,18 @@ function StudioInner({ formId }) {
                                                             className: "h-4 w-4"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                            lineNumber: 600,
+                                                            lineNumber: 795,
                                                             columnNumber: 89
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                        lineNumber: 600,
+                                                        lineNumber: 795,
                                                         columnNumber: 19
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                lineNumber: 598,
+                                                lineNumber: 793,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -5129,132 +5368,172 @@ function StudioInner({ formId }) {
                                                 className: "pointer-events-none absolute inset-x-0 bottom-0 h-px bg-white/25"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                lineNumber: 602,
+                                                lineNumber: 797,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                        lineNumber: 581,
+                                        lineNumber: 776,
                                         columnNumber: 15
                                     }, this),
-                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                        className: "flex flex-wrap items-center gap-1.5 border-b border-border/60 bg-muted/40 px-3 py-2",
-                                        "aria-hidden": true,
-                                        children: [
-                                            state.shell.footerButtons.map((b)=>{
-                                                const tile = FOOTER_TILE[b] ?? FOOTER_TILE.save;
-                                                const Icon = tile.icon;
-                                                return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                    className: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$utils$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["cn"])("flex h-6 w-6 items-center justify-center rounded-lg bg-gradient-to-br text-white shadow-sm", tile.tile),
-                                                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(Icon, {
-                                                        className: "h-3 w-3"
-                                                    }, void 0, false, {
-                                                        fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                        lineNumber: 614,
-                                                        columnNumber: 23
-                                                    }, this)
-                                                }, b, false, {
-                                                    fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                    lineNumber: 610,
-                                                    columnNumber: 21
-                                                }, this);
-                                            }),
-                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                className: "rounded-md border border-border/60 bg-background/60 px-1.5 py-0.5 text-[9px] text-muted-foreground",
-                                                children: preview ? t("dfb.studio.preview") : t("dfb.studio.editMode")
-                                            }, void 0, false, {
-                                                fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                lineNumber: 618,
-                                                columnNumber: 17
-                                            }, this)
-                                        ]
-                                    }, void 0, true, {
+                                    preview ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(PreviewCanvas, {
+                                        state: state,
+                                        values: previewValues,
+                                        options: previewOptions,
+                                        records: previewRecords,
+                                        dataId: previewDataId,
+                                        align: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$dfb$2d$theme$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["dfbBankAlign"])(state.shell.style, "main"),
+                                        busy: busy,
+                                        onFieldChange: (key, v)=>setPreviewValues((pv)=>({
+                                                    ...pv,
+                                                    [key]: v
+                                                })),
+                                        onSave: previewSave,
+                                        onSaveClose: previewSaveClose,
+                                        onReset: previewReset,
+                                        onCopy: previewCopy,
+                                        onDelete: previewDelete,
+                                        onPrint: ()=>window.print(),
+                                        onExitPreview: ()=>setPreview(false),
+                                        onOpenRecord: previewOpenRecord
+                                    }, void 0, false, {
                                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                        lineNumber: 605,
-                                        columnNumber: 15
-                                    }, this),
-                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                        className: "p-3 sm:p-4",
-                                        style: theme.bodyStyle,
+                                        lineNumber: 802,
+                                        columnNumber: 17
+                                    }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
                                         children: [
-                                            state.banks.map((bank, bi)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(BankCanvas, {
-                                                    bank: bank,
-                                                    index: bi,
-                                                    isMain: bi === 0,
-                                                    active: activeBankKey === bank.key,
-                                                    preview: preview,
-                                                    selectedFieldKey: selectedFieldKey,
-                                                    isSystem: isSystem,
-                                                    onSelectBank: ()=>setActiveBankKey(bank.key),
-                                                    onSelectField: (k)=>{
-                                                        setActiveBankKey(bank.key);
-                                                        setSelectedFieldKey(k);
-                                                    },
-                                                    onAddField: ()=>addField(bank.key, paletteType),
-                                                    onMoveFieldDir: (k, dir)=>moveFieldDir(bank.key, k, dir),
-                                                    onRemoveField: (k)=>removeField(bank.key, k),
-                                                    onMoveBank: (dir)=>moveBankDir(bank.key, dir),
-                                                    onRemoveBank: ()=>removeBank(bank.key),
-                                                    onDragStartField: (fieldKey)=>{
-                                                        dragRef.current = {
-                                                            kind: "move",
-                                                            fromBank: bank.key,
-                                                            fieldKey
-                                                        };
-                                                    },
-                                                    onDropInBank: (beforeKey)=>{
-                                                        const p = dragRef.current;
-                                                        if (!p) return;
-                                                        if (p.kind === "add") addField(bank.key, p.fieldType, beforeKey);
-                                                        else reorderField(p.fromBank, p.fieldKey, bank.key, beforeKey);
-                                                        dragRef.current = null;
-                                                    }
-                                                }, bank.key, false, {
-                                                    fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                    lineNumber: 625,
-                                                    columnNumber: 19
-                                                }, this)),
-                                            !isSystem && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
-                                                type: "button",
-                                                onClick: addBank,
-                                                className: "mt-3 flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-teal-600/50 bg-teal-500/5 px-4 py-3 text-sm font-medium text-teal-700 transition-all hover:border-teal-600 hover:bg-teal-500/10 hover:shadow-md dark:text-teal-400",
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                className: "flex flex-wrap items-center gap-1.5 border-b border-border/60 bg-muted/40 px-3 py-2",
+                                                "aria-hidden": true,
                                                 children: [
-                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$layers$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Layers$3e$__["Layers"], {
-                                                        className: "h-4 w-4",
-                                                        "aria-hidden": true
+                                                    state.shell.footerButtons.map((b)=>{
+                                                        const tile = FOOTER_TILE[b] ?? FOOTER_TILE.save;
+                                                        const Icon = tile.icon;
+                                                        return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                            className: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$utils$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["cn"])("flex h-6 w-6 items-center justify-center rounded-lg bg-gradient-to-br text-white shadow-sm", tile.tile),
+                                                            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(Icon, {
+                                                                className: "h-3 w-3"
+                                                            }, void 0, false, {
+                                                                fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
+                                                                lineNumber: 832,
+                                                                columnNumber: 27
+                                                            }, this)
+                                                        }, b, false, {
+                                                            fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
+                                                            lineNumber: 828,
+                                                            columnNumber: 25
+                                                        }, this);
+                                                    }),
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                        className: "rounded-md border border-border/60 bg-background/60 px-1.5 py-0.5 text-[9px] text-muted-foreground",
+                                                        children: t("dfb.studio.editMode")
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                        lineNumber: 662,
+                                                        lineNumber: 836,
                                                         columnNumber: 21
-                                                    }, this),
-                                                    t("dfb.studio.addBank")
+                                                    }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                lineNumber: 657,
+                                                lineNumber: 823,
+                                                columnNumber: 19
+                                            }, this),
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                className: "p-3 sm:p-4",
+                                                style: theme.bodyStyle,
+                                                children: [
+                                                    state.banks.map((bank, bi)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(BankCanvas, {
+                                                            bank: bank,
+                                                            index: bi,
+                                                            isMain: bi === 0,
+                                                            active: activeBankKey === bank.key,
+                                                            align: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$dfb$2d$theme$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["dfbBankAlign"])(state.shell.style, alignKeyForBank(bi)),
+                                                            resizing: resizing,
+                                                            onResizeLive: setResizing,
+                                                            onResizeCommit: (fieldKey, pct)=>{
+                                                                setResizing(null);
+                                                                updateField(fieldKey, {
+                                                                    widthSpan: pct
+                                                                });
+                                                            },
+                                                            selectedFieldKey: selectedFieldKey,
+                                                            isSystem: isSystem,
+                                                            onSelectBank: ()=>setActiveBankKey(bank.key),
+                                                            onSelectField: (k)=>{
+                                                                setActiveBankKey(bank.key);
+                                                                setSelectedFieldKey(k);
+                                                            },
+                                                            onAddField: ()=>addField(bank.key, paletteType),
+                                                            onMoveFieldDir: (k, dir)=>moveFieldDir(bank.key, k, dir),
+                                                            onRemoveField: (k)=>removeField(bank.key, k),
+                                                            onMoveBank: (dir)=>moveBankDir(bank.key, dir),
+                                                            onRemoveBank: ()=>removeBank(bank.key),
+                                                            onDragStartField: (fieldKey)=>{
+                                                                dragRef.current = {
+                                                                    kind: "move",
+                                                                    fromBank: bank.key,
+                                                                    fieldKey
+                                                                };
+                                                            },
+                                                            onDropInBank: (beforeKey)=>{
+                                                                const p = dragRef.current;
+                                                                if (!p) return;
+                                                                if (p.kind === "add") addField(bank.key, p.fieldType, beforeKey);
+                                                                else reorderField(p.fromBank, p.fieldKey, bank.key, beforeKey);
+                                                                dragRef.current = null;
+                                                            }
+                                                        }, bank.key, false, {
+                                                            fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
+                                                            lineNumber: 843,
+                                                            columnNumber: 23
+                                                        }, this)),
+                                                    !isSystem && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                                        type: "button",
+                                                        onClick: addBank,
+                                                        className: "mt-3 flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-teal-600/50 bg-teal-500/5 px-4 py-3 text-sm font-medium text-teal-700 transition-all hover:border-teal-600 hover:bg-teal-500/10 hover:shadow-md dark:text-teal-400",
+                                                        children: [
+                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$layers$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Layers$3e$__["Layers"], {
+                                                                className: "h-4 w-4",
+                                                                "aria-hidden": true
+                                                            }, void 0, false, {
+                                                                fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
+                                                                lineNumber: 886,
+                                                                columnNumber: 25
+                                                            }, this),
+                                                            t("dfb.studio.addBank")
+                                                        ]
+                                                    }, void 0, true, {
+                                                        fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
+                                                        lineNumber: 881,
+                                                        columnNumber: 23
+                                                    }, this)
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
+                                                lineNumber: 841,
                                                 columnNumber: 19
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                        lineNumber: 623,
-                                        columnNumber: 15
+                                        lineNumber: 821,
+                                        columnNumber: 17
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                lineNumber: 579,
+                                lineNumber: 774,
                                 columnNumber: 13
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                            lineNumber: 577,
+                            lineNumber: 772,
                             columnNumber: 11
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                        lineNumber: 576,
+                        lineNumber: 771,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("aside", {
@@ -5265,6 +5544,14 @@ function StudioInner({ formId }) {
                             children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                 className: "grid gap-4 p-4",
                                 children: [
+                                    preview && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                        className: "rounded-xl border border-teal-600/40 bg-teal-500/5 p-2.5 text-[11px] leading-relaxed text-teal-700 dark:text-teal-400",
+                                        children: t("dfb.studio.previewHint")
+                                    }, void 0, false, {
+                                        fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
+                                        lineNumber: 906,
+                                        columnNumber: 17
+                                    }, this),
                                     !isSystem && !preview && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("section", {
                                         "aria-label": t("dfb.studio.palette"),
                                         className: "grid gap-2",
@@ -5277,14 +5564,14 @@ function StudioInner({ formId }) {
                                                         "aria-hidden": true
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                        lineNumber: 682,
+                                                        lineNumber: 915,
                                                         columnNumber: 21
                                                     }, this),
                                                     t("dfb.studio.palette")
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                lineNumber: 681,
+                                                lineNumber: 914,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -5292,7 +5579,7 @@ function StudioInner({ formId }) {
                                                 children: t("dfb.studio.paletteHint")
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                lineNumber: 685,
+                                                lineNumber: 918,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5332,12 +5619,12 @@ function StudioInner({ formId }) {
                                                                     "aria-hidden": true
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                                    lineNumber: 716,
+                                                                    lineNumber: 949,
                                                                     columnNumber: 29
                                                                 }, this)
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                                lineNumber: 715,
+                                                                lineNumber: 948,
                                                                 columnNumber: 27
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -5345,25 +5632,25 @@ function StudioInner({ formId }) {
                                                                 children: t(`dfb.type.${ft}`)
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                                lineNumber: 718,
+                                                                lineNumber: 951,
                                                                 columnNumber: 27
                                                             }, this)
                                                         ]
                                                     }, ft, true, {
                                                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                        lineNumber: 692,
+                                                        lineNumber: 925,
                                                         columnNumber: 25
                                                     }, this);
                                                 })
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                lineNumber: 686,
+                                                lineNumber: 919,
                                                 columnNumber: 19
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                        lineNumber: 680,
+                                        lineNumber: 913,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("section", {
@@ -5378,14 +5665,14 @@ function StudioInner({ formId }) {
                                                         "aria-hidden": true
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                        lineNumber: 731,
+                                                        lineNumber: 964,
                                                         columnNumber: 19
                                                     }, this),
                                                     t("dfb.studio.shellStyle")
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                lineNumber: 730,
+                                                lineNumber: 963,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5396,7 +5683,7 @@ function StudioInner({ formId }) {
                                                         children: t("dfb.studio.theme")
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                        lineNumber: 735,
+                                                        lineNumber: 968,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5415,23 +5702,23 @@ function StudioInner({ formId }) {
                                                                     "aria-hidden": true
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                                    lineNumber: 751,
+                                                                    lineNumber: 984,
                                                                     columnNumber: 64
                                                                 }, this)
                                                             }, sw.key, false, {
                                                                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                                lineNumber: 738,
+                                                                lineNumber: 971,
                                                                 columnNumber: 23
                                                             }, this))
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                        lineNumber: 736,
+                                                        lineNumber: 969,
                                                         columnNumber: 19
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                lineNumber: 734,
+                                                lineNumber: 967,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5445,7 +5732,7 @@ function StudioInner({ formId }) {
                                                                 children: t("dfb.studio.titleSize")
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                                lineNumber: 758,
+                                                                lineNumber: 991,
                                                                 columnNumber: 21
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Select"], {
@@ -5459,12 +5746,12 @@ function StudioInner({ formId }) {
                                                                         className: "h-8",
                                                                         children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectValue"], {}, void 0, false, {
                                                                             fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                                            lineNumber: 763,
+                                                                            lineNumber: 996,
                                                                             columnNumber: 93
                                                                         }, this)
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                                        lineNumber: 763,
+                                                                        lineNumber: 996,
                                                                         columnNumber: 23
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectContent"], {
@@ -5474,7 +5761,7 @@ function StudioInner({ formId }) {
                                                                                 children: t("dfb.studio.size.sm")
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                                                lineNumber: 765,
+                                                                                lineNumber: 998,
                                                                                 columnNumber: 25
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectItem"], {
@@ -5482,7 +5769,7 @@ function StudioInner({ formId }) {
                                                                                 children: t("dfb.studio.size.md")
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                                                lineNumber: 766,
+                                                                                lineNumber: 999,
                                                                                 columnNumber: 25
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectItem"], {
@@ -5490,25 +5777,25 @@ function StudioInner({ formId }) {
                                                                                 children: t("dfb.studio.size.lg")
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                                                lineNumber: 767,
+                                                                                lineNumber: 1000,
                                                                                 columnNumber: 25
                                                                             }, this)
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                                        lineNumber: 764,
+                                                                        lineNumber: 997,
                                                                         columnNumber: 23
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                                lineNumber: 759,
+                                                                lineNumber: 992,
                                                                 columnNumber: 21
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                        lineNumber: 757,
+                                                        lineNumber: 990,
                                                         columnNumber: 19
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5519,7 +5806,7 @@ function StudioInner({ formId }) {
                                                                 children: t("dfb.studio.font")
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                                lineNumber: 772,
+                                                                lineNumber: 1005,
                                                                 columnNumber: 21
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Select"], {
@@ -5533,12 +5820,12 @@ function StudioInner({ formId }) {
                                                                         className: "h-8",
                                                                         children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectValue"], {}, void 0, false, {
                                                                             fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                                            lineNumber: 777,
+                                                                            lineNumber: 1010,
                                                                             columnNumber: 88
                                                                         }, this)
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                                        lineNumber: 777,
+                                                                        lineNumber: 1010,
                                                                         columnNumber: 23
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectContent"], {
@@ -5548,7 +5835,7 @@ function StudioInner({ formId }) {
                                                                                 children: t("dfb.studio.font.sans")
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                                                lineNumber: 779,
+                                                                                lineNumber: 1012,
                                                                                 columnNumber: 25
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectItem"], {
@@ -5556,7 +5843,7 @@ function StudioInner({ formId }) {
                                                                                 children: t("dfb.studio.font.serif")
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                                                lineNumber: 780,
+                                                                                lineNumber: 1013,
                                                                                 columnNumber: 25
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectItem"], {
@@ -5564,31 +5851,31 @@ function StudioInner({ formId }) {
                                                                                 children: t("dfb.studio.font.mono")
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                                                lineNumber: 781,
+                                                                                lineNumber: 1014,
                                                                                 columnNumber: 25
                                                                             }, this)
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                                        lineNumber: 778,
+                                                                        lineNumber: 1011,
                                                                         columnNumber: 23
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                                lineNumber: 773,
+                                                                lineNumber: 1006,
                                                                 columnNumber: 21
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                        lineNumber: 771,
+                                                        lineNumber: 1004,
                                                         columnNumber: 19
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                lineNumber: 756,
+                                                lineNumber: 989,
                                                 columnNumber: 17
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -5596,13 +5883,13 @@ function StudioInner({ formId }) {
                                                 children: t("dfb.studio.styleHint")
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                lineNumber: 786,
+                                                lineNumber: 1019,
                                                 columnNumber: 17
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                        lineNumber: 729,
+                                        lineNumber: 962,
                                         columnNumber: 15
                                     }, this),
                                     activeBank && !preview && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("section", {
@@ -5617,14 +5904,14 @@ function StudioInner({ formId }) {
                                                         "aria-hidden": true
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                        lineNumber: 795,
+                                                        lineNumber: 1028,
                                                         columnNumber: 21
                                                     }, this),
                                                     t("dfb.studio.bankSettings").replace("{n}", String(activeBankIndex + 1))
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                lineNumber: 794,
+                                                lineNumber: 1027,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5635,7 +5922,7 @@ function StudioInner({ formId }) {
                                                         children: t("dfb.studio.bankTitle")
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                        lineNumber: 799,
+                                                        lineNumber: 1032,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
@@ -5645,13 +5932,13 @@ function StudioInner({ formId }) {
                                                         className: "h-8"
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                        lineNumber: 800,
+                                                        lineNumber: 1033,
                                                         columnNumber: 21
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                lineNumber: 798,
+                                                lineNumber: 1031,
                                                 columnNumber: 19
                                             }, this),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5662,7 +5949,7 @@ function StudioInner({ formId }) {
                                                         children: t("dfb.studio.bankParent")
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                        lineNumber: 808,
+                                                        lineNumber: 1041,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Select"], {
@@ -5674,12 +5961,12 @@ function StudioInner({ formId }) {
                                                                 className: "h-8",
                                                                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectValue"], {}, void 0, false, {
                                                                     fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                                    lineNumber: 810,
+                                                                    lineNumber: 1043,
                                                                     columnNumber: 94
                                                                 }, this)
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                                lineNumber: 810,
+                                                                lineNumber: 1043,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectContent"], {
@@ -5689,7 +5976,7 @@ function StudioInner({ formId }) {
                                                                         children: t("dfb.studio.parentRoot")
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                                        lineNumber: 812,
+                                                                        lineNumber: 1045,
                                                                         columnNumber: 25
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectItem"], {
@@ -5697,26 +5984,111 @@ function StudioInner({ formId }) {
                                                                         children: t("dfb.studio.parentTab")
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                                        lineNumber: 813,
+                                                                        lineNumber: 1046,
                                                                         columnNumber: 25
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                                lineNumber: 811,
+                                                                lineNumber: 1044,
                                                                 columnNumber: 23
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                        lineNumber: 809,
+                                                        lineNumber: 1042,
                                                         columnNumber: 21
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                lineNumber: 807,
+                                                lineNumber: 1040,
                                                 columnNumber: 19
+                                            }, this),
+                                            !isSystem && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                className: "grid gap-1.5",
+                                                children: [
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$label$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Label"], {
+                                                        className: "text-[11px] text-muted-foreground",
+                                                        children: t("dfb.studio.align")
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
+                                                        lineNumber: 1054,
+                                                        columnNumber: 23
+                                                    }, this),
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                        className: "flex items-center gap-1 rounded-xl border border-border/60 p-1",
+                                                        children: [
+                                                            ALIGN_OPTIONS.map((opt)=>{
+                                                                const Icon = opt.icon;
+                                                                const on = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$dfb$2d$theme$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["dfbBankAlign"])(state.shell.style, alignKeyForBank(activeBankIndex)) === opt.key;
+                                                                return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                                                    type: "button",
+                                                                    "aria-pressed": on,
+                                                                    title: t(opt.labelKey),
+                                                                    "aria-label": t(opt.labelKey),
+                                                                    onClick: ()=>setBankAlign(activeBankIndex, opt.key),
+                                                                    className: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$utils$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["cn"])("flex h-7 flex-1 items-center justify-center rounded-lg transition-colors", on ? "bg-teal-500/15 text-teal-700 ring-1 ring-teal-500/40 dark:text-teal-400" : "text-muted-foreground hover:bg-foreground/5"),
+                                                                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(Icon, {
+                                                                        className: "h-4 w-4",
+                                                                        "aria-hidden": true
+                                                                    }, void 0, false, {
+                                                                        fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
+                                                                        lineNumber: 1074,
+                                                                        columnNumber: 31
+                                                                    }, this)
+                                                                }, opt.key, false, {
+                                                                    fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
+                                                                    lineNumber: 1060,
+                                                                    columnNumber: 29
+                                                                }, this);
+                                                            }),
+                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                                "aria-hidden": true,
+                                                                className: "mx-0.5 h-5 w-px bg-border"
+                                                            }, void 0, false, {
+                                                                fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
+                                                                lineNumber: 1078,
+                                                                columnNumber: 25
+                                                            }, this),
+                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                                                type: "button",
+                                                                title: t("dfb.studio.equalize"),
+                                                                "aria-label": t("dfb.studio.equalize"),
+                                                                onClick: ()=>equalizeBank(activeBank.key),
+                                                                className: "flex h-7 flex-1 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-foreground/5",
+                                                                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$move$2d$horizontal$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__MoveHorizontal$3e$__["MoveHorizontal"], {
+                                                                    className: "h-4 w-4",
+                                                                    "aria-hidden": true
+                                                                }, void 0, false, {
+                                                                    fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
+                                                                    lineNumber: 1086,
+                                                                    columnNumber: 27
+                                                                }, this)
+                                                            }, void 0, false, {
+                                                                fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
+                                                                lineNumber: 1079,
+                                                                columnNumber: 25
+                                                            }, this)
+                                                        ]
+                                                    }, void 0, true, {
+                                                        fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
+                                                        lineNumber: 1055,
+                                                        columnNumber: 23
+                                                    }, this),
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                                        className: "text-[11px] leading-relaxed text-muted-foreground/90",
+                                                        children: t("dfb.studio.alignHint")
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
+                                                        lineNumber: 1089,
+                                                        columnNumber: 23
+                                                    }, this)
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
+                                                lineNumber: 1053,
+                                                columnNumber: 21
                                             }, this),
                                             activeBank.key !== "main" && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                 className: "flex items-center gap-1.5",
@@ -5734,7 +6106,7 @@ function StudioInner({ formId }) {
                                                                 "aria-hidden": true
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                                lineNumber: 820,
+                                                                lineNumber: 1095,
                                                                 columnNumber: 25
                                                             }, this),
                                                             " ",
@@ -5742,7 +6114,7 @@ function StudioInner({ formId }) {
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                        lineNumber: 819,
+                                                        lineNumber: 1094,
                                                         columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -5758,7 +6130,7 @@ function StudioInner({ formId }) {
                                                                 "aria-hidden": true
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                                lineNumber: 823,
+                                                                lineNumber: 1098,
                                                                 columnNumber: 25
                                                             }, this),
                                                             " ",
@@ -5766,7 +6138,7 @@ function StudioInner({ formId }) {
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                        lineNumber: 822,
+                                                        lineNumber: 1097,
                                                         columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -5782,24 +6154,24 @@ function StudioInner({ formId }) {
                                                             "aria-hidden": true
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                            lineNumber: 832,
+                                                            lineNumber: 1107,
                                                             columnNumber: 25
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                        lineNumber: 825,
+                                                        lineNumber: 1100,
                                                         columnNumber: 23
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                lineNumber: 818,
+                                                lineNumber: 1093,
                                                 columnNumber: 21
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                        lineNumber: 793,
+                                        lineNumber: 1026,
                                         columnNumber: 17
                                     }, this),
                                     !preview && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("section", {
@@ -5814,14 +6186,14 @@ function StudioInner({ formId }) {
                                                         "aria-hidden": true
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                        lineNumber: 843,
+                                                        lineNumber: 1118,
                                                         columnNumber: 21
                                                     }, this),
                                                     t("dfb.studio.fieldSettings")
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                lineNumber: 842,
+                                                lineNumber: 1117,
                                                 columnNumber: 19
                                             }, this),
                                             !selectedField ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -5829,7 +6201,7 @@ function StudioInner({ formId }) {
                                                 children: t("dfb.studio.fieldSettingsHint")
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                lineNumber: 847,
+                                                lineNumber: 1122,
                                                 columnNumber: 21
                                             }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                                 className: "grid gap-2 rounded-xl border border-border/60 p-2.5",
@@ -5842,7 +6214,7 @@ function StudioInner({ formId }) {
                                                                 children: t("dfb.fieldLabel")
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                                lineNumber: 853,
+                                                                lineNumber: 1128,
                                                                 columnNumber: 25
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
@@ -5853,13 +6225,13 @@ function StudioInner({ formId }) {
                                                                 className: "h-8"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                                lineNumber: 854,
+                                                                lineNumber: 1129,
                                                                 columnNumber: 25
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                        lineNumber: 852,
+                                                        lineNumber: 1127,
                                                         columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5873,7 +6245,7 @@ function StudioInner({ formId }) {
                                                                         children: t("dfb.fieldType")
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                                        lineNumber: 862,
+                                                                        lineNumber: 1137,
                                                                         columnNumber: 27
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Select"], {
@@ -5889,12 +6261,12 @@ function StudioInner({ formId }) {
                                                                                 className: "h-8",
                                                                                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectValue"], {}, void 0, false, {
                                                                                     fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                                                    lineNumber: 867,
+                                                                                    lineNumber: 1142,
                                                                                     columnNumber: 92
                                                                                 }, this)
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                                                lineNumber: 867,
+                                                                                lineNumber: 1142,
                                                                                 columnNumber: 29
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectContent"], {
@@ -5903,24 +6275,24 @@ function StudioInner({ formId }) {
                                                                                         children: t(`dfb.type.${ft}`)
                                                                                     }, ft, false, {
                                                                                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                                                        lineNumber: 870,
+                                                                                        lineNumber: 1145,
                                                                                         columnNumber: 33
                                                                                     }, this))
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                                                lineNumber: 868,
+                                                                                lineNumber: 1143,
                                                                                 columnNumber: 29
                                                                             }, this)
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                                        lineNumber: 863,
+                                                                        lineNumber: 1138,
                                                                         columnNumber: 27
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                                lineNumber: 861,
+                                                                lineNumber: 1136,
                                                                 columnNumber: 25
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -5931,7 +6303,7 @@ function StudioInner({ formId }) {
                                                                         children: t("dfb.width")
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                                        lineNumber: 876,
+                                                                        lineNumber: 1151,
                                                                         columnNumber: 27
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Select"], {
@@ -5945,54 +6317,60 @@ function StudioInner({ formId }) {
                                                                                 className: "h-8",
                                                                                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectValue"], {}, void 0, false, {
                                                                                     fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                                                    lineNumber: 881,
+                                                                                    lineNumber: 1156,
                                                                                     columnNumber: 88
                                                                                 }, this)
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                                                lineNumber: 881,
+                                                                                lineNumber: 1156,
                                                                                 columnNumber: 29
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectContent"], {
                                                                                 children: [
-                                                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectItem"], {
-                                                                                        value: "1",
-                                                                                        children: t("dfb.widthHalf")
-                                                                                    }, void 0, false, {
+                                                                                    25,
+                                                                                    50,
+                                                                                    75,
+                                                                                    100
+                                                                                ].map((w)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectItem"], {
+                                                                                        value: String(w),
+                                                                                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                                                            dir: "ltr",
+                                                                                            className: "font-mono",
+                                                                                            children: [
+                                                                                                w,
+                                                                                                "%"
+                                                                                            ]
+                                                                                        }, void 0, true, {
+                                                                                            fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
+                                                                                            lineNumber: 1160,
+                                                                                            columnNumber: 35
+                                                                                        }, this)
+                                                                                    }, w, false, {
                                                                                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                                                        lineNumber: 883,
-                                                                                        columnNumber: 31
-                                                                                    }, this),
-                                                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectItem"], {
-                                                                                        value: "2",
-                                                                                        children: t("dfb.widthFull")
-                                                                                    }, void 0, false, {
-                                                                                        fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                                                        lineNumber: 884,
-                                                                                        columnNumber: 31
-                                                                                    }, this)
-                                                                                ]
-                                                                            }, void 0, true, {
+                                                                                        lineNumber: 1159,
+                                                                                        columnNumber: 33
+                                                                                    }, this))
+                                                                            }, void 0, false, {
                                                                                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                                                lineNumber: 882,
+                                                                                lineNumber: 1157,
                                                                                 columnNumber: 29
                                                                             }, this)
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                                        lineNumber: 877,
+                                                                        lineNumber: 1152,
                                                                         columnNumber: 27
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                                lineNumber: 875,
+                                                                lineNumber: 1150,
                                                                 columnNumber: 25
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                        lineNumber: 860,
+                                                        lineNumber: 1135,
                                                         columnNumber: 23
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -6009,14 +6387,14 @@ function StudioInner({ formId }) {
                                                                         "aria-label": t("dfb.required")
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                                        lineNumber: 891,
+                                                                        lineNumber: 1169,
                                                                         columnNumber: 27
                                                                     }, this),
                                                                     t("dfb.required")
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                                lineNumber: 890,
+                                                                lineNumber: 1168,
                                                                 columnNumber: 25
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
@@ -6030,20 +6408,20 @@ function StudioInner({ formId }) {
                                                                         "aria-label": t("dfb.studio.readOnly")
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                                        lineNumber: 899,
+                                                                        lineNumber: 1177,
                                                                         columnNumber: 27
                                                                     }, this),
                                                                     t("dfb.studio.readOnly")
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                                lineNumber: 898,
+                                                                lineNumber: 1176,
                                                                 columnNumber: 25
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                        lineNumber: 889,
+                                                        lineNumber: 1167,
                                                         columnNumber: 23
                                                     }, this),
                                                     (selectedField.fieldType === "select" || selectedField.fieldType === "lookup") && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
@@ -6056,7 +6434,7 @@ function StudioInner({ formId }) {
                                                                         children: t("dfb.queryBind")
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                                        lineNumber: 910,
+                                                                        lineNumber: 1188,
                                                                         columnNumber: 29
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Select"], {
@@ -6071,12 +6449,12 @@ function StudioInner({ formId }) {
                                                                                 className: "h-8",
                                                                                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectValue"], {}, void 0, false, {
                                                                                     fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                                                    lineNumber: 920,
+                                                                                    lineNumber: 1198,
                                                                                     columnNumber: 94
                                                                                 }, this)
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                                                lineNumber: 920,
+                                                                                lineNumber: 1198,
                                                                                 columnNumber: 31
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectContent"], {
@@ -6086,7 +6464,7 @@ function StudioInner({ formId }) {
                                                                                         children: t("dfb.noQuery")
                                                                                     }, void 0, false, {
                                                                                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                                                        lineNumber: 922,
+                                                                                        lineNumber: 1200,
                                                                                         columnNumber: 33
                                                                                     }, this),
                                                                                     queries.map((q)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectItem"], {
@@ -6094,25 +6472,25 @@ function StudioInner({ formId }) {
                                                                                             children: q.title
                                                                                         }, q.id, false, {
                                                                                             fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                                                            lineNumber: 924,
+                                                                                            lineNumber: 1202,
                                                                                             columnNumber: 35
                                                                                         }, this))
                                                                                 ]
                                                                             }, void 0, true, {
                                                                                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                                                lineNumber: 921,
+                                                                                lineNumber: 1199,
                                                                                 columnNumber: 31
                                                                             }, this)
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                                        lineNumber: 911,
+                                                                        lineNumber: 1189,
                                                                         columnNumber: 29
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                                lineNumber: 909,
+                                                                lineNumber: 1187,
                                                                 columnNumber: 27
                                                             }, this),
                                                             selectedField.queryRef != null && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -6123,7 +6501,7 @@ function StudioInner({ formId }) {
                                                                         children: t("dfb.queryValueColumn")
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                                        lineNumber: 931,
+                                                                        lineNumber: 1209,
                                                                         columnNumber: 31
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Select"], {
@@ -6137,12 +6515,12 @@ function StudioInner({ formId }) {
                                                                                 className: "h-8",
                                                                                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectValue"], {}, void 0, false, {
                                                                                     fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                                                    lineNumber: 936,
+                                                                                    lineNumber: 1214,
                                                                                     columnNumber: 103
                                                                                 }, this)
                                                                             }, void 0, false, {
                                                                                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                                                lineNumber: 936,
+                                                                                lineNumber: 1214,
                                                                                 columnNumber: 33
                                                                             }, this),
                                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectContent"], {
@@ -6152,7 +6530,7 @@ function StudioInner({ formId }) {
                                                                                         children: t("dfb.none")
                                                                                     }, void 0, false, {
                                                                                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                                                        lineNumber: 938,
+                                                                                        lineNumber: 1216,
                                                                                         columnNumber: 35
                                                                                     }, this),
                                                                                     (queries.find((q)=>q.id === selectedField.queryRef)?.fields ?? []).map((qf)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SelectItem"], {
@@ -6160,31 +6538,31 @@ function StudioInner({ formId }) {
                                                                                             children: qf.fieldName
                                                                                         }, qf.fieldName, false, {
                                                                                             fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                                                            lineNumber: 940,
+                                                                                            lineNumber: 1218,
                                                                                             columnNumber: 37
                                                                                         }, this))
                                                                                 ]
                                                                             }, void 0, true, {
                                                                                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                                                lineNumber: 937,
+                                                                                lineNumber: 1215,
                                                                                 columnNumber: 33
                                                                             }, this)
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                                        lineNumber: 932,
+                                                                        lineNumber: 1210,
                                                                         columnNumber: 31
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                                lineNumber: 930,
+                                                                lineNumber: 1208,
                                                                 columnNumber: 29
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                        lineNumber: 908,
+                                                        lineNumber: 1186,
                                                         columnNumber: 25
                                                     }, this),
                                                     !isSystem && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -6202,7 +6580,7 @@ function StudioInner({ formId }) {
                                                                 "aria-hidden": true
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                                lineNumber: 957,
+                                                                lineNumber: 1235,
                                                                 columnNumber: 27
                                                             }, this),
                                                             " ",
@@ -6210,41 +6588,41 @@ function StudioInner({ formId }) {
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                        lineNumber: 949,
+                                                        lineNumber: 1227,
                                                         columnNumber: 25
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                lineNumber: 851,
+                                                lineNumber: 1126,
                                                 columnNumber: 21
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                        lineNumber: 841,
+                                        lineNumber: 1116,
                                         columnNumber: 17
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                lineNumber: 677,
+                                lineNumber: 903,
                                 columnNumber: 13
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                            lineNumber: 676,
+                            lineNumber: 902,
                             columnNumber: 11
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                        lineNumber: 672,
+                        lineNumber: 898,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                lineNumber: 574,
+                lineNumber: 769,
                 columnNumber: 7
             }, this),
             metaOpen && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(StudioMetaDialog, {
@@ -6253,7 +6631,7 @@ function StudioInner({ formId }) {
                 onCommit: (mutate)=>commit(mutate)
             }, void 0, false, {
                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                lineNumber: 971,
+                lineNumber: 1249,
                 columnNumber: 9
             }, this),
             exitConfirm && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$dialog$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Dialog"], {
@@ -6270,12 +6648,12 @@ function StudioInner({ formId }) {
                                 children: t("dfb.studio.exit")
                             }, void 0, false, {
                                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                lineNumber: 983,
+                                lineNumber: 1261,
                                 columnNumber: 15
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                            lineNumber: 982,
+                            lineNumber: 1260,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -6283,7 +6661,7 @@ function StudioInner({ formId }) {
                             children: t("dfb.studio.exitConfirm")
                         }, void 0, false, {
                             fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                            lineNumber: 985,
+                            lineNumber: 1263,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$dialog$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["DialogFooter"], {
@@ -6296,7 +6674,7 @@ function StudioInner({ formId }) {
                                     children: t("dfb.studio.exitStay")
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                    lineNumber: 987,
+                                    lineNumber: 1265,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -6309,34 +6687,34 @@ function StudioInner({ formId }) {
                                     children: t("dfb.studio.exitDiscard")
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                    lineNumber: 990,
+                                    lineNumber: 1268,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                            lineNumber: 986,
+                            lineNumber: 1264,
                             columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                    lineNumber: 981,
+                    lineNumber: 1259,
                     columnNumber: 11
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                lineNumber: 980,
+                lineNumber: 1258,
                 columnNumber: 9
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-        lineNumber: 524,
+        lineNumber: 719,
         columnNumber: 5
     }, this);
 }
-_s(StudioInner, "zWjkZtZd9OtBTRm34udkc1AqQ8U=", false, function() {
+_s(StudioInner, "vPBDFhzbrzcDGfsb8LRaETimwvg=", false, function() {
     return [
         __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$settings$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useT"]
     ];
@@ -6346,7 +6724,7 @@ _c2 = StudioInner;
    keeps the card/bank components free of drag-prop churn */ const dragRef = {
     current: null
 };
-function BankCanvas({ bank, index, isMain, active, preview, selectedFieldKey, isSystem, onSelectBank, onSelectField, onAddField, onMoveFieldDir, onRemoveField, onMoveBank, onRemoveBank, onDragStartField, onDropInBank }) {
+function BankCanvas({ bank, index, isMain, active, align, resizing, onResizeLive, onResizeCommit, selectedFieldKey, isSystem, onSelectBank, onSelectField, onAddField, onMoveFieldDir, onRemoveField, onMoveBank, onRemoveBank, onDragStartField, onDropInBank }) {
     _s1();
     const t = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$settings$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useT"])();
     const [over, setOver] = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"](false);
@@ -6382,13 +6760,13 @@ function BankCanvas({ bank, index, isMain, active, preview, selectedFieldKey, is
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                lineNumber: 1061,
+                                lineNumber: 1345,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                        lineNumber: 1052,
+                        lineNumber: 1336,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$badge$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Badge"], {
@@ -6398,10 +6776,10 @@ function BankCanvas({ bank, index, isMain, active, preview, selectedFieldKey, is
                         children: "100%"
                     }, void 0, false, {
                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                        lineNumber: 1065,
+                        lineNumber: 1349,
                         columnNumber: 9
                     }, this),
-                    !preview && !isSystem && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                    !isSystem && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                         className: "ms-auto flex items-center gap-1",
                         children: [
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -6417,7 +6795,7 @@ function BankCanvas({ bank, index, isMain, active, preview, selectedFieldKey, is
                                         "aria-hidden": true
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                        lineNumber: 1069,
+                                        lineNumber: 1353,
                                         columnNumber: 15
                                     }, this),
                                     " ",
@@ -6425,7 +6803,7 @@ function BankCanvas({ bank, index, isMain, active, preview, selectedFieldKey, is
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                lineNumber: 1068,
+                                lineNumber: 1352,
                                 columnNumber: 13
                             }, this),
                             !isMain && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
@@ -6439,12 +6817,12 @@ function BankCanvas({ bank, index, isMain, active, preview, selectedFieldKey, is
                                             "aria-hidden": true
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                            lineNumber: 1074,
+                                            lineNumber: 1358,
                                             columnNumber: 19
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                        lineNumber: 1073,
+                                        lineNumber: 1357,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(MiniIconBtn, {
@@ -6455,12 +6833,12 @@ function BankCanvas({ bank, index, isMain, active, preview, selectedFieldKey, is
                                             "aria-hidden": true
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                            lineNumber: 1077,
+                                            lineNumber: 1361,
                                             columnNumber: 19
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                        lineNumber: 1076,
+                                        lineNumber: 1360,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(MiniIconBtn, {
@@ -6474,30 +6852,30 @@ function BankCanvas({ bank, index, isMain, active, preview, selectedFieldKey, is
                                             "aria-hidden": true
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                            lineNumber: 1080,
+                                            lineNumber: 1364,
                                             columnNumber: 19
                                         }, this)
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                        lineNumber: 1079,
+                                        lineNumber: 1363,
                                         columnNumber: 17
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                lineNumber: 1072,
+                                lineNumber: 1356,
                                 columnNumber: 15
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                        lineNumber: 1067,
+                        lineNumber: 1351,
                         columnNumber: 11
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                lineNumber: 1051,
+                lineNumber: 1335,
                 columnNumber: 7
             }, this),
             bank.fields.length === 0 ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -6505,35 +6883,75 @@ function BankCanvas({ bank, index, isMain, active, preview, selectedFieldKey, is
                 children: t("dfb.studio.emptyBankHint")
             }, void 0, false, {
                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                lineNumber: 1090,
+                lineNumber: 1374,
                 columnNumber: 9
             }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                className: "grid grid-cols-1 gap-2.5 sm:grid-cols-2",
-                children: bank.fields.map((f, fi)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(FieldCard, {
-                        field: f,
-                        order: fi + 1,
-                        selected: selectedFieldKey === f.key,
-                        preview: preview,
-                        isSystem: isSystem,
-                        onSelect: ()=>onSelectField(f.key),
-                        onMoveDir: (dir)=>onMoveFieldDir(f.key, dir),
-                        onRemove: ()=>onRemoveField(f.key),
-                        onDragStart: ()=>onDragStartField(f.key),
-                        onDropBefore: ()=>onDropInBank(f.key)
-                    }, f.key, false, {
+                "data-flow-container": true,
+                className: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$utils$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["cn"])("flex flex-wrap", align === "center" && "justify-center", align === "end" && "justify-end"),
+                children: bank.fields.map((f, fi)=>{
+                    const pct = resizing && resizing.key === f.key ? resizing.pct : f.widthSpan;
+                    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                        className: "relative box-border min-w-0 px-2.5 pb-2.5",
+                        style: {
+                            width: `${pct}%`
+                        },
+                        children: [
+                            resizing && resizing.key === f.key && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                dir: "ltr",
+                                className: "absolute end-3 top-1 z-20 rounded-md bg-teal-600 px-1.5 py-0.5 font-mono text-[9px] text-white shadow",
+                                children: [
+                                    resizing.pct,
+                                    "%"
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
+                                lineNumber: 1395,
+                                columnNumber: 19
+                            }, this),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(FieldCard, {
+                                field: f,
+                                order: fi + 1,
+                                selected: selectedFieldKey === f.key,
+                                preview: false,
+                                isSystem: isSystem,
+                                onSelect: ()=>onSelectField(f.key),
+                                onMoveDir: (dir)=>onMoveFieldDir(f.key, dir),
+                                onRemove: ()=>onRemoveField(f.key),
+                                onDragStart: ()=>onDragStartField(f.key),
+                                onDropBefore: ()=>onDropInBank(f.key)
+                            }, void 0, false, {
+                                fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
+                                lineNumber: 1402,
+                                columnNumber: 17
+                            }, this),
+                            !isSystem && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(FieldResizeHandle, {
+                                basePct: f.widthSpan,
+                                onLive: (p)=>onResizeLive({
+                                        key: f.key,
+                                        pct: p
+                                    }),
+                                onCommit: (p)=>onResizeCommit(f.key, p)
+                            }, void 0, false, {
+                                fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
+                                lineNumber: 1415,
+                                columnNumber: 19
+                            }, this)
+                        ]
+                    }, f.key, true, {
                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                        lineNumber: 1096,
-                        columnNumber: 13
-                    }, this))
+                        lineNumber: 1389,
+                        columnNumber: 15
+                    }, this);
+                })
             }, void 0, false, {
                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                lineNumber: 1094,
+                lineNumber: 1378,
                 columnNumber: 9
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-        lineNumber: 1033,
+        lineNumber: 1317,
         columnNumber: 5
     }, this);
 }
@@ -6554,13 +6972,86 @@ function MiniIconBtn({ label, onClick, children, danger, disabled, title }) {
         children: children
     }, void 0, false, {
         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-        lineNumber: 1127,
+        lineNumber: 1441,
         columnNumber: 5
     }, this);
 }
 _c4 = MiniIconBtn;
-function FieldCard({ field, order, selected, preview, isSystem, onSelect, onMoveDir, onRemove, onDragStart, onDropBefore }) {
+/**
+ * Task 48 — mouse width-resize handle on a field card's inline-END edge.
+ * Dragging outward widens, inward narrows; snapped to 5% steps within
+ * 25..100 (the WidthSpan percent model). RTL-aware (the inline end sits on
+ * the LEFT edge in RTL, so the drag sign flips). The live width renders on
+ * the card (chip) while the gesture runs; ONE undo snapshot commits on
+ * pointerup.
+ */ function FieldResizeHandle({ basePct, onLive, onCommit }) {
     _s2();
+    const t = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$settings$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useT"])();
+    const start = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRef"](null);
+    const lastPct = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRef"](basePct);
+    const snap = (p)=>Math.min(100, Math.max(25, Math.round(p / 5) * 5));
+    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+        type: "button",
+        "aria-label": t("dfb.width"),
+        title: t("dfb.width"),
+        onPointerDown: (e)=>{
+            e.preventDefault();
+            e.stopPropagation();
+            const dir = getComputedStyle(e.currentTarget).direction;
+            const row = e.currentTarget.closest("[data-flow-container]");
+            start.current = {
+                x: e.clientX,
+                base: basePct,
+                sign: dir === "rtl" ? -1 : 1,
+                rowW: row ? row.clientWidth : 0
+            };
+            lastPct.current = basePct;
+            e.currentTarget.setPointerCapture(e.pointerId);
+        },
+        onPointerMove: (e)=>{
+            const s = start.current;
+            if (!s || s.rowW <= 0) return;
+            const dx = e.clientX - s.x;
+            const pct = snap(s.base + dx * s.sign * 100 / s.rowW);
+            if (pct !== lastPct.current) {
+                lastPct.current = pct;
+                onLive(pct);
+            }
+        },
+        onPointerUp: ()=>{
+            if (!start.current) return;
+            start.current = null;
+            onCommit(lastPct.current);
+        },
+        onPointerCancel: ()=>{
+            if (!start.current) return;
+            start.current = null;
+            onCommit(lastPct.current);
+        },
+        onClick: (e)=>e.stopPropagation(),
+        className: "group absolute end-0 top-1/2 z-10 flex h-12 w-2.5 -translate-y-1/2 cursor-ew-resize items-center justify-center rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+            className: "h-9 w-1 rounded-full bg-border transition-colors group-hover:bg-teal-500/80",
+            "aria-hidden": true
+        }, void 0, false, {
+            fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
+            lineNumber: 1520,
+            columnNumber: 7
+        }, this)
+    }, void 0, false, {
+        fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
+        lineNumber: 1479,
+        columnNumber: 5
+    }, this);
+}
+_s2(FieldResizeHandle, "7PozMEwIy1mDD9Z0vu3387/zdqk=", false, function() {
+    return [
+        __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$settings$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useT"]
+    ];
+});
+_c5 = FieldResizeHandle;
+function FieldCard({ field, order, selected, preview, isSystem, onSelect, onMoveDir, onRemove, onDragStart, onDropBefore }) {
+    _s3();
     const t = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$settings$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useT"])();
     const [dropBefore, setDropBefore] = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"](false);
     const meta = FIELD_TYPE_META[field.fieldType] ?? FIELD_TYPE_META.text;
@@ -6599,7 +7090,7 @@ function FieldCard({ field, order, selected, preview, isSystem, onSelect, onMove
                 onSelect();
             }
         },
-        className: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$utils$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["cn"])("rounded-xl border bg-background p-2.5 transition-all", !preview && "cursor-pointer hover:border-foreground/25 hover:shadow-md", selected && "border-teal-500/60 ring-2 ring-teal-500/40", dropBefore && "border-t-2 border-t-teal-500", field.widthSpan >= 2 && "sm:col-span-2"),
+        className: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$utils$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["cn"])("rounded-xl border bg-background p-2.5 transition-all", !preview && "cursor-pointer hover:border-foreground/25 hover:shadow-md", selected && "border-teal-500/60 ring-2 ring-teal-500/40", dropBefore && "border-t-2 border-t-teal-500"),
         children: [
             !preview && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                 className: "mb-1.5 flex items-center gap-1.5",
@@ -6614,7 +7105,7 @@ function FieldCard({ field, order, selected, preview, isSystem, onSelect, onMove
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                        lineNumber: 1206,
+                        lineNumber: 1586,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -6624,12 +7115,12 @@ function FieldCard({ field, order, selected, preview, isSystem, onSelect, onMove
                             className: "h-2.5 w-2.5"
                         }, void 0, false, {
                             fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                            lineNumber: 1208,
+                            lineNumber: 1588,
                             columnNumber: 13
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                        lineNumber: 1207,
+                        lineNumber: 1587,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -6638,7 +7129,7 @@ function FieldCard({ field, order, selected, preview, isSystem, onSelect, onMove
                         children: field.fieldKey || "—"
                     }, void 0, false, {
                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                        lineNumber: 1210,
+                        lineNumber: 1590,
                         columnNumber: 11
                     }, this),
                     !isSystem && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -6652,12 +7143,12 @@ function FieldCard({ field, order, selected, preview, isSystem, onSelect, onMove
                                     "aria-hidden": true
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                    lineNumber: 1214,
+                                    lineNumber: 1594,
                                     columnNumber: 17
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                lineNumber: 1213,
+                                lineNumber: 1593,
                                 columnNumber: 15
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(MiniIconBtn, {
@@ -6668,12 +7159,12 @@ function FieldCard({ field, order, selected, preview, isSystem, onSelect, onMove
                                     "aria-hidden": true
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                    lineNumber: 1217,
+                                    lineNumber: 1597,
                                     columnNumber: 17
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                lineNumber: 1216,
+                                lineNumber: 1596,
                                 columnNumber: 15
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(MiniIconBtn, {
@@ -6685,24 +7176,24 @@ function FieldCard({ field, order, selected, preview, isSystem, onSelect, onMove
                                     "aria-hidden": true
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                    lineNumber: 1220,
+                                    lineNumber: 1600,
                                     columnNumber: 17
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                lineNumber: 1219,
+                                lineNumber: 1599,
                                 columnNumber: 15
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                        lineNumber: 1212,
+                        lineNumber: 1592,
                         columnNumber: 13
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                lineNumber: 1205,
+                lineNumber: 1585,
                 columnNumber: 9
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -6713,7 +7204,7 @@ function FieldCard({ field, order, selected, preview, isSystem, onSelect, onMove
                         children: field.label
                     }, void 0, false, {
                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                        lineNumber: 1227,
+                        lineNumber: 1607,
                         columnNumber: 9
                     }, this),
                     field.required && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -6722,7 +7213,7 @@ function FieldCard({ field, order, selected, preview, isSystem, onSelect, onMove
                         children: "*"
                     }, void 0, false, {
                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                        lineNumber: 1228,
+                        lineNumber: 1608,
                         columnNumber: 28
                     }, this),
                     field.readOnly && !preview && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$badge$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Badge"], {
@@ -6731,35 +7222,35 @@ function FieldCard({ field, order, selected, preview, isSystem, onSelect, onMove
                         children: t("dfb.studio.readOnly")
                     }, void 0, false, {
                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                        lineNumber: 1230,
+                        lineNumber: 1610,
                         columnNumber: 11
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                lineNumber: 1226,
+                lineNumber: 1606,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(FieldPreview, {
                 field: field
             }, void 0, false, {
                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                lineNumber: 1233,
+                lineNumber: 1613,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-        lineNumber: 1163,
+        lineNumber: 1544,
         columnNumber: 5
     }, this);
 }
-_s2(FieldCard, "BNiOsg9hQotDgrd47WViW8S7RFs=", false, function() {
+_s3(FieldCard, "BNiOsg9hQotDgrd47WViW8S7RFs=", false, function() {
     return [
         __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$settings$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useT"]
     ];
 });
-_c5 = FieldCard;
+_c6 = FieldCard;
 /** non-interactive preview of the field's editor (edits happen in the rail) */ function FieldPreview({ field }) {
     const type = field.fieldType;
     if (type === "checkbox") {
@@ -6770,12 +7261,12 @@ _c5 = FieldCard;
                 className: "flex h-4 w-4 items-center justify-center rounded border border-input"
             }, void 0, false, {
                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                lineNumber: 1244,
+                lineNumber: 1624,
                 columnNumber: 9
             }, this)
         }, void 0, false, {
             fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-            lineNumber: 1243,
+            lineNumber: 1623,
             columnNumber: 7
         }, this);
     }
@@ -6788,20 +7279,20 @@ _c5 = FieldCard;
                     children: "—"
                 }, void 0, false, {
                     fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                    lineNumber: 1251,
+                    lineNumber: 1631,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$down$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronDown$3e$__["ChevronDown"], {
                     className: "h-3 w-3 opacity-60"
                 }, void 0, false, {
                     fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                    lineNumber: 1252,
+                    lineNumber: 1632,
                     columnNumber: 9
                 }, this)
             ]
         }, void 0, true, {
             fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-            lineNumber: 1250,
+            lineNumber: 1630,
             columnNumber: 7
         }, this);
     }
@@ -6815,7 +7306,7 @@ _c5 = FieldCard;
                     children: "…"
                 }, void 0, false, {
                     fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                    lineNumber: 1259,
+                    lineNumber: 1639,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -6824,18 +7315,18 @@ _c5 = FieldCard;
                         className: "h-3.5 w-3.5"
                     }, void 0, false, {
                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                        lineNumber: 1261,
+                        lineNumber: 1641,
                         columnNumber: 11
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                    lineNumber: 1260,
+                    lineNumber: 1640,
                     columnNumber: 9
                 }, this)
             ]
         }, void 0, true, {
             fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-            lineNumber: 1258,
+            lineNumber: 1638,
             columnNumber: 7
         }, this);
     }
@@ -6846,7 +7337,7 @@ _c5 = FieldCard;
             children: "…"
         }, void 0, false, {
             fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-            lineNumber: 1268,
+            lineNumber: 1648,
             columnNumber: 7
         }, this);
     }
@@ -6861,44 +7352,151 @@ _c5 = FieldCard;
                     children: "YYYY/MM/DD"
                 }, void 0, false, {
                     fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                    lineNumber: 1276,
+                    lineNumber: 1656,
                     columnNumber: 28
                 }, this) : type === "number" ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                     dir: "ltr",
                     children: "0.00"
                 }, void 0, false, {
                     fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                    lineNumber: 1276,
+                    lineNumber: 1656,
                     columnNumber: 84
                 }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                     children: "…"
                 }, void 0, false, {
                     fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                    lineNumber: 1276,
+                    lineNumber: 1656,
                     columnNumber: 114
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                lineNumber: 1275,
+                lineNumber: 1655,
                 columnNumber: 7
             }, this),
             type === "date" && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$calendar$2d$days$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__CalendarDays$3e$__["CalendarDays"], {
                 className: "pointer-events-none absolute end-1.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground"
             }, void 0, false, {
                 fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                lineNumber: 1279,
+                lineNumber: 1659,
                 columnNumber: 9
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-        lineNumber: 1274,
+        lineNumber: 1654,
         columnNumber: 5
     }, this);
 }
-_c6 = FieldPreview;
+_c7 = FieldPreview;
+/**
+ * Task 48 — LIVE preview body (owner requirements 2 + 5): the design bands
+ * (dashed bank containers, bank titles, count chips, add-buttons) are NOT
+ * rendered — only the fields flow under the shell, using the SAME FieldCell
+ * the runtime uses, with the designed widths (WidthSpan percent) and bank
+ * alignment. The REAL action bar rides on top: data entry saves to the EAV
+ * store exactly like the running form (fields must have DB ids).
+ */ function PreviewCanvas({ state, values, options, records, dataId, align, busy, onFieldChange, onSave, onSaveClose, onReset, onCopy, onDelete, onPrint, onExitPreview, onOpenRecord }) {
+    _s4();
+    const t = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$settings$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useT"])();
+    const toSimple = (f)=>({
+            id: f.key,
+            label: f.label,
+            type: FIELD_TYPE_META[f.fieldType] ? f.fieldType : "text",
+            required: f.required,
+            value: f.fieldType === "checkbox" ? undefined : String(values[f.key] ?? ""),
+            checked: f.fieldType === "checkbox" ? Boolean(values[f.key]) : undefined,
+            readOnly: f.readOnly,
+            widthPct: f.widthSpan,
+            options: f.queryRef != null ? options[f.queryRef] : undefined,
+            ltr: f.fieldType === "number" || f.fieldType === "date",
+            disabled: busy
+        });
+    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
+        children: [
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                className: "flex flex-wrap items-center gap-1.5 border-b border-border/60 bg-muted/40 px-3 py-2",
+                children: [
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$forms$2f$action$2d$bar$2f$form$2d$action$2d$bar$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["FormActionBar"], {
+                        className: "min-w-0 flex-1",
+                        actions: state.shell.footerButtons,
+                        onReset: onReset,
+                        onSave: onSave,
+                        onSaveClose: onSaveClose,
+                        onCopy: onCopy,
+                        onDelete: onDelete,
+                        onPrint: onPrint,
+                        onClose: onExitPreview,
+                        listItems: records.map((r)=>({
+                                id: String(r.dataId),
+                                title: String(r.dataId)
+                            })),
+                        onOpenListItem: (item)=>onOpenRecord(item.id),
+                        canSave: !busy
+                    }, void 0, false, {
+                        fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
+                        lineNumber: 1714,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$badge$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Badge"], {
+                        variant: "outline",
+                        className: "text-[9px]",
+                        children: t("dfb.studio.preview")
+                    }, void 0, false, {
+                        fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
+                        lineNumber: 1728,
+                        columnNumber: 9
+                    }, this),
+                    dataId != null && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                        className: "font-mono text-[9px] text-muted-foreground",
+                        dir: "ltr",
+                        children: [
+                            "#",
+                            dataId
+                        ]
+                    }, void 0, true, {
+                        fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
+                        lineNumber: 1730,
+                        columnNumber: 11
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
+                lineNumber: 1713,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                className: "px-4 pb-3 pt-2.5",
+                style: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$dfb$2d$theme$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["dfbShellTheme"])(state.shell.style).bodyStyle,
+                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$forms$2f$form$2d$primitives$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["FlowFieldGrid"], {
+                    fields: state.banks.flatMap((b)=>b.fields).map(toSimple),
+                    onFieldChange: onFieldChange,
+                    idPrefix: "dfbprev",
+                    align: align
+                }, void 0, false, {
+                    fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
+                    lineNumber: 1735,
+                    columnNumber: 9
+                }, this)
+            }, void 0, false, {
+                fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
+                lineNumber: 1734,
+                columnNumber: 7
+            }, this)
+        ]
+    }, void 0, true, {
+        fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
+        lineNumber: 1711,
+        columnNumber: 5
+    }, this);
+}
+_s4(PreviewCanvas, "uZyfTDL5l50aWwhHvO0Py2n2h8Y=", false, function() {
+    return [
+        __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$settings$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useT"]
+    ];
+});
+_c8 = PreviewCanvas;
 /* --------------------------- meta dialog --------------------------- */ function StudioMetaDialog({ state, onClose, onCommit }) {
-    _s3();
+    _s5();
     const t = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$settings$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useT"])();
     const [title, setTitle] = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"](state.shell.title);
     const [titleEn, setTitleEn] = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"](state.shell.titleEn);
@@ -6909,7 +7507,7 @@ _c6 = FieldPreview;
             d.shell.title = title.trim() || d.shell.title;
             d.shell.titleEn = titleEn.trim();
             d.shell.badge = badge.trim();
-            d.shell.footerButtons = FOOTER_KEYS.filter((k)=>buttons.includes(k));
+            d.shell.footerButtons = __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$forms$2f$action$2d$bar$2f$index$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$locals$3e$__["ACTION_BAR_KEYS"].filter((k)=>buttons.includes(k));
         });
         onClose();
     };
@@ -6927,12 +7525,12 @@ _c6 = FieldPreview;
                         children: t("dfb.studio.meta")
                     }, void 0, false, {
                         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                        lineNumber: 1314,
+                        lineNumber: 1775,
                         columnNumber: 11
                     }, this)
                 }, void 0, false, {
                     fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                    lineNumber: 1313,
+                    lineNumber: 1774,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -6946,7 +7544,7 @@ _c6 = FieldPreview;
                                     children: t("dfb.formTitle")
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                    lineNumber: 1318,
+                                    lineNumber: 1779,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
@@ -6955,13 +7553,13 @@ _c6 = FieldPreview;
                                     onChange: (e)=>setTitle(e.target.value)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                    lineNumber: 1319,
+                                    lineNumber: 1780,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                            lineNumber: 1317,
+                            lineNumber: 1778,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -6972,7 +7570,7 @@ _c6 = FieldPreview;
                                     children: t("dfb.formTitleEn")
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                    lineNumber: 1322,
+                                    lineNumber: 1783,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
@@ -6982,13 +7580,13 @@ _c6 = FieldPreview;
                                     onChange: (e)=>setTitleEn(e.target.value)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                    lineNumber: 1323,
+                                    lineNumber: 1784,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                            lineNumber: 1321,
+                            lineNumber: 1782,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -6999,7 +7597,7 @@ _c6 = FieldPreview;
                                     children: t("dfb.badgeLabel")
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                    lineNumber: 1326,
+                                    lineNumber: 1787,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$input$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Input"], {
@@ -7008,13 +7606,13 @@ _c6 = FieldPreview;
                                     onChange: (e)=>setBadge(e.target.value)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                    lineNumber: 1327,
+                                    lineNumber: 1788,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                            lineNumber: 1325,
+                            lineNumber: 1786,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7024,12 +7622,12 @@ _c6 = FieldPreview;
                                     children: t("dfb.footerButtons")
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                    lineNumber: 1330,
+                                    lineNumber: 1791,
                                     columnNumber: 13
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                     className: "flex flex-wrap gap-2 rounded-xl border border-border/60 p-2.5",
-                                    children: FOOTER_KEYS.map((b)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
+                                    children: __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$forms$2f$action$2d$bar$2f$index$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$locals$3e$__["ACTION_BAR_KEYS"].map((b)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
                                             className: "flex cursor-pointer items-center gap-1.5 rounded-lg px-2 py-1 text-xs hover:bg-foreground/5",
                                             children: [
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$checkbox$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Checkbox"], {
@@ -7041,31 +7639,31 @@ _c6 = FieldPreview;
                                                     "aria-label": t(`dfb.btn.${b}`)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                                    lineNumber: 1334,
+                                                    lineNumber: 1795,
                                                     columnNumber: 19
                                                 }, this),
                                                 t(`dfb.btn.${b}`)
                                             ]
                                         }, b, true, {
                                             fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                            lineNumber: 1333,
+                                            lineNumber: 1794,
                                             columnNumber: 17
                                         }, this))
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                    lineNumber: 1331,
+                                    lineNumber: 1792,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                            lineNumber: 1329,
+                            lineNumber: 1790,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                    lineNumber: 1316,
+                    lineNumber: 1777,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$dialog$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["DialogFooter"], {
@@ -7078,7 +7676,7 @@ _c6 = FieldPreview;
                             children: t("common.cancel")
                         }, void 0, false, {
                             fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                            lineNumber: 1348,
+                            lineNumber: 1809,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -7091,7 +7689,7 @@ _c6 = FieldPreview;
                                     "aria-hidden": true
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                                    lineNumber: 1350,
+                                    lineNumber: 1811,
                                     columnNumber: 13
                                 }, this),
                                 " ",
@@ -7099,42 +7697,44 @@ _c6 = FieldPreview;
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                            lineNumber: 1349,
+                            lineNumber: 1810,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-                    lineNumber: 1347,
+                    lineNumber: 1808,
                     columnNumber: 9
                 }, this)
             ]
         }, void 0, true, {
             fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-            lineNumber: 1312,
+            lineNumber: 1773,
             columnNumber: 7
         }, this)
     }, void 0, false, {
         fileName: "[project]/src/components/erp/form-builder/dfb-studio.tsx",
-        lineNumber: 1311,
+        lineNumber: 1772,
         columnNumber: 5
     }, this);
 }
-_s3(StudioMetaDialog, "r9IN7Tgxc5qCaE051nHvVN/d4yw=", false, function() {
+_s5(StudioMetaDialog, "r9IN7Tgxc5qCaE051nHvVN/d4yw=", false, function() {
     return [
         __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$settings$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useT"]
     ];
 });
-_c7 = StudioMetaDialog;
-var _c, _c1, _c2, _c3, _c4, _c5, _c6, _c7;
+_c9 = StudioMetaDialog;
+var _c, _c1, _c2, _c3, _c4, _c5, _c6, _c7, _c8, _c9;
 __turbopack_context__.k.register(_c, "FIELD_TYPES");
 __turbopack_context__.k.register(_c1, "FormDesignStudio");
 __turbopack_context__.k.register(_c2, "StudioInner");
 __turbopack_context__.k.register(_c3, "BankCanvas");
 __turbopack_context__.k.register(_c4, "MiniIconBtn");
-__turbopack_context__.k.register(_c5, "FieldCard");
-__turbopack_context__.k.register(_c6, "FieldPreview");
-__turbopack_context__.k.register(_c7, "StudioMetaDialog");
+__turbopack_context__.k.register(_c5, "FieldResizeHandle");
+__turbopack_context__.k.register(_c6, "FieldCard");
+__turbopack_context__.k.register(_c7, "FieldPreview");
+__turbopack_context__.k.register(_c8, "PreviewCanvas");
+__turbopack_context__.k.register(_c9, "StudioMetaDialog");
 if (typeof globalThis.$RefreshHelpers$ === 'object' && globalThis.$RefreshHelpers !== null) {
     __turbopack_context__.k.registerExports(__turbopack_context__.m, globalThis.$RefreshHelpers$);
 }

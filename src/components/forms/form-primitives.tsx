@@ -15,6 +15,57 @@ import {
 import type { SimpleFormField } from "@/components/forms/simple-form-two-row-tabbed";
 
 /* ------------------------------------------------------------------ */
+/* Task 48 — percentage flow grid for dfb-designed forms (design==run) */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Field flow of a dfb-designed bank: flex-wrap with per-field width in
+ * percent (DfbFormField.WidthSpan stores 25..100, step 5) and an optional
+ * bank-level horizontal alignment (start/center/end, persisted in the
+ * form's headerJson.style.bankAlign) — what the design studio lays out is
+ * exactly what the runtime renders. FieldCell markup/label alignment is
+ * untouched. Legacy consumers keep the old fixed grid (they never pass
+ * widthPct/fieldsAlign).
+ */
+export function FlowFieldGrid({
+  fields,
+  onFieldChange,
+  idPrefix = "sft",
+  align,
+  gridRef,
+}: {
+  fields: SimpleFormField[];
+  onFieldChange?: (id: string, value: string | boolean) => void;
+  /** checkbox input id prefix forwarded to FieldCell (keeps DOM ids unique) */
+  idPrefix?: string;
+  /** bank alignment — start (default) keeps the natural reading edge */
+  align?: "start" | "center" | "end";
+  /** ref target for the caller's useAlignedLabels scope */
+  gridRef?: React.Ref<HTMLDivElement>;
+}) {
+  return (
+    <div
+      ref={gridRef}
+      className={cn(
+        "flex flex-wrap",
+        align === "center" && "justify-center",
+        align === "end" && "justify-end",
+      )}
+    >
+      {fields.map((f) => (
+        <div
+          key={f.id}
+          className="box-border min-w-0 px-2.5 pb-2"
+          style={{ width: `${f.widthPct ?? 50}%` }}
+        >
+          <FieldCell field={f} onChange={onFieldChange} idPrefix={idPrefix} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /* Shared form primitives (Task 30 — extracted verbatim from           */
 /* SimpleFormTwoRowTabbed so SimpleTreeForm reuses the exact same      */
 /* visual contract: Task 25.1 label alignment markup, Task 27 compact  */

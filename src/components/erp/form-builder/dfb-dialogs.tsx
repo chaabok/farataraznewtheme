@@ -17,6 +17,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { getIconKeyGlyph } from "@/lib/app-catalog";
+import { ACTION_BAR_KEYS } from "@/components/forms/action-bar";
 import {
   dfbApi, type DfbMenuNode, type DfbTabDef, type DfbFieldDef,
 } from "@/stores/dfb-store";
@@ -340,7 +341,9 @@ interface WizardTab {
 
 const FIELD_TYPE_OPTIONS = ["text", "number", "select", "lookup", "checkbox", "date", "textarea"] as const;
 
-const FOOTER_BUTTONS = ["save", "saveNew", "saveClose", "reset", "delete", "print"] as const;
+/* Task 48 — owner rule «تمامی آیکون‌های اکشن بار بصورت پیش‌فرض»: new forms
+   are created with the FULL legacy action bar; the user can still uncheck */
+const FOOTER_BUTTONS = ACTION_BAR_KEYS;
 
 export function DfbFormWizard({
   open, onOpenChange, parentMenu, onSaved,
@@ -376,7 +379,7 @@ function WizardBody({
   const [title, setTitle] = React.useState("");
   const [titleEn, setTitleEn] = React.useState("");
   const [badge, setBadge] = React.useState("");
-  const [footerButtons, setFooterButtons] = React.useState<string[]>(["save", "reset", "delete"]);
+  const [footerButtons, setFooterButtons] = React.useState<string[]>([...ACTION_BAR_KEYS]);
   const [tabs, setTabs] = React.useState<WizardTab[]>([]);
   const [newTabTitle, setNewTabTitle] = React.useState("");
   const [busy, setBusy] = React.useState(false);

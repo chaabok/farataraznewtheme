@@ -553,9 +553,15 @@ if (typeof globalThis.$RefreshHelpers$ === 'object' && globalThis.$RefreshHelper
     ()=>DFB_THEME_SWATCHES,
     "DFB_TITLE_SIZE",
     ()=>DFB_TITLE_SIZE,
+    "dfbBankAlign",
+    ()=>dfbBankAlign,
     "dfbShellTheme",
     ()=>dfbShellTheme
 ]);
+function dfbBankAlign(style, bankKey) {
+    const v = style?.bankAlign?.[bankKey];
+    return v === "center" || v === "end" ? v : "start";
+}
 const DFB_THEME_HEADER = {
     teal: "",
     emerald: "from-emerald-600 via-emerald-600 to-green-600",
@@ -931,6 +937,10 @@ if (typeof globalThis.$RefreshHelpers$ === 'object' && globalThis.$RefreshHelper
 "use strict";
 
 __turbopack_context__.s([
+    "DFB_WIDTH_MAX",
+    ()=>DFB_WIDTH_MAX,
+    "DFB_WIDTH_MIN",
+    ()=>DFB_WIDTH_MIN,
     "dfbApi",
     ()=>dfbApi,
     "dfbFormTitle",
@@ -941,6 +951,8 @@ __turbopack_context__.s([
     ()=>executeQuery,
     "fetchFormDetail",
     ()=>fetchFormDetail,
+    "fetchQueryOptionsForFields",
+    ()=>fetchQueryOptionsForFields,
     "findFormInTree",
     ()=>findFormInTree,
     "findMenuNode",
@@ -949,10 +961,14 @@ __turbopack_context__.s([
     ()=>findMenuNodeByAppKey,
     "loadFormData",
     ()=>loadFormData,
+    "normalizeFieldWidth",
+    ()=>normalizeFieldWidth,
     "saveFormData",
     ()=>saveFormData,
     "useDfb",
-    ()=>useDfb
+    ()=>useDfb,
+    "widthMinWidthClass",
+    ()=>widthMinWidthClass
 ]);
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$zustand$2f$esm$2f$react$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/zustand/esm/react.mjs [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$api$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/lib/api.ts [app-client] (ecmascript)");
@@ -1028,6 +1044,42 @@ async function fetchFormDetail(id) {
 async function executeQuery(id) {
     const res = await dfbApi.post(`queries/${id}/execute`, {});
     return res.rows ?? [];
+}
+const DFB_WIDTH_MIN = 25;
+const DFB_WIDTH_MAX = 100;
+function normalizeFieldWidth(v) {
+    const n = Math.round(Number(v ?? 50));
+    if (!Number.isFinite(n)) return 50;
+    if (n < DFB_WIDTH_MIN) return n <= 1 ? 50 : 100; // legacy 1=half, 2=full
+    return Math.min(DFB_WIDTH_MAX, Math.max(DFB_WIDTH_MIN, n));
+}
+function widthMinWidthClass(pct) {
+    return pct >= 100 ? "min-w-72" : pct >= 75 ? "min-w-56" : pct >= 50 ? "min-w-40" : "min-w-28";
+}
+async function fetchQueryOptionsForFields(fields) {
+    const bound = fields.filter((f)=>f.queryRef != null && (f.fieldType === "select" || f.fieldType === "lookup"));
+    const results = await Promise.all(bound.map(async (f)=>{
+        try {
+            const rows = await executeQuery(f.queryRef);
+            const keys = rows.length ? Object.keys(rows[0]) : [];
+            const valKey = f.queryFieldKey && keys.includes(f.queryFieldKey) ? f.queryFieldKey : keys[0] ?? "ID";
+            const labelKey = keys.find((k)=>k !== valKey && /title|label|name/i.test(k)) ?? valKey;
+            const options = rows.map((r)=>({
+                    value: String(r[valKey] ?? ""),
+                    label: String(r[labelKey] ?? r[valKey] ?? "")
+                })).filter((o)=>o.value !== "");
+            return [
+                f.queryRef,
+                options
+            ];
+        } catch  {
+            return [
+                f.queryRef,
+                []
+            ];
+        }
+    }));
+    return Object.fromEntries(results);
 }
 async function saveFormData(formId, values, externalKey) {
     return dfbApi.post(`forms/${formId}/data`, {

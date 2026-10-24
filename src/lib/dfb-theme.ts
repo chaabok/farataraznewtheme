@@ -12,6 +12,16 @@ export interface DfbFormStyle {
   theme?: string; // teal | emerald | amber | violet | rose
   titleSize?: string; // sm | md | lg
   font?: string; // sans | serif | mono
+  /** Task 48 — bank-level horizontal alignment, keyed "main" | "tab{i}"
+      (tab order index — stable across tab-id regeneration on save) */
+  bankAlign?: Record<string, string>; // "start" | "center" | "end"
+}
+
+/** Task 48 — bank alignment resolution (unknown/absent = start) */
+export type DfbBankAlign = "start" | "center" | "end";
+export function dfbBankAlign(style: DfbFormStyle | null | undefined, bankKey: string): DfbBankAlign {
+  const v = style?.bankAlign?.[bankKey];
+  return v === "center" || v === "end" ? v : "start";
 }
 
 /** gradient overrides for the form shell header strip (twMerge-merged over

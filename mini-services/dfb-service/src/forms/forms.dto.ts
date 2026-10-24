@@ -7,6 +7,8 @@ export class FormStyleDto {
   @IsOptional() @IsString() @MaxLength(30) theme?: string; // teal | emerald | amber | violet | rose
   @IsOptional() @IsString() @MaxLength(10) titleSize?: string; // sm | md | lg
   @IsOptional() @IsString() @MaxLength(10) font?: string; // sans | serif | mono
+  /** Task 48 — bank field alignment: key "main" | "tab{i}" → start|center|end */
+  @IsOptional() @IsObject() bankAlign?: Record<string, string>;
 }
 
 export class FormHeaderDto {
@@ -17,7 +19,8 @@ export class FormHeaderDto {
 }
 
 export class FormFooterDto {
-  @IsOptional() @IsArray() buttons?: string[]; // subset: save | saveNew | saveClose | reset | delete | print
+  /** Task 48 — subset of ACTION_BAR_KEYS; missing/empty = full default bar */
+  @IsOptional() @IsArray() buttons?: string[];
 }
 
 export class FieldInputDto {
@@ -31,7 +34,9 @@ export class FieldInputDto {
   @IsOptional() required?: boolean;
   @IsOptional() readOnly?: boolean;
   @IsOptional() @IsInt() @Min(0) orderIndex?: number;
-  @IsOptional() @IsInt() @Min(1) widthSpan?: number;
+  /** Task 48 — width percent of the flow row (25..100, step 5); legacy
+      1=half/2=full rows normalize client-side */
+  @IsOptional() @IsInt() @Min(25) @Max(100) widthSpan?: number;
   @IsOptional() defaultValue?: string | null;
   @IsOptional() queryRef?: number | null;
   @IsOptional() queryFieldKey?: string | null;
@@ -78,7 +83,7 @@ export class AddFieldDto {
   @IsOptional() required?: boolean;
   @IsOptional() readOnly?: boolean;
   @IsOptional() @IsInt() @Min(0) orderIndex?: number;
-  @IsOptional() @IsInt() @Min(1) widthSpan?: number;
+  @IsOptional() @IsInt() @Min(25) @Max(100) widthSpan?: number;
   @IsOptional() defaultValue?: string | null;
   @IsOptional() queryRef?: number | null;
   @IsOptional() queryFieldKey?: string | null;

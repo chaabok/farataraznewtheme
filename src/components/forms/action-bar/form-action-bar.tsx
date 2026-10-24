@@ -43,6 +43,12 @@ export interface FormActionBarProps {
   canDelete?: boolean;
   canPrint?: boolean;
 
+  /** Task 48 — optional allowlist of action keys (see ACTION_BAR_KEYS).
+      When provided, ONLY those icons render (stored form configuration);
+      omitted/undefined = all ten icons render (legacy default — untouched
+      behavior for existing consumers, §5.1 additive). */
+  actions?: readonly string[];
+
   className?: string;
 }
 
@@ -89,9 +95,17 @@ export function FormActionBar({
   canCopy = true,
   canDelete = true,
   canPrint = true,
+  actions,
   className,
 }: FormActionBarProps) {
   const t = useT();
+
+  /* Task 48 — per-key visibility (undefined allowlist = everything shows) */
+  const show = (k: string) => !actions || actions.includes(k);
+  const hasReset = show("reset");
+  const hasSaveGroup = show("save") || show("saveNew") || show("saveClose");
+  const hasCopyDelete = show("copy") || show("delete") || show("deleteNew") || show("deleteClose");
+  const hasPrintList = show("print") || show("list");
 
   const saveNew = onSaveNew ?? sequence(onSave, onReset);
   const saveClose = onSaveClose ?? sequence(onSave, onClose);
@@ -105,23 +119,25 @@ export function FormActionBar({
       aria-label={t("abar.toolbar")}
       className={cn("flex w-full flex-wrap items-center gap-1.5", className)}
     >
-      <ResetFieldsButton onClick={onReset} />
-      <Divider />
-      <SaveButton onClick={onSave} disabled={!canSave} />
-      <SaveNewButton onClick={saveNew} disabled={!canSave || !saveNew} />
-      <SaveCloseButton onClick={saveClose} disabled={!canSave || !saveClose} />
-      <Divider />
-      <CopyRecordButton onClick={onCopy} disabled={!canCopy} />
-      <DeleteRecordButton onClick={onDelete} disabled={!canDelete} />
-      <DeleteNewButton onClick={deleteNew} disabled={!canDelete || !deleteNew} />
-      <DeleteCloseButton onClick={deleteClose} disabled={!canDelete || !deleteClose} />
-      <Divider />
-      <PrintFormButton onClick={print} disabled={!canPrint} />
-      <RecordListDropdown
-        items={listItems}
-        loading={listLoading}
-        onOpenListItem={onOpenListItem}
-      />
+      {hasReset && <ResetFieldsButton onClick={onReset} />}
+      {hasReset && hasSaveGroup && <Divider />}
+      {show("save") && <SaveButton onClick={onSave} disabled={!canSave} />}
+      {show("saveNew") && <SaveNewButton onClick={saveNew} disabled={!canSave || !saveNew} />}
+      {show("saveClose") && <SaveCloseButton onClick={saveClose} disabled={!canSave || !saveClose} />}
+      {hasSaveGroup && hasCopyDelete && <Divider />}
+      {show("copy") && <CopyRecordButton onClick={onCopy} disabled={!canCopy} />}
+      {show("delete") && <DeleteRecordButton onClick={onDelete} disabled={!canDelete} />}
+      {show("deleteNew") && <DeleteNewButton onClick={deleteNew} disabled={!canDelete || !deleteNew} />}
+      {show("deleteClose") && <DeleteCloseButton onClick={deleteClose} disabled={!canDelete || !deleteClose} />}
+      {hasCopyDelete && hasPrintList && <Divider />}
+      {show("print") && <PrintFormButton onClick={print} disabled={!canPrint} />}
+      {show("list") && (
+        <RecordListDropdown
+          items={listItems}
+          loading={listLoading}
+          onOpenListItem={onOpenListItem}
+        />
+      )}
       {onHelp && <HelpButton onClick={onHelp} />}
     </div>
   );

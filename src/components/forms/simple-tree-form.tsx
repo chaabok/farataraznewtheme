@@ -25,7 +25,7 @@ import {
   type FormAction,
 } from "@/components/forms/action-bar";
 import { useAlignedLabels, type AlignedLabelsScope } from "@/components/forms/use-aligned-labels";
-import { FieldCell, HeaderButton } from "@/components/forms/form-primitives";
+import { FieldCell, FlowFieldGrid, HeaderButton } from "@/components/forms/form-primitives";
 import type { SimpleFormField } from "@/components/forms/simple-form-two-row-tabbed";
 
 /* ------------------------------------------------------------------ */
@@ -126,6 +126,11 @@ export interface SimpleTreeFormProps {
   canCopy?: boolean;
   canDelete?: boolean;
   canPrint?: boolean;
+  /** Task 48 — allowlist of visible action-bar icons (stored form config);
+      omitted = all ten icons (legacy default) */
+  actions?: readonly string[];
+  /** Task 48 — bank-level horizontal alignment of the detail field flow */
+  fieldsAlign?: "start" | "center" | "end";
 
   /* ----- OPTIONAL chromeless-window header controls (Task 28 contract) -----
      The gradient header hosts the caption buttons and drags the window. */
@@ -222,6 +227,8 @@ export function SimpleTreeForm({
   canCopy = true,
   canDelete = true,
   canPrint = true,
+  actions,
+  fieldsAlign,
   detailTitleOverride,
   emptyText,
   detailExtra,
@@ -529,6 +536,7 @@ export function SimpleTreeForm({
             canCopy={canCopy}
             canDelete={canDelete}
             canPrint={canPrint}
+            actions={actions}
           />
         </div>
 
@@ -536,14 +544,24 @@ export function SimpleTreeForm({
         <div className="min-h-0 flex-1 overflow-y-auto scrollbar-slim" style={bodyStyle}>
           {selected ? (
             <div className="px-4 pb-2 pt-2.5">
-              <div
-                ref={fieldsGridRef}
-                className="grid grid-cols-1 gap-x-5 gap-y-2 sm:grid-cols-2 lg:grid-cols-3"
-              >
-                {fields.map((f) => (
-                  <FieldCell key={f.id} field={f} onChange={onFieldChange} idPrefix="stf" />
-                ))}
-              </div>
+              {fieldsAlign && fieldsAlign !== "start" || fields.some((f) => f.widthPct != null) ? (
+                <FlowFieldGrid
+                  fields={fields}
+                  onFieldChange={onFieldChange}
+                  idPrefix="stf"
+                  gridRef={fieldsGridRef}
+                  align={fieldsAlign}
+                />
+              ) : (
+                <div
+                  ref={fieldsGridRef}
+                  className="grid grid-cols-1 gap-x-5 gap-y-2 sm:grid-cols-2 lg:grid-cols-3"
+                >
+                  {fields.map((f) => (
+                    <FieldCell key={f.id} field={f} onChange={onFieldChange} idPrefix="stf" />
+                  ))}
+                </div>
+              )}
               {detailExtra}
             </div>
           ) : (
