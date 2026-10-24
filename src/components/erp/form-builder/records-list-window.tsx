@@ -23,7 +23,7 @@ import {
 import {
   Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
-import { LOCALES, type Locale } from "@/i18n/config";
+import { LOCALES } from "@/i18n/config";
 
 /**
  * RecordsListWindow (Task 64 — owner request «فهرست کلّی») — the form's
@@ -57,7 +57,7 @@ export function RecordsListWindow({ formId }: { formId: number }) {
 
   /* زبان‌های مقصد ترجمهٔ خودکار = زبان‌های فعال منهای fa (زبان پایه) */
   const targetLangs = React.useMemo(
-    () => (LOCALES as Locale[]).filter((l) => l !== "fa" && activeLocales.includes(l)),
+    () => LOCALES.filter((l) => l !== "fa" && activeLocales.includes(l)),
     [activeLocales],
   );
 

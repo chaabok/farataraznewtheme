@@ -45,7 +45,22 @@ export const useSettings = create<SettingsState>()(
       },
       dir: () => dirOf(get().locale),
     }),
-    { name: "erp.settings" },
+    {
+      name: "erp.settings",
+      version: 1,
+      /* Task 71 — زبان‌های تازه (de/ru) برای کاربران موجود هم به‌صورت پیش‌فرض فعال شوند */
+      migrate: (persisted, version) => {
+        const p = (persisted ?? {}) as Partial<SettingsState>;
+        const stored = Array.isArray(p.activeLocales) ? p.activeLocales : [];
+        if (stored.length === 0) {
+          p.activeLocales = [...LOCALES] as Locale[];
+        } else if (version < 1) {
+          const added = (["de", "ru"] as Locale[]).filter((l) => !stored.includes(l));
+          p.activeLocales = [...stored, ...added] as Locale[];
+        }
+        return p as SettingsState;
+      },
+    },
   ),
 );
 

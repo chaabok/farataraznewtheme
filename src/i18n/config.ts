@@ -10,6 +10,8 @@ export const LOCALES = [
   "ko",
   "fr",
   "zh",
+  "de",
+  "ru",
 ] as const;
 
 export type Locale = (typeof LOCALES)[number];
@@ -29,6 +31,8 @@ export const DIR_BY_LOCALE: Record<Locale, "rtl" | "ltr"> = {
   ko: "ltr",
   fr: "ltr",
   zh: "ltr",
+  de: "ltr",
+  ru: "ltr",
 };
 
 export const LOCALE_NAMES: Record<Locale, string> = {
@@ -43,6 +47,8 @@ export const LOCALE_NAMES: Record<Locale, string> = {
   ko: "한국어",
   fr: "Français",
   zh: "中文",
+  de: "Deutsch",
+  ru: "Русский",
 };
 
 export function dirOf(locale: string): "rtl" | "ltr" {

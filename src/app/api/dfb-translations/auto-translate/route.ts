@@ -18,8 +18,8 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const DFB_SERVICE = process.env.DFB_SERVICE_URL ?? "http://127.0.0.1:3003";
-/** ۱۰ زبان غیر-fa — هم‌راستا با mini-services/dfb-service/src/translations/translations.dto.ts */
-const TRANSLATION_LANGS = ["en", "tr", "ar", "hi", "ps", "ckb", "pt", "ko", "fr", "zh"];
+/** ۱۲ زبان غیر-fa — هم‌راستا با mini-services/dfb-service/src/translations/translations.dto.ts (Task 71: +de/ru) */
+const TRANSLATION_LANGS = ["en", "tr", "ar", "hi", "ps", "ckb", "pt", "ko", "fr", "zh", "de", "ru"];
 const TEXT_FIELD_TYPES = new Set(["text", "textarea"]);
 const MAX_VALUE_CHARS = 2000; // سقف هر مقدار ورودی LLM
 const MAX_FIELDS = 30; // سقف فیلد در هر فراخوانی

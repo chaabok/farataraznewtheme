@@ -1,8 +1,8 @@
 import { ArrayMaxSize, ArrayMinSize, IsArray, IsIn, IsInt, IsString, MaxLength, Min, MinLength, ValidateNested } from "class-validator";
 import { Type } from "class-transformer";
 
-/** ۱۰ زبان غیر-fa (هم‌راستا با src/i18n/config.ts LOCALES فرانت) */
-export const TRANSLATION_LANGS = ["en", "tr", "ar", "hi", "ps", "ckb", "pt", "ko", "fr", "zh"] as const;
+/** ۱۲ زبان غیر-fa (هم‌راستا با src/i18n/config.ts LOCALES فرانت — Task 71: +de/ru) */
+export const TRANSLATION_LANGS = ["en", "tr", "ar", "hi", "ps", "ckb", "pt", "ko", "fr", "zh", "de", "ru"] as const;
 
 /** موجودیت‌های ترجمه‌پذیر — Task 69: Tab (کلید پایدار ClientKey در DfbFormTab)
     و Option (کلید مرکب `<fieldKey>::<value>` — هویت Field + value آیتم)؛

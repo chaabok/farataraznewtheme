@@ -42,7 +42,7 @@ const FLUSH_MS = 600;
 function useTranslationLangs(): Locale[] {
   const activeLocales = useSettings((s) => s.activeLocales);
   return React.useMemo(
-    () => (LOCALES as Locale[]).filter((l) => l !== "fa" && activeLocales.includes(l)),
+    () => LOCALES.filter((l) => l !== "fa" && activeLocales.includes(l)),
     [activeLocales],
   );
 }

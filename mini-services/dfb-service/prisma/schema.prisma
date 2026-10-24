@@ -245,14 +245,14 @@ model DfbQueryField {
 ///   · Menu  → EntityRef = DfbMenu.ID،  FieldKey = "Title"
 ///   · Form  → EntityRef = DfbForm.ID،  FieldKey = "Title"
 ///   · Field → EntityRef = DfbFormField.FormRef (پایدار)، FieldKey = FieldKey فیلد
-/// زبان پایه fa ترجمه نمی‌شود (متن اصلی Label/Title همان fa است)؛ ۱۰ زبان دیگر:
-/// en|tr|ar|hi|ps|ckb|pt|ko|fr|zh. نمایش: ترجمهٔ زبان فعلی → fa → Label_En.
+/// زبان پایه fa ترجمه نمی‌شود (متن اصلی Label/Title همان fa است)؛ ۱۲ زبان دیگر:
+/// en|tr|ar|hi|ps|ckb|pt|ko|fr|zh|de|ru. نمایش: ترجمهٔ زبان فعلی → fa → Label_En.
 model DfbTranslation {
   id                   BigInt   @id @map("ID")
   entityType           String   @map("EntityType") // Menu | Form | Field
   entityRef            BigInt   @map("EntityRef")
   fieldKey             String   @map("FieldKey") // "Title" | FieldKey فیلد
-  lang                 String   @map("Lang") // en|tr|ar|hi|ps|ckb|pt|ko|fr|zh
+  lang                 String   @map("Lang") // en|tr|ar|hi|ps|ckb|pt|ko|fr|zh|de|ru
   value                String   @map("Value")
   version              Int      @default(1) @map("Version")
   creator              String   @map("Creator")

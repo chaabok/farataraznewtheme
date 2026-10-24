@@ -239,6 +239,7 @@ export class SeedService implements OnModuleInit {
           en: "Vehicle Types", tr: "Araç Türleri", ar: "أنواع المركبات",
           hi: "वाहन प्रकार", ps: "د نقلیو وسایطو ډولونه", ckb: "جۆرەکانی ئۆتۆمبێل",
           pt: "Tipos de Veículos", ko: "차량 유형", fr: "Types de véhicules", zh: "车辆类型",
+          de: "Fahrzeugarten", ru: "Типы транспортных средств", // Task 71
         },
       },
       {
@@ -248,6 +249,7 @@ export class SeedService implements OnModuleInit {
           en: "Transportation", tr: "Ulaşım", ar: "النقل والمواصلات",
           hi: "परिवहन", ps: "ترانسپورت", ckb: "گواسترەوە",
           pt: "Transporte", ko: "운송", fr: "Transport", zh: "交通运输",
+          de: "Transport und Verkehr", ru: "Транспорт и перевозки", // Task 71
         },
       },
       {
@@ -257,6 +259,7 @@ export class SeedService implements OnModuleInit {
           en: "Business Structure", tr: "İş Yapısı", ar: "هيكل الأعمال",
           hi: "व्यावसायिक संरचना", ps: "د سوداګرۍ جوړښت", ckb: "پێکهاتەی بازرگانی",
           pt: "Estrutura de Negócios", ko: "비즈니스 구조", fr: "Structure commerciale", zh: "业务结构",
+          de: "Geschäftsstruktur", ru: "Бизнес-структура", // Task 71
         },
       },
       {
@@ -266,6 +269,7 @@ export class SeedService implements OnModuleInit {
           en: "Form Builder", tr: "Form Oluşturucu", ar: "منشئ النماذج",
           hi: "फ़ॉर्म बिल्डर", ps: "فورم جوړونکی", ckb: "د فۆرم سازەکەر",
           pt: "Criador de Formulários", ko: "폼 빌더", fr: "Créateur de formulaires", zh: "表单构建器",
+          de: "Formular-Builder", ru: "Конструктор форм", // Task 71
         },
       },
     ];
