@@ -660,11 +660,14 @@ const useDesktop = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modu
                 kind = "settings";
                 appKey = undefined;
             }
-            /* Task 45 — the catalog "advancedTools" app opens the real form-builder
-           window (فرمساز, dfb-service) instead of the §4.6 placeholder —
-           owner-requested promotion, same one-window pattern as settings. */ if (kind === "app" && appKey === "advancedTools") {
-                kind = "dfb-builder";
-                appKey = undefined;
+            /* Task 46 — the catalog "advancedTools" app opens its DB-driven forms
+           menu (kind "dfb-menu" bound to the system node by appKey) instead of
+           the §4.6 placeholder. The «فرمساز» launcher form inside that menu
+           opens the real form builder + tree (dfb-builder) — and every future
+           form of this menu (system or user-made) joins the same list
+           automatically, straight from dfb.db. */ if (kind === "app" && appKey === "advancedTools") {
+                kind = "dfb-menu";
+                appKey = "app:advancedTools";
             }
             const existing = get().windows.find((w)=>w.kind === kind && w.appKey === appKey);
             if (existing) {
@@ -835,6 +838,10 @@ const useDesktop = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modu
 __turbopack_context__.s([
     "dfbApi",
     ()=>dfbApi,
+    "dfbFormTitle",
+    ()=>dfbFormTitle,
+    "dfbNodeTitle",
+    ()=>dfbNodeTitle,
     "executeQuery",
     ()=>executeQuery,
     "fetchFormDetail",
@@ -843,6 +850,8 @@ __turbopack_context__.s([
     ()=>findFormInTree,
     "findMenuNode",
     ()=>findMenuNode,
+    "findMenuNodeByAppKey",
+    ()=>findMenuNodeByAppKey,
     "loadFormData",
     ()=>loadFormData,
     "saveFormData",
@@ -905,6 +914,16 @@ function findFormInTree(nodes, id) {
         if (hit) return hit;
     }
     return null;
+}
+function dfbFormTitle(form, locale) {
+    return locale === "en" && form.titleEn ? form.titleEn : form.title;
+}
+function dfbNodeTitle(node, t, locale) {
+    if (node.isSystem && node.appKey) return t(`app.${node.appKey}`);
+    return dfbFormTitle(node, locale);
+}
+function findMenuNodeByAppKey(nodes, appKey) {
+    return nodes.find((n)=>n.nodeType === 1 && n.isSystem && n.appKey === appKey) ?? null;
 }
 const dfbApi = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$api$2e$ts__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["appApi"])("advancedTools");
 async function fetchFormDetail(id) {

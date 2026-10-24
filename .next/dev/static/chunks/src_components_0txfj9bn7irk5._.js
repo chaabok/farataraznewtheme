@@ -990,17 +990,17 @@ var _s = __turbopack_context__.k.signature(), _s1 = __turbopack_context__.k.sign
                 className: "h-3 w-3"
             }, void 0, false, {
                 fileName: "[project]/src/components/desktop/desktop.tsx",
-                lineNumber: 60,
+                lineNumber: 63,
                 columnNumber: 9
             }, ("TURBOPACK compile-time value", void 0))
         }, void 0, false, {
             fileName: "[project]/src/components/desktop/desktop.tsx",
-            lineNumber: 59,
+            lineNumber: 62,
             columnNumber: 7
         }, ("TURBOPACK compile-time value", void 0)),
         content: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$erp$2f$business$2d$structure$2f$bs$2d$window$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["BusinessStructureWindow"], {}, void 0, false, {
             fileName: "[project]/src/components/desktop/desktop.tsx",
-            lineNumber: 63,
+            lineNumber: 66,
             columnNumber: 14
         }, ("TURBOPACK compile-time value", void 0))
     },
@@ -1012,12 +1012,12 @@ var _s = __turbopack_context__.k.signature(), _s1 = __turbopack_context__.k.sign
             iconClass: "h-3 w-3"
         }, void 0, false, {
             fileName: "[project]/src/components/desktop/desktop.tsx",
-            lineNumber: 67,
+            lineNumber: 70,
             columnNumber: 11
         }, ("TURBOPACK compile-time value", void 0)),
         content: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$erp$2f$settings$2d$window$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SettingsWindow"], {}, void 0, false, {
             fileName: "[project]/src/components/desktop/desktop.tsx",
-            lineNumber: 68,
+            lineNumber: 71,
             columnNumber: 14
         }, ("TURBOPACK compile-time value", void 0))
     },
@@ -1030,17 +1030,17 @@ var _s = __turbopack_context__.k.signature(), _s1 = __turbopack_context__.k.sign
                 className: "h-3 w-3"
             }, void 0, false, {
                 fileName: "[project]/src/components/desktop/desktop.tsx",
-                lineNumber: 76,
+                lineNumber: 79,
                 columnNumber: 9
             }, ("TURBOPACK compile-time value", void 0))
         }, void 0, false, {
             fileName: "[project]/src/components/desktop/desktop.tsx",
-            lineNumber: 75,
+            lineNumber: 78,
             columnNumber: 7
         }, ("TURBOPACK compile-time value", void 0)),
         content: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$erp$2f$form$2d$demo$2d$window$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["FormDemoWindow"], {}, void 0, false, {
             fileName: "[project]/src/components/desktop/desktop.tsx",
-            lineNumber: 79,
+            lineNumber: 82,
             columnNumber: 14
         }, ("TURBOPACK compile-time value", void 0))
     },
@@ -1053,23 +1053,25 @@ var _s = __turbopack_context__.k.signature(), _s1 = __turbopack_context__.k.sign
                 className: "h-3 w-3"
             }, void 0, false, {
                 fileName: "[project]/src/components/desktop/desktop.tsx",
-                lineNumber: 87,
+                lineNumber: 90,
                 columnNumber: 9
             }, ("TURBOPACK compile-time value", void 0))
         }, void 0, false, {
             fileName: "[project]/src/components/desktop/desktop.tsx",
-            lineNumber: 86,
+            lineNumber: 89,
             columnNumber: 7
         }, ("TURBOPACK compile-time value", void 0)),
         content: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$erp$2f$tree$2d$demo$2d$window$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["TreeDemoWindow"], {}, void 0, false, {
             fileName: "[project]/src/components/desktop/desktop.tsx",
-            lineNumber: 90,
+            lineNumber: 93,
             columnNumber: 14
         }, ("TURBOPACK compile-time value", void 0))
     },
-    /* Task 45 — the form builder (فرمساز) of the advancedTools app (dfb-service).
-     openWindow redirects (app, advancedTools) → kind "dfb-builder", so the
-     desktop icon, start-menu tile and taskbar pin share one builder window. */ "dfb-builder": {
+    /* Task 45/46 — the form builder (فرمساز) of the advancedTools app
+     (dfb-service). Since Task 46 the advancedTools icon opens the app's
+     forms menu (kind "dfb-menu", ref "app:advancedTools") and the «فرمساز»
+     launcher form inside that menu opens THIS builder window — one shared
+     instance for every entry point. */ "dfb-builder": {
         titleKey: "dfb.builderTitle",
         icon: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
             className: "flex h-5 w-5 items-center justify-center rounded-md bg-gradient-to-br from-amber-600 to-amber-800 text-white",
@@ -1077,22 +1079,22 @@ var _s = __turbopack_context__.k.signature(), _s1 = __turbopack_context__.k.sign
                 className: "h-3 w-3"
             }, void 0, false, {
                 fileName: "[project]/src/components/desktop/desktop.tsx",
-                lineNumber: 99,
+                lineNumber: 104,
                 columnNumber: 9
             }, ("TURBOPACK compile-time value", void 0))
         }, void 0, false, {
             fileName: "[project]/src/components/desktop/desktop.tsx",
-            lineNumber: 98,
+            lineNumber: 103,
             columnNumber: 7
         }, ("TURBOPACK compile-time value", void 0)),
         content: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$erp$2f$form$2d$builder$2f$form$2d$builder$2d$window$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["FormBuilderWindow"], {}, void 0, false, {
             fileName: "[project]/src/components/desktop/desktop.tsx",
-            lineNumber: 102,
+            lineNumber: 107,
             columnNumber: 14
         }, ("TURBOPACK compile-time value", void 0))
     }
 };
-function resolveWindowMeta(win, t, dfbTree) {
+function resolveWindowMeta(win, t, dfbTree, locale) {
     if (win.kind === "app") {
         const appKey = win.appKey ?? "";
         return {
@@ -1103,37 +1105,50 @@ function resolveWindowMeta(win, t, dfbTree) {
                 iconClass: "h-3 w-3"
             }, void 0, false, {
                 fileName: "[project]/src/components/desktop/desktop.tsx",
-                lineNumber: 115,
+                lineNumber: 121,
                 columnNumber: 13
             }, this),
             content: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$erp$2f$app$2d$placeholder$2d$window$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["AppPlaceholderWindow"], {
                 appKey: appKey
             }, void 0, false, {
                 fileName: "[project]/src/components/desktop/desktop.tsx",
-                lineNumber: 116,
+                lineNumber: 122,
                 columnNumber: 16
             }, this)
         };
     }
-    /* Task 45 — dynamic dfb windows: titles come from the builder tree (dfb.db) */ if (win.kind === "dfb-menu") {
-        const menuId = Number(win.appKey ?? 0);
-        const node = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$dfb$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["findMenuNode"])(dfbTree, menuId);
+    /* Task 45/46 — dynamic dfb windows: titles come from the builder tree
+     (dfb.db). A dfb-menu ref is either a numeric node id (user icons) or
+     "app:<appKey>" (a system catalog app's forms menu — Task 46): while the
+     tree is still loading the catalog label/icon answer for it, then the
+     live node takes over. */ if (win.kind === "dfb-menu") {
+        const ref = win.appKey ?? "";
+        const appRef = ref.startsWith("app:") ? ref.slice(4) : null;
+        const node = appRef ? (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$dfb$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["findMenuNodeByAppKey"])(dfbTree, appRef) : (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$dfb$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["findMenuNode"])(dfbTree, Number(ref));
         return {
-            title: node?.title ?? t("dfb.menuNotFound"),
+            title: node ? (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$dfb$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["dfbNodeTitle"])(node, t, locale) : appRef ? t(`app.${appRef}`) : t("dfb.menuNotFound"),
             icon: node ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$erp$2f$form$2d$builder$2f$dfb$2d$dialogs$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["DfbGlyph"], {
                 iconKey: node.iconKey,
                 className: "h-5 w-5 rounded-md",
                 iconClass: "h-3 w-3"
             }, void 0, false, {
                 fileName: "[project]/src/components/desktop/desktop.tsx",
-                lineNumber: 126,
+                lineNumber: 143,
+                columnNumber: 9
+            }, this) : appRef ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$desktop$2f$app$2d$tile$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["AppTile"], {
+                appKey: appRef,
+                className: "h-5 w-5 rounded-md",
+                iconClass: "h-3 w-3"
+            }, void 0, false, {
+                fileName: "[project]/src/components/desktop/desktop.tsx",
+                lineNumber: 145,
                 columnNumber: 9
             }, this) : STATIC_WINDOWS["dfb-builder"]?.icon ?? null,
             content: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$erp$2f$form$2d$builder$2f$dfb$2d$menu$2d$window$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["DfbMenuWindow"], {
-                menuId: menuId
+                menuRef: ref
             }, void 0, false, {
                 fileName: "[project]/src/components/desktop/desktop.tsx",
-                lineNumber: 130,
+                lineNumber: 149,
                 columnNumber: 16
             }, this)
         };
@@ -1142,26 +1157,26 @@ function resolveWindowMeta(win, t, dfbTree) {
         const formId = Number(win.appKey ?? 0);
         const form = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$dfb$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["findFormInTree"])(dfbTree, formId);
         return {
-            title: form?.title ?? t("dfb.formNotFound"),
+            title: form ? (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$dfb$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["dfbFormTitle"])(form, locale) : t("dfb.formNotFound"),
             icon: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                 className: "flex h-5 w-5 items-center justify-center rounded-md bg-gradient-to-br from-teal-500 to-emerald-600 text-white",
                 children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$file$2d$plus$2d$2$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__FilePlus2$3e$__["FilePlus2"], {
                     className: "h-3 w-3"
                 }, void 0, false, {
                     fileName: "[project]/src/components/desktop/desktop.tsx",
-                    lineNumber: 140,
+                    lineNumber: 159,
                     columnNumber: 11
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/desktop/desktop.tsx",
-                lineNumber: 139,
+                lineNumber: 158,
                 columnNumber: 9
             }, this),
             content: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$erp$2f$form$2d$builder$2f$dfb$2d$form$2d$runtime$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["DfbFormRuntime"], {
                 formId: formId
             }, void 0, false, {
                 fileName: "[project]/src/components/desktop/desktop.tsx",
-                lineNumber: 143,
+                lineNumber: 162,
                 columnNumber: 16
             }, this)
         };
@@ -1508,12 +1523,12 @@ function DesktopIcons() {
                 className: "h-6 w-6"
             }, void 0, false, {
                 fileName: "[project]/src/components/desktop/desktop.tsx",
-                lineNumber: 423,
+                lineNumber: 442,
                 columnNumber: 9
             }, this)
         }, void 0, false, {
             fileName: "[project]/src/components/desktop/desktop.tsx",
-            lineNumber: 422,
+            lineNumber: 441,
             columnNumber: 7
         }, this) : entry.id === "tree-demo" ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
             className: "flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-lg",
@@ -1521,12 +1536,12 @@ function DesktopIcons() {
                 className: "h-6 w-6"
             }, void 0, false, {
                 fileName: "[project]/src/components/desktop/desktop.tsx",
-                lineNumber: 427,
+                lineNumber: 446,
                 columnNumber: 9
             }, this)
         }, void 0, false, {
             fileName: "[project]/src/components/desktop/desktop.tsx",
-            lineNumber: 426,
+            lineNumber: 445,
             columnNumber: 7
         }, this) : entry.kind === "dfb-menu" ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$erp$2f$form$2d$builder$2f$dfb$2d$dialogs$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["DfbGlyph"], {
             iconKey: entry.iconKey ?? "folder",
@@ -1534,7 +1549,7 @@ function DesktopIcons() {
             iconClass: "h-6 w-6"
         }, void 0, false, {
             fileName: "[project]/src/components/desktop/desktop.tsx",
-            lineNumber: 430,
+            lineNumber: 449,
             columnNumber: 7
         }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$desktop$2f$app$2d$tile$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["AppTile"], {
             appKey: entry.appKey ?? "",
@@ -1542,7 +1557,7 @@ function DesktopIcons() {
             iconClass: "h-6 w-6"
         }, void 0, false, {
             fileName: "[project]/src/components/desktop/desktop.tsx",
-            lineNumber: 432,
+            lineNumber: 451,
             columnNumber: 7
         }, this);
     /* Task 38 — sidebar geometry: the panel docks on the inline-start edge,
@@ -1564,12 +1579,12 @@ function DesktopIcons() {
                 className: "h-4 w-4"
             }, void 0, false, {
                 fileName: "[project]/src/components/desktop/desktop.tsx",
-                lineNumber: 463,
+                lineNumber: 482,
                 columnNumber: 9
             }, this)
         }, void 0, false, {
             fileName: "[project]/src/components/desktop/desktop.tsx",
-            lineNumber: 462,
+            lineNumber: 481,
             columnNumber: 7
         }, this) : entry.id === "tree-demo" ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
             className: "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-md",
@@ -1577,12 +1592,12 @@ function DesktopIcons() {
                 className: "h-4 w-4"
             }, void 0, false, {
                 fileName: "[project]/src/components/desktop/desktop.tsx",
-                lineNumber: 467,
+                lineNumber: 486,
                 columnNumber: 9
             }, this)
         }, void 0, false, {
             fileName: "[project]/src/components/desktop/desktop.tsx",
-            lineNumber: 466,
+            lineNumber: 485,
             columnNumber: 7
         }, this) : entry.kind === "dfb-menu" ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$erp$2f$form$2d$builder$2f$dfb$2d$dialogs$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["DfbGlyph"], {
             iconKey: entry.iconKey ?? "folder",
@@ -1590,7 +1605,7 @@ function DesktopIcons() {
             iconClass: "h-4 w-4"
         }, void 0, false, {
             fileName: "[project]/src/components/desktop/desktop.tsx",
-            lineNumber: 470,
+            lineNumber: 489,
             columnNumber: 7
         }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$desktop$2f$app$2d$tile$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["AppTile"], {
             appKey: entry.appKey ?? "",
@@ -1598,7 +1613,7 @@ function DesktopIcons() {
             iconClass: "h-4 w-4"
         }, void 0, false, {
             fileName: "[project]/src/components/desktop/desktop.tsx",
-            lineNumber: 472,
+            lineNumber: 491,
             columnNumber: 7
         }, this);
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
@@ -1635,13 +1650,13 @@ function DesktopIcons() {
                                     children: entry.label
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/desktop/desktop.tsx",
-                                    lineNumber: 514,
+                                    lineNumber: 533,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, entry.id, true, {
                             fileName: "[project]/src/components/desktop/desktop.tsx",
-                            lineNumber: 498,
+                            lineNumber: 517,
                             columnNumber: 11
                         }, this);
                     }),
@@ -1661,24 +1676,24 @@ function DesktopIcons() {
                                     children: ghost.entry.label
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/desktop/desktop.tsx",
-                                    lineNumber: 531,
+                                    lineNumber: 550,
                                     columnNumber: 13
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/desktop/desktop.tsx",
-                            lineNumber: 524,
+                            lineNumber: 543,
                             columnNumber: 11
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/src/components/desktop/desktop.tsx",
-                        lineNumber: 523,
+                        lineNumber: 542,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/desktop/desktop.tsx",
-                lineNumber: 478,
+                lineNumber: 497,
                 columnNumber: 7
             }, this),
             sidebarOpen && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("aside", {
@@ -1701,7 +1716,7 @@ function DesktopIcons() {
                                         children: t("sidebar.title")
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/desktop/desktop.tsx",
-                                        lineNumber: 559,
+                                        lineNumber: 578,
                                         columnNumber: 17
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$badge$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Badge"], {
@@ -1710,13 +1725,13 @@ function DesktopIcons() {
                                         children: items.length
                                     }, void 0, false, {
                                         fileName: "[project]/src/components/desktop/desktop.tsx",
-                                        lineNumber: 562,
+                                        lineNumber: 581,
                                         columnNumber: 17
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/components/desktop/desktop.tsx",
-                                lineNumber: 558,
+                                lineNumber: 577,
                                 columnNumber: 15
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -1731,25 +1746,25 @@ function DesktopIcons() {
                                     "aria-hidden": true
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/desktop/desktop.tsx",
-                                    lineNumber: 576,
+                                    lineNumber: 595,
                                     columnNumber: 17
                                 }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(SidebarCollapseIcon, {
                                     className: "h-4 w-4",
                                     "aria-hidden": true
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/desktop/desktop.tsx",
-                                    lineNumber: 578,
+                                    lineNumber: 597,
                                     columnNumber: 17
                                 }, this)
                             }, void 0, false, {
                                 fileName: "[project]/src/components/desktop/desktop.tsx",
-                                lineNumber: 567,
+                                lineNumber: 586,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/desktop/desktop.tsx",
-                        lineNumber: 556,
+                        lineNumber: 575,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("nav", {
@@ -1784,34 +1799,34 @@ function DesktopIcons() {
                                                 children: entry.label
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/desktop/desktop.tsx",
-                                                lineNumber: 611,
+                                                lineNumber: 630,
                                                 columnNumber: 23
                                             }, this)
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/components/desktop/desktop.tsx",
-                                        lineNumber: 588,
+                                        lineNumber: 607,
                                         columnNumber: 19
                                     }, this)
                                 }, entry.id, false, {
                                     fileName: "[project]/src/components/desktop/desktop.tsx",
-                                    lineNumber: 587,
+                                    lineNumber: 606,
                                     columnNumber: 17
                                 }, this))
                         }, void 0, false, {
                             fileName: "[project]/src/components/desktop/desktop.tsx",
-                            lineNumber: 585,
+                            lineNumber: 604,
                             columnNumber: 13
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/src/components/desktop/desktop.tsx",
-                        lineNumber: 584,
+                        lineNumber: 603,
                         columnNumber: 11
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/desktop/desktop.tsx",
-                lineNumber: 545,
+                lineNumber: 564,
                 columnNumber: 9
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$tooltip$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Tooltip"], {
@@ -1845,17 +1860,17 @@ function DesktopIcons() {
                                 "aria-hidden": true
                             }, void 0, false, {
                                 fileName: "[project]/src/components/desktop/desktop.tsx",
-                                lineNumber: 651,
+                                lineNumber: 670,
                                 columnNumber: 13
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/src/components/desktop/desktop.tsx",
-                            lineNumber: 630,
+                            lineNumber: 649,
                             columnNumber: 11
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/src/components/desktop/desktop.tsx",
-                        lineNumber: 629,
+                        lineNumber: 648,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$tooltip$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["TooltipContent"], {
@@ -1865,13 +1880,13 @@ function DesktopIcons() {
                         children: sidebarOpen ? t("sidebar.toGrid") : t("sidebar.toSidebar")
                     }, void 0, false, {
                         fileName: "[project]/src/components/desktop/desktop.tsx",
-                        lineNumber: 654,
+                        lineNumber: 673,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/desktop/desktop.tsx",
-                lineNumber: 628,
+                lineNumber: 647,
                 columnNumber: 7
             }, this),
             menu && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$desktop$2f$floating$2d$menu$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["FloatingMenu"], {
@@ -1885,7 +1900,7 @@ function DesktopIcons() {
                             className: "h-3.5 w-3.5"
                         }, void 0, false, {
                             fileName: "[project]/src/components/desktop/desktop.tsx",
-                            lineNumber: 668,
+                            lineNumber: 687,
                             columnNumber: 21
                         }, this),
                         onSelect: ()=>activate(menu.entry)
@@ -1896,7 +1911,7 @@ function DesktopIcons() {
                             className: "h-3.5 w-3.5"
                         }, void 0, false, {
                             fileName: "[project]/src/components/desktop/desktop.tsx",
-                            lineNumber: 674,
+                            lineNumber: 693,
                             columnNumber: 25
                         }, this),
                         onSelect: ()=>{
@@ -1909,7 +1924,7 @@ function DesktopIcons() {
                             className: "h-3.5 w-3.5"
                         }, void 0, false, {
                             fileName: "[project]/src/components/desktop/desktop.tsx",
-                            lineNumber: 682,
+                            lineNumber: 701,
                             columnNumber: 25
                         }, this),
                         onSelect: ()=>{
@@ -1924,7 +1939,7 @@ function DesktopIcons() {
                                 className: "h-3.5 w-3.5"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/desktop/desktop.tsx",
-                                lineNumber: 692,
+                                lineNumber: 711,
                                 columnNumber: 27
                             }, this),
                             onSelect: ()=>resetIconLayout()
@@ -1933,13 +1948,13 @@ function DesktopIcons() {
                 ]
             }, void 0, false, {
                 fileName: "[project]/src/components/desktop/desktop.tsx",
-                lineNumber: 661,
+                lineNumber: 680,
                 columnNumber: 9
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/src/components/desktop/desktop.tsx",
-        lineNumber: 476,
+        lineNumber: 495,
         columnNumber: 5
     }, this);
 }
@@ -2014,12 +2029,12 @@ function Desktop() {
                 children: [
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(DesktopIcons, {}, void 0, false, {
                         fileName: "[project]/src/components/desktop/desktop.tsx",
-                        lineNumber: 737,
+                        lineNumber: 756,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$desktop$2f$dashboard$2d$header$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["DashboardHeader"], {}, void 0, false, {
                         fileName: "[project]/src/components/desktop/desktop.tsx",
-                        lineNumber: 740,
+                        lineNumber: 759,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2031,7 +2046,7 @@ function Desktop() {
                             bottom: 52
                         },
                         children: windows.map((win)=>{
-                            const meta = resolveWindowMeta(win, t, dfbTree);
+                            const meta = resolveWindowMeta(win, t, dfbTree, locale);
                             return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$desktop$2f$app$2d$window$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["AppWindow"], {
                                 win: win,
                                 title: meta.title,
@@ -2039,23 +2054,23 @@ function Desktop() {
                                 children: meta.content
                             }, win.id, false, {
                                 fileName: "[project]/src/components/desktop/desktop.tsx",
-                                lineNumber: 756,
+                                lineNumber: 775,
                                 columnNumber: 15
                             }, this);
                         })
                     }, void 0, false, {
                         fileName: "[project]/src/components/desktop/desktop.tsx",
-                        lineNumber: 744,
+                        lineNumber: 763,
                         columnNumber: 9
                     }, this),
                     startOpen && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$desktop$2f$start$2d$menu$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["StartMenu"], {}, void 0, false, {
                         fileName: "[project]/src/components/desktop/desktop.tsx",
-                        lineNumber: 763,
+                        lineNumber: 782,
                         columnNumber: 23
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$desktop$2f$taskbar$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Taskbar"], {}, void 0, false, {
                         fileName: "[project]/src/components/desktop/desktop.tsx",
-                        lineNumber: 764,
+                        lineNumber: 783,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$sonner$2f$dist$2f$index$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Toaster"], {
@@ -2065,23 +2080,23 @@ function Desktop() {
                         closeButton: true
                     }, void 0, false, {
                         fileName: "[project]/src/components/desktop/desktop.tsx",
-                        lineNumber: 766,
+                        lineNumber: 785,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/desktop/desktop.tsx",
-                lineNumber: 728,
+                lineNumber: 747,
                 columnNumber: 7
             }, this)
         }, void 0, false, {
             fileName: "[project]/src/components/desktop/desktop.tsx",
-            lineNumber: 727,
+            lineNumber: 746,
             columnNumber: 7
         }, this)
     }, void 0, false, {
         fileName: "[project]/src/components/desktop/desktop.tsx",
-        lineNumber: 726,
+        lineNumber: 745,
         columnNumber: 5
     }, this);
 }
@@ -7121,6 +7136,7 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$re
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$right$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronRight$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/chevron-right.js [app-client] (ecmascript) <export default as ChevronRight>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$file$2d$text$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__FileText$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/file-text.js [app-client] (ecmascript) <export default as FileText>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$folder$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Folder$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/folder.js [app-client] (ecmascript) <export default as Folder>");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$wrench$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Wrench$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/wrench.js [app-client] (ecmascript) <export default as Wrench>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$settings$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/stores/settings-store.ts [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$desktop$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/stores/desktop-store.ts [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$badge$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/src/components/ui/badge.tsx [app-client] (ecmascript)");
@@ -7138,12 +7154,15 @@ var _s = __turbopack_context__.k.signature();
 ;
 ;
 ;
-function DfbMenuWindow({ menuId }) {
+function DfbMenuWindow({ menuRef }) {
     _s();
     const t = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$settings$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useT"])();
     const dir = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$settings$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useSettings"])({
         "DfbMenuWindow.useSettings[dir]": (s)=>s.dir()
     }["DfbMenuWindow.useSettings[dir]"]);
+    const locale = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$settings$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useSettings"])({
+        "DfbMenuWindow.useSettings[locale]": (s)=>s.locale
+    }["DfbMenuWindow.useSettings[locale]"]);
     const tree = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$dfb$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useDfb"])({
         "DfbMenuWindow.useDfb[tree]": (s)=>s.tree
     }["DfbMenuWindow.useDfb[tree]"]);
@@ -7164,11 +7183,13 @@ function DfbMenuWindow({ menuId }) {
         load
     ]);
     const [path, setPath] = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"]([]);
+    const appRef = menuRef.startsWith("app:") ? menuRef.slice(4) : null;
     const root = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useMemo"]({
-        "DfbMenuWindow.useMemo[root]": ()=>(0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$dfb$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["findMenuNode"])(tree, menuId)
+        "DfbMenuWindow.useMemo[root]": ()=>appRef ? (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$dfb$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["findMenuNodeByAppKey"])(tree, appRef) : (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$dfb$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["findMenuNode"])(tree, Number(menuRef))
     }["DfbMenuWindow.useMemo[root]"], [
         tree,
-        menuId
+        appRef,
+        menuRef
     ]);
     const current = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useMemo"]({
         "DfbMenuWindow.useMemo[current]": ()=>{
@@ -7188,7 +7209,15 @@ function DfbMenuWindow({ menuId }) {
         path
     ]);
     const openForm = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useCallback"]({
-        "DfbMenuWindow.useCallback[openForm]": (form)=>openWindow("dfb-form", String(form.id))
+        "DfbMenuWindow.useCallback[openForm]": (form)=>{
+            /* Task 46 — the «فرمساز» launcher (system form, ComponentKey
+         "dfb-builder") opens the form builder + tree; every other form
+         opens its runtime window. */ if (form.componentKey === "dfb-builder") {
+                openWindow("dfb-builder");
+                return;
+            }
+            openWindow("dfb-form", String(form.id));
+        }
     }["DfbMenuWindow.useCallback[openForm]"], [
         openWindow
     ]);
@@ -7198,7 +7227,7 @@ function DfbMenuWindow({ menuId }) {
             children: t("common.loading")
         }, void 0, false, {
             fileName: "[project]/src/components/erp/form-builder/dfb-menu-window.tsx",
-            lineNumber: 49,
+            lineNumber: 70,
             columnNumber: 12
         }, this);
     }
@@ -7208,7 +7237,7 @@ function DfbMenuWindow({ menuId }) {
             children: t("dfb.menuNotFound")
         }, void 0, false, {
             fileName: "[project]/src/components/erp/form-builder/dfb-menu-window.tsx",
-            lineNumber: 52,
+            lineNumber: 73,
             columnNumber: 12
         }, this);
     }
@@ -7231,14 +7260,14 @@ function DfbMenuWindow({ menuId }) {
                                 iconClass: "h-2.5 w-2.5"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/erp/form-builder/dfb-menu-window.tsx",
-                                lineNumber: 68,
+                                lineNumber: 89,
                                 columnNumber: 13
                             }, this),
-                            root.title
+                            (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$dfb$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["dfbNodeTitle"])(root, t, locale)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/erp/form-builder/dfb-menu-window.tsx",
-                        lineNumber: 63,
+                        lineNumber: 84,
                         columnNumber: 11
                     }, this),
                     path.map((pid, i)=>{
@@ -7259,37 +7288,37 @@ function DfbMenuWindow({ menuId }) {
                                     "aria-hidden": true
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/erp/form-builder/dfb-menu-window.tsx",
-                                    lineNumber: 83,
+                                    lineNumber: 104,
                                     columnNumber: 34
                                 }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$chevron$2d$right$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__ChevronRight$3e$__["ChevronRight"], {
                                     className: "h-3 w-3",
                                     "aria-hidden": true
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/erp/form-builder/dfb-menu-window.tsx",
-                                    lineNumber: 83,
+                                    lineNumber: 104,
                                     columnNumber: 84
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                                     type: "button",
                                     className: "rounded-md px-1.5 py-0.5 hover:bg-foreground/5",
                                     onClick: ()=>setPath(path.slice(0, i + 1)),
-                                    children: node.title
+                                    children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$dfb$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["dfbNodeTitle"])(node, t, locale)
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/erp/form-builder/dfb-menu-window.tsx",
-                                    lineNumber: 84,
+                                    lineNumber: 105,
                                     columnNumber: 17
                                 }, this)
                             ]
                         }, pid, true, {
                             fileName: "[project]/src/components/erp/form-builder/dfb-menu-window.tsx",
-                            lineNumber: 82,
+                            lineNumber: 103,
                             columnNumber: 15
                         }, this);
                     })
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/erp/form-builder/dfb-menu-window.tsx",
-                lineNumber: 62,
+                lineNumber: 83,
                 columnNumber: 9
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$scroll$2d$area$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["ScrollArea"], {
@@ -7305,7 +7334,7 @@ function DfbMenuWindow({ menuId }) {
                                     children: t("dfb.submenusSection")
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/erp/form-builder/dfb-menu-window.tsx",
-                                    lineNumber: 101,
+                                    lineNumber: 122,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7324,32 +7353,32 @@ function DfbMenuWindow({ menuId }) {
                                                     iconClass: "h-5 w-5"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/erp/form-builder/dfb-menu-window.tsx",
-                                                    lineNumber: 110,
+                                                    lineNumber: 131,
                                                     columnNumber: 21
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                     className: "line-clamp-2 text-center text-[11px] font-medium leading-tight",
-                                                    children: sm.title
+                                                    children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$dfb$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["dfbNodeTitle"])(sm, t, locale)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/components/erp/form-builder/dfb-menu-window.tsx",
-                                                    lineNumber: 111,
+                                                    lineNumber: 132,
                                                     columnNumber: 21
                                                 }, this)
                                             ]
                                         }, sm.id, true, {
                                             fileName: "[project]/src/components/erp/form-builder/dfb-menu-window.tsx",
-                                            lineNumber: 104,
+                                            lineNumber: 125,
                                             columnNumber: 19
                                         }, this))
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/erp/form-builder/dfb-menu-window.tsx",
-                                    lineNumber: 102,
+                                    lineNumber: 123,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/erp/form-builder/dfb-menu-window.tsx",
-                            lineNumber: 100,
+                            lineNumber: 121,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("section", {
@@ -7360,7 +7389,7 @@ function DfbMenuWindow({ menuId }) {
                                     children: t("dfb.formsSection")
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/erp/form-builder/dfb-menu-window.tsx",
-                                    lineNumber: 119,
+                                    lineNumber: 140,
                                     columnNumber: 13
                                 }, this),
                                 forms.length === 0 ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -7368,41 +7397,50 @@ function DfbMenuWindow({ menuId }) {
                                     children: t("dfb.noFormsHere")
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/erp/form-builder/dfb-menu-window.tsx",
-                                    lineNumber: 121,
+                                    lineNumber: 142,
                                     columnNumber: 15
                                 }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("ul", {
                                     className: "grid gap-2",
-                                    children: forms.map((f)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
+                                    children: forms.map((f)=>{
+                                        const isBuilder = f.componentKey === "dfb-builder";
+                                        return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("li", {
                                             children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
                                                 type: "button",
                                                 onClick: ()=>openForm(f),
                                                 className: "flex w-full items-center gap-3 rounded-xl border border-border/60 px-3 py-2.5 text-start transition-all hover:border-foreground/25 hover:shadow-md",
                                                 children: [
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                        className: "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-teal-500 to-emerald-600 text-white shadow-sm",
-                                                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$file$2d$text$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__FileText$3e$__["FileText"], {
+                                                        className: isBuilder ? "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-amber-500 to-amber-700 text-white shadow-sm" : "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-teal-500 to-emerald-600 text-white shadow-sm",
+                                                        children: isBuilder ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$wrench$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Wrench$3e$__["Wrench"], {
                                                             className: "h-4 w-4",
                                                             "aria-hidden": true
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/components/erp/form-builder/dfb-menu-window.tsx",
-                                                            lineNumber: 134,
-                                                            columnNumber: 25
+                                                            lineNumber: 163,
+                                                            columnNumber: 40
+                                                        }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$file$2d$text$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__FileText$3e$__["FileText"], {
+                                                            className: "h-4 w-4",
+                                                            "aria-hidden": true
+                                                        }, void 0, false, {
+                                                            fileName: "[project]/src/components/erp/form-builder/dfb-menu-window.tsx",
+                                                            lineNumber: 163,
+                                                            columnNumber: 85
                                                         }, this)
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/erp/form-builder/dfb-menu-window.tsx",
-                                                        lineNumber: 133,
-                                                        columnNumber: 23
+                                                        lineNumber: 156,
+                                                        columnNumber: 25
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                         className: "min-w-0 flex-1",
                                                         children: [
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                 className: "block truncate text-sm font-medium",
-                                                                children: f.title
+                                                                children: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$dfb$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["dfbFormTitle"])(f, locale)
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/erp/form-builder/dfb-menu-window.tsx",
-                                                                lineNumber: 137,
-                                                                columnNumber: 25
+                                                                lineNumber: 166,
+                                                                columnNumber: 27
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                 className: "block truncate text-[11px] text-muted-foreground",
@@ -7410,14 +7448,14 @@ function DfbMenuWindow({ menuId }) {
                                                                 children: f.code
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/components/erp/form-builder/dfb-menu-window.tsx",
-                                                                lineNumber: 138,
-                                                                columnNumber: 25
+                                                                lineNumber: 167,
+                                                                columnNumber: 27
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/components/erp/form-builder/dfb-menu-window.tsx",
-                                                        lineNumber: 136,
-                                                        columnNumber: 23
+                                                        lineNumber: 165,
+                                                        columnNumber: 25
                                                     }, this),
                                                     f.isSystem && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$badge$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Badge"], {
                                                         variant: "secondary",
@@ -7425,29 +7463,30 @@ function DfbMenuWindow({ menuId }) {
                                                         children: t("dfb.systemForm")
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/components/erp/form-builder/dfb-menu-window.tsx",
-                                                        lineNumber: 142,
-                                                        columnNumber: 38
+                                                        lineNumber: 171,
+                                                        columnNumber: 40
                                                     }, this)
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/components/erp/form-builder/dfb-menu-window.tsx",
-                                                lineNumber: 128,
-                                                columnNumber: 21
+                                                lineNumber: 151,
+                                                columnNumber: 23
                                             }, this)
                                         }, f.id, false, {
                                             fileName: "[project]/src/components/erp/form-builder/dfb-menu-window.tsx",
-                                            lineNumber: 127,
-                                            columnNumber: 19
-                                        }, this))
+                                            lineNumber: 150,
+                                            columnNumber: 21
+                                        }, this);
+                                    })
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/erp/form-builder/dfb-menu-window.tsx",
-                                    lineNumber: 125,
+                                    lineNumber: 146,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/erp/form-builder/dfb-menu-window.tsx",
-                            lineNumber: 118,
+                            lineNumber: 139,
                             columnNumber: 11
                         }, this),
                         submenus.length === 0 && forms.length === 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -7458,7 +7497,7 @@ function DfbMenuWindow({ menuId }) {
                                     "aria-hidden": true
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/erp/form-builder/dfb-menu-window.tsx",
-                                    lineNumber: 152,
+                                    lineNumber: 182,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -7466,36 +7505,37 @@ function DfbMenuWindow({ menuId }) {
                                     children: t("dfb.emptyMenu")
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/erp/form-builder/dfb-menu-window.tsx",
-                                    lineNumber: 153,
+                                    lineNumber: 183,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/erp/form-builder/dfb-menu-window.tsx",
-                            lineNumber: 151,
+                            lineNumber: 181,
                             columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/erp/form-builder/dfb-menu-window.tsx",
-                    lineNumber: 98,
+                    lineNumber: 119,
                     columnNumber: 9
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/erp/form-builder/dfb-menu-window.tsx",
-                lineNumber: 97,
+                lineNumber: 118,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/src/components/erp/form-builder/dfb-menu-window.tsx",
-        lineNumber: 59,
+        lineNumber: 80,
         columnNumber: 5
     }, this);
 }
-_s(DfbMenuWindow, "mIuLO/jJjeNLRFFtM6vcWOvrlRo=", false, function() {
+_s(DfbMenuWindow, "13R3pUvnekziYVC0em/M+60+zDM=", false, function() {
     return [
         __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$settings$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useT"],
+        __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$settings$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useSettings"],
         __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$settings$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useSettings"],
         __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$dfb$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useDfb"],
         __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$dfb$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useDfb"],
@@ -7555,6 +7595,9 @@ var _s = __turbopack_context__.k.signature(), _s1 = __turbopack_context__.k.sign
 function FormBuilderWindow() {
     _s();
     const t = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$settings$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useT"])();
+    const locale = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$settings$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useSettings"])({
+        "FormBuilderWindow.useSettings[locale]": (s)=>s.locale
+    }["FormBuilderWindow.useSettings[locale]"]);
     const chrome = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$desktop$2f$app$2d$window$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useWindowChrome"])();
     const headerMaximized = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$desktop$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useDesktop"])({
         "FormBuilderWindow.useDesktop[headerMaximized]": (s)=>s.windows.find({
@@ -7667,7 +7710,7 @@ function FormBuilderWindow() {
             const mapMenu = {
                 "FormBuilderWindow.useMemo[nodes].mapMenu": (n)=>({
                         id: `m${n.id}`,
-                        label: n.title,
+                        label: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$dfb$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["dfbNodeTitle"])(n, t, locale),
                         icon: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                             className: "flex h-4 w-4 shrink-0 items-center justify-center",
                             children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$erp$2f$form$2d$builder$2f$dfb$2d$dialogs$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["DfbGlyph"], {
@@ -7676,12 +7719,12 @@ function FormBuilderWindow() {
                                 iconClass: "h-2.5 w-2.5"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/erp/form-builder/form-builder-window.tsx",
-                                lineNumber: 112,
+                                lineNumber: 113,
                                 columnNumber: 11
                             }, this)
                         }, void 0, false, {
                             fileName: "[project]/src/components/erp/form-builder/form-builder-window.tsx",
-                            lineNumber: 111,
+                            lineNumber: 112,
                             columnNumber: 9
                         }, this),
                         children: [
@@ -7689,7 +7732,7 @@ function FormBuilderWindow() {
                             ...n.forms.map({
                                 "FormBuilderWindow.useMemo[nodes].mapMenu": (f)=>({
                                         id: `f${f.id}`,
-                                        label: f.title,
+                                        label: (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$dfb$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["dfbFormTitle"])(f, locale),
                                         icon: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                             className: "flex h-4 w-4 shrink-0 items-center justify-center",
                                             children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$file$2d$text$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__FileText$3e$__["FileText"], {
@@ -7697,12 +7740,12 @@ function FormBuilderWindow() {
                                                 "aria-hidden": true
                                             }, void 0, false, {
                                                 fileName: "[project]/src/components/erp/form-builder/form-builder-window.tsx",
-                                                lineNumber: 122,
+                                                lineNumber: 123,
                                                 columnNumber: 15
                                             }, this)
                                         }, void 0, false, {
                                             fileName: "[project]/src/components/erp/form-builder/form-builder-window.tsx",
-                                            lineNumber: 121,
+                                            lineNumber: 122,
                                             columnNumber: 13
                                         }, this)
                                     })
@@ -7713,7 +7756,9 @@ function FormBuilderWindow() {
             return tree.map(mapMenu);
         }
     }["FormBuilderWindow.useMemo[nodes]"], [
-        tree
+        tree,
+        t,
+        locale
     ]);
     /* ---------------- detail fields ---------------- */ const fields = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useMemo"]({
         "FormBuilderWindow.useMemo[fields]": ()=>{
@@ -7982,7 +8027,7 @@ function FormBuilderWindow() {
                                     className: "h-4 w-4"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/erp/form-builder/form-builder-window.tsx",
-                                    lineNumber: 268,
+                                    lineNumber: 269,
                                     columnNumber: 13
                                 }, this),
                                 " ",
@@ -7990,7 +8035,7 @@ function FormBuilderWindow() {
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/erp/form-builder/form-builder-window.tsx",
-                            lineNumber: 267,
+                            lineNumber: 268,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -8008,7 +8053,7 @@ function FormBuilderWindow() {
                                     className: "h-4 w-4"
                                 }, void 0, false, {
                                     fileName: "[project]/src/components/erp/form-builder/form-builder-window.tsx",
-                                    lineNumber: 274,
+                                    lineNumber: 275,
                                     columnNumber: 13
                                 }, this),
                                 " ",
@@ -8016,7 +8061,7 @@ function FormBuilderWindow() {
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/erp/form-builder/form-builder-window.tsx",
-                            lineNumber: 270,
+                            lineNumber: 271,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$badge$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Badge"], {
@@ -8029,13 +8074,13 @@ function FormBuilderWindow() {
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/components/erp/form-builder/form-builder-window.tsx",
-                            lineNumber: 276,
+                            lineNumber: 277,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/components/erp/form-builder/form-builder-window.tsx",
-                    lineNumber: 266,
+                    lineNumber: 267,
                     columnNumber: 9
                 }, this);
             }
@@ -8049,7 +8094,7 @@ function FormBuilderWindow() {
                 }["FormBuilderWindow.useMemo[detailExtra]"]
             }, selected.form.id, false, {
                 fileName: "[project]/src/components/erp/form-builder/form-builder-window.tsx",
-                lineNumber: 283,
+                lineNumber: 284,
                 columnNumber: 7
             }, this);
         }
@@ -8066,11 +8111,12 @@ function FormBuilderWindow() {
     const detailTitleOverride = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useMemo"]({
         "FormBuilderWindow.useMemo[detailTitleOverride]": ()=>{
             if (!selected) return null;
-            return selected.kind === "menu" ? selected.menu.title : `${t("dfb.formEntry")}: ${selected.form.title}`;
+            return selected.kind === "menu" ? (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$dfb$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["dfbNodeTitle"])(selected.menu, t, locale) : `${t("dfb.formEntry")}: ${(0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$dfb$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["dfbFormTitle"])(selected.form, locale)}`;
         }
     }["FormBuilderWindow.useMemo[detailTitleOverride]"], [
         selected,
-        t
+        t,
+        locale
     ]);
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
         className: "flex h-full flex-col",
@@ -8091,7 +8137,7 @@ function FormBuilderWindow() {
                                 className: "h-4 w-4"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/erp/form-builder/form-builder-window.tsx",
-                                lineNumber: 308,
+                                lineNumber: 309,
                                 columnNumber: 11
                             }, this),
                             " ",
@@ -8099,7 +8145,7 @@ function FormBuilderWindow() {
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/erp/form-builder/form-builder-window.tsx",
-                        lineNumber: 307,
+                        lineNumber: 308,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -8112,7 +8158,7 @@ function FormBuilderWindow() {
                                 className: "h-4 w-4"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/erp/form-builder/form-builder-window.tsx",
-                                lineNumber: 311,
+                                lineNumber: 312,
                                 columnNumber: 11
                             }, this),
                             " ",
@@ -8120,7 +8166,7 @@ function FormBuilderWindow() {
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/erp/form-builder/form-builder-window.tsx",
-                        lineNumber: 310,
+                        lineNumber: 311,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -8131,20 +8177,20 @@ function FormBuilderWindow() {
                                 "aria-hidden": true
                             }, void 0, false, {
                                 fileName: "[project]/src/components/erp/form-builder/form-builder-window.tsx",
-                                lineNumber: 314,
+                                lineNumber: 315,
                                 columnNumber: 11
                             }, this),
                             t("dfb.builderNote")
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/erp/form-builder/form-builder-window.tsx",
-                        lineNumber: 313,
+                        lineNumber: 314,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/erp/form-builder/form-builder-window.tsx",
-                lineNumber: 306,
+                lineNumber: 307,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -8161,7 +8207,7 @@ function FormBuilderWindow() {
                         "aria-hidden": true
                     }, void 0, false, {
                         fileName: "[project]/src/components/erp/form-builder/form-builder-window.tsx",
-                        lineNumber: 327,
+                        lineNumber: 328,
                         columnNumber: 17
                     }, this),
                     fields: fields,
@@ -8216,12 +8262,12 @@ function FormBuilderWindow() {
                     addBranchLabel: t("dfb.addSubMenu")
                 }, void 0, false, {
                     fileName: "[project]/src/components/erp/form-builder/form-builder-window.tsx",
-                    lineNumber: 320,
+                    lineNumber: 321,
                     columnNumber: 9
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/components/erp/form-builder/form-builder-window.tsx",
-                lineNumber: 319,
+                lineNumber: 320,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$erp$2f$form$2d$builder$2f$dfb$2d$dialogs$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["DfbMenuDialog"], {
@@ -8234,7 +8280,7 @@ function FormBuilderWindow() {
                 onSaved: reload
             }, void 0, false, {
                 fileName: "[project]/src/components/erp/form-builder/form-builder-window.tsx",
-                lineNumber: 370,
+                lineNumber: 371,
                 columnNumber: 7
             }, this),
             wizard.parent && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$erp$2f$form$2d$builder$2f$dfb$2d$dialogs$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["DfbFormWizard"], {
@@ -8250,7 +8296,7 @@ function FormBuilderWindow() {
                 }
             }, void 0, false, {
                 fileName: "[project]/src/components/erp/form-builder/form-builder-window.tsx",
-                lineNumber: 377,
+                lineNumber: 378,
                 columnNumber: 9
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$erp$2f$form$2d$builder$2f$dfb$2d$dialogs$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["DfbQueryDialog"], {
@@ -8259,7 +8305,7 @@ function FormBuilderWindow() {
                 onSaved: reload
             }, void 0, false, {
                 fileName: "[project]/src/components/erp/form-builder/form-builder-window.tsx",
-                lineNumber: 387,
+                lineNumber: 388,
                 columnNumber: 7
             }, this),
             confirmDelete && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$forms$2f$action$2d$bar$2f$confirm$2d$delete$2d$dialog$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["ConfirmDeleteDialog"], {
@@ -8272,19 +8318,20 @@ function FormBuilderWindow() {
                 onConfirm: doDelete
             }, void 0, false, {
                 fileName: "[project]/src/components/erp/form-builder/form-builder-window.tsx",
-                lineNumber: 389,
+                lineNumber: 390,
                 columnNumber: 9
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/src/components/erp/form-builder/form-builder-window.tsx",
-        lineNumber: 304,
+        lineNumber: 305,
         columnNumber: 5
     }, this);
 }
-_s(FormBuilderWindow, "wbmf0VuZI/1FQq+eNYve4QIWW6s=", false, function() {
+_s(FormBuilderWindow, "ZfxC1ppdkstMR4LyOhNNA6sbXFQ=", false, function() {
     return [
         __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$settings$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useT"],
+        __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$settings$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useSettings"],
         __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$desktop$2f$app$2d$window$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useWindowChrome"],
         __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$desktop$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useDesktop"],
         __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$stores$2f$dfb$2d$store$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useDfb"],
@@ -8340,7 +8387,7 @@ _c = FormBuilderWindow;
                                 className: "h-4 w-4"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/erp/form-builder/form-builder-window.tsx",
-                                lineNumber: 434,
+                                lineNumber: 435,
                                 columnNumber: 11
                             }, this),
                             " ",
@@ -8348,7 +8395,7 @@ _c = FormBuilderWindow;
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/erp/form-builder/form-builder-window.tsx",
-                        lineNumber: 433,
+                        lineNumber: 434,
                         columnNumber: 9
                     }, this),
                     !form.isSystem && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -8361,7 +8408,7 @@ _c = FormBuilderWindow;
                                 className: "h-4 w-4"
                             }, void 0, false, {
                                 fileName: "[project]/src/components/erp/form-builder/form-builder-window.tsx",
-                                lineNumber: 441,
+                                lineNumber: 442,
                                 columnNumber: 13
                             }, this),
                             " ",
@@ -8369,7 +8416,7 @@ _c = FormBuilderWindow;
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/components/erp/form-builder/form-builder-window.tsx",
-                        lineNumber: 437,
+                        lineNumber: 438,
                         columnNumber: 11
                     }, this),
                     !form.isSystem && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -8389,7 +8436,7 @@ _c = FormBuilderWindow;
                         children: t("common.delete")
                     }, void 0, false, {
                         fileName: "[project]/src/components/erp/form-builder/form-builder-window.tsx",
-                        lineNumber: 445,
+                        lineNumber: 446,
                         columnNumber: 11
                     }, this),
                     form.isSystem && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$badge$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Badge"], {
@@ -8398,20 +8445,20 @@ _c = FormBuilderWindow;
                         children: t("dfb.systemForm")
                     }, void 0, false, {
                         fileName: "[project]/src/components/erp/form-builder/form-builder-window.tsx",
-                        lineNumber: 460,
+                        lineNumber: 461,
                         columnNumber: 27
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/components/erp/form-builder/form-builder-window.tsx",
-                lineNumber: 432,
+                lineNumber: 433,
                 columnNumber: 7
             }, this),
             detail ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$erp$2f$form$2d$builder$2f$dfb$2d$dialogs$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["DfbFieldsOverview"], {
                 fields: detail.fields
             }, void 0, false, {
                 fileName: "[project]/src/components/erp/form-builder/form-builder-window.tsx",
-                lineNumber: 462,
+                lineNumber: 463,
                 columnNumber: 17
             }, this) : null,
             detail && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$erp$2f$form$2d$builder$2f$dfb$2d$dialogs$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["DfbAddFieldDialog"], {
@@ -8423,13 +8470,13 @@ _c = FormBuilderWindow;
                 }
             }, void 0, false, {
                 fileName: "[project]/src/components/erp/form-builder/form-builder-window.tsx",
-                lineNumber: 464,
+                lineNumber: 465,
                 columnNumber: 9
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/src/components/erp/form-builder/form-builder-window.tsx",
-        lineNumber: 431,
+        lineNumber: 432,
         columnNumber: 5
     }, this);
 }
