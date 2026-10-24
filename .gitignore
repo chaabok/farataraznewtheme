@@ -4,3 +4,4 @@ tool-results/
 .next/
 dev.log
 mini-services/*/dist/
+upload/
