@@ -2498,3 +2498,19 @@ Stage Summary:
 - نرم‌افزار اکنون ۱۳ زبانه است: Deutsch و Русский در همهٔ سطح‌ها (سوییچر، تنظیمات، واژه‌نامهٔ کامل UI، پنل‌های ترجمهٔ فرمساز، ترجمهٔ آنلاین داده، نمونه‌های seed و زنجیرهٔ fallback) مثل بقیهٔ زبان‌ها سرویس می‌شوند؛ هر دو LTR با تاریخ بومی. باگ پخش i18n نسل قبلی هم به‌عنوان اثر جانبی ترمیم شد (خطاهای type-check از ۱۱۶ به ۵).
 - artifacts: src/i18n/{config.ts، dictionaries.ts}، src/stores/settings-store.ts، src/components/erp/form-builder/{field-translations.tsx، records-list-window.tsx}، mini-services/dfb-service/{src/translations/translations.dto.ts، src/seed/seed.service.ts، prisma/schema.prisma}؛ db/dfb.db (+۸ ردیف ترجمهٔ نمونه).
 - محدودیت شناخته‌شده: فونت روسی از زنجیرهٔ fallback سیستم استفاده می‌کند (Vazirmatn گلیف سیریلیک ندارد — مثل en/fr رفتار می‌کند)؛ رابط مدیریت «زبان‌های فعال» بدون تغییر و برای ۱۳ زبان کار می‌کند؛ ۳ خطای tsc پیشین نامرتبط (start-menu، entityRef) خارج از دامنهٔ این تسک ماند.
+
+---
+Task ID: 72
+Agent: Z.ai Code (main orchestrator)
+Task: درخواست مالک (مشاوره — هنوز تأیید نشده) — «توی آیکون تنظیمات یک تب اضافه کنید بنام پیکربندی نرم افزارها و تب عمومی، تب حسابداری، تب دریافت و پرداخت، تب انبار، تب فروش، تب دارایی ثابت، تب حقوق را اضافه کنید. هر کدام از این تب ها دارای فیلدهایی که به مرور اعلان می کنم. برای تنظیمات نرم افزار باید فیلدهای ارث بری رعایت گردد.»
+
+Work Log (فقط مشاوره — بدون هیچ کد):
+- بازخوانی وضعیت: Task 70 (ترجمهٔ دادهٔ آنلاین/آفلاین) و Task 71 (de/ru — ۱۳ زبان) کامل‌اند؛ پنجرهٔ تنظیمات اکنون home + دو زیرصفحه (ساختار کسب‌وکار، مدیریت کاربران) با الگوی کارت پرتابگر دارد (settings-window.tsx).
+- نگاشت ۷ تب درخواستی به کاتالوگ نرم‌افزارها (app-catalog.ts): عمومی=general، حسابداری=accounting، دریافت و پرداخت=receiptsPayment، انبار=inventory، فروش=sales، دارایی ثابت=fixedAssets، حقوق=payroll — عنوان‌های i18n این ۷ مورد از قبل ×۱۳ زبان در dictionaries.ts موجود است (تنها تفاوت: کاتالوگ «حقوق و دستمزد»، عبارت مالک «حقوق»).
+- بررسی قرارداد ارث‌بری: بلوک ۱۲فیلدی AppBaseEntity (mini-services/_shared/app-base-entity.ts) + appBaseOnCreate/OnUpdate + baseDataScopeWhere؛ جداول پلتفرمی Setting/IDGeneration/... مستثنا هستند ولی جدول جدید تنظیمات نرم‌افزارها «عملیاتی» است و باید بلوک کامل را بگیرد + TABLE_REGISTRY (§16) + VERSIONED_MODELS (§2.5).
+- مشاورهٔ طراحی به مالک ارائه شد: زیرصفحهٔ «پیکربندی نرم افزارها» در پنجرهٔ تنظیمات با ۷ تب؛ جدول واحد SoftwareConfig (ID دستی + AppKey + ConfigKey + ConfigValue + بلوک ارث‌بری ۱۲فیلدی؛ unique(AppKey,ConfigKey,BusinessStructureRef)) در settings-service (Gnr)؛ API GET/PUT per-appKey با whitelist؛ رجیستری اسکیمای فیلد (فرانت + whitelist سرور) برای فیلدهای به‌مرور اعلام‌شونده بدون مهاجرت دیتابیس.
+- چهار تصمیم باز به مالک ارائه شد: ① جای هاب (کارت پرتابگر + زیرصفحه) ② برچسب «حقوق» در برابر «حقوق و دستمزد» ③ مدل key-value واحد در برابر جدول ستونی مجزا ④ scope ساختار سازمانی در unique.
+- در انتظار تأیید مالک برای شروع پیاده‌سازی.
+
+Stage Summary:
+- درک درخواست به مالک بازگویی و طراحی کامل (دیتابیس/بک‌اند/فرانت/i18n×۱۳) پیشنهاد شد؛ هنوز هیچ پیاده‌سازی انجام نشده — Task 72 منتظر «بلی» مالک است.
