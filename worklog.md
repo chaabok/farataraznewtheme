@@ -2404,3 +2404,29 @@ Work Log:
 Stage Summary:
 - نمای «کلیک روی فرم» در فرمساز مطابق سلیقهٔ مالک سبک شد: سه آیتم زائد حذف و کد یتیم (کامپوننت دیالوگ، state، ایمپورت، ثابت و ۶۶ خط i18n) کامل پاک‌سازی شد؛ افزودن فیلد صرفاً از استودیو طراحی فرم.
 - artifacts: form-builder-window.tsx، dfb-dialogs.tsx، dictionaries.ts؛ بدون تغییر دیتابیس.
+
+---
+Task ID: 68
+Agent: Z.ai Code (main orchestrator)
+Task: تأیید مالک بر مشاورهٔ ترجمه — پیاده‌سازی «ترجمهٔ آفلاین ۱۱زبانهٔ اطلاعات فیلدها هنگام تغییر زبان نرم‌افزار» (جدول ترجمهٔ مرکزی DfbTranslation + کش کلاینت + پنل زبان در استودیو).
+
+Work Log:
+- مشاوره: سه گزینه مقایسه شد (جدول ترجمهٔ مرکزی / ستون‌های چندگانه / JSON) — جدول مرکزی تأیید مالک («بلی»). نکتهٔ کلیدی طراحی: چون در فرم‌های کاربر ID فیلدها در هر ذخیره بازتولید می‌شود (replaceFields)، هویت ترجمه با «کلید بیزینسی پایدار» گرفتنی شد نه ID ردیف: Menu→(menuId، Title)، Form→(formId، Title)، Field→(formRef، fieldKey). زبان fa پذیرفته نمی‌شود (متن اصلی خودش fa است)؛ ۱۰ زبان دیگر.
+- اسکیما: مدل DfbTranslation در mini-services/dfb-service/prisma/schema.prisma (۱۲فیلد AppBaseEntity + Version + @@unique چهارگانه؛ §2.3/§16) → db:push + generate.
+- ثبت در TABLE_REGISTRY (id-generation) + شمارندهٔ IDGeneration در seed + VERSIONED_MODELS در prisma.service (§2.5).
+- ماژول جدید translations (controller/service/dto/module): GET advancedTools/translations (کل نقشه) + POST upsert دسته‌ای (۱..۵۰۰ آیتم؛ value خالی = حذف؛ validate: زبان/موجودیت/وجود مبدأ — fa رد می‌شود؛ 404 برای مبدأ ناموجود) + GET langs. دو نکتهٔ اشکال‌زدایی: ValidationPipe با whitelist:true دکوراتور class-validator می‌خواست؛ deleteMany سینتکس کلید مرکب نمی‌پذیرد (فیلتر اسکالر).
+- پاک‌سازی همگام در خود سرویس: removeField → حذف ترجمه‌های (Field، formRef، fieldKey)؛ remove(form) → حذف Form+Field با entityRef=formId؛ replaceFields → حذف ترجمه‌های فیلدهایی که دیگر وجود ندارند (notIn fieldKeys)؛ menus.remove → حذف Menu.
+- seed گام ۴ (idempotent): «۴ب» ترجمهٔ نمونهٔ ۱۰زبانهٔ موجودیت‌های فعلی (فرم‌های «انواع وسیله نقلیه/ساختار کسب و کار/فرمساز» + منوی «حمل و ترابری» — هر ۴ × ۱۰ زبان) و بعد «۴الف» مهاجرت میراث ستون‌های Title_En/Label_En به ردیف‌های en (ترتیب مهم: نمونه اول تا en بهتری جایگزین میراث ضعیف مثل «haml»/«vehicleyypes» شود — این ترتیب پس از تست اصلاح شد).
+- فرانت — استور جدید src/stores/dfb-translations.ts: نقشهٔ byLang (زبان→کلید مرکبی→متن) با persist روی localStorage (کلید erp.dfb-translations) + load یک‌باره + applyLocal خوش‌بینانه + saveDfbTranslations (POST + apply) + useDfbTrMap (نقشهٔ زبان فعلی، reactive) + dfbResolveTr (زنجیره: ترجمهٔ زبان فعلی → fa → *_En).
+- helperهای dfb-store توسعه یافتند: dfbFormTitle/dfbNodeTitle پارامتر اختیاری trMap گرفتند + dfbFieldLabel جدید (Field:<formRef>:<fieldKey>). فراخوانی‌های این helper اکنون trMap را از useDfbTrMap می‌گذرانند — form-builder-window (درخت + عنوان جزئیات)، dfb-menu-window (ناوبری + فهرست فرم‌ها)، desktop.tsx (عنوان ۴ نوع پنجرهٔ داینامیک + برچسب آیکون‌های کاربر دسکتاپ)، start-menu.tsx (آیکون‌های کاربر)، dfb-form-runtime (عنوان فرم، عنوان تب‌ها، برچسب همهٔ فیلدها body/grid/footer/tree)، records-list-window (ستون‌های MainDataGrid + عنوان زندهٔ پنجره). واکشی یک‌بارهٔ نقشه در Desktop useEffect (ensureDfbTranslations).
+- استودیو: FieldTranslationsBody جدید (field-translations.tsx) — انتخابگر ۱۰ زبان با نقطهٔ «پر/خالی» + شمارندهٔ n/10 + ورودی dir=auto؛ هر ضربه فوراً کش را به‌روز می‌کند و ذخیرهٔ سرور debounce ۶۰۰ms + flush در unmount. در FieldSettingsBody (مشترک ریل + مودال ویژگی‌ها) بعد از «برچسب لاتین» سوار شد (prop جدید formRef به هر دو محل فراخوانی پاس شد). fieldKey اکنون از لحظهٔ ساخت پایدار است (fld_<ts36>) تا ترجمه پیش از اولین ذخیره هم معنا داشته باشد (پیش‌آیند فیلدهای script).
+- i18n: کلید جدید «dfb.i18n.title» × ۱۱ زبان در dictionaries.ts.
+- نکتهٔ عملیاتی: bun --hot سرویس dfb پس از چند reload ناپایدار شد (مرگ بی‌صدای پروسه)؛ سرویس با bun run start (بدون hot) پایدار شد — برای این تسک پایداری مهم‌تر از reload خودکار بود.
+- E2E API (curl از مسیر BFF): upsert/حذف با مقدار خالی/no-op تکراری/fa رد/404 مبدأ ناموجود — همه سبز؛ ۴۰ ردیف seed.
+- E2E مرورگر (agent-browser 1280×800): سوییچ en → درخت فرمساز «Vehicle Types/Transportation/Form Builder» و آیکون دسکتاپ «Transportation»؛ سوییچ ar → عنوان جزئیات «نموذج: أنواع المركبات»؛ استودیو → افزودن فیلد متن (fieldKey پایدار fld_mvmrvq4915) → پنل «ترجمهٔ برچسب» (0/10) → انتخاب العربية و تایپ «نوع وسیله نقلیه» → ردیف روی سرور در همان لحظه (debounce) → ذخیرهٔ قالب → بازکردن ران‌تایم در عربی: عنوان فرم «أنواع المركبات» + برچسب فیلد «نوع وسیله نقلیه» (اسکرین‌شات تأیید)؛ پاک‌سازی: حذف فیلد + ذخیره → فیلدهای فرم [] و ردیف ترجمهٔ Field خودکار حذف شد (notIn sync) → ۴۰ ردیف مفید باقی. ریلود تمیز نهایی در fa: ۰ خطای کنسول.
+- خانه‌داری §0.9: بک‌آپ زمان‌دار پیش از push.
+
+Stage Summary:
+- ترجمهٔ آفلاین ۱۱زبانهٔ محتوای دیتابیسی فرمساز فعال است: عنوان منو/فرم و برچسب فیلدها با تغییر زبان نرم‌افزار بلافاصله و بدون هیچ درخواست شبکه عوض می‌شوند (کش localStorage + نقشهٔ واکنشی)؛ ورود ترجمه از پنل زبان در استودیو (ریل و مودال ویژگی‌ها) با ذخیرهٔ فوری؛ زنجیرهٔ fallback تضمین می‌کند زبان‌های بدون ترجمه به فارسی برمی‌گردند. معماری نسبت به مهاجرت آیندهٔ PostgreSQL بی‌تفاوت است (Prisma + §2.3).
+- artifacts: mini-services/dfb-service/{prisma/schema.prisma، src/translations/*، src/forms/forms.service.ts، src/menus/menus.service.ts، src/seed/seed.service.ts، src/prisma/prisma.service.ts، src/id-generation/table-registry.ts، src/app.module.ts}، src/stores/dfb-translations.ts، src/stores/dfb-store.ts، src/components/erp/form-builder/{field-translations.tsx، dfb-studio.tsx، dfb-form-runtime.tsx، form-builder-window.tsx، dfb-menu-window.tsx، records-list-window.tsx}، src/components/desktop/{desktop.tsx، start-menu.tsx}، src/i18n/dictionaries.ts.
+- محدودیت شناخته‌شده: ترجمهٔ «عنوان تب‌ها» (DfbFormTab) فعلاً پشتیبانی نمی‌شود چون ID تب‌ها در هر ذخیره بازتولید می‌شود — نیازمند کلید پایدار clientKey در مدل (کار آینده). ترجمهٔ آیتم‌های select/radio نیز از همین الگو در آینده اضافه می‌شود (FieldKey=opt.<value>).
