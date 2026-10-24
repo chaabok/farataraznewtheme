@@ -8,7 +8,7 @@ import {
   SlidersHorizontal, Square, Trash2, Type, X,
 } from "lucide-react";
 import { toast } from "sonner";
-import { useT } from "@/stores/settings-store";
+import { useT, useSettings } from "@/stores/settings-store";
 import { useDesktop } from "@/stores/desktop-store";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/select";
 import {
   fetchFormDetail, dfbApi, saveFormData, loadFormData,
-  fetchQueryOptionsForFields, normalizeFieldWidth,
+  fetchQueryOptionsForFields, normalizeFieldWidth, widthMinWidthClass, dfbFormTitle,
   type DfbFormDetail, type DfbFieldDef, type DfbTabDef,
 } from "@/stores/dfb-store";
 import { LatinInput } from "@/components/forms/latin-input";
@@ -32,9 +32,13 @@ import {
   DFB_THEME_SWATCHES, dfbShellTheme, dfbBankAlign,
   type DfbFormStyle, type DfbBankAlign,
 } from "@/lib/dfb-theme";
-import { ACTION_BAR_KEYS, FormActionBar } from "@/components/forms/action-bar";
-import { FlowFieldGrid } from "@/components/forms/form-primitives";
-import type { SimpleFormField } from "@/components/forms/simple-form-two-row-tabbed";
+import { ACTION_BAR_KEYS } from "@/components/forms/action-bar";
+import {
+  SimpleFormTwoRowTabbed,
+  type SimpleFormField,
+  type SimpleFormTab,
+  type SimpleFormGridColumn,
+} from "@/components/forms/simple-form-two-row-tabbed";
 import { cn } from "@/lib/utils";
 
 /**
@@ -72,6 +76,13 @@ import { cn } from "@/lib/utils";
  * The hierarchy persists via DfbFormTab.ParentRef (band row = 0, child
  * tabs reference their band) with clientKey/parentKey correlation
  * because tab ids regenerate on every save.
+ *
+ * Task 51 — گزارش مالک: ۱) the live preview rendered ALL fields flat —
+ * it now mounts the REAL SimpleFormTwoRowTabbed engine (the runtime's
+ * exact template), so a form with tabs previews with the same tab
+ * navigation as the sample form; ۲) the field delete icon did nothing —
+ * removeField reassigned `fields` on the findContainer WRAPPER instead of
+ * mutating the bank/tab array in place (fixed with splice).
  */
 
 /* ------------------------------- model ------------------------------- */
@@ -627,7 +638,12 @@ function StudioInner({ formId }: { formId: number }) {
       commit((d) => {
         const dst = findContainer(d, containerKey);
         if (!dst) return;
-        dst.fields = dst.fields.filter((f) => f.key !== fieldKey);
+        /* Task 51 — MUST mutate the array IN PLACE: findContainer returns a
+           wrapper object, and reassigning `dst.fields = ...` would detach
+           the filtered copy from the bank/tab (the owner-reported bug: the
+           delete icon "did nothing"). splice keeps the reference live. */
+        const i = dst.fields.findIndex((f) => f.key === fieldKey);
+        if (i >= 0) dst.fields.splice(i, 1);
       });
       setSelectedFieldKey((k) => (k === fieldKey ? null : k));
     },
@@ -983,9 +999,21 @@ function StudioInner({ formId }: { formId: number }) {
         {/* ---------- canvas ---------- */}
         <ScrollArea className="max-lg:min-h-56 min-h-0 flex-1 bg-muted/30">
           <div className="mx-auto w-full max-w-3xl p-3 sm:p-5">
+            {/* Task 51 — preview chip (the template below owns the shell header,
+                so the preview badge rides ABOVE the shell instead) */}
+            {preview && (
+              <div className="mb-2 flex items-center gap-2">
+                <Badge variant="outline" className="text-[9px]">{t("dfb.studio.preview")}</Badge>
+                {previewDataId != null && (
+                  <span className="font-mono text-[9px] text-muted-foreground" dir="ltr">#{previewDataId}</span>
+                )}
+              </div>
+            )}
             {/* mock form shell */}
             <div className="overflow-hidden rounded-2xl border border-border/60 bg-background shadow-lg">
-              {/* shell header (theme) */}
+              {/* shell header (theme) — design mode only; the live preview
+                  renders the REAL template which brings its own header */}
+              {!preview && (
               <header
                 className={cn(
                   "relative flex h-11 select-none items-center gap-2.5 px-3 text-white rtl:bg-gradient-to-l ltr:bg-gradient-to-r from-teal-600 via-teal-600 to-emerald-600",
@@ -1009,15 +1037,15 @@ function StudioInner({ formId }: { formId: number }) {
                 </span>
                 <span aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-white/25" />
               </header>
-              {/* Task 48 — preview = the RUNNING form minus design bands:
-                  real action bar + interactive field flow (data entry) */}
+              )}
+              {/* Task 51 — preview = the RUNNING form itself:
+                  SimpleFormTwoRowTabbed engine with the designed tabs */}
               {preview ? (
                 <PreviewCanvas
                   state={state}
                   values={previewValues}
                   options={previewOptions}
                   records={previewRecords}
-                  dataId={previewDataId}
                   align={dfbBankAlign(state.shell.style, "main")}
                   busy={busy}
                   onFieldChange={(key, v) => setPreviewValues((pv) => ({ ...pv, [key]: v }))}
@@ -2181,15 +2209,17 @@ function FieldPreview({ field }: { field: StudioField }) {
 }
 
 /**
- * Task 48 — LIVE preview body (owner requirements 2 + 5): the design bands
- * (dashed bank containers, bank titles, count chips, add-buttons) are NOT
- * rendered — only the fields flow under the shell, using the SAME FieldCell
- * the runtime uses, with the designed widths (WidthSpan percent) and bank
- * alignment. The REAL action bar rides on top: data entry saves to the EAV
- * store exactly like the running form (fields must have DB ids).
+ * Task 51 — LIVE preview = the RUNNING form itself (owner request: «اگر فرمی
+ * دارای تب بندی بود باید تب ها همانند نمونه فرم نمایش داده شود»). The flat
+ * field flow of Task 48 is replaced by the REAL SimpleFormTwoRowTabbed
+ * template engine — the exact component the runtime mounts — mapped from the
+ * studio model: main-band fields flow on top, records-table bands become
+ * tabs (their «افزودن تب» children = inner tab strips, each one a grid),
+ * input-fields bands become "fields" tabs. No designer chrome (dashed bands,
+ * add buttons) ever renders; data entry still saves to the EAV store.
  */
 function PreviewCanvas({
-  state, values, options, records, dataId, align, busy,
+  state, values, options, records, align, busy,
   onFieldChange, onSave, onSaveClose, onReset, onCopy, onDelete, onPrint,
   onExitPreview, onOpenRecord,
 }: {
@@ -2197,7 +2227,6 @@ function PreviewCanvas({
   values: Record<string, string | boolean>;
   options: Record<number, Array<{ value: string; label: string }>>;
   records: Array<{ dataId: number; values: Record<string, string | boolean> }>;
-  dataId: number | null;
   align: DfbBankAlign;
   busy: boolean;
   onFieldChange: (key: string, value: string | boolean) => void;
@@ -2210,7 +2239,8 @@ function PreviewCanvas({
   onExitPreview: () => void;
   onOpenRecord: (dataId: string) => void;
 }) {
-  const t = useT();
+  const locale = useSettings((s) => s.locale);
+  const theme = dfbShellTheme(state.shell.style);
   const toSimple = (f: StudioField): SimpleFormField => ({
     id: f.key,
     label: f.label,
@@ -2224,40 +2254,74 @@ function PreviewCanvas({
     ltr: f.fieldType === "number" || f.fieldType === "date",
     disabled: busy,
   });
+  /** grid columns of one record table (tab fields → columns, widths ride) */
+  const colOf = (f: StudioField): SimpleFormGridColumn => ({
+    id: f.key,
+    label: f.label,
+    required: f.required,
+    minWidth: widthMinWidthClass(f.widthSpan),
+  });
+
+  /* Task 51 — the runtime's tab mapping, mirrored on the studio model:
+     banks[1..] are the DfbFormTab band rows; a records-table band's tabs
+     (created with «افزودن تب») become the INNER tab strip of its panel.
+     Labels are locale-aware (dfbFormTitle) exactly like the runtime. */
+  const previewTabs: SimpleFormTab[] = state.banks.slice(1).map((bank) => {
+    if (bank.tabKind === 2) {
+      return {
+        id: bank.key,
+        label: bank.title,
+        kind: "fields" as const,
+        columns: [],
+        fields: bank.fields.map(toSimple),
+      };
+    }
+    if (bank.tabs.length > 0) {
+      /* legacy band-level fields (pre-Task 50 save) wrap into ONE pseudo tab
+         titled after the band — render it like the runtime does: a plain
+         grid tab, no inner strip (the wrap is materialized on next save) */
+      if (bank.tabs.length === 1 && bank.tabs[0].key.startsWith("tb-legacy-")) {
+        return { id: bank.key, label: bank.title, columns: bank.tabs[0].fields.map(colOf) };
+      }
+      return {
+        id: bank.key,
+        label: bank.title,
+        columns: [],
+        children: bank.tabs.map((tb) => ({
+          id: `${bank.key}::${tb.key}`,
+          label: dfbFormTitle({ title: tb.title, titleEn: tb.titleEn }, locale),
+          columns: tb.fields.map(colOf),
+        })),
+      };
+    }
+    return { id: bank.key, label: bank.title, columns: bank.fields.map(colOf) };
+  });
 
   return (
-    <>
-      {/* real action bar (configured keys only — owner rule Task 48) */}
-      <div className="flex flex-wrap items-center gap-1.5 border-b border-border/60 bg-muted/40 px-3 py-2">
-        <FormActionBar
-          className="min-w-0 flex-1"
-          actions={state.shell.footerButtons}
-          onReset={onReset}
-          onSave={onSave}
-          onSaveClose={onSaveClose}
-          onCopy={onCopy}
-          onDelete={onDelete}
-          onPrint={onPrint}
-          onClose={onExitPreview}
-          listItems={records.map((r) => ({ id: String(r.dataId), title: String(r.dataId) }))}
-          onOpenListItem={(item) => onOpenRecord(item.id)}
-          canSave={!busy}
-        />
-        <Badge variant="outline" className="text-[9px]">{t("dfb.studio.preview")}</Badge>
-        {dataId != null && (
-          <span className="font-mono text-[9px] text-muted-foreground" dir="ltr">#{dataId}</span>
-        )}
-      </div>
-      {/* fields only — no bands */}
-      <div className="px-4 pb-3 pt-2.5" style={dfbShellTheme(state.shell.style).bodyStyle}>
-        <FlowFieldGrid
-          fields={allFieldsOf(state).map(toSimple)}
-          onFieldChange={onFieldChange}
-          idPrefix="dfbprev"
-          align={align}
-        />
-      </div>
-    </>
+    <SimpleFormTwoRowTabbed
+      title={state.shell.title}
+      badge={state.shell.badge || undefined}
+      icon={<FileText className="h-3.5 w-3.5" aria-hidden />}
+      headerClassName={theme.headerClassName}
+      titleClassName={theme.titleClassName}
+      bodyStyle={theme.bodyStyle}
+      fields={state.banks[0]?.fields.map(toSimple) ?? []}
+      onFieldChange={onFieldChange}
+      tabs={previewTabs}
+      actions={state.shell.footerButtons}
+      fieldsAlign={align}
+      onReset={onReset}
+      onSave={onSave}
+      onSaveClose={onSaveClose}
+      onCopy={onCopy}
+      onDelete={onDelete}
+      onPrint={onPrint}
+      onClose={onExitPreview}
+      onHeaderClose={onExitPreview}
+      listItems={records.map((r) => ({ id: String(r.dataId), title: String(r.dataId) }))}
+      onOpenListItem={(item) => onOpenRecord(item.id)}
+      canSave={!busy}
+    />
   );
 }
 
