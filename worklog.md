@@ -2286,3 +2286,23 @@ Work Log:
 Stage Summary:
 - چهار اصلاح مودال «ویژگی‌های فیلد» هم در سورس، هم در مرورگر (دسکتاپ و موبایل) تأیید نهایی شد — تسک ۵۸/۵۹/۶۰ بسته؛ بدهی باز جدیدی از این درخواست باقی نماند.
 - artifacts: گزارش راستی‌آزمایی + بک‌آپ تازهٔ db + .gitignore/upload.
+
+---
+Task ID: 62
+Agent: Z.ai Code (main orchestrator)
+Task: گزارش مالک — «در مودال تنظیمات فیلدها اسکریپت select * from db.table("DfbForm") را اجرا کردم ولی در تب پیش‌نمایش خطا ایجاد می‌شود» (تصویر: خطای عمومی «پیام را در لاگ سرویس ببینید»).
+
+Work Log:
+- ریشه‌یابی از لاگ سرویس: `form script failed: Unexpected identifier 'db'` — سندباکس اسکریپت فقط بدنهٔ JS می‌پذیرفت و SQL طبیعیِ مالک را SyntaxError می‌داد؛ ضمناً پیام واقعی بک‌اند (که در ApiError موجود بود) در فرانت دور ریخته می‌شد و توستِ کلی «لاگ سرویس» نشان داده می‌شد.
+- backend (forms.service.ts): parseSqlSelect + execSqlSelect — یک پارسر SELECT فقط-خواندنیِ کوچک: `select <ستون‌ها|*> from <جدول> [where ستون = مقدار [and …]] [limit N]` (جدول به‌صورت db.table("X") یا نقل‌قولی یا ساده هم پذیرفته می‌شود؛ `;` انتهایی تحمل می‌شود) — اجرا از مسیر همان خوانندهٔ امن sqlite (شناسه‌ها با اسکیمای واقعی اعتبارسنجی، مقادیر پارامتری، اتصال readonly، سقف ۲۰۰ ردیف)؛ projection ستون‌ها با اعتبارسنجی اسکیما؛ هر select بدقواره پیام روشن فارسی می‌دهد؛ غیر-select همان مسیر JS (AsyncFunction) قبلی. runScript اول مسیر SQL را امتحان می‌کند.
+- فرانت (dfb-studio.tsx): scriptErrMsg (ApiError → پیام واقعی، وگرنه کلید i18n)؛ توست سه اجراکنندهٔ اسکریپت (ریل فیلد، ریل آیتم‌ها، مودال) اکنون پیام واقعی می‌دهد؛ در تب «پیش‌نمایش اطلاعات» پنل خطای قرمز inline با role=alert اضافه شد (عنوان + متن دقیق خطا)؛ state قبلی پاک و placeholder ادیتور نمونهٔ SQL هم گرفت.
+- i18n: dfb.studio.scriptExecError در ۱۱ زبان به متن کوتاه («خطا در اجرای اسکریپت») تغییر کرد (ارجاع به لاگ دیگر معنی ندارد)؛ dfb.studio.scriptHint در ۱۱ زبان جملهٔ «یا ساده‌تر، دستور SQL هم پذیرفته می‌شود: select * from DfbForm limit 10» گرفت. (تصحیح وسط‌مسیر: جایگزینی regex-ای که به نقل‌قول‌های گریزدار \\" برخورد کرده بود، با بازسازی خط‌به‌خط ۱۱ ردیف — هر ۲۲ مقدار راستی‌آزمایی شد.)
+- باگ حین ساخت: `hit[2]` برای نام جدولِ bare (بدون نقل‌قول) گروهِ ناموجود دوم را می‌خواند → table=null؛ تفکیک به شاخهٔ quoted/bare با گروه درست.
+- smoke با curl امضاشده (۶ مسیر): select * from DfbForm ✓ ۳ ردیف؛ select Title, Code from DfbForm limit 2 ✓ projection+limit؛ select * from db.table("DfbForm") ✓؛ select Title from DfbMenu where NodeType = 1 limit 5 ✓ where+limit؛ جدول ناموجود → «جدول یا ویو … یافت نشد»؛ اسکریپت JS قدیمی ✓ و selectx بد → «خطای اجرای اسکریپت: Unexpected identifier …». tsc سرویس = 0.
+- E2E مرورگر: فرم ۱۱ → استودیو → فیلد اسکریپت روی باند اصلی → «ویرایش اسکریپت در مودال»: SQL در تب کد → تب پیش‌نمایش = گرید ۳ ردیف واقعی DfbForm (بدون خطا)؛ `select * from NoSuchTable` → پنل قرمز inline + توست با پیام واقعی؛ ورودی دقیق مالک `select * from db.table("DfbForm")` → گرید ۳ ردیف ✓. بدون ذخیرهٔ قالب → فرم ۱۱ دست‌نخورده (۰ فیلد، version=10).
+- **بهینه‌سازی محیط**: ۲۲ پروسهٔ bun زائد (نمونه‌های قدیمی dfb/settings از ری‌استارت‌های قبلی) شناسایی و kill شد → ~۲.۲GB حافظه آزاد شد (۴۵۰MB→۲.۴GB available)؛ چهار پورت ۳۰۰۰-۳۰۰۳ سالم ماندند. علت بن‌بست‌های قبلی CDP همین فشار حافظه بود.
+- eslint فایل‌های لمس‌شده = 0/0 (mini-services خارج از eslint پروژه است و با tsc خودش صفر است)؛ dev.log بدون خطا.
+
+Stage Summary:
+- اسکریپت فرمساز اکنون هم JS (`db.table(...).findMany`) و هم SQL ساده (`select * from جدول [where …] [limit N]`) را از مسیر امن فقط-خواندنی اجرا می‌کند؛ خطاها با پیام واقعی بک‌اند (inline + توست) دیده می‌شوند، نه ارجاع به لاگ.
+- artifacts: parseSqlSelect/execSqlSelect، پنل خطای inline مودال اسکریپت، scriptErrMsg، ۲۲ مقدار i18n (۱۱ زبان × ۲ کلید)، پاکسازی پروسه‌های زائد.

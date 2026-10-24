@@ -218,6 +218,118 @@ export class FormsService {
     return rows.map((r) => toPlain(r) as Record<string, unknown>);
   }
 
+  /* ------------------- Task 62 — SQL-style select for scripts ------------------- */
+
+  /**
+   * Task 62 (owner report) — the owner naturally writes SQL in the script
+   * editor («select * from DfbForm»). A tiny read-only SELECT parser over the
+   * SAME safe reader — no free SQL ever reaches SQLite:
+   *   select <cols|*> from <Table> [where <col> = <lit> [and ...]] [limit N]
+   * Table may also be written as db.table("X"). Returns null when the source
+   * is NOT a select statement (falls through to the JS sandbox); throws a
+   * clear BadRequest when it looks like a select but cannot be parsed.
+   */
+  private parseSqlSelect(src: string): {
+    cols: string[] | null;
+    table: string;
+    where: Record<string, unknown>;
+    limit: number;
+  } | null {
+    const s = src.trim().replace(/;+\s*$/, "");
+    if (!/^select\b/i.test(s)) return null;
+
+    const m = /^select\s+(.+?)\s+from\s+(.+)$/is.exec(s);
+    if (!m) throw new BadRequestException("دستور select نامعتبر است؛ نمونه: select * from DfbForm");
+    const colsPart = m[1].trim();
+    let tail = m[2].trim();
+
+    /* table source: db.table("X") | "X" | 'X' | bare identifier */
+    let table: string | null = null;
+    const dbt = /^db\.table\(\s*(["'`])([^"'`]+)\1\s*\)/i.exec(tail);
+    if (dbt) {
+      table = dbt[2];
+      tail = tail.slice(dbt[0].length).trim();
+    } else {
+      const quoted = /^(["'`])([^"'`]+)\1/.exec(tail);
+      const bare = /^([A-Za-z_][A-Za-z0-9_]*)/.exec(tail);
+      if (quoted) {
+        table = quoted[2];
+        tail = tail.slice(quoted[0].length).trim();
+      } else if (bare) {
+        table = bare[1];
+        tail = tail.slice(bare[0].length).trim();
+      }
+    }
+    if (!table || !IDENT_RE.test(table)) {
+      throw new BadRequestException(`نام جدول در select نامعتبر است: ${table ?? "—"}`);
+    }
+
+    /* column list: * or comma-separated identifiers (validated against schema later) */
+    let cols: string[] | null = null;
+    if (colsPart !== "*") {
+      cols = colsPart.split(",").map((c) => c.trim().replace(/^["'`]+|["'`]+$/g, "")).filter(Boolean);
+      if (cols.length === 0) throw new BadRequestException("فهرست ستون‌های select خالی است");
+      for (const c of cols) {
+        if (!IDENT_RE.test(c)) throw new BadRequestException(`ستون نامعتبر در select: ${c}`);
+      }
+    }
+
+    /* tail: [where …] [limit N] — where is equality-only, AND-chained, bound values */
+    let limit = SCRIPT_ROW_CAP;
+    const where: Record<string, unknown> = {};
+    const wm = /^where\s+(.+?)(?:\s+limit\s+(\d+))?$/is.exec(tail);
+    const lm = /^limit\s+(\d+)$/is.exec(tail);
+    if (wm) {
+      if (wm[2]) limit = Math.min(Number(wm[2]), SCRIPT_ROW_CAP);
+      for (const piece of wm[1].split(/\band\b/i)) {
+        const cm = /^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.+?)\s*$/.exec(piece);
+        if (!cm) throw new BadRequestException("در where فقط «ستون = مقدار» (با and) پذیرفته می‌شود");
+        const lit = cm[2];
+        const sq = /^'([^']*)'$/.exec(lit);
+        const dq = /^"([^"]*)"$/.exec(lit);
+        if (sq) where[cm[1]] = sq[1];
+        else if (dq) where[cm[1]] = dq[1];
+        else if (/^-?\d+(\.\d+)?$/.test(lit)) where[cm[1]] = Number(lit);
+        else throw new BadRequestException(`مقدار where پشتیبانی نمی‌شود: ${lit} (فقط رشتهٔ نقل‌قولی یا عدد)`);
+      }
+    } else if (lm) {
+      limit = Math.min(Number(lm[1]), SCRIPT_ROW_CAP);
+    } else if (tail !== "") {
+      throw new BadRequestException("بخش پایانی select قابل فهم نیست؛ نمونه: select * from DfbForm limit 10");
+    }
+
+    return { cols, table, where, limit };
+  }
+
+  /** executes a parsed SQL-style select via locateTable + sqliteFindMany */
+  private execSqlSelect(plan: {
+    cols: string[] | null;
+    table: string;
+    where: Record<string, unknown>;
+    limit: number;
+  }): Array<Record<string, unknown>> {
+    const loc = this.locateTable(plan.table);
+    if (!loc) {
+      throw new BadRequestException(`جدول یا ویو «${plan.table}» در بانک‌های اطلاعاتی متصل یافت نشد`);
+    }
+    if (plan.cols) {
+      const names = new Set(loc.fields.map((f) => f.name));
+      for (const c of plan.cols) {
+        if (!names.has(c)) throw new BadRequestException(`ستون «${c}» در «${plan.table}» وجود ندارد`);
+      }
+    }
+    const rows = this.sqliteFindMany(loc.file, plan.table, {
+      where: Object.keys(plan.where).length > 0 ? plan.where : undefined,
+      take: plan.limit,
+    });
+    if (!plan.cols) return rows;
+    return rows.map((r) => {
+      const out: Record<string, unknown> = {};
+      for (const c of plan.cols!) out[c] = r[c] ?? null;
+      return out;
+    });
+  }
+
   /* ------------------------------- read ------------------------------- */
 
   /** Full definition: form + tabs + fields (+header/body/footer parsed). */
@@ -498,6 +610,31 @@ export class FormsService {
     const src = String(script ?? "");
     if (!src.trim()) throw new BadRequestException("اسکریپت خالی است");
     if (src.length > 16000) throw new BadRequestException("اسکریپت بیش از حد بلند است");
+
+    /* Task 62 (owner report) — the owner naturally writes SQL («select * from
+       DfbForm»). If the source IS a select statement, run it through the SAME
+       safe sqlite reader (validated identifiers, bound values, read-only, row
+       cap) — no free SQL reaches SQLite. Anything else stays a JS body. */
+    const sqlPlan = this.parseSqlSelect(src);
+    if (sqlPlan) {
+      let rows: Array<Record<string, unknown>>;
+      try {
+        rows = this.execSqlSelect(sqlPlan);
+      } catch (err) {
+        if (err instanceof BadRequestException) throw err;
+        const msg = err instanceof Error ? err.message : String(err);
+        this.logger.warn(`form script failed: ${msg}`);
+        throw new BadRequestException(`خطای اجرای اسکریپت: ${msg}`);
+      }
+      const fields: string[] = [];
+      for (const r of rows.slice(0, 20)) {
+        for (const k of Object.keys(r ?? {})) {
+          if (!fields.includes(k)) fields.push(k);
+        }
+      }
+      this.logger.log(`form script executed rows=${rows.length} fields=${fields.length}`);
+      return { ok: true, fields, rowCount: rows.length, rows: rows.slice(0, 50) };
+    }
 
     const svc = this; // Task 59 — the connected-db reader needs `this`
     const db = {

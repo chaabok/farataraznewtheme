@@ -8,6 +8,7 @@ import {
   Pill, PencilLine, Play, Plus, RotateCcw, Save, Search, SlidersHorizontal, Square, Table2, Trash2, Type, X,
 } from "lucide-react";
 import { toast } from "sonner";
+import { ApiError } from "@/lib/api";
 import { useT, useSettings } from "@/stores/settings-store";
 import { useDesktop } from "@/stores/desktop-store";
 import { Button } from "@/components/ui/button";
@@ -959,6 +960,17 @@ function StudioInner({ formId }: { formId: number }) {
   /* -------- Task 53 — script field: run / select fetched fields / add -------- */
   const [scriptBusy, setScriptBusy] = React.useState(false);
 
+  /** Task 62 (owner report) — the backend's REAL script-error message (e.g.
+      «خطای اجرای اسکریپت: Unexpected identifier …») reaches the browser as an
+      ApiError; surface it instead of the generic «see service log» toast. */
+  const scriptErrMsg = React.useCallback(
+    (err: unknown) => {
+      const msg = err instanceof ApiError ? err.message : err instanceof Error ? err.message : "";
+      return msg.trim() && msg !== "network error" ? msg : t("dfb.studio.scriptExecError");
+    },
+    [t],
+  );
+
   const runSelectedScript = React.useCallback(async () => {
     if (!selectedFieldRef || selectedFieldRef.field.fieldType !== "script") return;
     const f = selectedFieldRef.field;
@@ -974,12 +986,12 @@ function StudioInner({ formId }: { formId: number }) {
         config: { ...(f.config ?? {}), fields: res.fields, rowCount: res.rowCount },
       });
       toast.success(t("dfb.studio.scriptRows").replace("{n}", String(res.rowCount)));
-    } catch {
-      toast.error(t("dfb.studio.scriptExecError"));
+    } catch (err) {
+      toast.error(scriptErrMsg(err));
     } finally {
       setScriptBusy(false);
     }
-  }, [selectedFieldRef, updateField, t]);
+  }, [selectedFieldRef, updateField, t, scriptErrMsg]);
 
   const toggleScriptFieldSelection = React.useCallback(
     (fieldName: string, on: boolean) => {
@@ -1102,12 +1114,12 @@ function StudioInner({ formId }: { formId: number }) {
       const vf = typeof f.config?.itemsValueField === "string" ? (f.config.itemsValueField as string) : undefined;
       setItemsCandidates((m) => ({ ...m, [f.key]: rowsToItems(res.rows, vf) }));
       toast.success(t("dfb.studio.scriptRows").replace("{n}", String(res.rowCount)));
-    } catch {
-      toast.error(t("dfb.studio.scriptExecError"));
+    } catch (err) {
+      toast.error(scriptErrMsg(err));
     } finally {
       setItemsBusy(false);
     }
-  }, [selectedFieldRef, t]);
+  }, [selectedFieldRef, t, scriptErrMsg]);
 
   const toggleItemCandidate = React.useCallback((fieldKey: string, value: string, on: boolean) => {
     setItemsPicked((m) => {
@@ -3594,6 +3606,8 @@ function ScriptModalDialog({
   const [tab, setTab] = React.useState<"code" | "preview">("code");
   const [busy, setBusy] = React.useState(false);
   const [preview, setPreview] = React.useState<DfbScriptResult | null>(null);
+  /* Task 62 (owner report) — the REAL backend error message, shown inline */
+  const [previewError, setPreviewError] = React.useState<string | null>(null);
   /* connected-database tree (loaded once per modal open) */
   const [schema, setSchema] = React.useState<DfbSchemaGroup[] | null>(null);
   const [schemaFailed, setSchemaFailed] = React.useState(false);
@@ -3655,6 +3669,7 @@ function ScriptModalDialog({
       return;
     }
     setBusy(true);
+    setPreviewError(null);
     try {
       const res = await executeFormScript(src);
       setPreview(res);
@@ -3668,8 +3683,17 @@ function ScriptModalDialog({
         onSetItemsCandidates(field.key, rowsToItems(res.rows, vf));
       }
       toast.success(t("dfb.studio.scriptRows").replace("{n}", String(res.rowCount)));
-    } catch {
-      toast.error(t("dfb.studio.scriptExecError"));
+    } catch (err) {
+      /* Task 62 (owner report) — show the backend's real message (e.g.
+         «خطای اجرای اسکریپت: Unexpected identifier …») inline in the preview
+         tab AND in the toast — not the old «see the service log» wording. */
+      const msg =
+        err instanceof ApiError && err.message.trim() && err.message !== "network error"
+          ? err.message
+          : t("dfb.studio.scriptExecError");
+      setPreviewError(msg);
+      setPreview(null);
+      toast.error(msg);
     } finally {
       setBusy(false);
     }
@@ -3854,7 +3878,7 @@ function ScriptModalDialog({
                 spellCheck={false}
                 dir="ltr"
                 aria-label={mode === "field" ? t("dfb.studio.scriptEditor") : t("dfb.studio.itemsScriptEditor")}
-                placeholder={'const rows = await db.table("DfbMenu").findMany({ take: 10 });\nreturn rows;'}
+                placeholder={'const rows = await db.table("DfbMenu").findMany({ take: 10 });\nreturn rows;\n\n// or simply (Task 62):\n// select * from DfbMenu limit 10'}
                 className="w-full resize-y rounded-lg border border-input bg-background px-2 py-1.5 font-mono text-[11px] leading-relaxed text-foreground shadow-xs outline-none transition-colors placeholder:text-muted-foreground/60 focus-visible:border-ring focus-visible:bg-background"
               />
               <p className="text-[10px] leading-relaxed text-muted-foreground">{t("dfb.studio.scriptHint")}</p>
@@ -3910,10 +3934,24 @@ function ScriptModalDialog({
                 </Badge>
               )}
             </div>
-            {!preview && !busy && (
+            {!preview && !busy && !previewError && (
               <p className="rounded-xl border border-dashed border-border/70 px-3 py-6 text-center text-[11px] text-muted-foreground">
                 {t("dfb.studio.scriptFetchedEmpty")}
               </p>
+            )}
+            {/* Task 62 (owner report) — the real error, inline (not only a toast) */}
+            {previewError && (
+              <div
+                role="alert"
+                className="grid gap-1 rounded-xl border border-rose-300 bg-rose-500/10 px-3 py-2.5"
+              >
+                <p className="flex items-center gap-1.5 text-[11px] font-semibold text-rose-700 dark:text-rose-300">
+                  <X className="h-3.5 w-3.5" aria-hidden /> {t("dfb.studio.scriptExecError")}
+                </p>
+                <p className="whitespace-pre-wrap break-words font-mono text-[10px] leading-relaxed text-rose-700/90 dark:text-rose-300/90" dir="auto">
+                  {previewError !== t("dfb.studio.scriptExecError") ? previewError : ""}
+                </p>
+              </div>
             )}
             {preview && (
               <>
