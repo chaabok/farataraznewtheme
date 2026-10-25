@@ -5,6 +5,7 @@ import { FormsService } from "./forms.service";
 import {
   AddFieldDto,
   CreateFormDto,
+  FormDataScopeQueryDto,
   RunScriptDto,
   SaveFormDataDto,
   UpdateFormDto,
@@ -63,8 +64,24 @@ export class FormsController {
   }
 
   @Get(":id/data")
-  loadData(@Param("id", ParseIntPipe) id: number, @Query("externalKey") externalKey?: string) {
-    return this.forms.loadData(id, externalKey);
+  loadData(
+    @Param("id", ParseIntPipe) id: number,
+    @Query("externalKey") externalKey?: string,
+    @Query("companyRef") companyRef?: string,
+    @Query("branchRef") branchRef?: string,
+    @Query("agencyRef") agencyRef?: string,
+    @Query("shopRef") shopRef?: string,
+    @Query("shared") shared?: string,
+  ) {
+    /* Task 78 — فیلتر نمایش بر اساس سطح سازمانی انتخابی هدر داشبورد */
+    const scope = new FormDataScopeQueryDto();
+    const num = (v?: string) => (v && v.trim() && Number.isFinite(Number(v)) ? Number(v) : undefined);
+    scope.companyRef = num(companyRef);
+    scope.branchRef = num(branchRef);
+    scope.agencyRef = num(agencyRef);
+    scope.shopRef = num(shopRef);
+    scope.shared = shared === "1" || shared === "true";
+    return this.forms.loadData(id, externalKey, scope);
   }
 
   /* Task 64 — MainDataGrid «فهرست کلّی»: حذف رکورد انتخاب‌شده */

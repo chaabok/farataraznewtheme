@@ -118,6 +118,31 @@ export class SaveFormDataDto {
   @IsOptional() @IsString() @MaxLength(120) externalKey?: string;
   /** { [fieldId: string]: string | boolean | null } */
   @IsObject() values: Record<string, string | boolean | number | null>;
+  /**
+   * Task 78 (owner request) — زنجیرهٔ سطح سازمانی انتخاب‌شده در هدر داشبورد؛
+   * روی رکورد تازه مُهر می‌شود (BusinessStructureRef = عمیق‌ترین گره انتخابی و
+   * CompanyRef/BranchRef/AgencyRef/ShopRef = زنجیرهٔ پدران). رکوردهای قبلی
+   * دست‌نخورده می‌مانند (انتقال سطح با ویرایش انجام نمی‌شود).
+   */
+  @IsOptional() @IsObject() org?: {
+    businessStructureRef?: number | null;
+    companyRef?: number | null;
+    branchRef?: number | null;
+    agencyRef?: number | null;
+    shopRef?: number | null;
+  };
+}
+
+/** Task 78 — پارامترهای فیلتر نمایش بر اساس سطح سازمانی انتخابی هدر داشبورد.
+ *  فیلتر = رکوردهای ساکنِ زیرِ درختِ عمیق‌ترین سطح انتخاب‌شده (با ستون‌های
+ *  زنجیرهٔ AppBase) + رکوردهای «دفتر مرکزی» وقتی اشتراک دادهٔ دفتر مرکزی
+ *  (IsBasicInfoShared ریشه) روشن است — پرچم shared از کلاینت می‌آید. */
+export class FormDataScopeQueryDto {
+  @IsOptional() @IsInt() companyRef?: number;
+  @IsOptional() @IsInt() branchRef?: number;
+  @IsOptional() @IsInt() agencyRef?: number;
+  @IsOptional() @IsInt() shopRef?: number;
+  @IsOptional() @IsBoolean() shared?: boolean;
 }
 
 function isValidComponentKey(key: string): boolean {

@@ -9,6 +9,7 @@ import {
   fetchFormDetail, loadFormData, dfbFormTitle, dfbFieldLabel, dfbApi, isDfbInputField,
   type DfbFormDetail,
 } from "@/stores/dfb-store";
+import { useOrgScope } from "@/stores/org-context-store";
 import {
   dfbTransKey, useDfbTrMap, useDfbTranslations,
 } from "@/stores/dfb-translations";
@@ -61,11 +62,14 @@ export function RecordsListWindow({ formId }: { formId: number }) {
     [activeLocales],
   );
 
+  /* Task 78 — فهرست کلّی هم در سطح سازمانی انتخابی هدر فیلتر می‌شود */
+  const { scope: orgScope } = useOrgScope();
+
   const fetchRows = React.useCallback(async () => {
     const d = await fetchFormDetail(formId);
-    const items = await loadFormData(formId);
+    const items = await loadFormData(formId, orgScope);
     return { d, items } as const;
-  }, [formId]);
+  }, [formId, orgScope]);
 
   const applyRows = React.useCallback(
     (d: DfbFormDetail, items: Awaited<ReturnType<typeof loadFormData>>) => {

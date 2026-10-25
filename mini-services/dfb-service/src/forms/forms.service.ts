@@ -17,12 +17,19 @@ import { APP_CATALOG } from "../../../_shared/app-catalog";
 import {
   AddFieldDto,
   CreateFormDto,
+  FormDataScopeQueryDto,
   SaveFormDataDto,
   UpdateFormDto,
   assertComponentKey,
   assertFieldType,
 } from "./forms.dto";
-import { appBaseOnCreate, appBaseOnUpdate, SYSTEM_ACTOR } from "../../../_shared/app-base-entity";
+import {
+  AppBaseActor,
+  HEAD_OFFICE_NODE_ID,
+  appBaseOnCreate,
+  appBaseOnUpdate,
+  SYSTEM_ACTOR,
+} from "../../../_shared/app-base-entity";
 import { parseJsonColumn, toPlain } from "../shared/serialize";
 
 /* ----------------- Task 59 — connected-database schema types ----------------- */
@@ -526,6 +533,43 @@ export class FormsService {
 
   /* ------------------------------- form data (EAV) ------------------------------- */
 
+  /**
+   * Task 78 — actor از زنجیرهٔ سطح سازمانی انتخاب‌شدهٔ هدر داشبورد (بدون IAM واقعی،
+   * هدر داشبورد مرجع انتخاب است): BusinessStructureRef = عمیق‌ترین گره انتخابی،
+   * بقیهٔ ستون‌های زنجیره از همان بدنه می‌آیند. بدون org → رفتار قبلی (دفتر مرکزی).
+   */
+  private actorFromOrg(org?: SaveFormDataDto["org"]): AppBaseActor {
+    if (!org) return SYSTEM_ACTOR;
+    const big = (v?: number | null) => (v != null && Number.isFinite(Number(v)) ? BigInt(v) : null);
+    const companyRef = big(org.companyRef);
+    const branchRef = big(org.branchRef);
+    const agencyRef = big(org.agencyRef);
+    const shopRef = big(org.shopRef);
+    const nodeId =
+      big(org.businessStructureRef) ?? shopRef ?? agencyRef ?? branchRef ?? companyRef ?? HEAD_OFFICE_NODE_ID;
+    return { userId: SYSTEM_ACTOR.userId, nodeId, companyRef, branchRef, agencyRef, shopRef };
+  }
+
+  /**
+   * Task 78 — فیلتر نمایش بر اساس سطح سازمانی انتخاب‌شدهٔ هدر داشبورد:
+   * رکوردهای زیرِ درختِ عمیق‌ترین سطح (با ستون زنجیرهٔ متناظر: ShopRef/
+   * AgencyRef/BranchRef/CompanyRef) + رکوردهای ساکنِ دقیقاً همان گره
+   * (BusinessStructureRef) + رکوردهای «دفتر مرکزی» وقتی اشتراک داده ریشه
+   * (IsBasicInfoShared) روشن است. بدون companyRef → بدون فیلتر (رفتار قبلی).
+   */
+  private orgScopeWhere(scope?: FormDataScopeQueryDto): { OR: Array<Record<string, bigint>> } | null {
+    if (!scope?.companyRef) return null;
+    const ors: Array<Record<string, bigint>> = [];
+    if (scope.shopRef != null) ors.push({ shopRef: BigInt(scope.shopRef) });
+    else if (scope.agencyRef != null) ors.push({ agencyRef: BigInt(scope.agencyRef) });
+    else if (scope.branchRef != null) ors.push({ branchRef: BigInt(scope.branchRef) });
+    else ors.push({ companyRef: BigInt(scope.companyRef) });
+    const deepest = scope.shopRef ?? scope.agencyRef ?? scope.branchRef ?? scope.companyRef;
+    ors.push({ businessStructureRef: BigInt(deepest) });
+    if (scope.shared) ors.push({ businessStructureRef: HEAD_OFFICE_NODE_ID });
+    return { OR: ors };
+  }
+
   /** ذخیرهٔ رکورد فرم: هر فیلد = یک سطر DfbFormDataValue (الگوی EAV). */
   async saveData(formId: number, dto: SaveFormDataDto) {
     const form = await this.prisma.dfbForm.findUnique({ where: { id: BigInt(formId) } });
@@ -534,6 +578,8 @@ export class FormsService {
     const fieldMap = new Map(fields.map((f) => [Number(f.id), f]));
 
     const externalKey = dto.externalKey ?? null;
+    /* Task 78 — مُهر زنجیرهٔ سطح سازمانی روی رکورد تازه (رکورد موجود جابه‌جا نمی‌شود) */
+    const actor = this.actorFromOrg(dto.org);
     const existing = externalKey
       ? await this.prisma.dfbFormData.findUnique({
           where: { formRef_externalKey: { formRef: BigInt(formId), externalKey } },
@@ -554,7 +600,7 @@ export class FormsService {
           id: BigInt(dataId),
           formRef: BigInt(formId),
           externalKey,
-          ...appBaseOnCreate(SYSTEM_ACTOR),
+          ...appBaseOnCreate(actor),
         },
       });
     }
@@ -581,11 +627,14 @@ export class FormsService {
   }
 
   /** خواندن مقادیر یک رکورد (یا همهٔ رکوردهای فرم برای فهرست). */
-  async loadData(formId: number, externalKey?: string) {
+  async loadData(formId: number, externalKey?: string, scope?: FormDataScopeQueryDto) {
+    /* Task 78 — فیلتر سطح سازمانی انتخابی هدر داشبورد (بدون companyRef = بدون فیلتر) */
+    const scopeWhere = this.orgScopeWhere(scope);
     const rows = await this.prisma.dfbFormData.findMany({
       where: {
         formRef: BigInt(formId),
         ...(externalKey ? { externalKey } : {}),
+        ...(scopeWhere ?? {}),
       },
       orderBy: { id: "asc" },
     });

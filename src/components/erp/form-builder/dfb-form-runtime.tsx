@@ -26,6 +26,7 @@ import {
   type DfbFormDetail, type DfbFieldDef, type DfbFieldItem,
 } from "@/stores/dfb-store";
 import { useDfbTrMap, dfbTransKey } from "@/stores/dfb-translations";
+import { useOrgScope } from "@/stores/org-context-store";
 
 /**
  * DfbFormRuntime (Task 45) — runs a DfbForm definition: renders the template
@@ -78,9 +79,13 @@ function RuntimeInner({ formId }: { formId: number }) {
     setRevealedIds((s) => (s.has(id) ? s : new Set(s).add(id)));
   }, []);
 
+  /* Task 78 — زمینهٔ سطح سازمانی هدر داشبورد: رکوردها فقط در سطح انتخابی
+     نمایش داده می‌شوند و رکورد تازه در همان سطح مُهر می‌خورد */
+  const { scope: orgScope } = useOrgScope();
+
   const loadRecords = React.useCallback(async (d: DfbFormDetail) => {
     try {
-      const items = await loadFormData(d.id);
+      const items = await loadFormData(d.id, orgScope);
       setRecords(
         items.map((it) => ({
           dataId: it.dataId,
@@ -96,7 +101,7 @@ function RuntimeInner({ formId }: { formId: number }) {
     } catch {
       /* record list is best-effort */
     }
-  }, []);
+  }, [orgScope]);
 
   React.useEffect(() => {
     let alive = true;
@@ -104,7 +109,6 @@ function RuntimeInner({ formId }: { formId: number }) {
       .then(async (d) => {
         if (!alive) return;
         setDetail(d);
-        await loadRecords(d);
         /* fetch options for query-bound select/lookup fields (shared helper,
            Task 48 — same mapping the studio preview uses) */
         const options = await fetchQueryOptionsForFields(d.fields);
@@ -170,7 +174,20 @@ function RuntimeInner({ formId }: { formId: number }) {
     return () => {
       alive = false;
     };
-  }, [formId, loadRecords]);
+  }, [formId]);
+
+  /* Task 78 — رکوردها بر اساس سطح سازمانی انتخابی هدر (شرکت/شعبه/نمایندگی/فروشگاه)؛
+     تغییر هر سطح = فیلتر دوبارهٔ فهرست رکوردهای همین فرم */
+  React.useEffect(() => {
+    if (!detail) return;
+    let alive = true;
+    void loadRecords(detail).catch(() => {
+      /* record list is best-effort */
+    });
+    return () => {
+      alive = false;
+    };
+  }, [detail, loadRecords]);
 
   const onFieldChange = React.useCallback((id: string, value: string | boolean) => {
     setValues((v) => ({ ...v, [id]: value }));
@@ -197,7 +214,21 @@ function RuntimeInner({ formId }: { formId: number }) {
         if (v === undefined) continue;
         payload[String(f.id)] = f.fieldType === "checkbox" ? Boolean(v) : String(v);
       }
-      const res = await saveFormData(detail.id, payload);
+      const res = await saveFormData(
+        detail.id,
+        payload,
+        undefined,
+        /* Task 78 — رکورد تازه در سطح سازمانی انتخاب‌شدهٔ هدر ساکن می‌شود */
+        orgScope.companyRef != null
+          ? {
+              businessStructureRef: orgScope.businessStructureRef,
+              companyRef: orgScope.companyRef,
+              branchRef: orgScope.branchRef,
+              agencyRef: orgScope.agencyRef,
+              shopRef: orgScope.shopRef,
+            }
+          : undefined,
+      );
       setCurrentDataId(res.dataId);
       toast.success(t("abar.savedToast"));
       await loadRecords(detail);
@@ -206,7 +237,7 @@ function RuntimeInner({ formId }: { formId: number }) {
     } finally {
       setBusy(false);
     }
-  }, [detail, values, t, loadRecords]);
+  }, [detail, values, t, loadRecords, orgScope]);
 
   const reset = React.useCallback(() => {
     setValues({ ...scriptPrefillRef.current }); // Task 53 — re-apply script prefill

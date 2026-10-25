@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { useSettings, useT } from "@/stores/settings-store";
 import { useDesktop, type HeaderDock } from "@/stores/desktop-store";
 import { FloatingMenu } from "./floating-menu";
+import { OrgSelectors } from "./org-selectors";
 
 /* Task 22 — dockable dashboard header (owner re-spec of Task 21):
    • "top"          → horizontal bar spanning the FULL page width,
@@ -218,6 +219,8 @@ export function DashboardHeader() {
       {brandTile}
       <span className="my-1 h-px w-4 shrink-0 bg-foreground/15" aria-hidden />
       {searchBtn}
+      {/* Task 78 — فیلدهای آبشاری سطح سازمانی (شرکت/شعبه/نمایندگی/فروشگاه) */}
+      <OrgSelectors vertical={vertical} narrow={narrow} />
       <span className="min-h-2 flex-1" aria-hidden />
       {dateEl}
     </>
@@ -235,6 +238,9 @@ export function DashboardHeader() {
       )}
       <span className="mx-1 hidden h-4 w-px shrink-0 bg-foreground/15 sm:block" aria-hidden />
       {searchBtn}
+      {/* Task 78 — فیلدهای آبشاری سطح سازمانی (شرکت/شعبه/نمایندگی/فروشگاه)؛
+          انتخاب هر سطح، نمایش اطلاعات فرم‌ها را در همان سطح فیلتر می‌کند */}
+      <OrgSelectors vertical={vertical} narrow={narrow} />
       <span className="min-w-2 flex-1" aria-hidden />
       {dateEl}
     </>

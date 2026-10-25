@@ -315,19 +315,61 @@ export async function fetchQueryOptionsForFields(
   return Object.fromEntries(results);
 }
 
+/* --------------- Task 78 — org-level scope (dashboard header) --------------
+ * The header's company/branch/agency/shop cascade defines the ORG CONTEXT:
+ *  · reads — loadFormData sends the chain as query params; dfb-service filters
+ *    records residing under the deepest selected level (+ head-office records
+ *    while the root's IsBasicInfoShared is ON);
+ *  · writes — saveFormData stamps the chain onto new records (body.org),
+ *    so a record belongs to the level it was created at.
+ * A null companyRef = no org context → unfiltered (previous behavior). */
+export interface OrgScopeQuery {
+  companyRef?: number | null;
+  branchRef?: number | null;
+  agencyRef?: number | null;
+  shopRef?: number | null;
+  shared?: boolean;
+}
+
+export interface OrgChain {
+  businessStructureRef?: number | null;
+  companyRef?: number | null;
+  branchRef?: number | null;
+  agencyRef?: number | null;
+  shopRef?: number | null;
+}
+
+/** URLSearchParams for the scope (empty string when no company selected) */
+export function orgScopeQuery(scope?: OrgScopeQuery | null): string {
+  if (!scope?.companyRef) return "";
+  const qs = new URLSearchParams({ companyRef: String(scope.companyRef) });
+  if (scope.branchRef != null) qs.set("branchRef", String(scope.branchRef));
+  if (scope.agencyRef != null) qs.set("agencyRef", String(scope.agencyRef));
+  if (scope.shopRef != null) qs.set("shopRef", String(scope.shopRef));
+  qs.set("shared", scope.shared ? "1" : "0");
+  return qs.toString();
+}
+
 export async function saveFormData(
   formId: number,
   values: Record<string, string | boolean | null>,
   externalKey?: string,
+  org?: OrgChain | null,
 ): Promise<{ ok: boolean; dataId: number }> {
-  return dfbApi.post(`forms/${formId}/data`, { values, externalKey });
+  return dfbApi.post(`forms/${formId}/data`, {
+    values,
+    externalKey,
+    ...(org ? { org } : {}),
+  });
 }
 
 export async function loadFormData(
   formId: number,
+  scope?: OrgScopeQuery | null,
 ): Promise<Array<{ dataId: number; externalKey: string | null; values: Array<{ fieldRef: number; value: string | null }> }>> {
+  const qs = orgScopeQuery(scope);
   const res = await dfbApi.get<{ items: Array<{ dataId: number; externalKey: string | null; values: Array<{ fieldRef: number; value: string | null }> }> }>(
-    `forms/${formId}/data`,
+    `forms/${formId}/data${qs ? `?${qs}` : ""}`,
   );
   return res.items ?? [];
 }
