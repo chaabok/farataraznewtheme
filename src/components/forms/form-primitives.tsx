@@ -399,7 +399,11 @@ export function FieldCell({
             *
           </span>
         </span>
-        <div className="relative min-w-0 flex-1">
+        {/* dir=ltr — the date value flows LTR; the chip must anchor to the
+            visual END (right edge) in every locale. Without it an RTL page
+            resolves `end` to the left edge and the chip covers the leading
+            digits of the date (owner report). */}
+        <div dir="ltr" className="relative min-w-0 flex-1">
           <Input
             ref={dateRef}
             value={field.value ?? ""}
@@ -608,7 +612,10 @@ export function GridCellInput({
       onChange(masked);
     };
     return (
-      <div className="relative">
+      /* dir=ltr — same anti-overlap contract as FieldCell's date chip:
+         the icon anchors to the visual end of the LTR date, RTL pages
+         must not flip it onto the first digits. */
+      <div dir="ltr" className="relative">
         <Input
           ref={dateRef}
           value={value}

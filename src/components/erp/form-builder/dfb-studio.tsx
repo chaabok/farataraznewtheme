@@ -2859,8 +2859,11 @@ function FieldPreview({ field }: { field: StudioField }) {
     );
   }
   return (
-    <div className="relative" aria-hidden>
-      <div className="flex h-7 items-center rounded-md border border-input bg-background px-2 text-[11px] text-muted-foreground">
+    /* dir=ltr — mirror the runtime date/number input geometry: value flows
+       LTR and the calendar chip anchors to the visual end (right edge),
+       even on RTL pages where `end` would otherwise flip onto the text. */
+    <div dir="ltr" className="relative" aria-hidden>
+      <div className="flex h-7 items-center rounded-md border border-input bg-background ps-2 pe-7 text-[11px] text-muted-foreground">
         {type === "date" ? <span dir="ltr">YYYY/MM/DD</span> : type === "number" ? <span dir="ltr">0.00</span> : <span>…</span>}
       </div>
       {type === "date" && (
