@@ -36,6 +36,9 @@ export interface FormActionBarProps {
   listItems?: ActionBarListItem[];
   listLoading?: boolean;
   onOpenListItem?: (item: ActionBarListItem) => void;
+  /* Task 86 — mini-grid dropdown: highlight of the open record + reload */
+  listActiveId?: string | null;
+  onListRefresh?: () => void | Promise<void>;
 
   /* capability gates (e.g. delete only when a saved record is loaded) */
   canSave?: boolean;
@@ -91,6 +94,8 @@ export function FormActionBar({
   listItems,
   listLoading,
   onOpenListItem,
+  listActiveId,
+  onListRefresh,
   canSave = true,
   canCopy = true,
   canDelete = true,
@@ -136,6 +141,8 @@ export function FormActionBar({
           items={listItems}
           loading={listLoading}
           onOpenListItem={onOpenListItem}
+          activeId={listActiveId}
+          onRefresh={onListRefresh}
         />
       )}
       {onHelp && <HelpButton onClick={onHelp} />}

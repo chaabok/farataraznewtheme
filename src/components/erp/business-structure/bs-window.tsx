@@ -415,8 +415,18 @@ export function BusinessStructureWindow({
 
   /* ---- records list (Task-20 action 10) — every tree node opens on click ---- */
   const listItems = React.useMemo<ActionBarListItem[]>(
-    () => items.map((n) => ({ id: String(n.id), title: n.title, subtitle: n.code })),
-    [items],
+    () =>
+      items.map((n) => ({
+        id: String(n.id),
+        title: n.title,
+        subtitle: n.code,
+        /* Task 86 — مینی‌گرید دراپ‌داون لیست */
+        cells: [
+          { label: t("abar.listColCode"), value: n.code },
+          { label: t("abar.listColTitle"), value: n.title },
+        ],
+      })),
+    [items, t],
   );
 
   /* ---- detail fields (shell contract) ---- */

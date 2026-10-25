@@ -405,8 +405,24 @@ export function FiscalYearForm({ onBack }: { onBack?: () => void }) {
           [storedToDisplayDate(r.startDate, locale), storedToDisplayDate(r.endDate, locale)]
             .filter(Boolean)
             .join(" ← ") || undefined,
+        /* Task 86 — مینی‌گرید دراپ‌داون لیست: یک ستون به‌ازای هر فیلد */
+        cells: [
+          { label: t("fy.code"), value: r.code },
+          { label: t("fy.title"), value: r.title },
+          { label: t("fy.startDate"), value: storedToDisplayDate(r.startDate, locale) },
+          { label: t("fy.endDate"), value: storedToDisplayDate(r.endDate, locale) },
+          { label: t("fy.active"), value: r.isActive ? t("abar.listYes") : t("abar.listNo") },
+        ],
       }))}
       listLoading={listLoading}
+      listActiveId={currentId != null ? String(currentId) : null}
+      onListRefresh={async () => {
+        try {
+          applyRecords(await fetchRecords());
+        } catch {
+          applyRecords([]);
+        }
+      }}
       onOpenListItem={(item) => {
         const r = records.find((x) => String(x.id) === item.id);
         if (r) {

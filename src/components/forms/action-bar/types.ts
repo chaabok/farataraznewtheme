@@ -3,11 +3,21 @@
 /** Any action handler: sync or async. The caller owns persistence + toasts. */
 export type FormAction = () => void | Promise<void>;
 
-/** One row of the records-list dropdown (the «لیست» icon, action 10). */
+/** Task 86 — one column cell of the mini-grid list dropdown: the field label
+    (column header) and the record's display value for that field. */
+export interface ActionBarListCell {
+  label: string;
+  value: string;
+}
+
+/** One row of the records-list dropdown (the «لیست» icon, action 10).
+    Task 86 — `cells` feeds the mini-grid presentation (column per field);
+    absent cells fall back to the legacy title/subtitle two columns. */
 export interface ActionBarListItem {
   id: string;
   title: string;
   subtitle?: string;
+  cells?: ActionBarListCell[];
 }
 
 /** Common props of every standalone action-bar button. */

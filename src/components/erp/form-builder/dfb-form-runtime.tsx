@@ -26,6 +26,7 @@ import {
   type DfbFormDetail, type DfbFieldDef, type DfbFieldItem,
 } from "@/stores/dfb-store";
 import { useDfbTrMap, dfbTransKey } from "@/stores/dfb-translations";
+import { storedToDisplayDate } from "@/lib/calendar-date";
 import { useOrgScope } from "@/stores/org-context-store";
 
 /**
@@ -494,7 +495,27 @@ function RuntimeInner({ formId }: { formId: number }) {
         onHeaderDoubleClick={chrome?.onDoubleClick}
         onHelp={() => { toast.info(t("dfb.builderNote")); }}
         canSave={!busy}
-        listItems={records.map((r) => ({ id: String(r.dataId), title: String(r.dataId) }))}
+        listItems={records.map((r) => ({
+          id: String(r.dataId),
+          title: String(r.dataId),
+          /* Task 86 — مینی‌گرید دراپ‌داون لیست: یک ستون به‌ازای هر فیلد اصلی؛
+             مقدار select با برچسب آیتم، checkbox با بله/خیر و تاریخ در تقویم
+             زبان انتخابی (قرارداد ۷۷) نمایش داده می‌شود */
+          cells: mainFields.map((f) => {
+            const lbl = dfbFieldLabel(f, locale, trMap);
+            const raw = r.values[String(f.id)];
+            if (f.fieldType === "checkbox") {
+              return { label: lbl, value: raw ? t("abar.listYes") : t("abar.listNo") };
+            }
+            if (f.fieldType === "date") {
+              return { label: lbl, value: raw ? storedToDisplayDate(String(raw), locale) : "" };
+            }
+            const opt = resolveFieldOptions(f)?.find((o) => o.value === String(raw ?? ""));
+            return { label: lbl, value: opt ? opt.label : String(raw ?? "") };
+          }),
+        }))}
+        listActiveId={currentDataId != null ? String(currentDataId) : null}
+        onListRefresh={detail ? () => loadRecords(detail) : undefined}
         onOpenListItem={(item) => openRecord(item.id)}
       />
     );

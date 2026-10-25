@@ -123,6 +123,9 @@ export interface SimpleTreeFormProps {
   listItems?: ActionBarListItem[];
   listLoading?: boolean;
   onOpenListItem?: (item: ActionBarListItem) => void;
+  /* Task 86 — mini-grid dropdown: highlight of the open record + reload */
+  listActiveId?: string | null;
+  onListRefresh?: () => void | Promise<void>;
   canSave?: boolean;
   canCopy?: boolean;
   canDelete?: boolean;
@@ -224,6 +227,8 @@ export function SimpleTreeForm({
   listItems,
   listLoading,
   onOpenListItem,
+  listActiveId,
+  onListRefresh,
   canSave = true,
   canCopy = true,
   canDelete = true,
@@ -535,6 +540,8 @@ export function SimpleTreeForm({
             listItems={listItems}
             listLoading={listLoading}
             onOpenListItem={onOpenListItem}
+            listActiveId={listActiveId}
+            onListRefresh={onListRefresh}
             canSave={canSave}
             canCopy={canCopy}
             canDelete={canDelete}

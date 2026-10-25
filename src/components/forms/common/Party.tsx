@@ -782,8 +782,26 @@ export function PartyForm({ onBack }: { onBack?: () => void }) {
           ]
             .filter(Boolean)
             .join(" — ") || undefined,
+        /* Task 86 — مینی‌گرید دراپ‌داون لیست: کد تفصیلی / نام / ماهیت / فعال */
+        cells: [
+          { label: t("party.tafsiliCode"), value: String(r.tafsiliCode ?? "") },
+          { label: t("party.name"), value: `${r.name}${r.lastName ? " " + r.lastName : ""}` },
+          {
+            label: t("party.nature"),
+            value: r.nature === "legal" ? t("party.natureLegal") : t("party.natureNatural"),
+          },
+          { label: t("fy.active"), value: r.isActive ? t("abar.listYes") : t("abar.listNo") },
+        ],
       }))}
       listLoading={listLoading}
+      listActiveId={currentId != null ? String(currentId) : null}
+      onListRefresh={async () => {
+        try {
+          applyRecords(await fetchRecords());
+        } catch {
+          applyRecords([]);
+        }
+      }}
       onOpenListItem={(item) => {
         const r = records.find((x) => String(x.id) === item.id);
         if (r) {

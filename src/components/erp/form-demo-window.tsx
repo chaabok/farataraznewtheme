@@ -15,13 +15,6 @@ import { useWindowChrome, useTabDirty } from "@/components/desktop/app-window";
 
 const delay = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
-/* sample rows for the records-list dropdown — NOT business data (§4.6) */
-const DEMO_ITEMS: ActionBarListItem[] = [
-  { id: "1001", title: "1001" },
-  { id: "1002", title: "1002" },
-  { id: "1003", title: "1003" },
-];
-
 type DemoValues = Record<string, string | boolean>;
 
 /**
@@ -92,6 +85,27 @@ export function FormDemoWindow() {
       setDirty(false); // Task 82 — رکورد ذخیره‌شده باز شد
     },
     [records],
+  );
+
+  /* Task 86 — records-list dropdown feeds the mini-grid from the SAME demo
+     rows (sample data only — NOT business data, §4.6) */
+  const listItems = React.useMemo<ActionBarListItem[]>(
+    () =>
+      records.map((r) => ({
+        id: String(r.code),
+        title: `${r.code} - ${r.name}`,
+        cells: [
+          { label: t("fdf.code"), value: String(r.code) },
+          { label: t("fdf.name"), value: String(r.name) },
+          {
+            label: t("fdf.customerType"),
+            value: r.customerType === "special" ? t("fdf.typeSpecial") : t("fdf.typeNormal"),
+          },
+          { label: t("fdf.balance"), value: String(r.balance) },
+          { label: t("fdf.active"), value: r.active ? t("abar.listYes") : t("abar.listNo") },
+        ],
+      })),
+    [records, t],
   );
 
   const onFieldChange = React.useCallback((id: string, value: string | boolean) => {
@@ -223,7 +237,8 @@ export function FormDemoWindow() {
       onHelp={() => {
         toast.info(t("abar.demoNote"));
       }}
-      listItems={DEMO_ITEMS}
+      listItems={listItems}
+      listActiveId={records[recIndex] ? String(records[recIndex].code) : null}
       onOpenListItem={(item) => {
         const i = Number(item.id) - 1001;
         applyRecord(i >= 0 && i < records.length ? i : 0);
