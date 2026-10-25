@@ -11,7 +11,33 @@ import { CreateBsDto, UpdateBsDto } from "./business-structure.dto";
  *   1 Holding → [2,3,4,5]   2 Company → [2,3,4,5]
  *   3 Branch → [4,5]        4 Agency → [4,5]   5 Store → leaf (no children)
  * Max depth: 5 levels below the root (Task 34: 4 → 5 for the Store level).
+ *
+ * Task 79 — type ticks on the root (ActiveStructureTypes) gate which structure
+ * types may be DEFINED at all: effective enabled types = union of the
+ * system-mandated Holding (1 — ticked by default on install, the user cannot
+ * remove it) and the ticks saved on the root node. Unticking a type blocks
+ * only NEW nodes of that type (existing nodes are preserved).
  */
+const TYPE_FA: Record<number, string> = {
+  1: "هلدینگ",
+  2: "شرکت",
+  3: "شعبه",
+  4: "نمایندگی",
+  5: "فروشگاه",
+};
+
+function parseTypesJson(raw: string | null | undefined): number[] {
+  if (!raw) return [];
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(
+      (x): x is number => typeof x === "number" && Number.isInteger(x) && x >= 1 && x <= 5,
+    );
+  } catch {
+    return [];
+  }
+}
 const CHILD_TYPE_RULES: Record<number, number[]> = {
   1: [2, 3, 4, 5],
   2: [2, 3, 4, 5],
@@ -76,6 +102,17 @@ export class BusinessStructureService {
     };
   }
 
+  /** Task 79 — effective enabled types = {1 Holding} ∪ root ticks. */
+  private async effectiveActiveTypes(): Promise<number[]> {
+    const root = await this.prisma.businessStructure.findUnique({
+      where: { id: BigInt(ROOT_ID) },
+      select: { activeStructureTypes: true },
+    });
+    return [...new Set([1, ...parseTypesJson(root?.activeStructureTypes)])].sort(
+      (a, b) => a - b,
+    );
+  }
+
   /* --------------------------------- read -------------------------------- */
 
   async list() {
@@ -110,6 +147,16 @@ export class BusinessStructureService {
     const allowed = allowedChildTypes(parentType ?? null);
     if (!allowed.includes(dto.businessStructureType)) {
       fail(422, `نوع مجاز برای این والد: ${allowed.join(", ")}`, "bs.val.typeRequired");
+    }
+
+    // Task 79 — the type must be ticked on the root (Holding is always on)
+    const effective = await this.effectiveActiveTypes();
+    if (!effective.includes(dto.businessStructureType)) {
+      fail(
+        422,
+        `تعریف شاخه از نوع «${TYPE_FA[dto.businessStructureType] ?? dto.businessStructureType}» فعال نیست — ابتدا در دفتر مرکزی تیک آن را بزنید`,
+        "bs.val.typeDisabled",
+      );
     }
 
     const depth = await this.depthOf(parent);
@@ -154,6 +201,17 @@ export class BusinessStructureService {
     if (!node) fail(404, "گره یافت نشد", "bs.msg.loadError");
 
     if (node.id === BigInt(ROOT_ID)) {
+      // Task 79 — the Holding tick is system-mandated: it can never be removed
+      if (
+        dto.activeStructureTypes !== undefined &&
+        !dto.activeStructureTypes.includes(1)
+      ) {
+        fail(
+          422,
+          "تیک «هلدینگ» پیش‌فرض سیستم است و قابل برداشتن نیست",
+          "bs.val.holdingLocked",
+        );
+      }
       /* ---- ROOT MODE: single-endpoint transaction (entity + Setting mirror) ---- */
       const updated = await this.prisma.$transaction(async (tx) => {
         const row = await tx.businessStructure.update({
@@ -193,6 +251,14 @@ export class BusinessStructureService {
       const parentType = parent && parent.id === BigInt(ROOT_ID) ? null : (parent?.businessStructureType ?? null);
       if (!allowedChildTypes(parentType).includes(dto.businessStructureType)) {
         fail(422, "نوع انتخابی با قواعد سطح والد سازگار نیست", "bs.val.typeRequired");
+      }
+      // Task 79 — changing a node TO an unticked type is also a definition
+      if (!(await this.effectiveActiveTypes()).includes(dto.businessStructureType)) {
+        fail(
+          422,
+          `تعریف شاخه از نوع «${TYPE_FA[dto.businessStructureType] ?? dto.businessStructureType}» فعال نیست — ابتدا در دفتر مرکزی تیک آن را بزنید`,
+          "bs.val.typeDisabled",
+        );
       }
       // children of this node must remain legal under the new type
       const childTypes = await this.prisma.businessStructure.findMany({

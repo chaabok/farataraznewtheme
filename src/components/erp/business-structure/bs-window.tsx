@@ -110,7 +110,6 @@ export function BusinessStructureWindow({
   }, [embedded, onEmbeddedClose]);
 
   const [items, setItems] = React.useState<BsNode[]>([]);
-  const [definedTypes, setDefinedTypes] = React.useState<number[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [saving, setSaving] = React.useState(false);
   const [selectedId, setSelectedId] = React.useState<string | null>(null);
@@ -130,7 +129,6 @@ export function BusinessStructureWindow({
     try {
       const res = await api.get<BsListResponse>("business-structure");
       setItems(res.items);
-      setDefinedTypes(res.definedTypes);
     } catch (e) {
       toast.error(t("bs.msg.loadError"), {
         description: e instanceof Error ? e.message : undefined,
@@ -189,6 +187,15 @@ export function BusinessStructureWindow({
     return roots;
   }, [items]);
 
+  /* Task 79 — effective enabled structure types = union of the system-mandated
+     Holding (1 — ticked by default on install, cannot be removed) and the
+     ticks saved on the root node; gates the type choice on create exactly like
+     the server (bs.val.typeDisabled). Unticking blocks only NEW nodes. */
+  const effectiveTypes = React.useMemo<number[]>(() => {
+    const rootTicks = parseTypes(byId.get("1")?.activeStructureTypes ?? null);
+    return [...new Set([1, ...rootTicks])].sort((a, b) => a - b);
+  }, [byId]);
+
   const selectedNode: BsNode | null = selectedId ? byId.get(selectedId) ?? null : null;
   const createParent: BsNode | null =
     createParentId ? byId.get(createParentId) ?? null : null;
@@ -225,9 +232,13 @@ export function BusinessStructureWindow({
 
   /* Task 34 — Store (type 5) is a leaf on the server (CHILD_TYPE_RULES[5]=[]);
      the tree flyout only offers «افزودن زیرشاخه» on nodes whose type may host
-     children — the same rule the server enforces (§5.1 additive gating). */
+     children — the same rule the server enforces (§5.1 additive gating).
+     Task 79 — the child type must ALSO be ticked on the root (effective
+     types); e.g. with only Holding ticked, a Holding offers no flyout. */
   const bsCanHostChild = (node: BsNode) =>
-    allowedChildTypes(node.businessStructureType ?? null).length > 0;
+    allowedChildTypes(node.businessStructureType ?? null).some((v) =>
+      effectiveTypes.includes(v),
+    );
 
   /* ---- actions (Task-17 semantics preserved) ----
      Task 32 — no window.confirm here: the FormActionBar delete-family tiles
@@ -309,7 +320,10 @@ export function BusinessStructureWindow({
     if (isRoot) {
       return {
         isBasicInfoShared: form.isBasicInfoShared,
-        activeStructureTypes: form.activeStructureTypes,
+        /* Task 79 — Holding (1) always travels with the payload (locked tick) */
+        activeStructureTypes: [...new Set([1, ...form.activeStructureTypes])].sort(
+          (a, b) => a - b,
+        ),
         isActive: form.isActive,
       };
     }
@@ -406,7 +420,9 @@ export function BusinessStructureWindow({
       mode === "create"
         ? createParent?.businessStructureType ?? null
         : parentNodeOfSelected?.businessStructureType ?? null;
-    const base = allowedChildTypes(parentType);
+    /* Task 79 — only root-ticked types are definable; the node's own current
+       type always stays selectable (existing nodes are never invalidated). */
+    const base = allowedChildTypes(parentType).filter((v) => effectiveTypes.includes(v));
     const cur =
       mode === "view" && selectedNode?.businessStructureType != null
         ? [selectedNode.businessStructureType]
@@ -419,12 +435,12 @@ export function BusinessStructureWindow({
     label: t(`bs.type.${v}` as never),
   }));
 
+  /* Task 79 — the union chips = system-mandated Holding ∪ the user's ticks
+     (the previous definedTypes union is superseded by the tick gate). */
   const unionTypes = React.useMemo(() => {
     if (!isRoot) return [] as number[];
-    const set = new Set<number>(definedTypes);
-    for (const v of form.activeStructureTypes) set.add(v);
-    return [...set].sort((a, b) => a - b);
-  }, [isRoot, definedTypes, form.activeStructureTypes]);
+    return [...new Set([1, ...form.activeStructureTypes])].sort((a, b) => a - b);
+  }, [isRoot, form.activeStructureTypes]);
 
   const fields: SimpleFormField[] = (() => {
     if (mode === "create") {
@@ -470,7 +486,9 @@ export function BusinessStructureWindow({
             id: `activeType${v}`,
             label: t(`bs.type.${v}` as never),
             type: "checkbox" as const,
-            checked: form.activeStructureTypes.includes(v),
+            /* Task 79 — Holding is the system default: ticked and locked */
+            checked: v === 1 ? true : form.activeStructureTypes.includes(v),
+            disabled: v === 1,
           }),
         ),
         {
@@ -514,9 +532,11 @@ export function BusinessStructureWindow({
   })();
 
   const onFieldChange = (id: string, value: string | boolean) => {
-    /* root «activeStructureTypes» chips became four checkboxes on the shell */
+    /* root «activeStructureTypes» chips became four checkboxes on the shell;
+       Task 79 — the Holding tick (1) is locked: toggling it is a no-op. */
     if (id.startsWith("activeType")) {
       const v = Number(id.slice("activeType".length));
+      if (v === 1) return;
       setForm((f) => ({
         ...f,
         activeStructureTypes:
@@ -539,21 +559,26 @@ export function BusinessStructureWindow({
       );
     }
     if (isRoot) {
-      if (unionTypes.length === 0) return null;
       return (
-        <div className="mt-3 flex items-start gap-2 rounded-lg bg-amber-500/10 p-2.5 text-amber-700 dark:text-amber-400">
-          <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
-          <div className="text-xs">
-            <p className="font-semibold">{t("bs.root.unionWarning")}</p>
-            <div className="mt-1 flex flex-wrap gap-1">
-              {unionTypes.map((v) => (
-                <Badge key={v} variant="secondary" className="text-[10px]">
-                  {t(`bs.type.${v}` as never)}
-                </Badge>
-              ))}
+        <>
+          {unionTypes.length > 0 && (
+            <div className="mt-3 flex items-start gap-2 rounded-lg bg-amber-500/10 p-2.5 text-amber-700 dark:text-amber-400">
+              <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
+              <div className="text-xs">
+                <p className="font-semibold">{t("bs.root.unionWarning")}</p>
+                <div className="mt-1 flex flex-wrap gap-1">
+                  {unionTypes.map((v) => (
+                    <Badge key={v} variant="secondary" className="text-[10px]">
+                      {t(`bs.type.${v}` as never)}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
+          )}
+          {/* Task 79 — the locked Holding tick is a system default */}
+          <p className="mt-2 text-[11px] text-muted-foreground">{t("bs.hint.holdingLocked")}</p>
+        </>
       );
     }
     return (

@@ -23,16 +23,19 @@ export class SeedService implements OnModuleInit {
   }
 
   async seed() {
-    /* 1) default settings */
+    /* 1) default settings — Task 79: fresh install ticks ONLY Holding (1);
+       the user ticks Company/Branch/Agency/Store as needed. */
     const defaults: Array<[string, string]> = [
       ["bs.shareHeadquarterData", "false"],
-      ["bs.activeStructureTypes", "[1,2,3,4]"],
+      ["bs.activeStructureTypes", "[1]"],
     ];
     for (const [key, value] of defaults) {
       await this.prisma.setting.upsert({ where: { key }, create: { key, value }, update: {} });
     }
 
-    /* 2) system-reserved root — direct INSERT at ID=1 (never via counter) */
+    /* 2) system-reserved root — direct INSERT at ID=1 (never via counter).
+       Task 79: the Holding tick is system-mandated, so the root is born with
+       ActiveStructureTypes "[1]". */
     const root = await this.prisma.businessStructure.findUnique({ where: { id: 1n } });
     if (!root) {
       await this.prisma.businessStructure.create({
@@ -43,11 +46,50 @@ export class SeedService implements OnModuleInit {
           title: "دفتر مرکزی",
           titleEn: "Headquarters",
           businessStructureType: null,
+          activeStructureTypes: "[1]",
           isSystem: true,
           isActive: true,
         },
       });
       this.logger.log("seeded BusinessStructure root ID=1");
+    }
+
+    /* 2b) Task 79 backfill (idempotent, runs every boot) — older roots whose
+       ActiveStructureTypes lost the Holding tick (e.g. "[]" or null before
+       Task 79) are merged back to include 1; the Setting mirror follows.
+       Safe by contract: the UI locks the Holding checkbox and the API rejects
+       its removal, so this can never fight a user's choice. */
+    const rootRow = await this.prisma.businessStructure.findUnique({
+      where: { id: 1n },
+      select: { activeStructureTypes: true },
+    });
+    if (rootRow) {
+      let ticks: number[] = [];
+      try {
+        const parsed: unknown = JSON.parse(rootRow.activeStructureTypes ?? "[]");
+        if (Array.isArray(parsed)) {
+          ticks = parsed.filter(
+            (x): x is number => typeof x === "number" && Number.isInteger(x) && x >= 1 && x <= 5,
+          );
+        }
+      } catch {
+        ticks = [];
+      }
+      if (!ticks.includes(1)) {
+        const merged = JSON.stringify([...new Set([1, ...ticks])].sort((a, b) => a - b));
+        await this.prisma.$transaction([
+          this.prisma.businessStructure.update({
+            where: { id: 1n },
+            data: { activeStructureTypes: merged },
+          }),
+          this.prisma.setting.upsert({
+            where: { key: "bs.activeStructureTypes" },
+            create: { key: "bs.activeStructureTypes", value: merged },
+            update: { value: merged },
+          }),
+        ]);
+        this.logger.log(`backfilled root ActiveStructureTypes -> ${merged}`);
+      }
     }
 
     /* 3) pre-seed counter rows (self-heal bootstrap) */
