@@ -32,6 +32,11 @@ const VERSIONED_MODELS: ReadonlySet<string> = new Set([
   "Systems",
   "SoftwareConfig", // Task 72 — پیکربندی نرم‌افزارها
   "FiscalYear", // Task 75 — سال مالی
+  "City", // Task 84 — شهرها
+  "Party", // Task 84 — طرف حساب
+  "PartyPerson", // Task 84 — افراد مرتبط
+  "PartyAddress", // Task 84 — نشانی
+  "PartyPhone", // Task 84 — تلفن
 ]);
 
 const VERSION_ACTIONS = new Set(["update", "updateMany", "upsert"]);

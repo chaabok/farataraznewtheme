@@ -8,6 +8,7 @@ import { AppRegistryModule } from "./app-registry/app-registry.module";
 import { SystemsModule } from "./systems/systems.module";
 import { SoftwareConfigModule } from "./software-config/software-config.module";
 import { FiscalYearModule } from "./fiscal-year/fiscal-year.module";
+import { PartyModule } from "./party/party.module";
 import { HealthController } from "./health/health.controller";
 import { SeedModule } from "./seed/seed.module";
 
@@ -20,6 +21,7 @@ import { SeedModule } from "./seed/seed.module";
     SystemsModule,
     SoftwareConfigModule,
     FiscalYearModule,
+    PartyModule,
     SeedModule,
   ],
   controllers: [HealthController],

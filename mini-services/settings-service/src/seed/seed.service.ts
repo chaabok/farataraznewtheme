@@ -145,5 +145,54 @@ export class SeedService implements OnModuleInit {
       });
       this.logger.log(`seeded sample company ID=${newId} via IdGenerationService`);
     }
+
+    /* 5) Task 84 — جدول شهرها (idempotent by Code): دراپ‌داونِ «شهر» تب
+       «نشانی» فرم طرف حساب به این جدول متصل است (کد/عنوان/عنوان لاتین/
+       استان/کشور). فهرست اولیه = شهرهای major ایران؛ توسعه با همین جدول. */
+    const CITIES: Array<[string, string, string, string, string]> = [
+      ["101", "تهران", "Tehran", "تهران", "ایران"],
+      ["102", "مشهد", "Mashhad", "خراسان رضوی", "ایران"],
+      ["103", "اصفهان", "Isfahan", "اصفهان", "ایران"],
+      ["104", "شیراز", "Shiraz", "فارس", "ایران"],
+      ["105", "تبریز", "Tabriz", "آذربایجان شرقی", "ایران"],
+      ["106", "کرج", "Karaj", "البرز", "ایران"],
+      ["107", "اهواز", "Ahvaz", "خوزستان", "ایران"],
+      ["108", "قم", "Qom", "قم", "ایران"],
+      ["109", "رشت", "Rasht", "گیلان", "ایران"],
+      ["110", "کرمان", "Kerman", "کرمان", "ایران"],
+      ["111", "یزد", "Yazd", "یزد", "ایران"],
+      ["112", "ارومیه", "Urmia", "آذربایجان غربی", "ایران"],
+      ["113", "زاهدان", "Zahedan", "سیستان و بلوچستان", "ایران"],
+      ["114", "سمنان", "Semnan", "سمنان", "ایران"],
+      ["115", "بجنورد", "Bojnord", "خراسان شمالی", "ایران"],
+      ["116", "بیرجند", "Birjand", "خراسان جنوبی", "ایران"],
+      ["117", "سنندج", "Sanandaj", "کردستان", "ایران"],
+      ["118", "همدان", "Hamadan", "همدان", "ایران"],
+      ["119", "بندرعباس", "Bandar Abbas", "هرمزگان", "ایران"],
+      ["120", "قزوین", "Qazvin", "قزوین", "ایران"],
+      ["121", "اراک", "Arak", "مرکزی", "ایران"],
+      ["122", "کاشان", "Kashan", "اصفهان", "ایران"],
+    ];
+    let cityMaxId = 0n;
+    const cityAgg = await this.prisma.city.aggregate({ _max: { id: true } });
+    cityMaxId = cityAgg._max.id ?? 0n;
+    for (const [code, title, titleLatin, province, country] of CITIES) {
+      const exists = await this.prisma.city.findUnique({ where: { code } });
+      if (exists) continue;
+      cityMaxId += 1n;
+      await this.prisma.city.create({
+        data: {
+          id: cityMaxId,
+          code,
+          title,
+          titleLatin,
+          provinceName: province,
+          countryName: country,
+          isActive: true,
+          creator: "system",
+          businessStructureRef: 1n,
+        },
+      });
+    }
   }
 }

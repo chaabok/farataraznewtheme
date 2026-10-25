@@ -207,3 +207,181 @@ model FiscalYear {
   @@unique([title, businessStructureRef])
   @@map("FiscalYear")
 }
+
+/// City — Task 84 (درخواست مالک): جدول شهرها برای دراپ‌داونِ «شهر» در تب
+/// «نشانی» فرم «طرف حساب جدید» (ستون‌ها: کد / عنوان / عنوان لاتین / نام استان /
+/// نام کشور). جدول مرجعِ اطلاعات پایه؛ seed اولیه با شهرهای major ایران
+/// (idempotent by Code) — توسعهٔ بعدی فهرست با همان جدول.
+model City {
+  id           BigInt   @id @map("ID")
+  code         String   @unique @map("Code")
+  title        String   @map("Title")
+  titleLatin   String?  @map("TitleLatin")
+  provinceName String   @map("ProvinceName")
+  countryName  String   @map("CountryName")
+  isActive     Boolean  @default(true) @map("IsActive")
+  version      Int      @default(1) @map("Version") // §2.5 auto-rowversion
+  creator      String   @map("Creator")
+  lastModifier String?  @map("LastModifier")
+  businessStructureRef BigInt @map("BusinessStructureRef")
+  companyRef   BigInt?  @map("CompanyRef")
+  branchRef    BigInt?  @map("BranchRef")
+  agencyRef    BigInt?  @map("AgencyRef")
+  shopRef      BigInt?  @map("ShopRef")
+  createdAt    DateTime @default(now()) @map("CreatedAt")
+  updatedAt    DateTime @updatedAt @map("UpdatedAt")
+  addresses    PartyAddress[]
+
+  @@map("City")
+}
+
+/// Party — Task 84 (درخواست مالک): فرم «طرف حساب جدید» در نرم‌افزار «عمومی» ←
+/// زیرمنوی «اطلاعات پایه». فیلدهای اصلی (دوستونه RTL):
+///   · Nature        — «ماهیت»: natural (شخص حقیقی، پیش‌فرض) | legal (شخص حقوقی).
+///   · Subtype       — «نوع فرعی» فقط برای شخص حقوقی فعال؛ در حالت حقیقی پاک.
+///   · Name          — «نام»، اجباری.
+///   · حقیقی: LastName (اجباری)، LatinName2 / LatinLastName2 (اختیاری).
+///   · حقوقی: LatinName (اختیاری).
+///   · TafsiliCode   — «کد تفصیلی» اجباری؛ «به‌صورت خودکار از شماره‌گذاری پر
+///                     می‌شود» — سرور سریال max+1 می‌دهد؛ نوع تفصیلی: حقیقی ← ۶،
+///                     حقوقی ← ۷ (متادیتای حسابداری؛ در DTO برمی‌گردد).
+///   · EconomicCode  — «کد اقتصادی» اختیاری.
+///   · حقیقی: NationalId (کد ملی)؛ حقوقی: LegalIdentity (شناسه ملی) +
+///             RegistrationNo (شماره ثبت) — تغییر ماهیت فیلدهای حالت دیگر را پاک می‌کند.
+///   · IsActive      — «فعال» (پیش‌فرض تیک).
+/// نقش‌ها/تب «جزئیات»: IsSupplier/IsCustomer/IsSalesAgent + مبلغ مانده + وضعیت
+/// بدهکار/بستانکار (مبلغ غیر صفر ⇔ وضعیت اجباری — دولایه).
+/// تب «سایر اطلاعات»: PassportNo/Website/Email/MarriageDate/BirthDate —
+/// سه‌تای اول/آخری فقط شخص حقیقی؛ تاریخ‌ها میلادی ISO (قرارداد Task 77).
+/// §16: ID دستی از IDGeneration؛ بلوک کامل AppBaseEntity ۸فیلدی (Task 76).
+model Party {
+  id                   BigInt   @id @map("ID")
+  nature               String   @map("Nature") // "natural" | "legal"
+  subtype              String?  @map("Subtype") // فقط شخص حقوقی
+  name                 String   @map("Name")
+  lastName             String?  @map("LastName") // فقط شخص حقیقی
+  latinName2           String?  @map("LatinName2") // فقط شخص حقیقی
+  latinLastName2       String?  @map("LatinLastName2") // فقط شخص حقیقی
+  latinName            String?  @map("LatinName") // فقط شخص حقوقی
+  tafsiliCode          Int      @map("TafsiliCode") // شماره‌گذاری خودکار (max+1)
+  economicCode         String?  @map("EconomicCode")
+  nationalId           String?  @map("NationalId") // فقط شخص حقیقی (کد ملی)
+  legalIdentity        String?  @map("LegalIdentity") // فقط شخص حقوقی (شناسه ملی)
+  registrationNo       String?  @map("RegistrationNo") // فقط شخص حقوقی (شماره ثبت)
+  isActive             Boolean  @default(true) @map("IsActive")
+  /* ---- تب «جزئیات» — نقش‌ها (تیک ← مبلغ ← وضعیت) ---- */
+  isSupplier           Boolean  @default(false) @map("IsSupplier")
+  supplierBalance      Float?   @map("SupplierBalance")
+  supplierSide         String?  @map("SupplierSide") // "debtor" | "creditor"
+  isCustomer           Boolean  @default(false) @map("IsCustomer")
+  customerBalance      Float?   @map("CustomerBalance")
+  customerSide         String?  @map("CustomerSide")
+  isSalesAgent         Boolean  @default(false) @map("IsSalesAgent")
+  salesAgentBalance    Float?   @map("SalesAgentBalance")
+  salesAgentSide       String?  @map("SalesAgentSide")
+  /* ---- تب «سایر اطلاعات» ---- */
+  passportNo           String?  @map("PassportNo") // فقط شخص حقیقی
+  website              String?  @map("Website")
+  email                String?  @map("Email")
+  marriageDate         String?  @map("MarriageDate") // Gregorian ISO (Task 77)
+  birthDate            String?  @map("BirthDate") // Gregorian ISO (Task 77)
+  /* ---- بلوک ارث‌بری AppBaseEntity (Task 76) ---- */
+  version              Int      @default(1) @map("Version")
+  creator              String   @map("Creator")
+  lastModifier         String?  @map("LastModifier")
+  businessStructureRef BigInt   @map("BusinessStructureRef")
+  companyRef           BigInt?  @map("CompanyRef")
+  branchRef            BigInt?  @map("BranchRef")
+  agencyRef            BigInt?  @map("AgencyRef")
+  shopRef              BigInt?  @map("ShopRef")
+  createdAt            DateTime @default(now()) @map("CreatedAt")
+  updatedAt            DateTime @updatedAt @map("UpdatedAt")
+
+  persons   PartyPerson[]
+  addresses PartyAddress[]
+  phones    PartyPhone[]
+
+  @@unique([tafsiliCode, businessStructureRef])
+  @@map("Party")
+}
+
+/// PartyPerson — تب «افراد مرتبط»: نام / نام خانوادگی (اجباری) / نسبت /
+/// کد ملی / شماره تلفن / توضیحات. با ثبت/ویرایشِ طرف حساب بازنویسی می‌شود.
+model PartyPerson {
+  id                   BigInt   @id @map("ID")
+  partyRef             BigInt   @map("PartyRef")
+  firstName            String   @map("FirstName")
+  lastName             String   @map("LastName")
+  relation             String?  @map("Relation")
+  nationalId           String?  @map("NationalId")
+  phone                String?  @map("Phone")
+  notes                String?  @map("Notes")
+  orderIndex           Int      @default(0) @map("OrderIndex")
+  version              Int      @default(1) @map("Version")
+  creator              String   @map("Creator")
+  lastModifier         String?  @map("LastModifier")
+  businessStructureRef BigInt   @map("BusinessStructureRef")
+  companyRef           BigInt?  @map("CompanyRef")
+  branchRef            BigInt?  @map("BranchRef")
+  agencyRef            BigInt?  @map("AgencyRef")
+  shopRef              BigInt?  @map("ShopRef")
+  createdAt            DateTime @default(now()) @map("CreatedAt")
+  updatedAt            DateTime @updatedAt @map("UpdatedAt")
+  party                Party    @relation(fields: [partyRef], references: [id], onDelete: Cascade)
+
+  @@map("PartyPerson")
+}
+
+/// PartyAddress — تب «نشانی»: نوع آدرس (اجباری) / شهر از جدول شهرها (اجباری،
+/// CityRef + عکسِ عنوان برای نمایش) / آدرس کامل (اجباری) / کد پستی /
+/// طول و عرض جغرافیایی.
+model PartyAddress {
+  id                   BigInt   @id @map("ID")
+  partyRef             BigInt   @map("PartyRef")
+  addrType             String   @map("AddrType") // official | workplace | invoice | goods | warehouse | home | postal | other
+  cityRef              BigInt?  @map("CityRef")
+  cityTitle            String?  @map("CityTitle") // عکس عنوانِ شهر در زمان ثبت
+  fullAddress          String   @map("FullAddress")
+  postalCode           String?  @map("PostalCode")
+  longitude            Float?   @map("Longitude")
+  latitude             Float?   @map("Latitude")
+  orderIndex           Int      @default(0) @map("OrderIndex")
+  version              Int      @default(1) @map("Version")
+  creator              String   @map("Creator")
+  lastModifier         String?  @map("LastModifier")
+  businessStructureRef BigInt   @map("BusinessStructureRef")
+  companyRef           BigInt?  @map("CompanyRef")
+  branchRef            BigInt?  @map("BranchRef")
+  agencyRef            BigInt?  @map("AgencyRef")
+  shopRef              BigInt?  @map("ShopRef")
+  createdAt            DateTime @default(now()) @map("CreatedAt")
+  updatedAt            DateTime @updatedAt @map("UpdatedAt")
+  party                Party    @relation(fields: [partyRef], references: [id], onDelete: Cascade)
+  city                 City?    @relation(fields: [cityRef], references: [id], onDelete: SetNull)
+
+  @@map("PartyAddress")
+}
+
+/// PartyPhone — تب «تلفن»: نوع تلفن / شماره / داخلی / توضیحات.
+model PartyPhone {
+  id                   BigInt   @id @map("ID")
+  partyRef             BigInt   @map("PartyRef")
+  phoneType            String   @map("PhoneType") // office | mobile | home | other | faxOffice | faxHome | faxOther
+  number               String?  @map("Number")
+  extension            String?  @map("Extension")
+  notes                String?  @map("Notes")
+  orderIndex           Int      @default(0) @map("OrderIndex")
+  version              Int      @default(1) @map("Version")
+  creator              String   @map("Creator")
+  lastModifier         String?  @map("LastModifier")
+  businessStructureRef BigInt   @map("BusinessStructureRef")
+  companyRef           BigInt?  @map("CompanyRef")
+  branchRef            BigInt?  @map("BranchRef")
+  agencyRef            BigInt?  @map("AgencyRef")
+  shopRef              BigInt?  @map("ShopRef")
+  createdAt            DateTime @default(now()) @map("CreatedAt")
+  updatedAt            DateTime @updatedAt @map("UpdatedAt")
+  party                Party    @relation(fields: [partyRef], references: [id], onDelete: Cascade)
+
+  @@map("PartyPhone")
+}

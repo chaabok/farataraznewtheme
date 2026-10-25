@@ -20,7 +20,12 @@ export type TableKey =
   | "BusinessStructureUser"
   | "Systems"
   | "SoftwareConfig" // Task 72 — پیکربندی نرم‌افزارها
-  | "FiscalYear"; // Task 75 — سال مالی (اطلاعات پایه)
+  | "FiscalYear" // Task 75 — سال مالی (اطلاعات پایه)
+  | "Party" // Task 84 — طرف حساب (اطلاعات پایهٔ عمومی)
+  | "PartyPerson" // Task 84 — افراد مرتبطِ طرف حساب
+  | "PartyAddress" // Task 84 — نشانی‌های طرف حساب
+  | "PartyPhone" // Task 84 — تلفن‌های طرف حساب
+  | "City"; // Task 84 — جدول شهرها (مرجع)
 
 export const TABLE_REGISTRY: Record<TableKey, TableEntry> = {
   IDGeneration: {
@@ -47,6 +52,26 @@ export const TABLE_REGISTRY: Record<TableKey, TableEntry> = {
   },
   FiscalYear: {
     canonical: "FiscalYear", // Task 75 — سال مالی (اطلاعات پایهٔ عمومی)
+    pk: "ID",
+  },
+  Party: {
+    canonical: "Party", // Task 84 — طرف حساب
+    pk: "ID",
+  },
+  PartyPerson: {
+    canonical: "PartyPerson", // Task 84 — افراد مرتبط
+    pk: "ID",
+  },
+  PartyAddress: {
+    canonical: "PartyAddress", // Task 84 — نشانی
+    pk: "ID",
+  },
+  PartyPhone: {
+    canonical: "PartyPhone", // Task 84 — تلفن
+    pk: "ID",
+  },
+  City: {
+    canonical: "City", // Task 84 — جدول شهرها (مرجع؛ seed دستی)
     pk: "ID",
   },
 };
