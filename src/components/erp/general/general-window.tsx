@@ -7,6 +7,7 @@ import {
   Boxes,
   CalendarPlus,
   ChevronDown,
+  ChevronLeft,
   ChevronRight,
   FolderOpen,
 } from "lucide-react";

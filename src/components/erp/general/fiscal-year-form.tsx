@@ -71,12 +71,6 @@ function elapsedMonths(start: string, end: string): number {
   return Number(end.slice(6, 8)) < Number(start.slice(6, 8)) ? months - 1 : months;
 }
 
-/** پیام خطای سرور (فارسی، مثل 409 تکراری) یا پیام عمومی. */
-async function serverMessage(res: Response, fallback: string): Promise<string> {
-  const j = (await res.json().catch(() => null)) as { message?: string } | null;
-  return (typeof j?.message === "string" && j.message) || fallback;
-}
-
 export function FiscalYearForm({ onBack }: { onBack?: () => void }) {
   const t = useT();
   const chrome = useWindowChrome();
@@ -257,12 +251,14 @@ export function FiscalYearForm({ onBack }: { onBack?: () => void }) {
       onNext={() => nav(Math.min(records.length - 1, currentIndex + 1))}
       onLast={() => nav(records.length - 1)}
       onReset={() => {
-        const current = records.find((r) => r.id === currentId);
-        if (current) applyRecord(current);
-        else newRecord();
+        /* آیکون + = شروع ثبتِ جدید: فرم خالی می‌شود (بازگشایی رکورد از «لیست»
+           یا ناوبری رکوردها انجام می‌شود) */
+        newRecord();
         toast.success(t("abar.resetToast"));
       }}
-      onSave={doSave}
+      onSave={async () => {
+        await doSave();
+      }}
       onSaveNew={async () => {
         if (await doSave()) newRecord();
       }}
