@@ -216,8 +216,9 @@ export function RecordListDropdown({
 
   return (
     <Popover open={open} onOpenChange={handleOpenChange}>
-      {/* Task 87 — the trigger is now a framed tile like every sibling icon:
-          solid teal gradient + glossy border + white glyph + colored glow,
+      {/* Task 87/88 — the trigger is a framed tile exactly like the sibling
+          icons, polished further: bright 3-stop teal gradient + glossy teal
+          border + glass gloss on the top half + white glyph + colored glow,
           the same hover tooltip as the rest of the bar, and a ring while the
           dropdown is open (driven by state — Tooltip's data-state would clash
           with Popover's on the same element). The dropdown body is untouched. */}
@@ -231,17 +232,22 @@ export function RecordListDropdown({
                 aria-haspopup="dialog"
                 disabled={disabled}
                 className={cn(
-                  "relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl",
-                  "border border-teal-300/50 bg-gradient-to-br from-teal-500 to-teal-600 text-white",
+                  "relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl",
+                  "border border-teal-300/60 bg-gradient-to-br from-teal-400 via-teal-500 to-teal-600 text-white",
                   "shadow-md shadow-teal-600/30 transition-all duration-150",
                   "hover:brightness-110 hover:shadow-lg hover:shadow-teal-600/40 active:scale-95",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
                   "disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:brightness-100 disabled:hover:shadow-md disabled:active:scale-100",
                   "cursor-pointer",
-                  open && "border-teal-200/70 ring-2 ring-teal-300/70",
+                  open && "border-teal-200/80 ring-2 ring-teal-300/70",
                 )}
               >
-                <AlignJustify className="h-[18px] w-[18px]" aria-hidden />
+                {/* glass gloss on the top half — the glossy, attractive look */}
+                <span
+                  aria-hidden
+                  className="pointer-events-none absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/25 to-transparent"
+                />
+                <AlignJustify className="relative h-[18px] w-[18px]" aria-hidden />
               </button>
             </PopoverTrigger>
           </TooltipTrigger>
