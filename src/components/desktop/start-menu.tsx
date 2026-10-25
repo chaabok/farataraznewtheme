@@ -115,7 +115,9 @@ export function StartMenu() {
               className="flex flex-col items-center gap-1.5 rounded-xl p-3 transition-colors hover:bg-foreground/8 cursor-pointer"
             >
               {app.icon}
-              <span className="line-clamp-2 text-center text-[11px] leading-tight text-foreground/90">
+              {/* Task 94 — same wrap rules as the desktop grid: long words
+                  must break inside the cell instead of overlapping. */}
+              <span className="line-clamp-2 w-full min-w-0 text-center text-[11px] leading-tight text-foreground/90 [overflow-wrap:anywhere]">
                 {"label" in app && app.label ? app.label : t(app.titleKey as never)}
               </span>
             </button>

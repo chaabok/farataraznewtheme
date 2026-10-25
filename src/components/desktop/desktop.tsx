@@ -405,6 +405,7 @@ function DesktopIcons() {
             onContextMenu={(e) => handleContextMenu(e, entry)}
             onPointerDown={(e) => beginDragTracking(e, entry)}
             style={pos ? { left: pos.x, top: pos.y } : undefined}
+            title={entry.label}
             className={cn(
               "group flex w-[84px] shrink-0 flex-col items-center gap-1.5 rounded-xl p-2 transition-colors hover:bg-white/12 focus:outline-none cursor-pointer",
               freeMode && "absolute touch-none",
@@ -413,7 +414,10 @@ function DesktopIcons() {
             )}
           >
             {iconGlyph(entry)}
-            <span className="line-clamp-2 rounded-md px-1 text-center text-[11px] font-medium leading-tight text-white drop-shadow group-focus-visible:bg-white/20">
+            {/* Task 94 — w-full + overflow-wrap:anywhere keep long single words
+                (e.g. "Kundenbeziehungsmanagement") inside the 84px cell so
+                labels wrap/ellipsize instead of overlapping neighbours. */}
+            <span className="line-clamp-2 w-full min-w-0 rounded-md px-1 text-center text-[11px] font-medium leading-tight text-white drop-shadow [overflow-wrap:anywhere] group-focus-visible:bg-white/20">
               {entry.label}
             </span>
           </button>
@@ -430,7 +434,8 @@ function DesktopIcons() {
             )}
           >
             {iconGlyph(ghost.entry)}
-            <span className="line-clamp-2 rounded-md bg-black/30 px-1 text-center text-[11px] font-medium leading-tight text-white">
+            {/* Task 94 — same wrap rules as the grid labels (see above). */}
+            <span className="line-clamp-2 w-full min-w-0 rounded-md bg-black/30 px-1 text-center text-[11px] font-medium leading-tight text-white [overflow-wrap:anywhere]">
               {ghost.entry.label}
             </span>
           </div>

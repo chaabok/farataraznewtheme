@@ -3253,3 +3253,20 @@ Work Log:
 Stage Summary:
 - خطای hydration ریشه‌ای برطرف شد: همهٔ پنج استور ماندگار اکنون یک قرارداد واحد دارند — رندر SSR/اولین رندر کلاینت با پیش‌فرض‌ها قطعی است و وضعیت ماندگار کاربر فقط بعد از mount بازخوانی می‌شود (erp.settings/erp.orgContext/erp.dfb-translations به erp.desktop.layout/erp.fiscalYear ملحق شدند). عارضهٔ جانبی: کاربر غیرفارسی‌زبان یک لحظه فلش fa در اولین رندر می‌بیند (همان سازش پذیرفته‌شدهٔ قبلی برای layout/سال مالی).
 - artifacts: src/stores/settings-store.ts؛ src/stores/org-context-store.ts؛ src/stores/dfb-translations.ts؛ src/components/desktop/desktop.tsx (فقط این چهار فایل).
+
+---
+Task ID: 94
+Agent: Z.ai Code (main)
+Task: «عنوان آیکون‌ها در دسکتاپ در زبان آلمانی و برخی زبان‌های دیگر با هم تداخل پیدا کرده‌اند» — رفع همپوشانی برچسب آیکون‌های دسکتاپ (اسکرین‌شات کاربر: Anlagevermögen / Büroautomation / Finanzberichte / Kundenbeziehungsmanagement (CRM) روی هم افتاده بودند).
+
+Work Log:
+- ریشه‌یابی: در desktop.tsx شبکهٔ آیکون‌های دسکتاپ هر دکمه `w-[84px]` است ولی span برچسب (`line-clamp-2`) عرضش fit-content بود؛ واژه‌های مرکب طولانی آلمانی (بدون فاصله، مثل «Kundenbeziehungsmanagement» ≈۱۶۰px) قابل شکستن نبودند ⇒ span از سلول ۸۴px بیرون می‌زد و روی برچسب‌های مجاور می‌افتاد. line-clamp فقط تعداد خط را محدود می‌کند نه عرض را — برای همین brچسب‌ها تک‌خطیِ سرریز شده بودند.
+- اصلاح desktop.tsx (شبکهٔ دسکتاپ): به span برچسب `w-full min-w-0 [overflow-wrap:anywhere]` اضافه شد ⇒ عرض برچسب به داخل سلول محدود و واژه‌های بلند شکسته می‌شوند؛ line-clamp-2 سرریز عمودی را با «…» می‌بُرد. همچنین `title={entry.label}` به دکمه اضافه شد تا نام کامل با hover دیده شود.
+- اصلاح desktop.tsx (ghost درگ): همان قواعد شکست برای برچسب شبحِ کشیدن آیکون (وقتی freeMode).
+- اصلاح start-menu.tsx (منوی استارت، grid-cols-4/6): همان الگوی پنهان همان مشکل داشت؛ span برچسب `w-full min-w-0 [overflow-wrap:anywhere]` گرفت.
+- lint = ۰/۰؛ tsc = همان ۱۱ خطای baseline — صفر خطای جدید.
+- E2E با agent-browser (زبان Deutsch از منوی زبان هدر): ۳۰ برچسب شبکهٔ دسکتاپ — `scrollWidth <= clientWidth` برای همه ✓، تداخل مستطیلی زوج‌برچسب‌ها = ۰ ✓؛ اسکرین‌شات: همهٔ برچسب‌ها (Anlagevermögen، Büroautomation، Kundenbeziehung…، Produktionsplanung و…) داخل سلول خودشان دوخطی شده و با «…» بسته می‌شوند، هیچ هم‌پوشانی نیست ✓؛ tooltip نام کامل («Kundenbeziehungsmanagement (CRM)») با title attr ✓؛ منوی استارت هم سالم (یک مورد ۲px فقط آرتیفکت گردکردن scrollWidth، درون gap و غیرمرئی) ✓؛ بازگشت به فارسی: شبکهٔ ۳۰تایی — صفر سرریز، صفر تداخل ✓؛ کنسول/page errors صفر؛ dev.log پاک.
+
+Stage Summary:
+- همپوشانی برچسب‌ها در همهٔ زبان‌ها (مستقل از locale، با CSS) برطرف شد: برچسب همیشه داخل سلول ۸۴px شکسته و حداکثر دوسطر با «…» نمایش داده می‌شود؛ نام کامل از طریق tooltip (title) در دسترس است و منوی استارت/سایدبار هم کامل‌تر نشان می‌دهند.
+- فایل‌های تغییر یافته: src/components/desktop/desktop.tsx (span شبکه + ghost + title)؛ src/components/desktop/start-menu.tsx (span برچسب). هیچ منطق دیتا یا استور دست نخورد.
