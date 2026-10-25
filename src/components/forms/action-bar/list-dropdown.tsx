@@ -22,25 +22,37 @@
  */
 
 import * as React from "react";
-import { AlignJustify, Filter, FilterX, Inbox, Loader2, RotateCw, Search } from "lucide-react";
+import {
+  AlignJustify,
+  FileSpreadsheet,
+  FileText,
+  Filter,
+  FilterX,
+  Inbox,
+  Loader2,
+  RotateCw,
+  Search,
+} from "lucide-react";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useT, useSettings } from "@/stores/settings-store";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { ActionBarListItem } from "./types";
 
-/** small round footer button — the image's mini toolbar look */
-function RoundTool({
+/** small footer tool — the image's outline rounded-square look: thin border,
+    colored glyph, transparent background (the + tile is banned by the owner) */
+function ListTool({
   title,
   onClick,
   disabled,
-  tint,
+  tone,
   children,
 }: {
   title: string;
   onClick?: () => void;
   disabled?: boolean;
-  /** gradient stops, e.g. "from-sky-500 to-sky-600" */
-  tint: string;
+  /** glyph color, e.g. "text-sky-400" */
+  tone: string;
   children: React.ReactNode;
 }) {
   return (
@@ -51,8 +63,8 @@ function RoundTool({
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        "flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br text-white shadow-sm transition-all hover:brightness-110 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:brightness-100 cursor-pointer",
-        tint,
+        "flex h-7 w-7 items-center justify-center rounded-lg border border-border/70 bg-background/30 transition-all hover:bg-foreground/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer",
+        tone,
       )}
     >
       {children}
@@ -129,6 +141,44 @@ export function RecordListDropdown({
     if (next) setFilters({});
   }, []);
 
+  /* Task 86-b — the image's document tools, made real: the green
+     spreadsheet doc exports the FILTERED view as CSV (Excel-friendly BOM),
+     the blue document copies it as TSV (paste straight into Excel). */
+  const exportCsv = React.useCallback(() => {
+    const esc = (s: string) => `"${s.replaceAll('"', '""')}"`;
+    const lines = [
+      columns.map(esc).join(","),
+      ...rows.map((it) =>
+        columns.map((c) => esc(it.cells.find((x) => x.label === c)?.value ?? "")).join(","),
+      ),
+    ];
+    const blob = new Blob(["\uFEFF" + lines.join("\r\n")], {
+      type: "text/csv;charset=utf-8",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "list.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(t("abar.listExportedToast"));
+  }, [columns, rows, t]);
+
+  const copyList = React.useCallback(async () => {
+    const tsv = [
+      columns.join("\t"),
+      ...rows.map((it) =>
+        columns.map((c) => it.cells.find((x) => x.label === c)?.value ?? "").join("\t"),
+      ),
+    ].join("\n");
+    try {
+      await navigator.clipboard.writeText(tsv);
+      toast.success(t("abar.listCopiedToast"));
+    } catch {
+      toast.error(t("common.error"));
+    }
+  }, [columns, rows, t]);
+
   const openRecord = React.useCallback(
     (it: ActionBarListItem) => {
       onOpenListItem?.(it);
@@ -185,7 +235,7 @@ export function RecordListDropdown({
                     <th
                       key={c}
                       scope="col"
-                      className="sticky top-0 z-10 border-b border-border/60 bg-muted/95 px-2.5 pb-2 pt-2.5 text-start align-bottom text-[11px] font-semibold leading-4 text-muted-foreground backdrop-blur"
+                      className="sticky top-0 z-10 border-b border-border/60 bg-muted/95 px-2.5 pb-2 pt-2.5 text-center align-bottom text-[11px] font-semibold leading-4 text-muted-foreground backdrop-blur"
                     >
                       <span className="line-clamp-2 max-w-[170px] whitespace-normal">{c}</span>
                     </th>
@@ -211,7 +261,7 @@ export function RecordListDropdown({
                           onChange={(e) => setFilters((s) => ({ ...s, [c]: e.target.value }))}
                           placeholder={t("abar.listFilterPh")}
                           aria-label={`${t("abar.listFilterPh")} — ${c}`}
-                          className="h-7 w-full min-w-[88px] rounded-lg border border-border/70 bg-background/50 ps-7 pe-2 text-[11px] text-foreground placeholder:text-muted-foreground/60 outline-none transition-all focus:border-primary/50 focus:bg-background focus:ring-2 focus:ring-primary/20"
+                          className="h-7 w-full min-w-[88px] rounded-lg border border-border/70 bg-background/50 ps-7 pe-2 text-center text-[11px] text-foreground placeholder:text-muted-foreground/60 outline-none transition-all focus:border-primary/50 focus:bg-background focus:ring-2 focus:ring-primary/20"
                         />
                       </div>
                     </th>
@@ -258,7 +308,11 @@ export function RecordListDropdown({
                               key={c}
                               className={cn(
                                 "max-w-[220px] truncate border-b border-border/40 px-2.5 py-2 text-xs",
-                                isActive ? "font-medium text-foreground" : "text-foreground/85",
+                                /* the image's hierarchy: the first column (the
+                                   record's title) reads white/medium, the rest muted */
+                                isActive || colIdx === 0
+                                  ? "font-medium text-foreground"
+                                  : "text-foreground/70",
                               )}
                             >
                               <span className="flex items-center gap-1.5">
@@ -282,34 +336,51 @@ export function RecordListDropdown({
           )}
         </div>
 
-        {/* ---- footer: mini round tools (NO plus — owner rule) + record count ---- */}
+        {/* ---- footer: the image's outline tools (NO plus — owner rule)
+              + record count ---- */}
         <div className="flex items-center justify-between gap-2 border-t border-border/60 bg-muted/40 px-3 py-2">
           <div className="flex items-center gap-1.5">
-            <RoundTool
+            <ListTool
               title={t("abar.listSearch")}
-              tint="from-sky-500 to-sky-600"
+              tone="text-foreground/80"
               disabled={empty}
               onClick={() => firstFilterRef.current?.focus()}
             >
               <Search className="h-3.5 w-3.5" aria-hidden />
-            </RoundTool>
-            <RoundTool
+            </ListTool>
+            <ListTool
+              title={t("abar.listCopy")}
+              tone="text-sky-400"
+              disabled={empty || rows.length === 0}
+              onClick={() => void copyList()}
+            >
+              <FileText className="h-3.5 w-3.5" aria-hidden />
+            </ListTool>
+            <ListTool
+              title={t("abar.listExport")}
+              tone="text-emerald-500"
+              disabled={empty || rows.length === 0}
+              onClick={exportCsv}
+            >
+              <FileSpreadsheet className="h-3.5 w-3.5" aria-hidden />
+            </ListTool>
+            <ListTool
               title={t("abar.listClearFilters")}
-              tint="from-amber-500 to-orange-600"
+              tone="text-amber-500"
               disabled={empty || activeFilterCount === 0}
               onClick={() => setFilters({})}
             >
               <FilterX className="h-3.5 w-3.5" aria-hidden />
-            </RoundTool>
+            </ListTool>
             {onRefresh && (
-              <RoundTool
+              <ListTool
                 title={t("abar.listRefresh")}
-                tint="from-teal-500 to-teal-600"
+                tone="text-sky-300"
                 disabled={Boolean(loading)}
                 onClick={() => void onRefresh()}
               >
                 <RotateCw className={cn("h-3.5 w-3.5", loading && "animate-spin")} aria-hidden />
-              </RoundTool>
+              </ListTool>
             )}
           </div>
           <span
