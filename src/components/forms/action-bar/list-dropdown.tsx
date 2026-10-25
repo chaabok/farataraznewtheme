@@ -1,14 +1,17 @@
 "use client";
 
 /**
- * Action 10 — «لیست» (Task 86 — بازطراحی به درخواست مالک):
+ * Action 10 — «لیست» (Task 86 — بازطراحی به درخواست مالک؛ Task 87 — تریگر):
  * «آیکون لیست در اکشن بار باید دقیقا شبیه تصویر پیوست باشد. بصورت کاملا زیبا
  * و جذاب و کاربرپسند این دراپ دان را ایجاد کنید. دکمه پلاس را در این دراپ دان
  * قرار ندهید»
+ * Task 87: «آیکون لیست را بوردر بدهید مثل بقیه آیکون ها و استایل آن را زیباتر
+ * و جذاب تر کنید. فقط آیکون را تغییر بدهید و دراپ دان آن را تغییری ندهید»
  *
  * Contract:
- *  · تریگر = آیکون ☰ ساده (هم‌شکل تصویر: بدون کاشی رنگی، بدون شورون) —
- *    گلیف همیشه با رنگ متنِ زمینه (روی نوار تیره سفید، روی روشن تیره)؛
+ *  · تریگر = کاشی گرادیانی بوردر‌دار هم‌قوارهٔ بقیه آیکون‌های اکشن بار
+ *    (تِیل — رنگ یکتای نوار) با گلیف سفید ☰، هالهٔ رنگی، tooltip هم‌سان
+ *    بقیه و حلقهٔ حالتِ باز؛ خودِ دراپ‌داون دست‌نخورده ماند؛
  *  · پنل = مینی‌گرید عین تصویر: سرستونِ برچسب فیلدها + ردیف «فیلتر...»
  *    (قیف داخل هر خانه) + ردیف رکوردها + اسکرول افقی/عمودی؛
  *  · فوتر = دکمه‌های گرد کوچک (جست‌وجو / پاک‌سازی فیلترها / بازخوانی) در
@@ -37,6 +40,12 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useT, useSettings } from "@/stores/settings-store";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import type { ActionBarListItem } from "./types";
 
 /** small footer tool — the image's outline rounded-square look: thin border,
@@ -207,18 +216,40 @@ export function RecordListDropdown({
 
   return (
     <Popover open={open} onOpenChange={handleOpenChange}>
-      <PopoverTrigger asChild>
-        <button
-          type="button"
-          title={text}
-          aria-label={text}
-          aria-haspopup="dialog"
-          disabled={disabled}
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-foreground/85 transition-all hover:bg-foreground/10 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-40 data-[state=open]:bg-foreground/10 data-[state=open]:text-foreground cursor-pointer"
-        >
-          <AlignJustify className="h-[18px] w-[18px]" aria-hidden />
-        </button>
-      </PopoverTrigger>
+      {/* Task 87 — the trigger is now a framed tile like every sibling icon:
+          solid teal gradient + glossy border + white glyph + colored glow,
+          the same hover tooltip as the rest of the bar, and a ring while the
+          dropdown is open (driven by state — Tooltip's data-state would clash
+          with Popover's on the same element). The dropdown body is untouched. */}
+      <TooltipProvider delayDuration={250}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                aria-label={text}
+                aria-haspopup="dialog"
+                disabled={disabled}
+                className={cn(
+                  "relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl",
+                  "border border-teal-300/50 bg-gradient-to-br from-teal-500 to-teal-600 text-white",
+                  "shadow-md shadow-teal-600/30 transition-all duration-150",
+                  "hover:brightness-110 hover:shadow-lg hover:shadow-teal-600/40 active:scale-95",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
+                  "disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:brightness-100 disabled:hover:shadow-md disabled:active:scale-100",
+                  "cursor-pointer",
+                  open && "border-teal-200/70 ring-2 ring-teal-300/70",
+                )}
+              >
+                <AlignJustify className="h-[18px] w-[18px]" aria-hidden />
+              </button>
+            </PopoverTrigger>
+          </TooltipTrigger>
+          <TooltipContent dir="auto" className="text-[11px]">
+            {text}
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
 
       <PopoverContent
         dir="auto"
