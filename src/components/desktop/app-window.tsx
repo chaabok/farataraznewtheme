@@ -21,6 +21,8 @@ import { useDesktop, type WinState } from "@/stores/desktop-store";
 
 /** Header-strip API a tab injects into its chromeless form shell. */
 export interface WindowChromeApi {
+  /** Task 82 — id of the hosting TAB (forms report their dirty state to it) */
+  windowId: string;
   onDragStart: (e: React.PointerEvent) => void;
   onDragMove: (e: React.PointerEvent) => void;
   onDragEnd: (e: React.PointerEvent) => void;
@@ -39,6 +41,25 @@ export function useWindowChrome(): WindowChromeApi | null {
   return React.useContext(WindowChromeContext);
 }
 
+/**
+ * Task 82 (درخواست مالک) — a tab announces its unsaved-data state:
+ * «اگر فرمی در تب بار باز بود که دارای اطلاعات بود و ذخیره نشده بود باید به
+ * کاربر آلارم داده شود». Call it anywhere inside a tab with the form's live
+ * dirty flag; the desktop store keeps a per-tab registry the fiscal-year
+ * guard consults before closing tabs. Outside a tab (embedded/previews)
+ * it is a no-op. Unmounting (tab closed) always reports clean.
+ */
+export function useTabDirty(dirty: boolean): void {
+  const chrome = useWindowChrome();
+  const setTabDirty = useDesktop((s) => s.setTabDirty);
+  React.useEffect(() => {
+    const id = chrome?.windowId;
+    if (!id) return;
+    setTabDirty(id, dirty);
+    return () => setTabDirty(id, false);
+  }, [chrome, dirty, setTabDirty]);
+}
+
 const noop = () => {};
 
 interface TabSurfaceProps {
@@ -53,6 +74,7 @@ export function TabSurface({ win, active, children }: TabSurfaceProps) {
 
   const chrome = React.useMemo<WindowChromeApi>(
     () => ({
+      windowId: win.id,
       onDragStart: noop,
       onDragMove: noop,
       onDragEnd: noop,

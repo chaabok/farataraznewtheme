@@ -82,8 +82,17 @@ interface DesktopState {
   closeWindow: (id: string) => void;
   /** switch the active tab */
   activateTab: (id: string) => void;
-  /** Task 64 — live tab title (record-count in list windows) */
-  setWindowTitle: (id: string, title: string) => void;
+  /** Task 64 — live tab title (record-count in list windows); undefined =
+      drop the override and fall back to the resolved meta title (Task 82:
+      the «عمومی» window retitles itself while its سال مالی sub-page is open) */
+  setWindowTitle: (id: string, title: string | undefined) => void;
+  /** Task 82 — a tab reports its unsaved-data state (form has edits that were
+      never saved); absent id = clean. Session-local, never persisted. */
+  dirtyTabs: Record<string, boolean>;
+  setTabDirty: (id: string, dirty: boolean) => void;
+  /** Task 82 — fiscal-year change: every open form tab closes at once
+      (home is implicit and stays) and the strip disappears */
+  closeAllFormTabs: () => void;
   setStartOpen: (open: boolean) => void;
   setIconPos: (id: string, pos: IconPos) => void;
   resetIconLayout: () => void;
@@ -154,6 +163,9 @@ export const useDesktop = create<DesktopState>()(
         set((s) => {
           const idx = s.windows.findIndex((w) => w.id === id);
           const windows = s.windows.filter((w) => w.id !== id);
+          /* Task 82 — a closed tab can no longer be dirty */
+          const dirtyTabs = { ...s.dirtyTabs };
+          delete dirtyTabs[id];
           /* browser rule: closing the ACTIVE tab activates its neighbour —
              prefer the tab before it, fall back to the one after, else home */
           let activeTabId = s.activeTabId;
@@ -163,13 +175,21 @@ export const useDesktop = create<DesktopState>()(
             activeTabId =
               windows[Math.min(Math.max(idx - 1, 0), windows.length - 1)]?.id ?? HOME_TAB_ID;
           }
-          return { windows, activeTabId };
+          return { windows, activeTabId, dirtyTabs };
         }),
       activateTab: (id) => set({ activeTabId: id }),
       setWindowTitle: (id, title) =>
         set((s) => ({
           windows: s.windows.map((w) => (w.id === id ? { ...w, titleOverride: title } : w)),
         })),
+      /* Task 82 — dirty registry (same-reference no-op keeps listeners quiet) */
+      dirtyTabs: {},
+      setTabDirty: (id, dirty) =>
+        set((s) =>
+          Boolean(s.dirtyTabs[id]) === dirty ? s : { dirtyTabs: { ...s.dirtyTabs, [id]: dirty } },
+        ),
+      closeAllFormTabs: () =>
+        set({ windows: [], activeTabId: HOME_TAB_ID, dirtyTabs: {} }),
       setStartOpen: (open) => set({ startOpen: open }),
       setIconPos: (id, pos) =>
         set((s) => ({ iconPositions: { ...s.iconPositions, [id]: pos } })),
