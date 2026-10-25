@@ -4,7 +4,12 @@ import * as React from "react";
 import { CalendarPlus } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
-import { useT } from "@/stores/settings-store";
+import {
+  displayToStoredDate,
+  monthsBetweenISO,
+  storedToDisplayDate,
+} from "@/lib/calendar-date";
+import { useT, useSettings } from "@/stores/settings-store";
 import { useDesktop } from "@/stores/desktop-store";
 import {
   SimpleFormTwoRowTabbed,
@@ -20,22 +25,30 @@ import { useWindowChrome } from "@/components/desktop/app-window";
  * فیلدها (عین عبارت مالک):
  *   ۱. کد — اجباری، نمی‌تواند خالی باشد.
  *   ۲. عنوان — اجباری، نمی‌تواند خالی باشد، فقط عدد، دقیقاً ۴ کاراکتر.
- *   ۳. تاریخ شروع / ۴. تاریخ پایان — ماسک YYYY/MM/DD (تقویم شمسی).
+ *   ۳. تاریخ شروع / ۴. تاریخ پایان — ماسک YYYY/MM/DD.
  *   ۵. فعال — چک‌باکس.
+ *
+ * Task 77 (درخواست مالک): «تمامی ستون‌های از نوع تاریخ فقط بصورت میلادی در
+ * بانک اطلاعاتی ذخیره شوند و نباید به تاریخ‌های دیگر در بانک اطلاعاتی ذخیره
+ * شوند ولی موقع نمایش در فرم‌ها باید به تاریخ زبان انتخاب شده نمایش داده شوند»
+ *   · ذخیره — فرم تاریخِ زبان انتخابی را می‌گیرد (fa/ps/ckb = شمسی، بقیه =
+ *     میلادی) و پیش از ارسال به میلادی 'YYYY-MM-DD' تبدیل می‌کند (API/DB فقط میلادی).
+ *   · نمایش — تاریخ ذخیره‌شدهٔ میلادی هنگام بازکردن رکورد/لیست به تقویمِ زبان
+ *     انتخابی برمی‌گردد (تبدیل‌گر: src/lib/calendar-date.ts).
  *
  * قوانین ثبت (اعتبارسنجی دولایه — فرانت + سرور):
  *   · سال مالی تکراری (کد/عنوان) رد می‌شود — سرور 409 با پیام روشن.
  *   · بازهٔ شروع/پایان تکراری (هم‌پوشانی) رد می‌شود — سرور 409.
  *   · طول بازه از «تعداد ماه‌های مالی» تنظیمات نرم‌افزار ← تب حسابداری
- *     (SoftwareConfig fiscalMonthsCount، پیش‌فرض ۱۲) بیشتر نباشد — فرانت
- *     پیش از ارسال چک می‌کند و سرور همان قانون را دوباره اعمال می‌کند.
+ *     (SoftwareConfig fiscalMonthsCount، پیش‌فرض ۱۲) بیشتر نباشد — کنترل روی
+ *     تاریخ میلادیِ ذخیره‌سازی، دولایه.
  */
 
 interface FiscalYearDto {
   id: number;
   code: string;
   title: string;
-  startDate: string; // 'YYYY/MM/DD' یا ''
+  startDate: string; // میلادی 'YYYY-MM-DD' یا '' (Task 77)
   endDate: string;
   isActive: boolean;
 }
@@ -52,28 +65,11 @@ const BLANK: FormValues = { code: "", title: "", startDate: "", endDate: "", act
 
 const DEFAULT_FISCAL_MONTHS = 12;
 
-/** 'YYYY/MM/DD' → 'YYYYMMDD' نرمال؛ null وقتی ناقص/نامعتبر است (مثل سرور). */
-function normalizeShamsi(raw: string): string | null {
-  const digits = normalizeDigits(raw).replace(/[^0-9]/g, "");
-  if (digits.length !== 8) return null;
-  const y = Number(digits.slice(0, 4));
-  const m = Number(digits.slice(4, 6));
-  const d = Number(digits.slice(6, 8));
-  if (y < 1300 || y > 1500 || m < 1 || m > 12 || d < 1 || d > 31) return null;
-  return digits;
-}
-
-/** تعداد ماهِ سپری‌شدهٔ بازه — دقیق تا سطح روز (مثل سرور). */
-function elapsedMonths(start: string, end: string): number {
-  const months =
-    (Number(end.slice(0, 4)) * 12 + Number(end.slice(4, 6))) -
-    (Number(start.slice(0, 4)) * 12 + Number(start.slice(4, 6)));
-  return Number(end.slice(6, 8)) < Number(start.slice(6, 8)) ? months - 1 : months;
-}
-
 export function FiscalYearForm({ onBack }: { onBack?: () => void }) {
   const t = useT();
   const chrome = useWindowChrome();
+  /* تقویمِ نمایش = زبان انتخابی (fa/ps/ckb → شمسی، بقیه → میلادی) — Task 77 */
+  const locale = useSettings((s) => s.locale);
   const headerMaximized = useDesktop(
     (s) => s.windows.find((w) => w.kind === "app" && w.appKey === "general")?.maximized ?? false,
   );
@@ -121,16 +117,20 @@ export function FiscalYearForm({ onBack }: { onBack?: () => void }) {
     };
   }, [fetchRecords, applyRecords]);
 
-  const applyRecord = React.useCallback((r: FiscalYearDto) => {
-    setCurrentId(r.id);
-    setValues({
-      code: r.code,
-      title: r.title,
-      startDate: r.startDate,
-      endDate: r.endDate,
-      active: r.isActive,
-    });
-  }, []);
+  /* بازکردن رکورد: تاریخِ میلادیِ ذخیره‌شده → نمایش در تقویمِ زبان انتخابی */
+  const applyRecord = React.useCallback(
+    (r: FiscalYearDto) => {
+      setCurrentId(r.id);
+      setValues({
+        code: r.code,
+        title: r.title,
+        startDate: storedToDisplayDate(r.startDate, locale),
+        endDate: storedToDisplayDate(r.endDate, locale),
+        active: r.isActive,
+      });
+    },
+    [locale],
+  );
 
   const newRecord = React.useCallback(() => {
     setCurrentId(null);
@@ -147,20 +147,21 @@ export function FiscalYearForm({ onBack }: { onBack?: () => void }) {
     });
   }, []);
 
-  /* زنجیرهٔ اعتبارسنجی فرانت — همان قوانین سرور، برای بازخورد فوری */
+  /* زنجیرهٔ اعتبارسنجی فرانت — همان قوانین سرور، برای بازخورد فوری؛
+     تاریخ‌ها از نمایشِ زبان انتخابی به میلادیِ ذخیره‌سازی تبدیل می‌شوند */
   const validate = (vals: FormValues): string | null => {
     if (vals.code.trim() === "") return t("fy.errCodeRequired");
     if (vals.title.trim() === "") return t("fy.errTitleRequired");
     if (!/^[0-9]{4}$/.test(vals.title.trim())) return t("fy.errTitleDigits");
 
-    const s = vals.startDate.trim() === "" ? null : normalizeShamsi(vals.startDate);
-    const e = vals.endDate.trim() === "" ? null : normalizeShamsi(vals.endDate);
+    const s = vals.startDate.trim() === "" ? null : displayToStoredDate(vals.startDate, locale, normalizeDigits);
+    const e = vals.endDate.trim() === "" ? null : displayToStoredDate(vals.endDate, locale, normalizeDigits);
     if ((vals.startDate.trim() !== "" && !s) || (vals.endDate.trim() !== "" && !e)) {
       return t("fy.errDateInvalid");
     }
     if (s && e && e < s) return t("fy.errDateOrder");
     if (s && e) {
-      const months = elapsedMonths(s, e);
+      const months = monthsBetweenISO(s, e);
       if (months > monthsLimit) {
         return t("fy.errMonths").replace("{max}", String(monthsLimit));
       }
@@ -178,8 +179,9 @@ export function FiscalYearForm({ onBack }: { onBack?: () => void }) {
     const body = {
       code: values.code.trim(),
       title: values.title.trim(),
-      startDate: values.startDate.trim(),
-      endDate: values.endDate.trim(),
+      /* Task 77: API/DB فقط میلادی — تبدیل نمایشِ زبان انتخابی به 'YYYY-MM-DD' */
+      startDate: displayToStoredDate(values.startDate, locale, normalizeDigits) ?? "",
+      endDate: displayToStoredDate(values.endDate, locale, normalizeDigits) ?? "",
       isActive: values.active,
     };
     try {
@@ -279,7 +281,11 @@ export function FiscalYearForm({ onBack }: { onBack?: () => void }) {
       listItems={records.map((r) => ({
         id: String(r.id),
         title: `${r.code} - ${r.title}`,
-        subtitle: [r.startDate, r.endDate].filter(Boolean).join(" ← ") || undefined,
+        /* زیرنویس بازه: تاریخ میلادیِ ذخیره‌شده → تقویم زبان انتخابی (Task 77) */
+        subtitle:
+          [storedToDisplayDate(r.startDate, locale), storedToDisplayDate(r.endDate, locale)]
+            .filter(Boolean)
+            .join(" ← ") || undefined,
       }))}
       listLoading={listLoading}
       onOpenListItem={(item) => {

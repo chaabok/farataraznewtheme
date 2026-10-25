@@ -28,7 +28,7 @@ export class UpsertFiscalYearDto {
   @MaxLength(4)
   title!: string; // فقط عدد ۴رقمی — اعتبارسنجی دقیق در سرویس
 
-  /** 'YYYY/MM/DD' یا 'YYYYMMDD' شمسی؛ خالی = ثبت‌نشده */
+  /** میلادی 'YYYY-MM-DD' (Task 77 — DB فقط میلادی)؛ خالی = ثبت‌نشده */
   @IsOptional()
   @IsString()
   @MaxLength(10)

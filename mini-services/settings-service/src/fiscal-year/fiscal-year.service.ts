@@ -31,7 +31,10 @@ import { UpsertFiscalYearDto } from "./fiscal-year.dto";
  *      هم‌راستا با unique index دوتایی جدول).
  *   ۴. بازهٔ شروع/پایان تکراری (هم‌پوشان با هر سال مالی موجود) رد می‌شود.
  *   ۵. طول بازه از «تعداد ماه‌های مالی» (SoftwareConfig → appKey "accounting"
- *      → configKey "fiscalMonthsCount"، پیش‌فرض ۱۲) بیشتر نباشد.
+ *      → configKey "fiscalMonthsCount", پیش‌فرض ۱۲) بیشتر نباشد.
+ *
+ * Task 77 (درخواست مالک): تاریخ‌ها «میلادی» 'YYYY-MM-DD' ذخیره می‌شوند —
+ * سرور فقط میلادی قبول می‌کند؛ تبدیل شمسی (زبان‌های fa/ps/ckb) فقط در فرانت.
  */
 
 /** تبدیل ارقام فارسی/عربی به لاتین (سرور هر ورودی کاربری را نرمال می‌کند). */
@@ -41,37 +44,41 @@ function toLatinDigits(s: string): string {
     .replace(/[٠-٩]/g, (d) => String("٠١٢٣٤٥٦٧٨٩".indexOf(d)));
 }
 
-/** 'YYYY/MM/DD' یا 'YYYYMMDD' → 'YYYYMMDD' شمسی نرمال، یا null وقتی نامعتبر است. */
-function normalizeShamsiDate(raw: string | undefined | null): string | null {
+/**
+ * Task 77 (درخواست مالک 1405/08/03): «تمامی ستون‌های از نوع تاریخ فقط باید
+ * بصورت میلادی در بانک اطلاعاتی ذخیره شوند... ولی موقع نمایش در فرم‌ها باید به
+ * تاریخ زبان انتخاب شده نمایش داده شوند» — پس StartDate/EndDate میلادی ISO
+ * 'YYYY-MM-DD' ذخیره می‌شوند؛ تبدیل شمسی↔میلادی «فقط در فرانت» انجام می‌شود و
+ * سرور هیچ تاریخ غیرمیلادی‌ای قبول/ذخیره نمی‌کند.
+ */
+
+/** 'YYYY-MM-DD' یا 'YYYY/MM/DD' یا 'YYYYMMDD' میلادی → 'YYYY-MM-DD' نرمال، یا null وقتی نامعتبر است. */
+function normalizeGregorianDate(raw: string | undefined | null): string | null {
   if (raw == null) return null;
   const digits = toLatinDigits(String(raw)).replace(/[^0-9]/g, "");
   if (digits.length !== 8) return null;
   const y = Number(digits.slice(0, 4));
   const m = Number(digits.slice(4, 6));
   const d = Number(digits.slice(6, 8));
-  if (y < 1300 || y > 1500) return null; // گارد معقول بازهٔ سال شمسی
-  if (m < 1 || m > 12) return null;
-  if (d < 1 || d > 31) return null;
-  return digits;
-}
-
-function parseShamsi(yyyymmdd: string): { y: number; m: number; d: number } {
-  return {
-    y: Number(yyyymmdd.slice(0, 4)),
-    m: Number(yyyymmdd.slice(4, 6)),
-    d: Number(yyyymmdd.slice(6, 8)),
-  };
+  if (y < 1900 || y > 2199) return null; // گارد معقول بازهٔ سال میلادی
+  // تاریخ واقعی تقویم میلادی (ماه/روز + کبیسه) با رفت‌وبرگشت UTC
+  const probe = new Date(Date.UTC(y, m - 1, d));
+  if (probe.getUTCFullYear() !== y || probe.getUTCMonth() !== m - 1 || probe.getUTCDate() !== d) {
+    return null;
+  }
+  return `${digits.slice(0, 4)}-${digits.slice(4, 6)}-${digits.slice(6, 8)}`;
 }
 
 /**
- * تعداد ماهِ سپری‌شدهٔ بازهٔ [start, end] — دقیق تا سطح روز:
- * از 1404/01/01 تا 1405/01/01 دقیقاً ۱۲ ماه است؛ تا 1405/01/02 می‌شود ۱۳ ماه.
+ * تعداد ماهِ سپری‌شدهٔ بازهٔ [start, end] روی تاریخ ذخیره‌شدهٔ میلادی ISO —
+ * دقیق تا سطح روز: 2025-03-21 تا 2026-03-21 دقیقاً ۱۲ ماه است؛
+ * معنای Task 75 حفظ شده، فقط روی تقویمِ ذخیره‌سازی (میلادی) اعمال می‌شود.
  */
-function elapsedMonths(start: string, end: string): number {
-  const a = parseShamsi(start);
-  const b = parseShamsi(end);
-  let months = (b.y * 12 + b.m) - (a.y * 12 + a.m);
-  if (b.d < a.d) months -= 1; // ماهِ آخر کامل نشده
+function elapsedMonths(startISO: string, endISO: string): number {
+  const a = startISO.split("-").map(Number);
+  const b = endISO.split("-").map(Number);
+  let months = (b[0] * 12 + b[1]) - (a[0] * 12 + a[1]);
+  if (b[2] < a[2]) months -= 1; // ماهِ آخر کامل نشده
   return months;
 }
 
@@ -200,21 +207,21 @@ export class FiscalYearService {
     let startDate: string | null = null;
     let endDate: string | null = null;
     if (dto.startDate != null && String(dto.startDate).trim() !== "") {
-      startDate = normalizeShamsiDate(dto.startDate);
+      startDate = normalizeGregorianDate(dto.startDate);
       if (!startDate) {
         throw new BadRequestException({
           statusCode: 422,
-          message: "قالب تاریخ شروع باید YYYY/MM/DD باشد.",
+          message: "قالب تاریخ شروع باید میلادی و در قالب YYYY-MM-DD باشد.",
           messageKey: "common.error",
         });
       }
     }
     if (dto.endDate != null && String(dto.endDate).trim() !== "") {
-      endDate = normalizeShamsiDate(dto.endDate);
+      endDate = normalizeGregorianDate(dto.endDate);
       if (!endDate) {
         throw new BadRequestException({
           statusCode: 422,
-          message: "قالب تاریخ پایان باید YYYY/MM/DD باشد.",
+          message: "قالب تاریخ پایان باید میلادی و در قالب YYYY-MM-DD باشد.",
           messageKey: "common.error",
         });
       }
@@ -278,11 +285,9 @@ export class FiscalYearService {
       rangesOverlap(r.startDate, r.endDate, startDate!, endDate!),
     );
     if (overlapping) {
-      const fmt = (d: string | null) =>
-        d ? `${d.slice(0, 4)}/${d.slice(4, 6)}/${d.slice(6, 8)}` : "—";
       throw new ConflictException({
         statusCode: 409,
-        message: `بازهٔ تاریخ شروع و پایان تکراری است و با سال مالی «${overlapping.code} - ${overlapping.title}» (${fmt(overlapping.startDate)} تا ${fmt(overlapping.endDate)}) هم‌پوشانی دارد.`,
+        message: `بازهٔ تاریخ شروع و پایان تکراری است و با سال مالی «${overlapping.code} - ${overlapping.title}» (${overlapping.startDate ?? "—"} تا ${overlapping.endDate ?? "—"}) هم‌پوشانی دارد.`,
         messageKey: "common.error",
       });
     }
@@ -340,14 +345,14 @@ export class FiscalYearService {
     createdAt: Date;
     updatedAt: Date;
   }) {
-    const fmt = (d: string | null) =>
-      d ? `${d.slice(0, 4)}/${d.slice(4, 6)}/${d.slice(6, 8)}` : "";
+    /* Task 77: تاریخ‌ها میلادی ISO ذخیره/برگردانده می‌شوند — نمایشِ تقویمِ هر
+       زبان (شمسی برای fa/ps/ckb) فقط در لایهٔ فرانت انجام می‌شود. */
     return {
       id: Number(r.id), // §2.4 BigInt → number (گارد 2^53 در مولد ID)
       code: r.code,
       title: r.title,
-      startDate: fmt(r.startDate),
-      endDate: fmt(r.endDate),
+      startDate: r.startDate ?? "",
+      endDate: r.endDate ?? "",
       isActive: r.isActive,
       version: r.version,
       creator: r.creator,

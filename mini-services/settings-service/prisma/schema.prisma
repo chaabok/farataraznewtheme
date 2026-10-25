@@ -176,9 +176,12 @@ model SoftwareConfig {
 ///   · Code  — کد سال مالی، اجباری، در ساختار سازمانی یکتا (unique با BSRef).
 ///   · Title — عنوان سال مالی، اجباری، فقط عدد و دقیقاً ۴ کاراکتر (مثل «1404»)
 ///             و یکتا در ساختار سازمانی (unique با BSRef) — «سال مالی تکراری» رد.
-///   · StartDate/EndDate — 'YYYYMMDD' شمسی؛ بازهٔ تکراری (هم‌پوشانی) رد؛ طول
-///             بازه بیش از «تعداد ماه‌های مالی» پیکربندی نرم‌افزار/حسابداری
-///             (SoftwareConfig fiscalMonthsCount، پیش‌فرض ۱۲) رد می‌شود.
+///   · StartDate/EndDate — میلادی 'YYYY-MM-DD' (Task 77: «تمامی ستون‌های از نوع
+///             تاریخ فقط میلادی ذخیره شوند» — نمایش تقویمِ زبان انتخابی فقط در فرانت؛
+///             فرانتِ fa/ps/ckb شمسی نشان می‌دهد و پیش از ارسال تبدیل می‌کند)؛
+///             بازهٔ تکراری (هم‌پوشانی) رد؛ طول بازه بیش از «تعداد ماه‌های مالی»
+///             پیکربندی نرم‌افزار/حسابداری (SoftwareConfig fiscalMonthsCount،
+///             پیش‌فرض ۱۲) رد می‌شود.
 ///   · IsActive — «فعال».
 /// §16: ID دستی از IDGeneration ("FiscalYear")؛ بلوک کامل ارث‌بری AppBaseEntity
 /// ۸فیلدی (قرارداد اجباری مالک؛ نسخهٔ Task 76) — تا استقرار IAM = SYSTEM_ACTOR (دفتر مرکزی، ID=1).
@@ -186,8 +189,8 @@ model FiscalYear {
   id                   BigInt   @id @map("ID")
   code                 String   @map("Code")
   title                String   @map("Title") // فقط عدد، ۴ کاراکتر
-  startDate            String?  @map("StartDate") // Shamsi 'YYYYMMDD'
-  endDate              String?  @map("EndDate") // Shamsi 'YYYYMMDD'
+  startDate            String?  @map("StartDate") // Gregorian 'YYYY-MM-DD' (Task 77)
+  endDate              String?  @map("EndDate") // Gregorian 'YYYY-MM-DD' (Task 77)
   isActive             Boolean  @default(true) @map("IsActive")
   version              Int      @default(1) @map("Version") // §2.5 auto-rowversion
   creator              String   @map("Creator") // IAM UserID
