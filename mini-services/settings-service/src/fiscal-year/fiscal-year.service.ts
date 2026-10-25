@@ -18,8 +18,9 @@ import { UpsertFiscalYearDto } from "./fiscal-year.dto";
 /**
  * FiscalYear — Task 75 (درخواست مالک): فرم «سال مالی جدید» در نرم‌افزار
  * «عمومی» → زیرمنوی «اطلاعات پایه». رعایت کامل فیلدهای ارث‌بری AppBaseEntity
- * (۱۲فیلدی): ID دستی از IDGeneration (§16)، Version با §2.5 auto-rowversion،
- * مهر Creator/CreationDate/CreateTime + زنجیرهٔ ساختار سازمانی روی هر ردیف
+ * (۸فیلدی — نسخهٔ Task 76: مهر زمانی را CreatedAt/UpdatedAt پرایسما دارد):
+ * ID دستی از IDGeneration (§16)، Version با §2.5 auto-rowversion،
+ * مهر Creator/LastModifier + زنجیرهٔ ساختار سازمانی روی هر ردیف
  * (تا استقرار IAM = SYSTEM_ACTOR / دفتر مرکزی ID=1).
  *
  * زنجیرهٔ اعتبارسنجی ثبت (خط دفاعی نهایی سمت سرور؛ فرانت همان قوانین را
@@ -330,11 +331,7 @@ export class FiscalYearService {
     isActive: boolean;
     version: number;
     creator: string;
-    creationDate: string;
-    createTime: string;
     lastModifier: string | null;
-    lastModificationDate: string | null;
-    lastModificationTime: string | null;
     businessStructureRef: bigint;
     companyRef: bigint | null;
     branchRef: bigint | null;
@@ -354,11 +351,7 @@ export class FiscalYearService {
       isActive: r.isActive,
       version: r.version,
       creator: r.creator,
-      creationDate: r.creationDate,
-      createTime: r.createTime,
       lastModifier: r.lastModifier,
-      lastModificationDate: r.lastModificationDate,
-      lastModificationTime: r.lastModificationTime,
       businessStructureRef: Number(r.businessStructureRef),
       companyRef: r.companyRef == null ? null : Number(r.companyRef),
       branchRef: r.branchRef == null ? null : Number(r.branchRef),

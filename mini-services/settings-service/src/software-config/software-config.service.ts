@@ -16,8 +16,9 @@ import {
 
 /**
  * SoftwareConfig — Task 72 (تأیید مالک): «پیکربندی نرم افزارها» با رعایت
- * کامل فیلدهای ارث‌بری AppBaseEntity (۱۲فیلدی): ID دستی از IDGeneration (§16)،
- * Version با §2.5 auto-rowversion، و مهر Creator/CreationDate/CreateTime +
+ * کامل فیلدهای ارث‌بری AppBaseEntity (۸فیلدی — نسخهٔ Task 76: مهر زمانی را
+ * CreatedAt/UpdatedAt پرایسما دارد): ID دستی از IDGeneration (§16)،
+ * Version با §2.5 auto-rowversion، و مهر Creator/LastModifier +
  * زنجیرهٔ ساختار سازمانی روی هر ردیف (تا استقرار IAM = SYSTEM_ACTOR / دفتر
  * مرکزی ID=1). خواندن فعلاً سراسری است؛ وقتی IAM وصل شود همین مسیر با
  * baseDataScopeWhere دامنه‌گذاری می‌شود (قرارداد _shared/app-base-entity).
@@ -169,11 +170,7 @@ export class SoftwareConfigService {
     configValue: string | null;
     version: number;
     creator: string;
-    creationDate: string;
-    createTime: string;
     lastModifier: string | null;
-    lastModificationDate: string | null;
-    lastModificationTime: string | null;
     businessStructureRef: bigint;
     companyRef: bigint | null;
     branchRef: bigint | null;
@@ -189,11 +186,7 @@ export class SoftwareConfigService {
       configValue: r.configValue ?? "",
       version: r.version,
       creator: r.creator,
-      creationDate: r.creationDate,
-      createTime: r.createTime,
       lastModifier: r.lastModifier,
-      lastModificationDate: r.lastModificationDate,
-      lastModificationTime: r.lastModificationTime,
       businessStructureRef: Number(r.businessStructureRef),
       companyRef: r.companyRef == null ? null : Number(r.companyRef),
       branchRef: r.branchRef == null ? null : Number(r.branchRef),

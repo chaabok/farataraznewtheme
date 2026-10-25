@@ -3,8 +3,12 @@
 // §16 contract: NO autoincrement anywhere — every operational PK is manual via IdGenerationService.
 
 /*
- * AppBaseEntity — بلوک اجباری ۱۲فیلدی برای «هر» مدل عملیاتیِ آینده
- * (درخواست مالک: «در تمامی جداول از فیلدهای ارث‌بری استفاده کنیم» — تأیید 1405/08/01).
+ * AppBaseEntity — بلوک اجباری ۸فیلدی برای «هر» مدل عملیاتیِ آینده
+ * (درخواست مالک: «در تمامی جداول از فیلدهای ارث‌بری استفاده کنیم» — تأیید 1405/08/01؛
+ *  اصلاح Task 76 در 1405/08/03: چهار ستون مهرِ زمانی شمسی CreationDate/CreationTime/
+ *  LastModificationDate/LastModificationTime از بلوک حذف شد — منطق زمانِ ایجاد/ویرایش
+ *  را CreatedAt/UpdatedAt پرایسما پوشش می‌دهد؛ Creator/LastModifier برای «چه‌کسی» می‌ماند.
+ *  نمایش شمسیِ CreatedAt در UI/گزارش = تبدیل در زمان خواندن با tehranNowParts)
  * قرارداد کامل و توابع پرکردن خودکار: mini-services/_shared/app-base-entity.ts
  *   · create → spread appBaseOnCreate(actor)   · update → spread appBaseOnUpdate(actor)
  *   · خواندن اطلاعات پایه → baseDataScopeWhere(scope, root.isBasicInfoShared)
@@ -16,16 +20,14 @@
  *   ...
  *   version              Int      @default(1) @map("Version")                 // §2.5 rowversion
  *   creator              String               @map("Creator")                 // IAM UserID
- *   creationDate         String               @map("CreationDate")            // Shamsi 'YYYYMMDD' (Tehran)
- *   createTime           String               @map("CreationTime")            // 'HHmmss' (Tehran)
  *   lastModifier         String?              @map("LastModifier")
- *   lastModificationDate String?              @map("LastModificationDate")
- *   lastModificationTime String?              @map("LastModificationTime")
  *   businessStructureRef BigInt               @map("BusinessStructureRef")   // owning node
  *   companyRef           BigInt?              @map("CompanyRef")             // level anchors
  *   branchRef            BigInt?              @map("BranchRef")
  *   agencyRef            BigInt?              @map("AgencyRef")
  *   shopRef              BigInt?              @map("ShopRef")
+ *   createdAt            DateTime @default(now()) @map("CreatedAt")          // Task 76: تِک ستون زمان
+ *   updatedAt            DateTime @updatedAt      @map("UpdatedAt")
  * }
  */
 
@@ -145,7 +147,7 @@ model Systems {
 /// AppKey = appKey کاتالوگ (general|accounting|receiptsPayment|inventory|sales|
 /// fixedAssets|payroll — بعداً گسترش می‌یابد)؛ ConfigValue رشته‌ای است (§2.3).
 /// §16: ID دستی از IDGeneration ("SoftwareConfig")؛ بلوک کامل ارث‌بری
-/// AppBaseEntity ۱۲فیلدی (درخواست مالک: «فیلدهای ارث بری رعایت گردد») —
+/// AppBaseEntity ۸فیلدی (درخواست مالک؛ نسخهٔ Task 76 — مهر زمانی با CreatedAt/UpdatedAt) —
 /// درخواست‌کننده تا استقرار IAM = SYSTEM_ACTOR (دفتر مرکزی، ID=1).
 /// Unique شامل BusinessStructureRef است تا پیکربندی تفکیکی هر شرکت/شعبه در
 /// آینده بدون تغییر اسکیما ممکن شود (پیش‌فرض تأییدشدهٔ مشاورهٔ Task 72).
@@ -156,11 +158,7 @@ model SoftwareConfig {
   configValue          String?  @map("ConfigValue") // "" = حذف (الگوی Task 68)
   version              Int      @default(1) @map("Version") // §2.5 auto-rowversion
   creator              String   @map("Creator") // IAM UserID
-  creationDate         String   @map("CreationDate") // Shamsi 'YYYYMMDD' (Tehran)
-  createTime           String   @map("CreationTime") // 'HHmmss' (Tehran)
   lastModifier         String?  @map("LastModifier")
-  lastModificationDate String?  @map("LastModificationDate")
-  lastModificationTime String?  @map("LastModificationTime")
   businessStructureRef BigInt   @map("BusinessStructureRef")
   companyRef           BigInt?  @map("CompanyRef")
   branchRef            BigInt?  @map("BranchRef")
@@ -183,7 +181,7 @@ model SoftwareConfig {
 ///             (SoftwareConfig fiscalMonthsCount، پیش‌فرض ۱۲) رد می‌شود.
 ///   · IsActive — «فعال».
 /// §16: ID دستی از IDGeneration ("FiscalYear")؛ بلوک کامل ارث‌بری AppBaseEntity
-/// ۱۲فیلدی (قرارداد اجباری مالک) — تا استقرار IAM = SYSTEM_ACTOR (دفتر مرکزی، ID=1).
+/// ۸فیلدی (قرارداد اجباری مالک؛ نسخهٔ Task 76) — تا استقرار IAM = SYSTEM_ACTOR (دفتر مرکزی، ID=1).
 model FiscalYear {
   id                   BigInt   @id @map("ID")
   code                 String   @map("Code")
@@ -193,11 +191,7 @@ model FiscalYear {
   isActive             Boolean  @default(true) @map("IsActive")
   version              Int      @default(1) @map("Version") // §2.5 auto-rowversion
   creator              String   @map("Creator") // IAM UserID
-  creationDate         String   @map("CreationDate") // Shamsi 'YYYYMMDD' (Tehran)
-  createTime           String   @map("CreationTime") // 'HHmmss' (Tehran)
   lastModifier         String?  @map("LastModifier")
-  lastModificationDate String?  @map("LastModificationDate")
-  lastModificationTime String?  @map("LastModificationTime")
   businessStructureRef BigInt   @map("BusinessStructureRef")
   companyRef           BigInt?  @map("CompanyRef")
   branchRef            BigInt?  @map("BranchRef")

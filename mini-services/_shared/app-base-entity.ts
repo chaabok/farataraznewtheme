@@ -12,7 +12,7 @@
  *           office's base data).
  *
  * Layers (Prisma has no model inheritance — §2.3):
- *   1) SCHEMA: every operational Prisma model carries the 12-column block
+ *   1) SCHEMA: every operational Prisma model carries the 8-column block
  *      verbatim (template in settings-service/prisma/schema.prisma; legacy
  *      PascalCase @@map per §2.6) and registers its model in VERSIONED_MODELS
  *      (prisma.service.ts) for the §2.5 auto-rowversion.
@@ -24,20 +24,22 @@
  *
  * Platform tables (Setting/AppRegistry/Systems/IDGeneration/BusinessStructure/
  * BusinessStructureUser) are EXEMPT by owner confirmation (consult Q2).
- * Dates/times are legacy Shamsi strings (consult Q1 default): 'YYYYMMDD' +
- * 'HHmmss', always Asia/Tehran wall clock. Actor is the IAM UserID; until real
- * IAM wiring arrives services pass SYSTEM_ACTOR (consult Q5 default).
+ *
+ * Task 76 (owner decision 1405/08/03): the Shamsi date/time stamp columns
+ * (CreationDate/CreationTime/LastModificationDate/LastModificationTime) were
+ * REMOVED from the inheritance block — CreatedAt/UpdatedAt (Prisma epoch UTC)
+ * already carry the exact same timing logic. Creator/LastModifier stay: they
+ * carry the "who", which timestamps cannot. When a Shamsi wall-clock view of
+ * CreatedAt/UpdatedAt is needed (UI/reports), convert at read time with
+ * tehranNowParts(new Date(row.createdAt)) below. Actor is the IAM UserID;
+ * until real IAM wiring arrives services pass SYSTEM_ACTOR (consult Q5).
  */
 
-/** Legacy column set of the base entity (Prisma field names, camelCase). */
+/** Column set of the base entity (Prisma field names, camelCase). */
 export const APP_BASE_FIELDS = [
   "version",
   "creator",
-  "creationDate",
-  "createTime",
   "lastModifier",
-  "lastModificationDate",
-  "lastModificationTime",
   "businessStructureRef",
   "companyRef",
   "branchRef",
@@ -66,11 +68,7 @@ export interface AppBaseEntityFields {
   /** §2.5 auto-rowversion — never written manually (middleware bumps it). */
   version: number;
   creator: string;
-  creationDate: string;
-  createTime: string;
   lastModifier: string | null;
-  lastModificationDate: string | null;
-  lastModificationTime: string | null;
   businessStructureRef: bigint;
   companyRef: bigint | null;
   branchRef: bigint | null;
@@ -84,7 +82,7 @@ export const SYSTEM_ACTOR: AppBaseActor = {
   nodeId: HEAD_OFFICE_NODE_ID,
 };
 
-/* ------------------------------- Shamsi clock ------------------------------ */
+/* --------------------- Shamsi clock (display conversion) -------------------- */
 
 /** Gregorian→Jalali (standard algorithm, dependency-free). */
 export function gregorianToJalali(
@@ -117,7 +115,11 @@ export function gregorianToJalali(
 
 const pad2 = (n: number) => String(n).padStart(2, "0");
 
-/** Tehran wall clock split into legacy Shamsi date + time strings. */
+/**
+ * Tehran wall clock for a given instant, split into Shamsi date + time strings.
+ * Task 76: no longer stamped into rows — use it at READ time to render the
+ * Shamsi view of technical timestamps, e.g. tehranNowParts(row.createdAt).
+ */
 export function tehranNowParts(at: Date = new Date()): { date: string; time: string } {
   const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Tehran",
@@ -139,16 +141,15 @@ export function tehranNowParts(at: Date = new Date()): { date: string; time: str
 
 /* ------------------------------ audit helpers ------------------------------ */
 
-/** Spread into prisma `.create({ data })` — fills audit trail + tree anchors. */
+/**
+ * Spread into prisma `.create({ data })` — fills the "who" + tree anchors.
+ * Task 76: timing is owned by CreatedAt/UpdatedAt (@default(now())/@updatedAt);
+ * only the actor and residency chain are stamped here.
+ */
 export function appBaseOnCreate(actor: AppBaseActor): Omit<AppBaseEntityFields, "version"> {
-  const { date, time } = tehranNowParts();
   return {
     creator: actor.userId,
-    creationDate: date,
-    createTime: time,
     lastModifier: null,
-    lastModificationDate: null,
-    lastModificationTime: null,
     businessStructureRef: actor.nodeId,
     companyRef: actor.companyRef ?? null,
     branchRef: actor.branchRef ?? null,
@@ -157,14 +158,9 @@ export function appBaseOnCreate(actor: AppBaseActor): Omit<AppBaseEntityFields, 
   };
 }
 
-/** Spread into prisma `.update({ data })` — stamps the modifier audit trail. */
+/** Spread into prisma `.update({ data })` — stamps the modifier ("who"). */
 export function appBaseOnUpdate(actor: AppBaseActor) {
-  const { date, time } = tehranNowParts();
-  return {
-    lastModifier: actor.userId,
-    lastModificationDate: date,
-    lastModificationTime: time,
-  };
+  return { lastModifier: actor.userId };
 }
 
 /* ------------------------------ read scoping ------------------------------- */
