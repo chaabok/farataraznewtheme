@@ -31,6 +31,7 @@ const VERSIONED_MODELS: ReadonlySet<string> = new Set([
   "AppRegistry",
   "Systems",
   "SoftwareConfig", // Task 72 — پیکربندی نرم‌افزارها
+  "FiscalYear", // Task 75 — سال مالی
 ]);
 
 const VERSION_ACTIONS = new Set(["update", "updateMany", "upsert"]);

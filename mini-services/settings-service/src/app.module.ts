@@ -7,6 +7,7 @@ import { BusinessStructureModule } from "./business-structure/business-structure
 import { AppRegistryModule } from "./app-registry/app-registry.module";
 import { SystemsModule } from "./systems/systems.module";
 import { SoftwareConfigModule } from "./software-config/software-config.module";
+import { FiscalYearModule } from "./fiscal-year/fiscal-year.module";
 import { HealthController } from "./health/health.controller";
 import { SeedModule } from "./seed/seed.module";
 
@@ -18,6 +19,7 @@ import { SeedModule } from "./seed/seed.module";
     AppRegistryModule,
     SystemsModule,
     SoftwareConfigModule,
+    FiscalYearModule,
     SeedModule,
   ],
   controllers: [HealthController],

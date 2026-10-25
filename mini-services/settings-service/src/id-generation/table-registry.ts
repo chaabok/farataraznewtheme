@@ -19,7 +19,8 @@ export type TableKey =
   | "BusinessStructure"
   | "BusinessStructureUser"
   | "Systems"
-  | "SoftwareConfig"; // Task 72 — پیکربندی نرم‌افزارها
+  | "SoftwareConfig" // Task 72 — پیکربندی نرم‌افزارها
+  | "FiscalYear"; // Task 75 — سال مالی (اطلاعات پایه)
 
 export const TABLE_REGISTRY: Record<TableKey, TableEntry> = {
   IDGeneration: {
@@ -42,6 +43,10 @@ export const TABLE_REGISTRY: Record<TableKey, TableEntry> = {
   },
   SoftwareConfig: {
     canonical: "SoftwareConfig", // Task 72 — پیکربندی نرم‌افزارها (هر فیلد یک ردیف)
+    pk: "ID",
+  },
+  FiscalYear: {
+    canonical: "FiscalYear", // Task 75 — سال مالی (اطلاعات پایهٔ عمومی)
     pk: "ID",
   },
 };

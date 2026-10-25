@@ -172,3 +172,41 @@ model SoftwareConfig {
   @@unique([appKey, configKey, businessStructureRef])
   @@map("SoftwareConfig")
 }
+
+/// FiscalYear — Task 75 (درخواست مالک): فرم «سال مالی جدید» در پنجرهٔ نرم‌افزار
+/// «عمومی» → زیرمنوی «اطلاعات پایه». اطلاعات پایهٔ تقویم مالی سیستم (دامنهٔ Gnr):
+///   · Code  — کد سال مالی، اجباری، در ساختار سازمانی یکتا (unique با BSRef).
+///   · Title — عنوان سال مالی، اجباری، فقط عدد و دقیقاً ۴ کاراکتر (مثل «1404»)
+///             و یکتا در ساختار سازمانی (unique با BSRef) — «سال مالی تکراری» رد.
+///   · StartDate/EndDate — 'YYYYMMDD' شمسی؛ بازهٔ تکراری (هم‌پوشانی) رد؛ طول
+///             بازه بیش از «تعداد ماه‌های مالی» پیکربندی نرم‌افزار/حسابداری
+///             (SoftwareConfig fiscalMonthsCount، پیش‌فرض ۱۲) رد می‌شود.
+///   · IsActive — «فعال».
+/// §16: ID دستی از IDGeneration ("FiscalYear")؛ بلوک کامل ارث‌بری AppBaseEntity
+/// ۱۲فیلدی (قرارداد اجباری مالک) — تا استقرار IAM = SYSTEM_ACTOR (دفتر مرکزی، ID=1).
+model FiscalYear {
+  id                   BigInt   @id @map("ID")
+  code                 String   @map("Code")
+  title                String   @map("Title") // فقط عدد، ۴ کاراکتر
+  startDate            String?  @map("StartDate") // Shamsi 'YYYYMMDD'
+  endDate              String?  @map("EndDate") // Shamsi 'YYYYMMDD'
+  isActive             Boolean  @default(true) @map("IsActive")
+  version              Int      @default(1) @map("Version") // §2.5 auto-rowversion
+  creator              String   @map("Creator") // IAM UserID
+  creationDate         String   @map("CreationDate") // Shamsi 'YYYYMMDD' (Tehran)
+  createTime           String   @map("CreationTime") // 'HHmmss' (Tehran)
+  lastModifier         String?  @map("LastModifier")
+  lastModificationDate String?  @map("LastModificationDate")
+  lastModificationTime String?  @map("LastModificationTime")
+  businessStructureRef BigInt   @map("BusinessStructureRef")
+  companyRef           BigInt?  @map("CompanyRef")
+  branchRef            BigInt?  @map("BranchRef")
+  agencyRef            BigInt?  @map("AgencyRef")
+  shopRef              BigInt?  @map("ShopRef")
+  createdAt            DateTime @default(now()) @map("CreatedAt")
+  updatedAt            DateTime @updatedAt @map("UpdatedAt")
+
+  @@unique([code, businessStructureRef])
+  @@unique([title, businessStructureRef])
+  @@map("FiscalYear")
+}
