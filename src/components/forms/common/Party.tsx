@@ -163,6 +163,21 @@ const TAB_ADDRESS = "address";
 const TAB_PHONE = "phone";
 const GRID_TABS = [TAB_PEOPLE, TAB_ADDRESS, TAB_PHONE] as const;
 
+/* Task 95 (درخواست مالک: «اطلاعات واردشدهٔ داخل تب‌ها هم ترجمه شود») —
+   ستون‌های متنیِ هر تب گرید که در انبار DataTranslation ترجمه می‌شوند +
+   پیشوند کلید انبار همان مسیرِ Task 92: persons.{i}.{col}/address.{i}.{col}/phones.{i}.{col}.
+   ستون‌های کد/عدد (لیست‌ها، ملی، تلفن، طول/عرض جغرافیایی…) ترجمه نمی‌شوند. */
+const GRID_TR_COLUMNS: Record<string, readonly string[]> = {
+  [TAB_PEOPLE]: ["firstName", "lastName", "relation", "notes"],
+  [TAB_ADDRESS]: ["fullAddress"],
+  [TAB_PHONE]: ["notes"],
+};
+const GRID_TR_PREFIX: Record<string, string> = {
+  [TAB_PEOPLE]: "persons",
+  [TAB_ADDRESS]: "address",
+  [TAB_PHONE]: "phones",
+};
+
 type Row = Record<string, string>;
 
 const n2 = (v: number | null | undefined): string => (v == null ? "" : String(v));
@@ -204,6 +219,14 @@ export function PartyForm({ onBack }: { onBack?: () => void }) {
   const [revealed, setRevealed] = React.useState<ReadonlySet<string>>(new Set());
   /** Task 93 — عکس رکورد باز (برای تشخیص ویرایش زیر overlay) — state است چون در رندر خوانده می‌شود */
   const [baseValues, setBaseValues] = React.useState<FormValues>(BLANK_VALUES);
+  /** Task 95 — عکس ردیف‌های گریدِ رکورد باز (تشخیص ویرایش سلول زیر overlay) */
+  const [baseRows, setBaseRows] = React.useState<Record<string, Row[]>>({});
+  /* Task 95 — آینهٔ currentId برای گاردهای async (خواندن در کال‌بک مجاز است؛
+     رکورد عوض‌شده ⇒ پاسخ کهنهٔ ترجمه/آپدیت UI اعمال نمی‌شود) */
+  const currentIdRef = React.useRef<number | null>(null);
+  React.useEffect(() => {
+    currentIdRef.current = currentId;
+  }, [currentId]);
 
   /* Task 93 — نقشهٔ ترجمهٔ رکورد باز (همهٔ زبان‌ها) از انبار DataTranslation */
   const loadTr = React.useCallback(async (id: number): Promise<void> => {
@@ -211,6 +234,7 @@ export function PartyForm({ onBack }: { onBack?: () => void }) {
       const res = await api.get<{
         items?: Array<{ fieldKey: string; locale: string; value: string }>;
       }>(`data-translations?entityType=Party&entityId=${id}`);
+      if (currentIdRef.current !== id) return; // Task 95 — پاسخ کهنه؛ رکورد عوض شده
       const next: Record<string, Record<string, string>> = {};
       for (const it of res.items ?? []) {
         if (!it?.fieldKey || !it?.locale || !it?.value) continue;
@@ -325,7 +349,7 @@ export function PartyForm({ onBack }: { onBack?: () => void }) {
         marriageDate: storedToDisplayDate(r.other.marriageDate, locale),
         birthDate: storedToDisplayDate(r.other.birthDate, locale),
       });
-      setRows({
+      const nextRows: Record<string, Row[]> = {
         [TAB_PEOPLE]: r.persons.map((p) => ({
           firstName: p.firstName,
           lastName: p.lastName,
@@ -348,7 +372,9 @@ export function PartyForm({ onBack }: { onBack?: () => void }) {
           extension: p.extension,
           notes: p.notes,
         })),
-      });
+      };
+      setBaseRows(nextRows); // Task 95 — پایهٔ مقایسهٔ overlay سلول‌ها
+      setRows(nextRows);
       setFormKey((k) => k + 1); // remount — ردیف‌های داخلی دوباره seed شوند
     },
     [locale, loadTr],
@@ -358,6 +384,7 @@ export function PartyForm({ onBack }: { onBack?: () => void }) {
     setCurrentId(null);
     setDirty(false);
     setBaseValues(BLANK_VALUES); // Task 93 — overlay خاموش
+    setBaseRows({}); // Task 95
     setValues(BLANK_VALUES);
     setRevealed(new Set()); // Task 93
     setTrMap({}); // Task 93
@@ -536,6 +563,76 @@ export function PartyForm({ onBack }: { onBack?: () => void }) {
     };
   };
 
+  /* -------- Task 92 (تأیید مالک) — ترجمهٔ دادهٔ رکورد باز --------
+     فیلدهای متنیِ معنادارِ رکورد (نام/نام خانوادگی، نشانی‌ها، افراد مرتبط،
+     یادداشت تلفن‌ها — Task 95: پوشش کامل ستون‌های متنیِ تب‌ها) —
+     کلیدهای پایدار برای انبار DataTranslation (مسیر ردیف جدولی مجاز است). */
+  const translatableFields = React.useCallback((): DataTranslationField[] => {
+    const out: DataTranslationField[] = [];
+    const push = (key: string, label: string, value: string) => {
+      const v = value.trim();
+      if (v) out.push({ key, label, value: v });
+    };
+    push("name", t("party.name"), values.name);
+    if (!isLegal) push("lastName", t("party.lastName"), values.lastName);
+    (rows[TAB_ADDRESS] ?? []).forEach((a, i) => {
+      push(`address.${i}.fullAddress`, `${t("party.fullAddress")} ${i + 1}`, a.fullAddress);
+    });
+    (rows[TAB_PEOPLE] ?? []).forEach((p, i) => {
+      push(`persons.${i}.firstName`, `${t("party.name")} ${i + 1}`, p.firstName);
+      push(`persons.${i}.lastName`, `${t("party.lastName")} ${i + 1}`, p.lastName);
+      push(`persons.${i}.relation`, `${t("party.relation")} ${i + 1}`, p.relation); // Task 95
+      push(`persons.${i}.notes`, `${t("common.description")} ${i + 1}`, p.notes);
+    });
+    (rows[TAB_PHONE] ?? []).forEach((p, i) => {
+      push(`phones.${i}.notes`, `${t("common.description")} ${i + 1}`, p.notes); // Task 95
+    });
+    return out;
+  }, [t, values, rows, isLegal]);
+
+  /* Task 95 — explicitId: پس از ذخیره (وقتی currentId هنوز در state به‌روز
+     نشده) ترجمهٔ خودکار با شناسهٔ رکورد تازه صدا زده می‌شود؛ دکمهٔ «ترجمه
+     آنلاین» بدون آرگومان همان مسیر همیشگی است (FormAction سازگار است). */
+  const translateOnline = React.useCallback(async (explicitId?: number) => {
+    const targetId = explicitId ?? currentId;
+    if (targetId == null) {
+      toast.info(t("dfb.noRecordSelected"));
+      return;
+    }
+    const fields = translatableFields();
+    if (fields.length === 0) {
+      toast.info(t("dfb.list.translateNoTextFields"));
+      return;
+    }
+    const langs = LOCALES.filter((l) => l !== "fa" && activeLocales.includes(l));
+    if (langs.length === 0) {
+      toast.info(t("settings.activeLangs"));
+      return;
+    }
+    try {
+      const res = await fetch("/api/data-translations/auto-translate", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ entityType: "Party", entityId: targetId, langs, fields }),
+      });
+      const json = (await res.json().catch(() => null)) as
+        | { ok?: boolean; message?: string }
+        | null;
+      if (!res.ok || !json?.ok) {
+        throw new Error(json?.message || t("common.error"));
+      }
+      /* Task 93/95 — نقشهٔ تازه + ریست reveal تا فیلدها همان لحظه ترجمه را
+         نشان دهند؛ فقط وقتی هنوز روی همان رکوردیم (گارد مسابقهٔ async) */
+      if (currentIdRef.current === targetId) {
+        setRevealed(new Set());
+        await loadTr(targetId);
+      }
+      toast.success(t("dfb.list.translateDone"));
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : t("common.error"));
+    }
+  }, [currentId, activeLocales, translatableFields, t, loadTr]);
+
   const doSave = async (): Promise<boolean> => {
     const err = validate();
     if (err) {
@@ -555,6 +652,21 @@ export function PartyForm({ onBack }: { onBack?: () => void }) {
       window.dispatchEvent(
         new CustomEvent("erp:records-changed", { detail: { entity: "party" } }),
       );
+      /* Task 95 (درخواست مالک) — «ترجمهٔ آنلاین اطلاعات فیلدها همزمان با
+         ذخیره‌سازی»: اگر چک‌باکس «پیکربندی نرم‌افزار ← تب عمومی» فعال باشد،
+         پس از هر ذخیرهٔ موفق ترجمهٔ آنلاین خودکار اجرا می‌شود (پیکربندی هر
+         بار تازه خوانده می‌شود تا تغییرش بدون بازکردن مجدد فرم اثر کند)؛
+         در غیر این صورت ترجمه فقط با کلیک دکمهٔ «ترجمه آنلاین» انجام می‌شود. */
+      try {
+        const cfg = await api.get<{ items?: { configKey: string; configValue: string }[] }>(
+          "software-config/general",
+        );
+        const autoTr =
+          cfg.items?.find((i) => i.configKey === "autoTranslateOnSave")?.configValue === "1";
+        if (autoTr) void translateOnline(res.id);
+      } catch {
+        /* پیکربندی خوانده نشد — رفتار پیش‌فرض (بدون ترجمهٔ خودکار) */
+      }
       return true;
     } catch (e) {
       const msg = e instanceof Error && e.message ? e.message : t("common.error");
@@ -590,64 +702,26 @@ export function PartyForm({ onBack }: { onBack?: () => void }) {
     if (r) applyRecord(r);
   };
 
-  /* -------- Task 92 (تأیید مالک) — ترجمهٔ دادهٔ رکورد باز --------
-     فیلدهای متنیِ معنادارِ رکورد (نام/نام خانوادگی، نشانی‌ها، افراد مرتبط) —
-     کلیدهای پایدار برای انبار DataTranslation (مسیر ردیف جدولی مجاز است). */
-  const translatableFields = React.useCallback((): DataTranslationField[] => {
-    const out: DataTranslationField[] = [];
-    const push = (key: string, label: string, value: string) => {
-      const v = value.trim();
-      if (v) out.push({ key, label, value: v });
-    };
-    push("name", t("party.name"), values.name);
-    if (!isLegal) push("lastName", t("party.lastName"), values.lastName);
-    (rows[TAB_ADDRESS] ?? []).forEach((a, i) => {
-      push(`address.${i}.fullAddress`, `${t("party.fullAddress")} ${i + 1}`, a.fullAddress);
-    });
-    (rows[TAB_PEOPLE] ?? []).forEach((p, i) => {
-      push(`persons.${i}.firstName`, `${t("party.name")} ${i + 1}`, p.firstName);
-      push(`persons.${i}.lastName`, `${t("party.lastName")} ${i + 1}`, p.lastName);
-      push(`persons.${i}.notes`, `${t("common.description")} ${i + 1}`, p.notes);
-    });
-    return out;
-  }, [t, values, rows, isLegal]);
-
-  const translateOnline = React.useCallback(async () => {
-    if (currentId == null) {
-      toast.info(t("dfb.noRecordSelected"));
-      return;
-    }
-    const fields = translatableFields();
-    if (fields.length === 0) {
-      toast.info(t("dfb.list.translateNoTextFields"));
-      return;
-    }
-    const langs = LOCALES.filter((l) => l !== "fa" && activeLocales.includes(l));
-    if (langs.length === 0) {
-      toast.info(t("settings.activeLangs"));
-      return;
-    }
-    try {
-      const res = await fetch("/api/data-translations/auto-translate", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ entityType: "Party", entityId: currentId, langs, fields }),
-      });
-      const json = (await res.json().catch(() => null)) as
-        | { ok?: boolean; message?: string }
-        | null;
-      if (!res.ok || !json?.ok) {
-        throw new Error(json?.message || t("common.error"));
-      }
-      /* Task 93 — نقشهٔ تازه + ریست reveal تا فیلدهای اصلی همان لحظه
-         ترجمه را نشان دهند (بدون بستن/بازکردن رکورد) */
-      setRevealed(new Set());
-      await loadTr(currentId);
-      toast.success(t("dfb.list.translateDone"));
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : t("common.error"));
-    }
-  }, [currentId, activeLocales, translatableFields, t, loadTr]);
+  /* -------- Task 95 — overlay سلول‌های گرید (هم‌قرارداد Task 70/93) --------
+     در زبان غیر-fa و رکورد ذخیره‌شدهٔ باز، ستون متنیِ سلول اگر نه فوکوس و
+     نه ویرایش شده باشد ترجمهٔ زبان فعلی را از انبار نشان می‌دهد؛ ستون‌های
+     کد/عدد (لیست، کد ملی، تلفن، مختصات…) همیشه مقدار پایه را نشان می‌دهند. */
+  const cellOverlay = (tabId: string, rowIndex: number, colId: string): string | undefined => {
+    if (locale === "fa" || currentId == null) return undefined;
+    if (!GRID_TR_COLUMNS[tabId]?.includes(colId)) return undefined;
+    const key = `${GRID_TR_PREFIX[tabId]}.${rowIndex}.${colId}`;
+    if (revealed.has(key)) return undefined; // فوکوس ⇒ مقدار پایه
+    const base = baseRows[tabId]?.[rowIndex]?.[colId] ?? "";
+    if ((rows[tabId]?.[rowIndex]?.[colId] ?? "") !== base) return undefined; // ویرایش‌شده ⇒ مقدار واقعی
+    const tr = trMap[key]?.[locale];
+    return tr && tr.trim() ? tr : undefined;
+  };
+  const revealCell = React.useCallback(
+    (tabId: string, rowIndex: number, colId: string) => {
+      revealField(`${GRID_TR_PREFIX[tabId]}.${rowIndex}.${colId}`);
+    },
+    [revealField],
+  );
 
   const [offlineOpen, setOfflineOpen] = React.useState(false);
   const openTranslateOffline = React.useCallback(() => {
@@ -904,6 +978,8 @@ export function PartyForm({ onBack }: { onBack?: () => void }) {
       onDelete={doDelete}
       onTranslateOnline={translateOnline}
       onTranslateOffline={openTranslateOffline}
+      cellOverlay={cellOverlay} // Task 95 — نمایش ترجمه در سلول‌های تب‌ها
+      onCellReveal={revealCell} // Task 95 — فوکوس سلول = نمایان‌شدن مقدار پایه
       onDeleteNew={async () => {
         await doDelete();
         newRecord();

@@ -67,7 +67,17 @@ const SW_CONFIG_TABS: { appKey: string; titleKey: DictKey; icon: React.ElementTy
     software-config.dto.ts). فیلدها «به‌مرور» اعلام می‌شوند؛ هر اعلام = افزودن
     به همین رجیستری + ترجمه‌های labelKey — بدون هیچ مهاجرت دیتابیس/کد جدید. */
 const SOFTWARE_CONFIG_FIELDS: Record<string, SwConfigFieldDef[]> = {
-  general: [],
+  general: [
+    {
+      /* Task 95 (درخواست مالک) — اولین فیلد اعلام‌شدهٔ تب «عمومی»:
+         «ترجمه آنلاین اطلاعات فیلدها همزمان با ذخیره‌سازی» — فعال ⇒ ذخیرهٔ
+         فرم، ترجمهٔ آنلاین را خودکار اجرا می‌کند؛ آینهٔ سرور:
+         software-config.dto.ts (type checkbox، پیش‌فرض «0»). */
+      key: "autoTranslateOnSave",
+      labelKey: "settings.swAutoTranslateOnSave",
+      type: "checkbox",
+    },
+  ],
   accounting: [
     {
       /* Task 73 — اولین فیلد اعلام‌شدهٔ مالک (تب حسابداری):

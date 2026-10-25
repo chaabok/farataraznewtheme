@@ -186,6 +186,14 @@ export interface SimpleFormTwoRowTabbedProps {
      exists in ALL forms; enablement lives inside TranslateButton) */
   onTranslateOnline?: FormAction;
   onTranslateOffline?: FormAction;
+  /* Task 95 (درخواست مالک: «اطلاعات واردشدهٔ داخل تب‌ها هم ترجمه شود») —
+     per-cell translation overlay of the grid tabs. The FORM resolves the
+     overlay (Task 70/93 contract: locale ≠ fa + saved record + cell not
+     focused/edited + translation exists); the shell only applies the value
+     and forwards focus-reveals. Only TEXT cells participate — select/
+     date/number/checkbox cells carry code values, never translated. */
+  cellOverlay?: (tabId: string, rowIndex: number, colId: string) => string | undefined;
+  onCellReveal?: (tabId: string, rowIndex: number, colId: string) => void;
   canSave?: boolean;
   canCopy?: boolean;
   canDelete?: boolean;
@@ -307,6 +315,8 @@ export function SimpleFormTwoRowTabbed({
   onListRefresh,
   onTranslateOnline,
   onTranslateOffline,
+  cellOverlay,
+  onCellReveal,
   canSave = true,
   canCopy = true,
   canDelete = true,
@@ -458,22 +468,32 @@ export function SimpleFormTwoRowTabbed({
                     sel ? "bg-primary/10" : "hover:bg-foreground/5",
                   )}
                 >
-                  {tb.columns.map((c) => (
-                    <td key={c.id} className="border-b border-border/50 px-1.5 py-0.5">
-                      {/* Task 58 — the cell editor follows the COLUMN TYPE:
-                          checkbox → a real checkbox, select → an opening
-                          list, date → the masked YYYY/MM/DD input, number →
-                          LTR decimal, radio → a radio group — the owner rule
-                          «هر فیلدی در گرید باید با همان فرمت از کاربر اطلاعات
-                          دریافت کند» */}
-                      <GridCellInput
-                        column={c}
-                        value={row[c.id] ?? ""}
-                        onChange={(v) => setCell(tb.id, ri, c.id, v)}
-                        ariaLabel={`${tb.label} — ${c.label} ${ri + 1}`}
-                      />
-                    </td>
-                  ))}
+                  {tb.columns.map((c) => {
+                    /* Task 95 — overlay display of text cells: the value the
+                       caller returns (current-locale translation) covers the
+                       base value; focusing the cell reveals the base (same
+                       reveal contract as the main fields, Task 70/93). */
+                    const base = row[c.id] ?? "";
+                    const ov = cellOverlay?.(tb.id, ri, c.id);
+                    const canReveal = (c.type ?? "text") === "text";
+                    return (
+                      <td key={c.id} className="border-b border-border/50 px-1.5 py-0.5">
+                        {/* Task 58 — the cell editor follows the COLUMN TYPE:
+                            checkbox → a real checkbox, select → an opening
+                            list, date → the masked YYYY/MM/DD input, number →
+                            LTR decimal, radio → a radio group — the owner rule
+                            «هر فیلدی در گرید باید با همان فرمت از کاربر اطلاعات
+                            دریافت کند» */}
+                        <GridCellInput
+                          column={c}
+                          value={ov ?? base}
+                          onChange={(v) => setCell(tb.id, ri, c.id, v)}
+                          onFocus={canReveal ? () => onCellReveal?.(tb.id, ri, c.id) : undefined}
+                          ariaLabel={`${tb.label} — ${c.label} ${ri + 1}`}
+                        />
+                      </td>
+                    );
+                  })}
                 </tr>
               );
             })

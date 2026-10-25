@@ -44,7 +44,12 @@ export const SOFTWARE_CONFIG_FIELDS: Record<
   SoftwareConfigAppKey,
   Readonly<Record<string, SoftwareConfigFieldSpec>>
 > = {
-  general: {},
+  general: {
+    /* Task 95 (درخواست مالک) — «ترجمه آنلاین اطلاعات فیلدها همزمان با ذخیره‌سازی»:
+       وقتی فعال باشد، ذخیرهٔ فرم‌ها (فعلاً طرف حساب) ترجمهٔ آنلاین فیلدها را
+       خودکار اجرا می‌کند؛ غیرفعال = فقط با کلیک دکمهٔ «ترجمه آنلاین». */
+    autoTranslateOnSave: { type: "checkbox", defaultValue: "0" },
+  },
   accounting: {
     fiscalMonthsCount: { type: "number", min: 1, max: 16, integer: true, defaultValue: "12" },
   },

@@ -530,12 +530,18 @@ export function GridCellInput({
   onChange,
   ariaLabel,
   disabled,
+  onFocus,
 }: {
   column: SimpleFormGridColumn;
   value: string;
   onChange: (value: string) => void;
   ariaLabel: string;
   disabled?: boolean;
+  /* Task 95 — reveal hook for the translation overlay of TEXT cells
+     (same contract as FieldCell's onRevealFocus — Task 70); the shell
+     passes it only for text columns, so select/date/number/checkbox
+     cells (code values, never translated) stay untouched. */
+  onFocus?: () => void;
 }) {
   const type = column.type ?? "text";
   /* date mask state (declared unconditionally — rules-of-hooks) */
@@ -642,6 +648,7 @@ export function GridCellInput({
       disabled={disabled}
       aria-label={ariaLabel}
       dir={type === "number" ? "ltr" : undefined}
+      onFocus={onFocus} // Task 95 — reveal base value under the cell overlay
       onChange={(e) => onChange(e.target.value)}
       className={cn(textBase, type === "number" && "text-start")}
     />
