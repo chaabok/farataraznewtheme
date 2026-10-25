@@ -60,3 +60,5 @@ $ NODE_PATH=./node_modules bun --hot src/main.ts
 [Nest] 30928  - 10/25/2026, 7:13:29 PM     LOG [DataTranslationsService] data-translations save Party#6: +0 ~2 -0
 [Nest] 30928  - 10/25/2026, 7:14:34 PM     LOG [DataTranslationsService] data-translations save Party#6: +0 ~1 -1
 [Nest] 30928  - 10/25/2026, 7:58:58 PM     LOG [DataTranslationsService] data-translations save Party#5: +22 ~0 -0
+[Nest] 30928  - 10/25/2026, 8:13:44 PM     LOG [DataTranslationsService] data-translations save Party#5: +2 ~22 -0
+[Nest] 30928  - 10/25/2026, 8:15:48 PM     LOG [DataTranslationsService] data-translations save Party#5: +0 ~2 -0

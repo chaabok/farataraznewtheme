@@ -195,6 +195,38 @@ export function PartyForm({ onBack }: { onBack?: () => void }) {
   const [formKey, setFormKey] = React.useState(0);
   const [nextTafsili, setNextTafsili] = React.useState<number | null>(null);
 
+  /* -------- Task 93 (گزارش مالک: «اطلاعات داخل اینپوت ترجمه گردد») --------
+     نمایشِ ترجمهٔ داده در فیلدهای اصلی — هم‌قرارداد Task 70 فرم‌ساز:
+     در زبان غیر-fa، اگر رکورد ذخیره‌شده باز باشد و فیلد هنوز فوکوس/ویرایش
+     نشده باشد، ترجمهٔ زبان فعلی از انبار DataTranslation به‌جای مقدار پایه
+     در اینپوت دیده می‌شود؛ فوکوس = نمایان‌شدن مقدار پایه، ویرایش = مقدار واقعی. */
+  const [trMap, setTrMap] = React.useState<Record<string, Record<string, string>>>({});
+  const [revealed, setRevealed] = React.useState<ReadonlySet<string>>(new Set());
+  /** Task 93 — عکس رکورد باز (برای تشخیص ویرایش زیر overlay) — state است چون در رندر خوانده می‌شود */
+  const [baseValues, setBaseValues] = React.useState<FormValues>(BLANK_VALUES);
+
+  /* Task 93 — نقشهٔ ترجمهٔ رکورد باز (همهٔ زبان‌ها) از انبار DataTranslation */
+  const loadTr = React.useCallback(async (id: number): Promise<void> => {
+    try {
+      const res = await api.get<{
+        items?: Array<{ fieldKey: string; locale: string; value: string }>;
+      }>(`data-translations?entityType=Party&entityId=${id}`);
+      const next: Record<string, Record<string, string>> = {};
+      for (const it of res.items ?? []) {
+        if (!it?.fieldKey || !it?.locale || !it?.value) continue;
+        (next[it.fieldKey] ??= {})[it.locale] = it.value;
+      }
+      setTrMap(next);
+    } catch {
+      /* واکشی ناموفق — نقشهٔ پیشین می‌ماند و مقادیر پایه دیده می‌شوند */
+    }
+  }, []);
+
+  /* Task 93 — فوکوس روی فیلد = نمایان‌شدن مقدار پایه زیر overlay (عین Task 70) */
+  const revealField = React.useCallback((key: string) => {
+    setRevealed((prev) => (prev.has(key) ? prev : new Set(prev).add(key)));
+  }, []);
+
   const fetchRecords = React.useCallback(async (): Promise<PartyDto[]> => {
     const res = await api.get<{ items?: PartyDto[] }>("party");
     return res.items ?? [];
@@ -249,7 +281,7 @@ export function PartyForm({ onBack }: { onBack?: () => void }) {
     (r: PartyDto) => {
       setCurrentId(r.id);
       setDirty(false);
-      setValues({
+      const nextValues: FormValues = {
         nature: r.nature,
         subtype: r.subtype,
         name: r.name,
@@ -263,7 +295,12 @@ export function PartyForm({ onBack }: { onBack?: () => void }) {
         legalIdentity: r.legalIdentity,
         registrationNo: r.registrationNo,
         active: r.isActive,
-      });
+      };
+      setBaseValues(nextValues); // Task 93 — پایهٔ مقایسهٔ overlay
+      setValues(nextValues);
+      setRevealed(new Set()); // Task 93 — overlay از نو
+      setTrMap({}); // Task 93 — نقشهٔ رکورد قبلی اعتبار ندارد
+      void loadTr(r.id); // Task 93 — نقشهٔ ترجمهٔ رکورد تازه
       setDetails({
         supplier: {
           checked: r.details.isSupplier,
@@ -314,13 +351,16 @@ export function PartyForm({ onBack }: { onBack?: () => void }) {
       });
       setFormKey((k) => k + 1); // remount — ردیف‌های داخلی دوباره seed شوند
     },
-    [locale],
+    [locale, loadTr],
   );
 
   const newRecord = React.useCallback(() => {
     setCurrentId(null);
     setDirty(false);
+    setBaseValues(BLANK_VALUES); // Task 93 — overlay خاموش
     setValues(BLANK_VALUES);
+    setRevealed(new Set()); // Task 93
+    setTrMap({}); // Task 93
     setDetails({ supplier: { ...BLANK_ROLE }, customer: { ...BLANK_ROLE }, salesAgent: { ...BLANK_ROLE } });
     setOther({ ...BLANK_OTHER });
     setRows(Object.fromEntries(GRID_TABS.map((k) => [k, []])));
@@ -599,11 +639,15 @@ export function PartyForm({ onBack }: { onBack?: () => void }) {
       if (!res.ok || !json?.ok) {
         throw new Error(json?.message || t("common.error"));
       }
+      /* Task 93 — نقشهٔ تازه + ریست reveal تا فیلدهای اصلی همان لحظه
+         ترجمه را نشان دهند (بدون بستن/بازکردن رکورد) */
+      setRevealed(new Set());
+      await loadTr(currentId);
       toast.success(t("dfb.list.translateDone"));
     } catch (e) {
       toast.error(e instanceof Error ? e.message : t("common.error"));
     }
-  }, [currentId, activeLocales, translatableFields, t]);
+  }, [currentId, activeLocales, translatableFields, t, loadTr]);
 
   const [offlineOpen, setOfflineOpen] = React.useState(false);
   const openTranslateOffline = React.useCallback(() => {
@@ -630,6 +674,17 @@ export function PartyForm({ onBack }: { onBack?: () => void }) {
     { value: "private", label: t("party.subtypePrivate") },
   ];
 
+  /* Task 93 — مقدار overlay فیلدهای اصلی: ترجمهٔ زبان فعلی فقط وقتی که
+     رکورد باز است، زبان ≠ fa، فیلد فوکوس/ویرایش نشده و ترجمه موجود است
+     (زنجیرهٔ جایگزینی: بدون ترجمه = مقدار اصلی — عین Task 70) */
+  const mainOverlay = (key: "name" | "lastName"): string | undefined => {
+    if (locale === "fa" || currentId == null) return undefined;
+    if (revealed.has(key)) return undefined; // فوکوس ⇒ مقدار پایه
+    if (values[key] !== baseValues[key]) return undefined; // ویرایش‌شده ⇒ مقدار واقعی
+    const tr = trMap[key]?.[locale];
+    return tr && tr.trim() ? tr : undefined;
+  };
+
   const fields = React.useMemo<SimpleFormField[]>(() => {
     const base: SimpleFormField[] = [
       { id: "nature", label: t("party.nature"), type: "select", required: true, options: natureOptions, value: values.nature },
@@ -641,13 +696,25 @@ export function PartyForm({ onBack }: { onBack?: () => void }) {
         value: values.subtype,
         disabled: !isLegal,
       },
-      { id: "name", label: t("party.name"), required: true, value: values.name },
+      {
+        id: "name",
+        label: t("party.name"),
+        required: true,
+        value: mainOverlay("name") ?? values.name,
+        onRevealFocus: () => revealField("name"), // Task 93
+      },
     ];
     if (isLegal) {
       base.push({ id: "latinName", label: t("party.latinName"), ltr: true, value: values.latinName });
     } else {
       base.push(
-        { id: "lastName", label: t("party.lastName"), required: true, value: values.lastName },
+        {
+          id: "lastName",
+          label: t("party.lastName"),
+          required: true,
+          value: mainOverlay("lastName") ?? values.lastName,
+          onRevealFocus: () => revealField("lastName"), // Task 93
+        },
         { id: "latinName2", label: t("party.nameLatin"), ltr: true, value: values.latinName2 },
         { id: "latinLastName2", label: t("party.lastNameLatin"), ltr: true, value: values.latinLastName2 },
       );
@@ -677,7 +744,7 @@ export function PartyForm({ onBack }: { onBack?: () => void }) {
     base.push({ id: "active", label: t("fy.active"), type: "checkbox", checked: values.active });
     return base;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [t, values, isLegal, currentId, nextTafsili, locale]);
+  }, [t, values, isLegal, currentId, nextTafsili, locale, trMap, revealed, baseValues, revealField]);
 
   const roleFields = (role: "supplier" | "customer" | "salesAgent", label: string): SimpleFormField[] => {
     const r = details[role];
@@ -892,10 +959,15 @@ export function PartyForm({ onBack }: { onBack?: () => void }) {
       onHeaderDragEnd={chrome?.onDragEnd}
       onHeaderDoubleClick={chrome?.onDoubleClick}
     />
-    {/* Task 92 — ورود دستی (آفلاین) ترجمهٔ دادهٔ رکورد باز */}
+    {/* Task 92/93 — ورود دستی (آفلاین) ترجمهٔ دادهٔ رکورد باز؛ پس از بستنِ
+        دیالوگ نقشهٔ overlay تازه می‌شود تا ترجمه‌های ذخیره‌شده همان لحظه
+        در فیلدها دیده شوند */}
     <DataTranslationsDialog
       open={offlineOpen}
-      onOpenChange={setOfflineOpen}
+      onOpenChange={(v) => {
+        setOfflineOpen(v);
+        if (!v && currentId != null) void loadTr(currentId);
+      }}
       entityType="Party"
       entityId={currentId}
       fields={translatableFields()}
