@@ -3162,3 +3162,22 @@ Work Log:
 Stage Summary:
 - پاسخ مشاوره: دکمهٔ ترجمهٔ آنلاین فقط در «فهرست رکوردها (کلّی)» فرم‌های فرم‌ساز است: ابزارهای پیشرفته ← فرمساز ← انتخاب فرم ← «فهرست رکوردها» ← دکمهٔ بنفش 🌐 «ترجمه» در نوار گرید ← «ترجمهٔ خودکار (آنلاین)». هیچ‌جای دیگر (نوار اکشن فرم‌ها، استودیو، تنظیمات) دکمهٔ ترجمهٔ آنلاین وجود ندارد.
 - هیچ فایل کدی تغییر نکرد (مشاوره).
+
+---
+Task ID: 90
+Agent: Z.ai Code (main)
+Task: درخواست مالک — «دکمه ترجمه باید در تمامی فرم های سیستم و غیرسیستمی وجود داشته باشد. اگر کاربر 2 زبان را در تنظیمات انتخاب کرده بود باید دکمه ترجمه در اکشن بار فعال گردد»
+
+Work Log:
+- ممیزی معماری: همهٔ فرم‌ها (سیستمی و غیرسیستمی) از SimpleFormTwoRowTabbed/SimpleTreeForm ← FormActionBar می‌گذرند؛ ترجمهٔ آنلاین موجود (Task 70) فقط DFB را پوشش می‌دهد (DfbTranslation روی dfb.db) و دادهٔ فرم‌های سیستمی (Party/FiscalYear روی main.db) در آن نیست.
+- اکشن ۱۲ «ترجمه» جدید (translate-button.tsx): کاشی گرادیانی بنفش (Languages) هم‌قوارهٔ بقیه + tooltip هم‌سان + منوی کشویی عین فهرست کلّی (✨ ترجمهٔ خودکار آنلاین با شمارندهٔ زبان‌ها / ⌨ ورود دستی آفلاین) + busy چرخان داخلی؛ فعال‌بودن = activeLocales.length ≥ 2 (عین فرمان مالک — داخل خود دکمه، خودکار در همهٔ فرم‌ها)؛ حلقهٔ حالت باز با state (نه data-state — تداخل Tooltip/Dropdown)؛ آیتم‌های فرم‌های بدون رفتار ترجمه: غیرفعال با توضیح جدید abar.translateUnavailable (بدون کلیک مرده).
+- FormActionBar: دو پراپ جدید onTranslateOnline/onTranslateOffline؛ دکمه عمداً بیرون از allowlist ذخیره‌شده (فرمان مطلق مالک: «تمامی فرم‌ها»)؛ pass-through در هر دو شِل (simple-form-two-row-tabbed + simple-tree-form).
+- dfb-form-runtime: رفتار کامل رکورد باز — آنلاین: POST /api/dfb-translations/auto-translate {formId, dataId: currentDataId, langs: فعال منهای fa} → بازخوانی نقشهٔ کش → توست «ترجمهٔ خودکار انجام شد»؛ آفلاین: دیالوگ RuntimeTranslateDialog (جدید) با DfbTranslationsBody برای هر فیلد متنی (entityType=Value, entityRef=currentDataId) — در هر دو مسیر دو‌ردیفه و درختی؛ رکورد ذخیره‌نشده ← توست راهنما (dfb.noRecordSelected).
+- i18n: کلید جدید abar.translateUnavailable ×۱۳ زبان (fa لنگر: «ترجمهٔ دادهٔ این فرم هنوز فعال نیست»).
+- lint = ۰/۰؛ tsc = همان ۱۱ خطای baseline — صفر خطای جدید.
+- دادهٔ آزمون: فرم DFB «فرم آزمون ترجمه» (id=16، دو فیلد متنی) + رکورد ۳۱ با مُهر سازمانی companyRef=14 ساخته شد (برای آزمون زندهٔ مالک نگه داشته شد — با اجازه حذف می‌شود).
+- E2E مرورگر: فرم سیستمی سال مالی → کاشی بنفش حاضر و فعال (۱۳ زبان) + آیتم‌ها با توضیح غیرفعال ✓؛ تنظیم activeLocales=['fa'] → کاشی dimmed و aria-disabled=true ✓ (قاعدهٔ ≥2)؛ فرم غیرسیستمی → آیتم‌ها فعال با «۱۲ زبان فعال» ✓؛ ترجمهٔ آنلاین از اکشن بار → توست «ترجمهٔ خودکار انجام شد» و ۲۴ ردیف در DfbTranslation (۲ فیلد × ۱۲ زبان؛ یک فراخوانی اول 502 گذرای LLM بود، فراخوانی دوم موفق) ✓؛ زبان en → overlay رکورد باز «Liqvan Cheese / Probiotic product for export to Europe» ✓؛ دیالوگ آفلاین → دو پنل 12/12 با انتخابگر زبان ✓؛ کنسول صفر خطا، dev.log پاک (POST auto-translate 200 در 4.5s)؛ زبان به fa برگردانده شد.
+
+Stage Summary:
+- دکمهٔ «ترجمه» اکنون در اکشن بار همهٔ فرم‌ها (سیستمی و غیرسیستمی) هست و فقط با ≥۲ زبان فعال روشن می‌شود (فرمان مالک). فرم‌های فرم‌ساز ترجمهٔ کامل رکورد باز را دارند (آنلاین LLM + ورود دستی)؛ فرم‌های سیستمی دکمه را دارند ولی آیتم‌هایشان تا بستن زیرساخت ترجمهٔ دادهٔ main.db غیرفعال با توضیح است (پیشنهاد: تسک بعدی).
+- artifacts: src/components/forms/action-bar/translate-button.tsx (جدید)؛ form-action-bar.tsx؛ index.ts؛ simple-form-two-row-tabbed.tsx؛ simple-tree-form.tsx؛ dfb-form-runtime.tsx (+RuntimeTranslateDialog)؛ src/i18n/dictionaries.ts (۱ کلید ×۱۳).
