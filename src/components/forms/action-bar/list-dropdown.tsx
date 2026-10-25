@@ -251,7 +251,7 @@ export function RecordListDropdown({
                             : "hover:bg-accent/60",
                         )}
                       >
-                        {columns.map((c) => {
+                        {columns.map((c, colIdx) => {
                           const v = it.cells.find((x) => x.label === c)?.value ?? "";
                           return (
                             <td
@@ -262,7 +262,7 @@ export function RecordListDropdown({
                               )}
                             >
                               <span className="flex items-center gap-1.5">
-                                {isActive && (
+                                {isActive && colIdx === 0 && (
                                   <span
                                     aria-hidden
                                     className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary shadow-[0_0_5px] shadow-primary/50"
