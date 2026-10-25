@@ -17,7 +17,7 @@ import { useSettings, useT } from "@/stores/settings-store";
 import { useDesktop } from "@/stores/desktop-store";
 import { useWindowChrome } from "@/components/desktop/app-window";
 import { FiscalYearForm } from "@/components/erp/general/fiscal-year-form";
-import { PartyForm } from "@/components/erp/general/party-form";
+import { PartyForm } from "@/components/forms/common/Party";
 
 /**
  * GeneralWindow — Task 75 (درخواست مالک): پنجرهٔ نرم‌افزار «عمومی» (appKey
