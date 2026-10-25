@@ -2555,3 +2555,25 @@ Stage Summary:
 - تب «عمومی» پیکربندی نرم‌افزارها زنده شد: انتخاب زبان + مدیریت زبان‌های فعال (۱۳ زبانه) از همان‌جا سرویس می‌شوند و سوییچ فوری کل UI را همان‌جا اعمال می‌کند؛ خانهٔ تنظیمات فقط «ظاهر» + پرتابگرهاست. دکمهٔ تم شب/روز روی هدر گرادیانی همهٔ فرم‌ها (کنار captionهای پنجره) در دسترس است و تم سراسری next-themes را بین روشن/تیره جابه‌جا می‌کند.
 - artifacts: src/components/erp/settings/language-settings.tsx (جدید)، src/components/forms/form-theme-toggle.tsx (جدید)، src/components/erp/settings-window.tsx، src/components/erp/settings/software-config-window.tsx، src/components/forms/simple-form-two-row-tabbed.tsx، src/components/forms/simple-tree-form.tsx.
 - E2E مرورگر: خانهٔ تنظیمات بدون بخش زبان ✓؛ عمومی = زبان + زبان‌های فعال با بج 13/13 ✓؛ سوییچ en→ کل UI انگلیسی، de→ آلمانی (هر دو جهت از همان تب) ✓؛ toggle خاموش/روشن زبان فعال ✓؛ state به locale=fa و هر ۱۳ زبان فعال بازگردانده شد ✓. دکمهٔ تم: هدر «مشتری جدید» (دو‌ردیفه‌ای) و «نمونه درختی» (درختی) → dark (html.dark + آیکون Sun/«روشن») → light (Moon/«تیره») ✓؛ اسکرین‌شات‌های light/dark/موبایل ذخیره شدند. موبایل 375px: ۷ تب اسکرول‌پذیر + گرید دوستونهٔ زبان‌ها ✓. صفر خطای کنسول/دواِرور در بارگذاری عادی fa.
+
+---
+Task ID: 74
+Agent: Z.ai Code (main orchestrator)
+Task: درخواست مالک — «در منوی تنظیمات و در زیرمنوی پیکربندی نرم افزار و در تب حسابداری یک فیلد اضافه کنید بنام تعداد ماه های مالی که باید فیلد عددی باشد و بصورت پیش فرض عدد 12 داخل آن وجود داشته باشد و نمی تواند بیشتر از عدد 16 باشد» (اولین اعلام فیلدِ معماری Task 72).
+
+Work Log:
+- دوتایی رجیستری (قرارداد اعلام فیلد — صفر مهاجرت دیتابیس): ① فرانت SOFTWARE_CONFIG_FIELDS.accounting += فیلد fiscalMonthsCount (labelKey=settings.swFiscalMonths، type=number، min=1، max=16، integer، defaultValue="12") ② سرور software-config.dto.ts: whitelist از آرایهٔ رشته‌ای به رجیستری مشخصات ارتقا یافت (SoftwareConfigFieldSpec: type/min/max/integer/defaultValue) با همان ورودی.
+- اعتبارسنجی دولایه: ① فرانت (save): قبل از PUT — NaN/اعشاری/خارج از بازه → توست خطا و ارسال نمی‌شود ② سرور (software-config.service.ts upsert): همان قانون بازه با پیام‌های روشن فارسی (باید عدد باشد/عدد صحیح باشد/کمتر از ۱/بیشتر از ۱۶ = 422) — خط دوم دفاعی.
+- سقف ۱۶ در UI هم نشسته: input عددی با min=1/max=16/step=1 (اسپینر در ۱۶ می‌ایستد) + مقدار پیش‌فرض: وقتی ردیف ذخیره‌شده نیست فیلد ۱۲ نشان می‌دهد و ذخیرهٔ بی‌تغییر همان ۱۲ را می‌نویسد؛ خالی‌کردن و ذخیره = حذف ردیف (الگوی Task 68) → بازگشت به پیش‌فرض ۱۲.
+- بهبود توست خطا: پیام متنی سرور (مثل رد 422) اکنون مستقیم در توست نمایش داده می‌شود (قبلاً generic بود).
+- i18n: ۳ کلید جدید settings.swFiscalMonths/swRangeError/swIntError ×۱۳ زبان (۳۹ خط) با اسکریپت لنگردار بعد از settings.swConfigPayroll — دو باگ اسکریپت (regex \w{2} که ckb سه‌حرفی را نمی‌گرفت + جایگزینی ناقص sed روی regex literal) پیدا و رفع شد؛ راستی‌آزمایی نهایی ۱۳/۱۳ برای هر ۳ کلید + جایگاه ckb بعد از لنگر.
+- خطای محیطی: dfb پایین بود در ابتدای جلسه (۵۰۲) → راه‌اندازی مجدد؛ settings-service با pkill قدیمی نکُشت (cmdline متفاوت) → خطای EADDRINUSE → kill با PID + راه‌اندازی مجدد تمیز روی :3001.
+- tsc سرویس=0؛ bun run lint=0 خطا/هشدار.
+- E2E API (پروکسی امضاشدهٔ Next): GET خالی ✓؛ PUT 20 → 422 «نمی‌تواند بیشتر از 16 باشد» ✓؛ PUT 12.5 → 422 «باید عدد صحیح باشد» ✓؛ PUT 0 → 422 «کمتر از 1» ✓؛ کلید ناشناس → 422 whitelist ✓؛ PUT 14 → saved=1 با ردیف کامل ارث‌بری (creator=system، CreationDate شمسی، BusinessStructureRef=1، ID=2 از IDGeneration — ID=1 مال ردیف آزمون Task 72) ✓.
+- E2E مرورگر (1280×800): تب حسابداری = فیلد «تعداد ماه‌های مالی» با مقدار سرور ✓؛ تایپ ۲۰ + ذخیره → توست «مقدار «تعداد ماههای مالی» باید عددی بین 1 و 16 باشد.» و مقدار سرور دست‌نخورده (درخواست ارسال نشد) ✓؛ ذخیرهٔ ۱۳ → موفق ✓؛ reload کامل + مسیر مجدد → ۱۳ ✓؛ آلمانی: Softwarekonfiguration→Buchhaltung = «Anzahl der Geschäftsjahresmonate» (اسکرین‌شات) ✓؛ حذف ردیف آزمون با PUT خالی → فیلد پیش‌فرض ۱۲ را نشان می‌دهد (اسکرین‌شات fa) ✓؛ بارگذاری تمیز fa = ۰ خطا (خطای hydration فقط آرتیفکت تزریق de از localStorage پیش از hydrate — الگوی شناخته‌شده).
+- state نهایی تمیز: locale=fa + هر ۱۳ زبان فعال؛ جدول SoftwareConfig بدون ردِ آزمون (فیلد با ذخیرهٔ مالک اولین ردیف واقعی را با ID بعدی می‌گیرد).
+
+Stage Summary:
+- اولین فیلد پیکربندی نرم‌افزارها زنده شد: تب «حسابداری» فیلد «تعداد ماه‌های مالی» را دارد — عددی، پیش‌فرض ۱۲، سقف ۱۶ (و کف ۱، فقط صحیح) با اعتبارسنجی دولایهٔ فرانت/سرور و پیام‌های بومی ۱۳زبانه؛ قرارداد «اعلام فیلد = رجیستری دوقلو + ترجمه» بار اول خودش را ثابت کرد (بدون مهاجرت، بدون کد مسیر جدید).
+- artifacts: src/components/erp/settings/software-config-window.tsx، mini-services/settings-service/src/software-config/{software-config.dto.ts، software-config.service.ts}، src/i18n/dictionaries.ts.
+- تصمیم تفسیری اعلام‌شده: کف ۱ و قید «عدد صحیح» به‌عنوان گارد فنی شمارندهٔ ماه اضافه شد (مالک فقط سقف ۱۶ را گفته بود) — در worklog و گزارش مالک شفاف است.
