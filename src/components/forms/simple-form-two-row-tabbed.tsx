@@ -135,6 +135,10 @@ export interface SimpleFormTwoRowTabbedProps {
   titleClassName?: string;
   bodyStyle?: React.CSSProperties;
 
+  /** Task 80 — optional muted note rendered as a small line under the field
+      grid (e.g. «تاریخ‌ها به‌صورت خودکار محاسبه می‌شوند…»). Absent = nothing. */
+  hint?: React.ReactNode;
+
   /** the field rows — flows into a responsive 3-column grid (canonical two rows) */
   fields: SimpleFormField[];
   onFieldChange?: (id: string, value: string | boolean) => void;
@@ -266,6 +270,7 @@ export function SimpleFormTwoRowTabbed({
   headerClassName,
   titleClassName,
   bodyStyle,
+  hint,
   fields,
   onFieldChange,
   labelScope = "container",
@@ -602,6 +607,9 @@ export function SimpleFormTwoRowTabbed({
                 <FieldCell key={f.id} field={f} onChange={onFieldChange} />
               ))}
             </div>
+          )}
+          {hint != null && (
+            <p className="mt-1.5 text-[11px] leading-5 text-muted-foreground">{hint}</p>
           )}
         </div>
 

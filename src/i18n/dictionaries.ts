@@ -131,6 +131,7 @@ const fa = {
   "fy.errDateInvalid": "قالب تاریخ باید YYYY/MM/DD باشد.",
   "fy.errDateOrder": "تاریخ پایان نمی‌تواند قبل از تاریخ شروع باشد.",
   "fy.errMonths": "طول بازهٔ سال مالی نمی‌تواند بیشتر از {max} ماه باشد.",
+  "fy.datesAutoHint": "تاریخ شروع و پایان به‌صورت خودکار محاسبه می‌شوند: شروع = نخستین روزِ سال مالی واردشده؛ پایان = بر پایهٔ «تعداد ماه‌های مالی» در پیکربندی نرم‌افزار ← تب حسابداری.",
   "settings.activeLangs": "زبان‌های فعال",
   "settings.activeLangsDesc": "زبان‌هایی که در سوییچر زبان و پنل‌های ترجمه نمایش داده می‌شوند (فارسی همیشه فعال است)",
 
@@ -641,6 +642,7 @@ const en: Dict = {
   "fy.errDateInvalid": "Date format must be YYYY/MM/DD.",
   "fy.errDateOrder": "End date cannot be before the start date.",
   "fy.errMonths": "The fiscal-year range cannot exceed {max} months.",
+  "fy.datesAutoHint": "Start and end dates are calculated automatically: start = the first day of the entered fiscal year; end = based on the «fiscal months count» in Software Configuration → Accounting tab.",
   "settings.activeLangs": "Active languages",
   "settings.activeLangsDesc": "Languages shown in the language switcher and the translation panels (Persian is always active)",
 
@@ -1143,6 +1145,7 @@ const tr: Dict = {
   "fy.errDateInvalid": "Tarih biçimi YYYY/MM/DD olmalıdır.",
   "fy.errDateOrder": "Bitiş tarihi başlangıç tarihinden önce olamaz.",
   "fy.errMonths": "Mali yıl aralığı {max} aydan fazla olamaz.",
+  "fy.datesAutoHint": "Başlangıç ve bitiş tarihleri otomatik hesaplanır: başlangıç = girilen mali yılın ilk günü; bitiş = Yazılım Yapılandırması → Muhasebe sekmesindeki «mali ay sayısı»na göre.",
   "settings.activeLangs": "Aktif diller",
   "settings.activeLangsDesc": "Dil değiştiricide ve çeviri panellerinde gösterilen diller (Farsça her zaman etkindir)",
 
@@ -1640,6 +1643,7 @@ const ar: Dict = {
   "fy.errDateInvalid": "يجب أن يكون تنسيق التاريخ YYYY/MM/DD.",
   "fy.errDateOrder": "لا يمكن أن يكون تاريخ النهاية قبل تاريخ البداية.",
   "fy.errMonths": "لا يمكن أن تتجاوز مدة السنة المالية {max} شهراً.",
+  "fy.datesAutoHint": "يُحسب تاريخ البداية والنهاية تلقائياً: البداية = أول يوم من السنة المالية المُدخلة؛ النهاية = بناءً على «عدد الأشهر المالية» في إعدادات البرنامج ← تب المحاسبة.",
   "settings.activeLangs": "اللغات النشطة",
   "settings.activeLangsDesc": "اللغات المعروضة في مبدل اللغة ولوحات الترجمة (الفارسية مفعّلة دائماً)",
 
@@ -2137,6 +2141,7 @@ const hi: Dict = {
   "fy.errDateInvalid": "तिथि का प्रारूप YYYY/MM/DD होना चाहिए।",
   "fy.errDateOrder": "अंतिम तिथि प्रारंभ तिथि से पहले नहीं हो सकती।",
   "fy.errMonths": "वित्तीय वर्ष की अवधि {max} महीनों से अधिक नहीं हो सकती।",
+  "fy.datesAutoHint": "प्रारंभ और समाप्ति तिथियाँ स्वतः गणना होती हैं: प्रारंभ = दर्ज वित्तीय वर्ष का पहला दिन; समाप्ति = सॉफ़्टवेयर कॉन्फ़िगरेशन → लेखा टैब की «वित्तीय महीनों की संख्या» के अनुसार।",
   "settings.activeLangs": "सक्रिय भाषाएँ",
   "settings.activeLangsDesc": "भाषा स्विचर और अनुवाद पैनलों में दिखाई देने वाली भाषाएँ (फ़ारसी हमेशा सक्रिय है)",
 
@@ -2634,6 +2639,7 @@ const ps: Dict = {
   "fy.errDateInvalid": "د نېټې بڼه باید YYYY/MM/DD وي.",
   "fy.errDateOrder": "د پای نېټه نشي کولی له د پیل نېټې څخه وړاندې وي.",
   "fy.errMonths": "د مالي کال دوره نشي کولی له {max} میاشتو څخه زیاته وي.",
+  "fy.datesAutoHint": "د پیل او پای نېټې په اتوماتيک ډول محاسبه کیږي: پیل = د ننوتلي مالي کال لومړنۍ ورځ؛ پای = د سافټویر پیکربندنې ← د حسابدارۍ ټب کې «د مالیو میاشتو شمېر» ته په پام سره.",
   "settings.activeLangs": "فعال ژبې",
   "settings.activeLangsDesc": "هغې ژبو چې په ژبې بدلونکي او د ژباړې پینلونو کې ښکاري (فارسي تل فعال دی)",
 
@@ -3131,6 +3137,7 @@ const ckb: Dict = {
   "fy.errDateInvalid": "شێوازی بەروار دەبێت YYYY/MM/DD بێت.",
   "fy.errDateOrder": "بەرواری کۆتایی ناتوانێت پێش بەرواری دەستپێک بێت.",
   "fy.errMonths": "مەودای ساڵی دارایی ناتوانێت لە {max} مانگ زیاتر بێت.",
+  "fy.datesAutoHint": "بەروارەکانی دەستپێک و کۆتایی خۆکارانە حیساب دەکرێن: دەستپێک = یەکەم ڕۆژی ساڵی دارایی تۆمارکراو؛ کۆتایی = بەپێی «ژمارەی مانگە داراییەکان» لە پیکێربەندی نەرمەواڵە ← تب ژمێریاری.",
   "settings.activeLangs": "زمانە چالاکەکان",
   "settings.activeLangsDesc": "زمانەکان کە لە گۆڕەری زمان و پانێڵەکانی وەرگێڕان دەردەکەون (فارسی هەمیشە چالاکە)",
 
@@ -3628,6 +3635,7 @@ const pt: Dict = {
   "fy.errDateInvalid": "O formato da data deve ser YYYY/MM/DD.",
   "fy.errDateOrder": "A data de término não pode ser anterior à data de início.",
   "fy.errMonths": "O intervalo do ano fiscal não pode exceder {max} meses.",
+  "fy.datesAutoHint": "As datas de início e fim são calculadas automaticamente: início = primeiro dia do ano fiscal informado; fim = com base no «número de meses fiscais» na Configuração do Software → separador Contabilidade.",
   "settings.activeLangs": "Idiomas ativos",
   "settings.activeLangsDesc": "Idiomas exibidos no seletor de idiomas e nos painéis de tradução (o persa está sempre ativo)",
 
@@ -4125,6 +4133,7 @@ const ko: Dict = {
   "fy.errDateInvalid": "날짜 형식은 YYYY/MM/DD여야 합니다.",
   "fy.errDateOrder": "종료일은 시작일보다 이전일 수 없습니다.",
   "fy.errMonths": "회계연도 기간은 {max}개월을 초과할 수 없습니다.",
+  "fy.datesAutoHint": "시작일과 종료일은 자동 계산됩니다: 시작일 = 입력한 회계연도의 첫날; 종료일 = 소프트웨어 구성 → 회계 탭의 «회계 월 수»에 따라 결정됩니다.",
   "settings.activeLangs": "활성 언어",
   "settings.activeLangsDesc": "언어 전환기 및 번역 패널에 표시되는 언어 (페르시아어는 항상 활성화됨)",
 
@@ -4622,6 +4631,7 @@ const fr: Dict = {
   "fy.errDateInvalid": "Le format de la date doit être YYYY/MM/DD.",
   "fy.errDateOrder": "La date de fin ne peut pas être antérieure à la date de début.",
   "fy.errMonths": "La durée de l'exercice financier ne peut pas dépasser {max} mois.",
+  "fy.datesAutoHint": "Les dates de début et de fin sont calculées automatiquement : début = premier jour de l'exercice saisi ; fin = d'après le « nombre de mois fiscaux » dans Configuration du logiciel → onglet Comptabilité.",
   "settings.activeLangs": "Langues actives",
   "settings.activeLangsDesc": "Langues affichées dans le sélecteur de langue et les panneaux de traduction (le persan est toujours actif)",
 
@@ -5119,6 +5129,7 @@ const zh: Dict = {
   "fy.errDateInvalid": "日期格式必须为 YYYY/MM/DD。",
   "fy.errDateOrder": "结束日期不能早于开始日期。",
   "fy.errMonths": "会计年度期间不能超过 {max} 个月。",
+  "fy.datesAutoHint": "开始与结束日期自动计算：开始 = 所录入会计年度的第一天；结束 = 依据软件配置 → 会计选项卡中的「会计月数」。",
   "settings.activeLangs": "启用的语言",
   "settings.activeLangsDesc": "语言切换器和翻译面板中显示的语言（波斯语始终启用）",
 
@@ -5621,6 +5632,7 @@ const de: Dict = {
   "fy.errDateInvalid": "Das Datumsformat muss YYYY/MM/DD sein.",
   "fy.errDateOrder": "Das Enddatum darf nicht vor dem Startdatum liegen.",
   "fy.errMonths": "Der Zeitraum des Geschäftsjahres darf {max} Monate nicht überschreiten.",
+  "fy.datesAutoHint": "Start- und Enddatum werden automatisch berechnet: Start = erster Tag des eingegebenen Geschäftsjahres; Ende = gemäß der «Anzahl der Geschäftsmonate» in Softwarekonfiguration → Tab Buchhaltung.",
   "settings.activeLangs": "Aktive Sprachen",
   "settings.activeLangsDesc": "Sprachen, die im Sprachumschalter und in den Übersetzungspanels angezeigt werden (Persisch ist immer aktiv)",
 
@@ -6128,6 +6140,7 @@ const ru: Dict = {
   "fy.errDateInvalid": "Формат даты должен быть YYYY/MM/DD.",
   "fy.errDateOrder": "Дата окончания не может быть раньше даты начала.",
   "fy.errMonths": "Продолжительность финансового года не может превышать {max} месяцев.",
+  "fy.datesAutoHint": "Даты начала и окончания рассчитываются автоматически: начало = первый день введённого финансового года; окончание = по «количеству финансовых месяцев» в Конфигурации ПО → вкладка Бухгалтерия.",
   "settings.activeLangs": "Активные языки",
   "settings.activeLangsDesc": "Языки, отображаемые в переключателе языка и панелях перевода (персидский всегда активен)",
 
