@@ -65,3 +65,6 @@ $ NODE_PATH=./node_modules bun --hot src/main.ts
 [Nest] 30928  - 10/25/2026, 8:24:13 PM     LOG [DataTranslationsService] data-translations save Party#5: +0 ~22 -0
 [Nest] 30928  - 10/25/2026, 8:26:47 PM     LOG [PartyService] Party created — ID=7 Tafsili=2 Nature=natural Name=علیرضا
 [Nest] 30928  - 10/25/2026, 8:26:54 PM     LOG [DataTranslationsService] data-translations save Party#7: +22 ~0 -0
+[Nest] 30928  - 10/25/2026, 9:08:36 PM     LOG [PartyService] Party created — ID=8 Tafsili=3 Nature=natural Name=لیلا
+[Nest] 30928  - 10/25/2026, 9:09:04 PM     LOG [DataTranslationsService] data-translations save Party#8: +22 ~0 -0
+[Nest] 30928  - 10/25/2026, 9:10:04 PM     LOG [DataTranslationsService] data-translations save Party#8: +33 ~22 -0
