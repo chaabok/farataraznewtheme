@@ -2647,3 +2647,67 @@ Stage Summary:
 - قرارداد تقویم مالک مستقر شد: «DB فقط میلادی، UI به تقویم زبان انتخابی» — StartDate/EndDate سال مالی حالا میلادی ISO ذخیره می‌شوند، سرور هر ورودی غیرمیلادی را رد می‌کند، و سه زبان fa/ps/ckb شمسی می‌بینند (ورود + نمایش) در حالی که ۱۰ زبان دیگر میلادی می‌بینند؛ همهٔ قواعد ثبت (یکتایی، عدم هم‌پوشانی، سقف پویای ماه‌ها) روی تاریخ میلادی معیار دولایه باقی است؛ الگوی الگوریتم jalaali-js برای هر نمایش تاریخ آینده در UI قابل بازاستفاده است.
 - artifacts: src/lib/calendar-date.ts (جدید)، src/components/erp/general/fiscal-year-form.tsx، mini-services/settings-service/{src/fiscal-year/fiscal-year.service.ts، src/fiscal-year/fiscal-year.dto.ts، prisma/schema.prisma} — بدون مهاجرت DDL.
 - محدودیت‌های شناخته‌شده: پیام‌های خطای سرور فارسی‌اند (الگوی پیشین) و تاریخ داخل پیام 409 میلادی نمایش داده می‌شود؛ اگر رکوردی باز باشد و کاربر وسط ویرایش زبان عوض کند، نمایش فیلدهای تاریخ تا بازکردن مجدد رکورد به‌روز نمی‌شود (لیست فوراً عوض می‌شود)؛ عنوان ۴رقمی (مثل «1404») دادهٔ کاربر است نه ستون تاریخ و طبق قاعده دست‌نخورده ماند.
+
+---
+Task ID: 78
+Agent: Z.ai Code (main orchestrator)
+Task: «تمامی کسب‌وکارهای نوع هلدینگ/شرکت + شعبه/نمایندگی/فروشگاه در هدر داشبورد به‌صورت آبشاری
+نمایش داده شود؛ پیش‌فرض = اولین شرکت تعریف‌شده، پس از تغییر = آخرین انتخاب کاربر (پایدار)؛
+نمایش اطلاعات فرم‌ها بر اساس هر سطح انتخابی در همان سطح فیلتر گردد» — زمینهٔ سطح سازمانی
+(Org Context) در هدر داشبورد + فیلتر دادهٔ فرم‌های DFB.
+
+Work Log:
+- org-context-store.ts (جدید، src/stores): درخت BusinessStructure از settings-BFF با
+  «erp:records-changed» بازخوانی می‌شود؛ آبشار چهار فیلد — companies = گره‌های فعال نوع ۱|۲ به
+  ترتیب ID («اولین شرکت»)، branches/agencies/shops = فرزندان نوع ۳|۴|۵ زیر عمیق‌ترین سطح انتخابی
+  (تنگ‌شونده در هر گام)؛ انتخاب شرکت سطوح پایین‌تر را پاک می‌کند؛ ids نامعتبر در بارگذاری
+  fall-back می‌شوند؛ انتخاب کاربر در erp.orgContext (persist، partialize فقط ids).
+- ancestryChain: زنجیرهٔ اقامت = تبار کاملِ عمیق‌ترین گره (نوع ۵→ShopRef، ۴→AgencyRef، ۳→BranchRef،
+  ۱|۲→CompanyRef) — حتی اگر کاربر مستقیم فروشگاه را زده باشد، BranchRef/CompanyRef از درخت حل
+  می‌شود تا فیلتر سطوح بالاتر رکوردهای زیرمجموعه را هم ببیند (قرارداد AppBase: anchors از تبار).
+- dashboard-header.tsx + org-selectors.tsx (جدید): چهار فیلد pill هم‌سبک با جست‌وجو (Building2/
+  Building/Handshake/Store)؛ فیلدهای شعبه/نمایندگی/فروشگاه فقط وقتی لیست‌شان غیرخالی است رندر
+  می‌شوند؛ آیتم اولِ سطوح عمیق «همه» = بازگشت به سطح والد؛ pointerdown/dblclick داخل فیلدها
+  propagate نمی‌شود (هدر نکشد/اسنپ نکند)؛ عمودی و موبایل = فقط آیکون (۲۴px، بدون سرریز).
+- dfb-service: SaveFormDataDto.org (اختیاری) → actorFromOrg (nodeId = عمیق‌ترین، زنجیره از بدنه،
+  بدون org = SYSTEM_ACTOR دفتر مرکزی) در saveData فقط برای رکورد تازه (جابه‌جایی رکورد قدیم ممنوع)؛
+  loadData با query params companyRef/branchRef/agencyRef/shopRef/shared → orgScopeWhere:
+  OR(ستون زنجیرهٔ عمیق‌ترین سطح، BusinessStructureRef=عمیق‌ترین گره، BusinessStructureRef=1 اگر
+  shared) — بدون companyRef = بدون فیلتر؛ «shared» = IsBasicInfoShared ریشه که کلاینت از درخت
+  می‌فرستد (قرارداد اشتراک دفتر مرکزی، Task 44).
+- فرانت: dfb-store → loadFormData(scope) + orgScopeQuery + saveFormData(org)؛ dfb-form-runtime
+  و records-list-window با useOrgScope فیلتر می‌شوند و افکت مستقل رکوردها را با تغییر سطح
+  دوباره واکشی می‌کند (بدون واکشی مجدد تعریف فرم)؛ save ران‌تایم زنجیرهٔ org را می‌فرستد
+  (فقط وقتی شرکتی انتخاب است)؛ dfb-studio (پیش‌نمایش طراحی) عمداً بدون scope ماند.
+- i18n: ۵ کلید header.orgCompany/orgBranch/orgAgency/orgShop/orgAll در ۱۳ زبان.
+- E2E API (پس از کشتن پروسهٔ قدیمی :3003 که EADDRINUSE داده بود): مُهر DB = {24: BS=14,C=14}
+  {25: BS=16,C=14,B=16} {26: BS=19,C=14,B=16,S=19} {27: بدون org → BS=1}؛ فیلتر: company14
+  shared=0 → ۲۴|۲۵|۲۶ (دفتر مرکزی پنهان)، shared=1 → +۲۷، +branch16 → ۲۵|۲۶، +shop19 → ۲۶،
+  company18 → خالی.
+- E2E مرورگر: پیش‌فرض «شرکت نمونه» در تریگر؛ لیست شرکت‌ها = هلدینگ نمونه/شرکت نمونه/شرکت دوم؛
+  انتخاب شعبه → فیلد نمایندگی ناپدید شد (آبشار درست)؛ لیست رکوردهای فرمِ باز «انواع وسیله نقلیه»
+  زنده فیلتر شد: شعبه→[25,26]، همه→[24,25,26]، فروشگاه→[26]، شرکت دوم→[]؛ ذخیره از ران‌تایم در
+  سطح فروشگاه → رکورد ۲۹ با زنجیرهٔ کامل B=16 (پس از فیکس ancestry)؛ reload → «شرکت دوم» باقی
+  ماند (آخرین انتخاب کاربر) و بازگشت به «شرکت نمونه»؛ en → برچسب‌ها + «Sample Company»؛ fa→
+  بازگشت؛ اسکرین‌شات هدر با ۴ فیلد؛ صفر خطای کنسول/صفحه؛ موبایل ۳۹۰px = ۴ دکمهٔ آیکونی.
+- lint برنامه = ۰ (پس از فیکس set-state-in-effect: واکشی رکوردها داخل Promise.resolve().then)؛
+  tsc dfb-service = ۰؛ dev.log = همه ۲۰۰/۲۰۱ (خطاهای «Return statement» قدیمیِ settings-window
+  از جلسات قبل است — فایل دست‌نخورده و صفحه سالم).
+
+Stage Summary:
+- قرارداد مالک پیاده شد: هدر داشبورد مرجع «زمینهٔ سازمانی» است — ۴ فیلد آبشاری (هلدینگ/شرکت ←
+  شعبه ← نمایندگی ← فروشگاه)، پیش‌فرض اولین شرکت، پایدارسازی آخرین انتخاب، و فیلتر دادهٔ فرم‌ها
+  دقیقاً در سطح انتخابی؛ رکوردهای تازه در همان سطح ساکن می‌شوند و ستون‌های زنجیرهٔ AppBase
+  (BusinessStructureRef/CompanyRef/BranchRef/AgencyRef/ShopRef) حالا به‌صورت عملیاتی استفاده می‌شوند.
+- artifacts: src/stores/org-context-store.ts، src/components/desktop/org-selectors.tsx (جدید)؛
+  src/components/desktop/dashboard-header.tsx، src/stores/dfb-store.ts،
+  src/components/erp/form-builder/{dfb-form-runtime.tsx،records-list-window.tsx}،
+  src/i18n/dictionaries.ts؛ mini-services/dfb-service/src/forms/{forms.dto.ts،forms.controller.ts،
+  forms.service.ts} — بدون مهاجرت DDL (ستون‌ها از قبل وجود داشتند).
+- دادهٔ نمونه برای دمو باقی مانده: گره‌های ۱۵..۱۹ (هلدینگ نمونه، شعبه مرکزی، نمایندگی تهران،
+  شرکت دوم، فروشگاه شعبه مرکزی) + فیلدهای vt_title/vt_code و ۵ رکورد فرم ۱۱ در ۴ سطح
+  (۲۴ شرکت، ۲۵ شعبه، ۲۶ فروشگاه، ۲۷ دفتر مرکزی، ۲۹ فروشگاه) — مالک می‌تواند از خودِ فرم‌ها پاک کند.
+- محدودیت‌های شناخته‌شده: فیلتر «در همان سطح» = زیردرختِ سطح انتخابی (سطح + پایین‌تر) با ستون
+  زنجیره؛ نمایندگی تو در تو (نمایندگی زیر نمایندگی) فقط با عمیق‌ترین AgencyRef مچ می‌شود؛
+  رکوردِ باز در فرم هنگام تغییر زمینه دستی بسته نمی‌شود (فقط فهرست فیلتر می‌شود)؛ پیام‌های
+  سرور همچنان فارسی.
