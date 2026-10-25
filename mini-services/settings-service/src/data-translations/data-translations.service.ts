@@ -55,31 +55,40 @@ export class DataTranslationsService {
     let created = 0;
     let updated = 0;
     let deleted = 0;
-
-    /* IDهای ردیف‌های جدید یک‌جا از شمارندهٔ مرکزی گرفته می‌شود (§16) */
+    /* IDهای ردیف‌های جدید یک‌جا از شمارندهٔ مرکزی گرفته می‌شود (§16) —
+       generateNextIdBlock «شناسهٔ آغازین» برمی‌گرداند (startId..startId+n-1) */
     const fresh = dto.items.filter((it) => (it.value ?? "").trim() !== "");
-    let ids: number[] = [];
+    let startId = 0;
     if (fresh.length > 0) {
-      ids = await this.idGen.generateNextIdBlock("DataTranslation", fresh.length);
+      startId = await this.idGen.generateNextIdBlock("DataTranslation", fresh.length);
     }
 
     for (let i = 0; i < dto.items.length; i++) {
       const it = dto.items[i];
       const value = (it.value ?? "").trim();
-      const where = {
-        entityType_entityId_fieldKey_locale: {
-          entityType: dto.entityType,
-          entityId,
-          fieldKey: it.fieldKey,
-          locale: it.locale,
-        },
-      };
       if (value === "") {
-        const res = await this.prisma.dataTranslation.deleteMany({ where });
+        /* deleteMany فیلتر معمولی می‌گیرد (نه کلید یکتای مرکب) */
+        const res = await this.prisma.dataTranslation.deleteMany({
+          where: {
+            entityType: dto.entityType,
+            entityId,
+            fieldKey: it.fieldKey,
+            locale: it.locale,
+          },
+        });
         deleted += res.count;
         continue;
       }
-      const existing = await this.prisma.dataTranslation.findUnique({ where });
+      const existing = await this.prisma.dataTranslation.findUnique({
+        where: {
+          entityType_entityId_fieldKey_locale: {
+            entityType: dto.entityType,
+            entityId,
+            fieldKey: it.fieldKey,
+            locale: it.locale,
+          },
+        },
+      });
       if (existing) {
         await this.prisma.dataTranslation.update({
           where: { id: existing.id },
@@ -89,7 +98,7 @@ export class DataTranslationsService {
       } else {
         await this.prisma.dataTranslation.create({
           data: {
-            id: BigInt(ids[created] ?? 0),
+            id: BigInt(startId + created),
             entityType: dto.entityType,
             entityId,
             fieldKey: it.fieldKey,

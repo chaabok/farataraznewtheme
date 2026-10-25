@@ -14,6 +14,11 @@ import {
   type SimpleFormTab,
 } from "@/components/forms/simple-form-two-row-tabbed";
 import { normalizeDigits } from "@/components/forms/form-primitives";
+import {
+  DataTranslationsDialog,
+  type DataTranslationField,
+} from "@/components/forms/common/data-translations-dialog";
+import { LOCALES } from "@/i18n/config";
 
 /**
  * PartyForm — Task 84 (درخواست مالک): فرم «تعریف طرف حساب» در نرم‌افزار
@@ -165,6 +170,7 @@ const n2 = (v: number | null | undefined): string => (v == null ? "" : String(v)
 export function PartyForm({ onBack }: { onBack?: () => void }) {
   const t = useT();
   const locale = useSettings((s) => s.locale);
+  const activeLocales = useSettings((s) => s.activeLocales);
   const chrome = useWindowChrome();
   const headerMaximized = useDesktop(
     (s) => s.windows.find((w) => w.kind === "app" && w.appKey === "general")?.maximized ?? false,
@@ -544,6 +550,70 @@ export function PartyForm({ onBack }: { onBack?: () => void }) {
     if (r) applyRecord(r);
   };
 
+  /* -------- Task 92 (تأیید مالک) — ترجمهٔ دادهٔ رکورد باز --------
+     فیلدهای متنیِ معنادارِ رکورد (نام/نام خانوادگی، نشانی‌ها، افراد مرتبط) —
+     کلیدهای پایدار برای انبار DataTranslation (مسیر ردیف جدولی مجاز است). */
+  const translatableFields = React.useCallback((): DataTranslationField[] => {
+    const out: DataTranslationField[] = [];
+    const push = (key: string, label: string, value: string) => {
+      const v = value.trim();
+      if (v) out.push({ key, label, value: v });
+    };
+    push("name", t("party.name"), values.name);
+    if (!isLegal) push("lastName", t("party.lastName"), values.lastName);
+    (rows[TAB_ADDRESS] ?? []).forEach((a, i) => {
+      push(`address.${i}.fullAddress`, `${t("party.fullAddress")} ${i + 1}`, a.fullAddress);
+    });
+    (rows[TAB_PEOPLE] ?? []).forEach((p, i) => {
+      push(`persons.${i}.firstName`, `${t("party.name")} ${i + 1}`, p.firstName);
+      push(`persons.${i}.lastName`, `${t("party.lastName")} ${i + 1}`, p.lastName);
+      push(`persons.${i}.notes`, `${t("common.description")} ${i + 1}`, p.notes);
+    });
+    return out;
+  }, [t, values, rows, isLegal]);
+
+  const translateOnline = React.useCallback(async () => {
+    if (currentId == null) {
+      toast.info(t("dfb.noRecordSelected"));
+      return;
+    }
+    const fields = translatableFields();
+    if (fields.length === 0) {
+      toast.info(t("dfb.list.translateNoTextFields"));
+      return;
+    }
+    const langs = LOCALES.filter((l) => l !== "fa" && activeLocales.includes(l));
+    if (langs.length === 0) {
+      toast.info(t("settings.activeLangs"));
+      return;
+    }
+    try {
+      const res = await fetch("/api/data-translations/auto-translate", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ entityType: "Party", entityId: currentId, langs, fields }),
+      });
+      const json = (await res.json().catch(() => null)) as
+        | { ok?: boolean; message?: string }
+        | null;
+      if (!res.ok || !json?.ok) {
+        throw new Error(json?.message || t("common.error"));
+      }
+      toast.success(t("dfb.list.translateDone"));
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : t("common.error"));
+    }
+  }, [currentId, activeLocales, translatableFields, t]);
+
+  const [offlineOpen, setOfflineOpen] = React.useState(false);
+  const openTranslateOffline = React.useCallback(() => {
+    if (currentId == null) {
+      toast.info(t("dfb.noRecordSelected"));
+      return;
+    }
+    setOfflineOpen(true);
+  }, [currentId, t]);
+
   /* ------------------------------ rendering ------------------------------ */
 
   const natureOptions = [
@@ -732,6 +802,7 @@ export function PartyForm({ onBack }: { onBack?: () => void }) {
   }, [t, rows, cities, other, details, isLegal, locale]);
 
   return (
+    <>
     <SimpleFormTwoRowTabbed
       key={formKey}
       title={t("party.formTitle")}
@@ -764,6 +835,8 @@ export function PartyForm({ onBack }: { onBack?: () => void }) {
         toast.success(t("abar.copyToast"));
       }}
       onDelete={doDelete}
+      onTranslateOnline={translateOnline}
+      onTranslateOffline={openTranslateOffline}
       onDeleteNew={async () => {
         await doDelete();
         newRecord();
@@ -819,5 +892,14 @@ export function PartyForm({ onBack }: { onBack?: () => void }) {
       onHeaderDragEnd={chrome?.onDragEnd}
       onHeaderDoubleClick={chrome?.onDoubleClick}
     />
+    {/* Task 92 — ورود دستی (آفلاین) ترجمهٔ دادهٔ رکورد باز */}
+    <DataTranslationsDialog
+      open={offlineOpen}
+      onOpenChange={setOfflineOpen}
+      entityType="Party"
+      entityId={currentId}
+      fields={translatableFields()}
+    />
+    </>
   );
 }
