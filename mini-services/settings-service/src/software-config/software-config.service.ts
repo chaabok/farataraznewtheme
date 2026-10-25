@@ -57,13 +57,14 @@ export class SoftwareConfigService {
    */
   async upsert(appKey: string, dto: UpsertSoftwareConfigDto) {
     this.assertAppKey(appKey);
-    const allowed = SOFTWARE_CONFIG_FIELDS[appKey as SoftwareConfigAppKey] ?? [];
+    const registry = SOFTWARE_CONFIG_FIELDS[appKey as SoftwareConfigAppKey] ?? {};
     let saved = 0;
     let deleted = 0;
 
     for (const it of dto.items) {
       const key = String(it.configKey ?? "").trim();
-      if (!allowed.includes(key)) {
+      const spec = registry[key];
+      if (!spec) {
         throw new BadRequestException({
           statusCode: 422,
           message: `کلید پیکربندی «${key}» برای «${appKey}» هنوز در رجیستری فیلدها تعریف نشده است`,
@@ -73,6 +74,40 @@ export class SoftwareConfigService {
 
       const raw = String(it.configValue ?? "");
       const value = raw.trim() === "" ? "" : raw.trim().slice(0, 2000);
+
+      /* Task 73 — قانون بازهٔ فیلدهای عددی (مثل «تعداد ماه‌های مالی»:
+         عدد صحیح ۱..۱۶) — خط دوم دفاعی؛ فرانت هم پیش از PUT اعتبارسنجی می‌کند. */
+      if (value !== "" && spec.type === "number") {
+        const num = Number(value);
+        if (!Number.isFinite(num)) {
+          throw new BadRequestException({
+            statusCode: 422,
+            message: `مقدار فیلد «${key}» باید عدد باشد`,
+            messageKey: "common.error",
+          });
+        }
+        if (spec.integer && !Number.isInteger(num)) {
+          throw new BadRequestException({
+            statusCode: 422,
+            message: `مقدار فیلد «${key}» باید عدد صحیح باشد`,
+            messageKey: "common.error",
+          });
+        }
+        if (spec.min !== undefined && num < spec.min) {
+          throw new BadRequestException({
+            statusCode: 422,
+            message: `مقدار فیلد «${key}» نمی‌تواند کمتر از ${spec.min} باشد`,
+            messageKey: "common.error",
+          });
+        }
+        if (spec.max !== undefined && num > spec.max) {
+          throw new BadRequestException({
+            statusCode: 422,
+            message: `مقدار فیلد «${key}» نمی‌تواند بیشتر از ${spec.max} باشد`,
+            messageKey: "common.error",
+          });
+        }
+      }
 
       if (value === "") {
         const res = await this.prisma.softwareConfig.deleteMany({

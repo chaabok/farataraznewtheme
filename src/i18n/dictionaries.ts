@@ -106,6 +106,9 @@ const fa = {
   "settings.swConfigDesc": "پیکربندی فیلدهای نرم‌افزارهای سیستم — فیلدها به‌مرور اضافه می‌شوند",
   "settings.swConfigPending": "فیلدهای این بخش به‌مرور اعلان و اضافه می‌شوند.",
   "settings.swConfigPayroll": "حقوق",
+  "settings.swFiscalMonths": "تعداد ماه‌های مالی",
+  "settings.swRangeError": "مقدار «{field}» باید عددی بین {min} و {max} باشد.",
+  "settings.swIntError": "مقدار «{field}» باید عدد صحیح باشد.",
   "settings.activeLangs": "زبان‌های فعال",
   "settings.activeLangsDesc": "زبان‌هایی که در سوییچر زبان و پنل‌های ترجمه نمایش داده می‌شوند (فارسی همیشه فعال است)",
 
@@ -591,6 +594,9 @@ const en: Dict = {
   "settings.swConfigDesc": "Configure the fields of system software — fields are added gradually",
   "settings.swConfigPending": "The fields of this section will be announced and added gradually.",
   "settings.swConfigPayroll": "Payroll",
+  "settings.swFiscalMonths": "Fiscal months count",
+  "settings.swRangeError": "The value of “{field}” must be a number between {min} and {max}.",
+  "settings.swIntError": "The value of “{field}” must be a whole number.",
   "settings.activeLangs": "Active languages",
   "settings.activeLangsDesc": "Languages shown in the language switcher and the translation panels (Persian is always active)",
 
@@ -1068,6 +1074,9 @@ const tr: Dict = {
   "settings.swConfigDesc": "Sistem yazılımlarının alanlarını yapılandırın — alanlar zamanla eklenir",
   "settings.swConfigPending": "Bu bölümün alanları zaman içinde bildirilerek eklenecektir.",
   "settings.swConfigPayroll": "Maaş",
+  "settings.swFiscalMonths": "Mali dönem sayısı",
+  "settings.swRangeError": "“{field}” değeri {min} ile {max} arasında bir sayı olmalıdır.",
+  "settings.swIntError": "“{field}” değeri tam bir sayı olmalıdır.",
   "settings.activeLangs": "Aktif diller",
   "settings.activeLangsDesc": "Dil değiştiricide ve çeviri panellerinde gösterilen diller (Farsça her zaman etkindir)",
 
@@ -1540,6 +1549,9 @@ const ar: Dict = {
   "settings.swConfigDesc": "تهيئة حقول برامج النظام — تُضاف الحقول تدريجياً",
   "settings.swConfigPending": "ستُعلن حقول هذا القسم وتُضاف تدريجياً.",
   "settings.swConfigPayroll": "الرواتب",
+  "settings.swFiscalMonths": "عدد الشهور المالية",
+  "settings.swRangeError": "يجب أن تكون قيمة «{field}» رقماً بين {min} و {max}.",
+  "settings.swIntError": "يجب أن تكون قيمة «{field}» رقماً صحيحاً.",
   "settings.activeLangs": "اللغات النشطة",
   "settings.activeLangsDesc": "اللغات المعروضة في مبدل اللغة ولوحات الترجمة (الفارسية مفعّلة دائماً)",
 
@@ -2012,6 +2024,9 @@ const hi: Dict = {
   "settings.swConfigDesc": "सिस्टम सॉफ़्टवेयर के फ़ील्ड कॉन्फ़िगर करें — फ़ील्ड धीरे-धीरे जोड़े जाते हैं",
   "settings.swConfigPending": "इस अनुभाग के फ़ील्ड धीरे-धीरे घोषित और जोड़े जाएंगे।",
   "settings.swConfigPayroll": "वेतन",
+  "settings.swFiscalMonths": "वित्तीय महीनों की संख्या",
+  "settings.swRangeError": "“{field}” का मान {min} और {max} के बीच एक संख्या होनी चाहिए.",
+  "settings.swIntError": "“{field}” का मान एक पूर्ण संख्या होनी चाहिए.",
   "settings.activeLangs": "सक्रिय भाषाएँ",
   "settings.activeLangsDesc": "भाषा स्विचर और अनुवाद पैनलों में दिखाई देने वाली भाषाएँ (फ़ारसी हमेशा सक्रिय है)",
 
@@ -2484,6 +2499,9 @@ const ps: Dict = {
   "settings.swConfigDesc": "د سیسټم سافټویر فیلډونه تنظیم کړئ — فیلډونه په تدریج سره اضافه کیږي",
   "settings.swConfigPending": "دې برخې فیلډونه به په تدریج سره اعلان او اضافه شي.",
   "settings.swConfigPayroll": "معاش",
+  "settings.swFiscalMonths": "د مالي میاشتو شمېر",
+  "settings.swRangeError": "د «{field}» ارزشت باید د {min} او {max} ترمنځ یو عدد وي.",
+  "settings.swIntError": "د «{field}» ارزشت باید یو بشپړ عدد وي.",
   "settings.activeLangs": "فعال ژبې",
   "settings.activeLangsDesc": "هغې ژبو چې په ژبې بدلونکي او د ژباړې پینلونو کې ښکاري (فارسي تل فعال دی)",
 
@@ -2956,6 +2974,9 @@ const ckb: Dict = {
   "settings.swConfigDesc": "ڕێکخستنی خانەکانی سۆفتوێرەکانی سیستەم — خانەکان بە شێوەی هەنگاو بە هەنگاو زیاد دەکرێن",
   "settings.swConfigPending": "خانەکانی ئەم بەشە بە شێوەی هەنگاو بە هەنگاو ڕادەگەیەنرێن و زیاد دەکرێن.",
   "settings.swConfigPayroll": "موچە",
+  "settings.swFiscalMonths": "ژمارەی مانگە دارایییەکان",
+  "settings.swRangeError": "نرخەی «{field}» دەبێت ژمارەیەک بێت لە نێوان {min} و {max}.",
+  "settings.swIntError": "نرخەی «{field}» دەبێت ژمارەیەکی تەواو بێت.",
   "settings.activeLangs": "زمانە چالاکەکان",
   "settings.activeLangsDesc": "زمانەکان کە لە گۆڕەری زمان و پانێڵەکانی وەرگێڕان دەردەکەون (فارسی هەمیشە چالاکە)",
 
@@ -3428,6 +3449,9 @@ const pt: Dict = {
   "settings.swConfigDesc": "Configure os campos dos softwares do sistema — os campos são adicionados gradualmente",
   "settings.swConfigPending": "Os campos desta seção serão anunciados e adicionados gradualmente.",
   "settings.swConfigPayroll": "Salários",
+  "settings.swFiscalMonths": "Número de meses fiscais",
+  "settings.swRangeError": "O valor de “{field}” deve ser um número entre {min} e {max}.",
+  "settings.swIntError": "O valor de “{field}” deve ser um número inteiro.",
   "settings.activeLangs": "Idiomas ativos",
   "settings.activeLangsDesc": "Idiomas exibidos no seletor de idiomas e nos painéis de tradução (o persa está sempre ativo)",
 
@@ -3900,6 +3924,9 @@ const ko: Dict = {
   "settings.swConfigDesc": "시스템 소프트웨어의 필드를 구성합니다 — 필드는 점진적으로 추가됩니다",
   "settings.swConfigPending": "이 섹션의 필드는 점진적으로 공지되어 추가됩니다.",
   "settings.swConfigPayroll": "급여",
+  "settings.swFiscalMonths": "회계 월 수",
+  "settings.swRangeError": "“{field}” 값은 {min}에서 {max} 사이의 숫자여야 합니다.",
+  "settings.swIntError": "“{field}” 값은 정수여야 합니다.",
   "settings.activeLangs": "활성 언어",
   "settings.activeLangsDesc": "언어 전환기 및 번역 패널에 표시되는 언어 (페르시아어는 항상 활성화됨)",
 
@@ -4372,6 +4399,9 @@ const fr: Dict = {
   "settings.swConfigDesc": "Configurez les champs des logiciels du système — les champs sont ajoutés progressivement",
   "settings.swConfigPending": "Les champs de cette section seront annoncés et ajoutés progressivement.",
   "settings.swConfigPayroll": "Salaires",
+  "settings.swFiscalMonths": "Nombre de mois fiscaux",
+  "settings.swRangeError": "La valeur de « {field} » doit être un nombre entre {min} et {max}.",
+  "settings.swIntError": "La valeur de « {field} » doit être un nombre entier.",
   "settings.activeLangs": "Langues actives",
   "settings.activeLangsDesc": "Langues affichées dans le sélecteur de langue et les panneaux de traduction (le persan est toujours actif)",
 
@@ -4844,6 +4874,9 @@ const zh: Dict = {
   "settings.swConfigDesc": "配置系统软件的字段 — 字段将逐步添加",
   "settings.swConfigPending": "本部分的字段将逐步公布并添加。",
   "settings.swConfigPayroll": "工资",
+  "settings.swFiscalMonths": "会计月份数",
+  "settings.swRangeError": "“{field}”的值必须是介于{min}和{max}之间的数字。",
+  "settings.swIntError": "“{field}”的值必须是整数。",
   "settings.activeLangs": "启用的语言",
   "settings.activeLangsDesc": "语言切换器和翻译面板中显示的语言（波斯语始终启用）",
 
@@ -5321,6 +5354,9 @@ const de: Dict = {
   "settings.swConfigDesc": "Felder der System-Software konfigurieren — Felder werden nach und nach ergänzt",
   "settings.swConfigPending": "Die Felder dieses Bereichs werden nach und nach angekündigt und ergänzt.",
   "settings.swConfigPayroll": "Gehälter",
+  "settings.swFiscalMonths": "Anzahl der Geschäftsjahresmonate",
+  "settings.swRangeError": "Der Wert von „{field}“ muss eine Zahl zwischen {min} und {max} sein.",
+  "settings.swIntError": "Der Wert von „{field}“ muss eine ganze Zahl sein.",
   "settings.activeLangs": "Aktive Sprachen",
   "settings.activeLangsDesc": "Sprachen, die im Sprachumschalter und in den Übersetzungspanels angezeigt werden (Persisch ist immer aktiv)",
 
@@ -5803,6 +5839,9 @@ const ru: Dict = {
   "settings.swConfigDesc": "Настройка полей системного ПО — поля добавляются постепенно",
   "settings.swConfigPending": "Поля этого раздела будут объявлены и добавлены постепенно.",
   "settings.swConfigPayroll": "Зарплата",
+  "settings.swFiscalMonths": "Количество финансовых месяцев",
+  "settings.swRangeError": "Значение «{field}» должно быть числом от {min} до {max}.",
+  "settings.swIntError": "Значение «{field}» должно быть целым числом.",
   "settings.activeLangs": "Активные языки",
   "settings.activeLangsDesc": "Языки, отображаемые в переключателе языка и панелях перевода (персидский всегда активен)",
 

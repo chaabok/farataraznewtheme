@@ -39,6 +39,13 @@ export interface SwConfigFieldDef {
   labelKey: DictKey;
   type: "text" | "number" | "date" | "checkbox" | "select" | "textarea";
   required?: boolean;
+  /** فقط برای type="number" — بازهٔ مجاز (اعتبارسنجی فرانت + آینهٔ قانون سرور) */
+  min?: number;
+  max?: number;
+  /** فقط برای type="number" — فقط عدد صحیح (شمارنده‌ها) */
+  integer?: boolean;
+  /** فقط برای type="number" — مقدار پیش‌فرض وقتی مقدار ذخیره‌شده‌ای وجود ندارد */
+  defaultValue?: string;
   /** فقط برای type="select" */
   options?: { value: string; labelKey: DictKey }[];
 }
@@ -60,7 +67,20 @@ const SW_CONFIG_TABS: { appKey: string; titleKey: DictKey; icon: React.ElementTy
     به همین رجیستری + ترجمه‌های labelKey — بدون هیچ مهاجرت دیتابیس/کد جدید. */
 const SOFTWARE_CONFIG_FIELDS: Record<string, SwConfigFieldDef[]> = {
   general: [],
-  accounting: [],
+  accounting: [
+    {
+      /* Task 73 — اولین فیلد اعلام‌شدهٔ مالک (تب حسابداری):
+         «تعداد ماه‌های مالی» — عددی، پیش‌فرض ۱۲، حداکثر ۱۶؛
+         آینهٔ قانون سرور: software-config.dto.ts (min 1 / max 16 / integer). */
+      key: "fiscalMonthsCount",
+      labelKey: "settings.swFiscalMonths",
+      type: "number",
+      min: 1,
+      max: 16,
+      integer: true,
+      defaultValue: "12",
+    },
+  ],
   receiptsPayment: [],
   inventory: [],
   sales: [],
@@ -117,6 +137,27 @@ export function SoftwareConfigBody() {
   const save = async () => {
     if (fields.length === 0) return;
     if (values[activeTab] === undefined) return; // دادهٔ تب هنوز لود نشده
+    /* Task 73 — اعتبارسنجی بازهٔ فیلدهای عددی پیش از ارسال (خط اول؛
+       خط دوم همان قانون روی سرور است) */
+    for (const f of fields) {
+      if (f.type !== "number") continue;
+      const v = values[activeTab]?.[f.key] ?? f.defaultValue ?? "";
+      if (v === "") continue;
+      const num = Number(v);
+      const label = t(f.labelKey);
+      if (!Number.isFinite(num)) {
+        toast.error(t("settings.swRangeError").replace("{field}", label).replace("{min}", String(f.min ?? 0)).replace("{max}", String(f.max ?? 0)));
+        return;
+      }
+      if (f.integer && !Number.isInteger(num)) {
+        toast.error(t("settings.swIntError").replace("{field}", label));
+        return;
+      }
+      if ((f.min !== undefined && num < f.min) || (f.max !== undefined && num > f.max)) {
+        toast.error(t("settings.swRangeError").replace("{field}", label).replace("{min}", String(f.min ?? 0)).replace("{max}", String(f.max ?? 0)));
+        return;
+      }
+    }
     try {
       const res = await fetch(`/api/settings/software-config/${activeTab}`, {
         method: "PUT",
@@ -124,11 +165,19 @@ export function SoftwareConfigBody() {
         body: JSON.stringify({
           items: fields.map((f) => ({
             configKey: f.key,
-            configValue: values[activeTab]?.[f.key] ?? "",
+            configValue: values[activeTab]?.[f.key] ?? f.defaultValue ?? "",
           })),
         }),
       });
-      if (!res.ok) throw new Error(String(res.status));
+      if (!res.ok) {
+        /* پیام روشن سرور (مثل رد بازهٔ ۴۲۲) مستقیم به توست می‌رسد */
+        const serverMsg = await res
+          .json()
+          .then((j) => (typeof j?.message === "string" && j.message ? j.message : ""))
+          .catch(() => "");
+        toast.error(serverMsg || t("common.error"));
+        return;
+      }
       toast.success(t("common.save"));
       applyValues(activeTab, await fetchValues(activeTab)); // بازخوانی پس از ذخیره
     } catch {
@@ -207,7 +256,8 @@ export function SoftwareConfigBody() {
             <section className="rounded-xl border border-border/70 bg-card/60 p-4">
               <div className="space-y-4">
                 {fields.map((f) => {
-                  const val = values[activeTab]?.[f.key] ?? "";
+                  /* Task 73 — مقدار پیش‌فرض وقتی ردیف ذخیره‌شده‌ای نیست */
+                  const val = values[activeTab]?.[f.key] ?? f.defaultValue ?? "";
                   if (f.type === "checkbox") {
                     return (
                       <label
@@ -259,6 +309,9 @@ export function SoftwareConfigBody() {
                           id={`swc-${f.key}`}
                           type={f.type === "number" ? "number" : f.type === "date" ? "date" : "text"}
                           dir={f.type === "number" || f.type === "date" ? "ltr" : "auto"}
+                          min={f.type === "number" ? f.min : undefined}
+                          max={f.type === "number" ? f.max : undefined}
+                          step={f.type === "number" ? 1 : undefined}
                           value={val}
                           onChange={(e) => setVal(f.key, e.target.value)}
                           className="h-9 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"

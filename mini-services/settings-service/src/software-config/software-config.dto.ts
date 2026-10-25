@@ -21,21 +21,38 @@ export const SOFTWARE_CONFIG_APP_KEYS = [
 export type SoftwareConfigAppKey = (typeof SOFTWARE_CONFIG_APP_KEYS)[number];
 
 /**
- * رجیستری کلیدهای مجاز پیکربندی هر نرم‌افزار (سمت سرور — whitelist).
- * فیلدها «به‌مرور» توسط مالک اعلان می‌شوند؛ هر اعلام جدید = افزودن کلید به
+ * رجیستری فیلدهای مجاز پیکربندی هر نرم‌افزار (سمت سرور — whitelist + قانون).
+ * فیلدها «به‌مرور» توسط مالک اعلان می‌شوند؛ هر اعلام جدید = افزودن ورودی به
  * همین رجیستری (هم‌راستا با SOFTWARE_CONFIG_FIELDS فرانت در
  * src/components/erp/settings/software-config-window.tsx) — بدون مهاجرت دیتابیس.
- * تا اعلام اولین فیلدها، رجیستری هر ۷ نرم‌افزار خالی است و PUT هر کلیدی
- * با پیام روشن رد می‌شود (۴۲۲).
+ *
+ * Task 73 — اولین فیلد اعلام‌شدهٔ مالک (تب حسابداری):
+ *   «تعداد ماه‌های مالی» — عددی، پیش‌فرض ۱۲، حداکثر ۱۶.
  */
-export const SOFTWARE_CONFIG_FIELDS: Record<SoftwareConfigAppKey, readonly string[]> = {
-  general: [],
-  accounting: [],
-  receiptsPayment: [],
-  inventory: [],
-  sales: [],
-  fixedAssets: [],
-  payroll: [],
+export interface SoftwareConfigFieldSpec {
+  type: "text" | "number" | "date" | "checkbox" | "select" | "textarea";
+  /** بازهٔ مجاز برای type:"number" (در صورت اعلام) */
+  min?: number;
+  max?: number;
+  /** فقط عدد صحیح (شمارنده‌ها مثل تعداد ماه‌ها) */
+  integer?: boolean;
+  /** مقدار پیش‌فرض — مالکیت نمایش با فرانت است؛ سرور همان بازه را اعتبارسنجی می‌کند */
+  defaultValue?: string;
+}
+
+export const SOFTWARE_CONFIG_FIELDS: Record<
+  SoftwareConfigAppKey,
+  Readonly<Record<string, SoftwareConfigFieldSpec>>
+> = {
+  general: {},
+  accounting: {
+    fiscalMonthsCount: { type: "number", min: 1, max: 16, integer: true, defaultValue: "12" },
+  },
+  receiptsPayment: {},
+  inventory: {},
+  sales: {},
+  fixedAssets: {},
+  payroll: {},
 };
 
 /** یک آیتم ذخیره — configValue خالی ("") یعنی «حذف تنظیم» (الگوی Task 68). */
