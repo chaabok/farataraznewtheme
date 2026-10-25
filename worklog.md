@@ -3047,3 +3047,24 @@ Work Log:
 
 Stage Summary:
 - فرم طرف حساب حالا در components/forms/common/Party.tsx است (همان فایلِ نام‌بردهٔ مالک) و از general-window ← اطلاعات پایه سرو می‌شود؛ عملکرد و قراردادها عین Task 84.
+---
+Task ID: 85
+Agent: Z.ai Code (main)
+Task: درخواست مالک — «اگر برنامه نصب شده بود و سال مالی ایجاد نشده بود باید به کاربر پیغام داده شود "سال مالی وجود ندارد. می خواهید سال مالی را ایجاد کنید؟" اگر کاربر روی دکمه بلی کلیک کرد فرم تعریف سال مالی برای کاربر باز شود»
+
+Work Log:
+- تصمیم تفسیری اعلام‌شده: «برنامه نصب شده» = پوستهٔ ERP در حال اجراست (بررسی داخل خود پوسته سوار است، پس شرط همیشه برقرار)؛ در اپ مفهوم نصب‌بودنِ مستقل وجود ندارد (فقط AppRegistry.IsEnabled — بی‌ربط به سناریو). گیتِ واقعی = فهرست سال مالی خالی پس از نخستین بارگیری موفق.
+- src/stores/fiscal-year-store.ts — پرچم failed اضافه شد (load موفق: failed=false؛ catch: failed=true) تا خطای سرویس هرگز دیالوگ کاذب نسازد؛ UI دیگران دست‌نخورده.
+- src/stores/general-nav-store.ts (جدید) — درخواست ناوبری یک‌باره به پنجرهٔ «عمومی»: هر درخواست id یک‌نواخت می‌گیرد؛ پنجره فقط idهای دیده‌نشده را مصرف می‌کند ⇒ تغییر زبان/رندر مجدد هرگز ناوبری کاذب نمی‌سازد؛ پنجرهٔ تازه‌بازشده هم درخواست در انتظار را در mount مصرف می‌کند (openWindow قبل از request — هر دو ترتیب درست).
+- src/components/desktop/fiscal-year-missing-prompt.tsx (جدید) — Dialog شیشه‌ای با آیکون CalendarDays زمردی/فیروزه‌ای، عنوان «سال مالی وجود ندارد» + پرسش «می خواهید سال مالی را ایجاد کنید؟» (عین متن مالک، دو خط)، دکمهٔ «بلی» (primary) و «خیر» (outline)؛ Escape/کلیک بیرون/✕ = خیر (امن)؛ تصمیم از subscribe خود store — نه setState-in-effect (قاعدهٔ react-hooks/set-state-in-effect) — checkedRef یک‌باره در هر نشست؛ «بلی» = openWindow("app","general") + requestGeneralPage("fiscal-year") ⇒ فرم تعریف سال مالی مستقیم باز می‌شود.
+- src/components/erp/general/general-window.tsx — GeneralPage از GeneralSubPage store مشتق شد؛ مصرف‌کنندهٔ درخواست‌های nav (mount + شنوندهٔ id-محور، بدون پرش در تغییر زبان).
+- src/components/desktop/taskbar.tsx — FiscalYearMissingPrompt کنار FiscalYearFooter در tray سوار شد (Dialog پرتال است).
+- i18n — چهار کلید fy.missingTitle/missingAsk/missingYes/missingNo ×۱۳ زبان (fa/en کامل؛ tr/ar/hi/ps/ckb/pt/ko/fr/zh بعد از spread؛ de/ru کامل) — «بلی» دقیقاً عین واژهٔ مالک.
+- پاک‌سازی دادهٔ کهنهٔ E2E: ردیف ۱۴۰۴ بازماندهٔ Task 83 (id=15) حذف شد تا جدول خالی شود.
+- lint = ۰/۰؛ tsc = فقط ۳ خطای baseline قدیمی (start-menu/field-translations) — صفر خطای جدید.
+- E2E مرورگر (agent-browser، fa + en، 1280×800 + 375×720): جدول خالی → دیالوگ با متن دقیق مالک و «سال مالی تعریف نشده است» در فوتر ✓؛ «خیر» → بسته، در همان نشست تغییر زبان هم دوباره باز نمی‌شود ✓؛ reload در en → پیغام انگلیسی LTR ("No fiscal year exists" / "Do you want to create one?" / No/Yes) ✓؛ fa reload → «بلی» → برگهٔ «عمومی — سال مالی جدید» بدون هیچ ناوبری دستی مستقیم روی زیرصفحهٔ فرم (بازگشت/اطلاعات پایه/سال مالی جدید) ✓؛ ذخیرهٔ ۱۴۰۴ → ردیف سروری درست (تاریخ میلادی ۲۰۲۵-۰۳-۲۱→۲۰۲۶-۰۳-۲۰، قرارداد ۷۷) و فوتر همان لحظه ۱۴۰۴ ✓؛ reload با سال موجود → صفر دیالوگ ✓؛ 375px بدون سرریز (دکمه‌ها پشته‌ای) ✓؛ Escape = خیر ✓؛ نشست تازه با جدول خالی → دوباره می‌پرسد (قرارداد اجرای بعدی) ✓؛ هشدار hydrate موجود (chevron داخل Tooltip، dir-محور) با جست‌وجوی stack ثابت شد به Task 85 تعلق ندارد ✓؛ پاک‌سازی: ردیف آزمون حذف، جدول خالی، نشست با «خیر» بسته — tabs=0، فوتر «سال مالی تعریف نشده است».
+
+Stage Summary:
+- چرخهٔ «نصب بدون سال مالی» بسته شد: هر اجرای برنامه با جدولِ خالیِ سال مالی، پرسش مالک را exact same words می‌پرسد؛ «بلی» کاربر را بی‌واسطه به فرم تعریف سال مالی می‌رساند؛ «خیر» فقط نشست را بی‌سروصدا رد می‌کند و اجرای بعدی دوباره می‌پرسد؛ خطای سرویس هرگز دیالوگ کاذب نمی‌سازد.
+- قراردادهای جدید: GeneralNavStore (درخواست ناوبری id-محور یک‌باره به پنجرهٔ عمومی — الگوی بازشدن مستقیم زیرصفحه از هر نقطهٔ پوسته)؛ پرچم failed در fiscal-year-store.
+- artifacts: src/components/desktop/fiscal-year-missing-prompt.tsx (جدید)؛ src/stores/general-nav-store.ts (جدید)؛ src/stores/fiscal-year-store.ts؛ src/components/erp/general/general-window.tsx؛ src/components/desktop/taskbar.tsx؛ src/i18n/dictionaries.ts (fy.missing* ×۱۳).
