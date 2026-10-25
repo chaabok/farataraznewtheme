@@ -185,16 +185,18 @@ export class PartyService {
     const newId = await this.idGen.generateNextId("Party");
     const tafsili = await this.allocateTafsili();
 
-    /* IDهای فرزندان — بلوک پیوسته از شمارندهٔ هر جدول (§16) */
-    const personIds = norm.persons.length
+    /* IDهای فرزندان — بلوک پیوسته از شمارندهٔ هر جدول (§16).
+       generateNextIdBlock «شناسهٔ شروع» را برمی‌گرداند؛ ردیف iام = start+i. */
+    const personStart = norm.persons.length
       ? await this.idGen.generateNextIdBlock("PartyPerson", norm.persons.length)
-      : [];
-    const addressIds = norm.addresses.length
+      : 0;
+    const addressStart = norm.addresses.length
       ? await this.idGen.generateNextIdBlock("PartyAddress", norm.addresses.length)
-      : [];
-    const phoneIds = norm.phones.length
+      : 0;
+    const phoneStart = norm.phones.length
       ? await this.idGen.generateNextIdBlock("PartyPhone", norm.phones.length)
-      : [];
+      : 0;
+    const addresses = await this.withCityTitles(norm.addresses);
 
     let row;
     try {
@@ -231,24 +233,29 @@ export class PartyService {
           ...appBaseOnCreate(SYSTEM_ACTOR),
           persons: {
             create: norm.persons.map((p, i) => ({
-              id: BigInt(personIds[i]),
+              id: BigInt(personStart + i),
               ...p,
               orderIndex: i,
               ...appBaseOnCreate(SYSTEM_ACTOR),
             })),
           },
           addresses: {
-            create: norm.addresses.map((a, i) => ({
-              id: BigInt(addressIds[i]),
-              ...a,
+            create: addresses.map((a, i) => ({
+              id: BigInt(addressStart + i),
+              addrType: a.addrType,
               cityRef: BigInt(a.cityRef),
+              cityTitle: a.cityTitle,
+              fullAddress: a.fullAddress,
+              postalCode: a.postalCode,
+              longitude: a.longitude,
+              latitude: a.latitude,
               orderIndex: i,
               ...appBaseOnCreate(SYSTEM_ACTOR),
             })),
           },
           phones: {
             create: norm.phones.map((ph, i) => ({
-              id: BigInt(phoneIds[i]),
+              id: BigInt(phoneStart + i),
               ...ph,
               orderIndex: i,
               ...appBaseOnCreate(SYSTEM_ACTOR),
@@ -284,15 +291,16 @@ export class PartyService {
     }
     const norm = this.normalize(dto);
 
-    const personIds = norm.persons.length
+    const personStart = norm.persons.length
       ? await this.idGen.generateNextIdBlock("PartyPerson", norm.persons.length)
-      : [];
-    const addressIds = norm.addresses.length
+      : 0;
+    const addressStart = norm.addresses.length
       ? await this.idGen.generateNextIdBlock("PartyAddress", norm.addresses.length)
-      : [];
-    const phoneIds = norm.phones.length
+      : 0;
+    const phoneStart = norm.phones.length
       ? await this.idGen.generateNextIdBlock("PartyPhone", norm.phones.length)
-      : [];
+      : 0;
+    const addresses = await this.withCityTitles(norm.addresses);
 
     /* بازنویسی کامل ردیف‌های تب‌ها (قرارداد ویرایش سند-محور) */
     let row;
@@ -333,24 +341,29 @@ export class PartyService {
             ...appBaseOnUpdate(SYSTEM_ACTOR),
             persons: {
               create: norm.persons.map((p, i) => ({
-                id: BigInt(personIds[i]),
+                id: BigInt(personStart + i),
                 ...p,
                 orderIndex: i,
                 ...appBaseOnCreate(SYSTEM_ACTOR),
               })),
             },
             addresses: {
-              create: norm.addresses.map((a, i) => ({
-                id: BigInt(addressIds[i]),
-                ...a,
+              create: addresses.map((a, i) => ({
+                id: BigInt(addressStart + i),
+                addrType: a.addrType,
                 cityRef: BigInt(a.cityRef),
+                cityTitle: a.cityTitle,
+                fullAddress: a.fullAddress,
+                postalCode: a.postalCode,
+                longitude: a.longitude,
+                latitude: a.latitude,
                 orderIndex: i,
                 ...appBaseOnCreate(SYSTEM_ACTOR),
               })),
             },
             phones: {
               create: norm.phones.map((ph, i) => ({
-                id: BigInt(phoneIds[i]),
+                id: BigInt(phoneStart + i),
                 ...ph,
                 orderIndex: i,
                 ...appBaseOnCreate(SYSTEM_ACTOR),
@@ -615,6 +628,20 @@ export class PartyService {
       "code" in e &&
       ((e as { code?: string }).code === "P2002" || (e as { code?: string }).code === "23505")
     );
+  }
+
+  /** عکسِ عنوان شهرها برای ردیف‌های نشانی (نمایش بدون join در لیست‌ها). */
+  private async withCityTitles(
+    addresses: NormalizedParty["addresses"],
+  ): Promise<Array<NormalizedParty["addresses"][number] & { cityTitle: string }>> {
+    if (addresses.length === 0) return [];
+    const refs = [...new Set(addresses.map((a) => a.cityRef))];
+    const rows = await this.prisma.city.findMany({
+      where: { id: { in: refs.map((r) => BigInt(r)) } },
+      select: { id: true, title: true },
+    });
+    const map = new Map(rows.map((c) => [Number(c.id), c.title]));
+    return addresses.map((a) => ({ ...a, cityTitle: map.get(a.cityRef) ?? "" }));
   }
 
   private fullInclude() {
