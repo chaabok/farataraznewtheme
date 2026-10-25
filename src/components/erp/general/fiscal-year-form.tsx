@@ -129,9 +129,9 @@ export function FiscalYearForm({ onBack }: { onBack?: () => void }) {
   const [currentId, setCurrentId] = React.useState<number | null>(null);
   const [values, setValues] = React.useState<FormValues>(BLANK);
   const [monthsLimit, setMonthsLimit] = React.useState<number>(DEFAULT_FISCAL_MONTHS);
-  /* Task 80 — تاریخ‌های نمایش‌داده‌شده حاصلِ محاسبهٔ خودکارند (نه مقادیر
-     ذخیره‌شدهٔ یک رکورد باز)؛ فقط در این حالت بازمحاسبهٔ زنده مجاز است. */
-  const autoDatesRef = React.useRef(false);
+  /* Task 80 — سالِ شمسی‌ای که تاریخ‌های نمایشی از روی آن محاسبه می‌شوند؛
+     null = تاریخ‌های values بی‌واسطه (فرم خالی، رکورد باز یا کپی) نمایش داده شوند. */
+  const [autoYear, setAutoYear] = React.useState<number | null>(null);
 
   /* واکشی خالص — setState فقط داخل then (قرارداد react-hooks/set-state-in-effect) */
   const fetchRecords = React.useCallback(async (): Promise<FiscalYearDto[]> => {
@@ -144,6 +144,27 @@ export function FiscalYearForm({ onBack }: { onBack?: () => void }) {
     setListLoading(false);
   }, []);
 
+  /* «تعداد ماه‌های مالی» از پیکربندی نرم‌افزار (تب حسابداری) — Task 80:
+     علاوه بر واکشی اولیه، هر بار که فرم خالی می‌شود (ریست/ثبت جدید) یا
+     رکوردی باز می‌شود هم دوباره خوانده می‌شود تا تغییرِ پیکربندی در حینِ
+     باز بودنِ فرم هم لحاظ شود؛ شمارندهٔ توالی فقط اجازهٔ اعمالِ آخرین پاسخ. */
+  const monthsFetchSeq = React.useRef(0);
+  const refreshMonthsLimit = React.useCallback(async () => {
+    const callId = ++monthsFetchSeq.current;
+    try {
+      const res = await api.get<{ items?: { configKey: string; configValue: string }[] }>(
+        "software-config/accounting",
+      );
+      if (callId !== monthsFetchSeq.current) return; // پاسخ کهنه — نادیده
+      const raw =
+        res.items?.find((i) => i.configKey === "fiscalMonthsCount")?.configValue ?? "";
+      const n = Number(raw);
+      setMonthsLimit(Number.isFinite(n) && n >= 1 ? Math.floor(n) : DEFAULT_FISCAL_MONTHS);
+    } catch {
+      /* مقدار قبلی/پیش‌فرض ۱۲ می‌ماند */
+    }
+  }, []);
+
   /* فهرست سال‌های مالی + سقف «تعداد ماه‌های مالی» از پیکربندی نرم‌افزار */
   React.useEffect(() => {
     let alive = true;
@@ -151,12 +172,13 @@ export function FiscalYearForm({ onBack }: { onBack?: () => void }) {
       (rows) => alive && applyRecords(rows),
       () => alive && applyRecords([]),
     );
+    const callId = ++monthsFetchSeq.current;
     api
       .get<{ items?: { configKey: string; configValue: string }[] }>(
         "software-config/accounting",
       )
       .then((res) => {
-        if (!alive) return;
+        if (!alive || callId !== monthsFetchSeq.current) return;
         const raw =
           res.items?.find((i) => i.configKey === "fiscalMonthsCount")?.configValue ?? "";
         const n = Number(raw);
@@ -173,7 +195,7 @@ export function FiscalYearForm({ onBack }: { onBack?: () => void }) {
   /* بازکردن رکورد: تاریخِ میلادیِ ذخیره‌شده → نمایش در تقویمِ زبان انتخابی */
   const applyRecord = React.useCallback(
     (r: FiscalYearDto) => {
-      autoDatesRef.current = false; // Task 80 — مقادیر ذخیره‌شده‌اند، نه محاسبه‌شده
+      setAutoYear(null); // Task 80 — مقادیر ذخیره‌شده‌اند، نه محاسبه‌شده
       setCurrentId(r.id);
       setValues({
         code: r.code,
@@ -182,37 +204,44 @@ export function FiscalYearForm({ onBack }: { onBack?: () => void }) {
         endDate: storedToDisplayDate(r.endDate, locale),
         active: r.isActive,
       });
+      void refreshMonthsLimit(); // Task 80 — همگام با آخرین پیکربندی
     },
-    [locale],
+    [locale, refreshMonthsLimit],
   );
 
   const newRecord = React.useCallback(() => {
-    autoDatesRef.current = false; // Task 80 — فرم خالی، تا ورود سال بعدی
+    setAutoYear(null); // Task 80 — فرم خالی، تا ورود سال بعدی
     setCurrentId(null);
     setValues(BLANK);
-  }, []);
+    void refreshMonthsLimit(); // Task 80 — همگام با آخرین پیکربندی
+  }, [refreshMonthsLimit]);
 
-  /* Task 80 — بازمحاسبهٔ زندهٔ تاریخ‌های خودکار: با تغییر سال، «تعداد ماه‌های
-     مالی» (رسیدن async از پیکربندی) یا زبانِ نمایش — فقط وقتی خودِ فرم آنها
-     را محاسبه کرده باشد (رکورد بازِ ذخیره‌شده دست‌نخورده می‌ماند). */
-  React.useEffect(() => {
-    if (!autoDatesRef.current || currentId != null) return;
-    if (!/^[0-9]{4}$/.test(values.title)) return;
-    const auto = computeAutoFiscalDates(Number(values.title), monthsLimit, locale);
-    setValues((v) =>
-      v.title === values.title ? { ...v, startDate: auto.start, endDate: auto.end } : v,
-    );
-  }, [monthsLimit, locale, values.title, currentId]);
+  /* Task 80 — مشتق‌سازی حینِ رندر (بدون اثر): تاریخ‌های خودکارِ سالِ واردشده
+     با تغییر سال/«تعداد ماه‌های مالی»/زبان بلافاصله بازمحاسبه می‌شوند؛
+     رکوردهای ذخیره‌شده (autoYear = null) هرگز بازنویسی نمی‌شوند. */
+  const autoDates = React.useMemo(
+    () => (autoYear == null ? null : computeAutoFiscalDates(autoYear, monthsLimit, locale)),
+    [autoYear, monthsLimit, locale],
+  );
+
+  /* مقادیر مؤثرِ فرم = خودکارِ محاسبه‌شده (وقتی سالِ فعالی هست) وگرنه values */
+  const effectiveValues = React.useMemo<FormValues>(
+    () => ({
+      ...values,
+      startDate: autoDates?.start ?? values.startDate,
+      endDate: autoDates?.end ?? values.endDate,
+    }),
+    [values, autoDates],
+  );
 
   /* عنوان: فقط رقم لاتین، حداکثر ۴ کاراکتر (فیلتر ورودی هم‌زمان با تایپ)
-     Task 80 — سالِ معتبر ۴رقمی ⇔ حالتِ محاسبهٔ خودکار تاریخ‌ها روشن؛
-     خراب/خالی‌شدن عنوان ⇔ تاریخ‌های خودکار هم پاک می‌شوند. */
+     Task 80 — سالِ معتبر ۴رقمی ⇔ تاریخ‌ها از همان سال محاسبه می‌شوند؛
+     خراب/خالی‌شدن عنوان ⇔ بازگشت به مقادیر values (خالی یا رکورد باز). */
   const onFieldChange = React.useCallback((id: string, value: string | boolean) => {
     if (id === "title" && typeof value === "string") {
       const title = normalizeDigits(value).replace(/[^0-9]/g, "").slice(0, 4);
-      const valid = /^[0-9]{4}$/.test(title);
-      autoDatesRef.current = valid;
-      setValues((v) => (valid ? { ...v, title } : { ...v, title, startDate: "", endDate: "" }));
+      setAutoYear(/^[0-9]{4}$/.test(title) ? Number(title) : null);
+      setValues((v) => ({ ...v, title }));
       return;
     }
     setValues((v) => ({ ...v, [id]: value }));
@@ -242,18 +271,19 @@ export function FiscalYearForm({ onBack }: { onBack?: () => void }) {
 
   /* ذخیره: ثبت جدید (POST) یا ویرایش رکورد جاری (PUT) — true = موفق */
   const doSave = async (): Promise<boolean> => {
-    const err = validate(values);
+    /* Task 80 — تاریخ‌های مؤثر (خودکارِ محاسبه‌شده یا مقادیر values) */
+    const err = validate(effectiveValues);
     if (err) {
       toast.error(err);
       return false;
     }
     const body = {
-      code: values.code.trim(),
-      title: values.title.trim(),
+      code: effectiveValues.code.trim(),
+      title: effectiveValues.title.trim(),
       /* Task 77: API/DB فقط میلادی — تبدیل نمایشِ زبان انتخابی به 'YYYY-MM-DD' */
-      startDate: displayToStoredDate(values.startDate, locale, normalizeDigits) ?? "",
-      endDate: displayToStoredDate(values.endDate, locale, normalizeDigits) ?? "",
-      isActive: values.active,
+      startDate: displayToStoredDate(effectiveValues.startDate, locale, normalizeDigits) ?? "",
+      endDate: displayToStoredDate(effectiveValues.endDate, locale, normalizeDigits) ?? "",
+      isActive: effectiveValues.active,
     };
     try {
       const res = currentId == null
@@ -297,20 +327,20 @@ export function FiscalYearForm({ onBack }: { onBack?: () => void }) {
 
   const fields = React.useMemo<SimpleFormField[]>(
     () => [
-      { id: "code", label: t("fy.code"), required: true, value: values.code },
+      { id: "code", label: t("fy.code"), required: true, value: effectiveValues.code },
       {
         id: "title",
         label: t("fy.title"),
         required: true,
-        value: values.title,
+        value: effectiveValues.title,
         placeholder: "1404",
       },
       /* Task 80 — تاریخ‌ها خودکار محاسبه می‌شوند و فقط-نمایش‌اند */
-      { id: "startDate", label: t("fy.startDate"), type: "date", value: values.startDate, disabled: true },
-      { id: "endDate", label: t("fy.endDate"), type: "date", value: values.endDate, disabled: true },
-      { id: "active", label: t("fy.active"), type: "checkbox", checked: values.active },
+      { id: "startDate", label: t("fy.startDate"), type: "date", value: effectiveValues.startDate, disabled: true },
+      { id: "endDate", label: t("fy.endDate"), type: "date", value: effectiveValues.endDate, disabled: true },
+      { id: "active", label: t("fy.active"), type: "checkbox", checked: effectiveValues.active },
     ],
-    [t, values],
+    [t, effectiveValues],
   );
 
   return (
