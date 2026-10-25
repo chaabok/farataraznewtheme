@@ -17,17 +17,17 @@ import { useSettings, useT } from "@/stores/settings-store";
 import { useDesktop, type HeaderDock } from "@/stores/desktop-store";
 import { FloatingMenu } from "./floating-menu";
 import { OrgSelectors } from "./org-selectors";
+import { useChromeMetrics } from "./chrome-metrics";
 
 /* Task 22 — dockable dashboard header (owner re-spec of Task 21):
-   • "top"          → horizontal bar spanning the FULL page width,
-                      height exactly 30% less than the 52px footer (52 × 0.7 = 36.4px)
-   • "left"/"right" → vertical strip spanning the full desktop height (thickness 36.4px)
+   • "top"          → horizontal bar spanning the FULL page width (52×0.7 = 36.4px)
+   • "left"/"right" → vertical strip spanning the full desktop height
    The user drags the bar with the mouse; a live preview highlights the target edge
    (pointer x < 30% → left, > 70% → right, otherwise top) and release commits the dock.
-   The dock persists in `erp.desktop.layout` (headerDock). */
+   The dock persists in `erp.desktop.layout` (headerDock).
+   Task 81 — thickness/height are DYNAMIC now: the header auto-shrinks while
+   the tab strip is open (owner contract) — chrome-metrics owns the numbers. */
 
-const THICK = 36.4; /* 52 × 0.7 — owner height contract */
-const TASKBAR_H = 52; /* keep the footer visible under vertical docks (§7.7) */
 const DRAG_THRESHOLD = 6;
 
 function zoneFor(x: number, vw: number): HeaderDock {
@@ -54,6 +54,8 @@ export function DashboardHeader() {
   const dock = useDesktop((s) => s.headerDock);
   const setHeaderDock = useDesktop((s) => s.setHeaderDock);
   const setStartOpen = useDesktop((s) => s.setStartOpen);
+  /* Task 81 — live chrome heights (header auto-shrinks with the tab strip) */
+  const metrics = useChromeMetrics();
 
   /* SSR-safe: wait for the persisted layout rehydrate, then reveal the bar */
   const [mounted, setMounted] = React.useState(false);
@@ -250,8 +252,8 @@ export function DashboardHeader() {
 
   const dockedStyle: React.CSSProperties =
     dock === "top"
-      ? { top: 0, left: 0, right: 0, height: THICK }
-      : { top: 0, bottom: TASKBAR_H, width: THICK, ...(dock === "left" ? { left: 0 } : { right: 0 }) };
+      ? { top: 0, left: 0, right: 0, height: metrics.headerH }
+      : { top: 0, bottom: metrics.taskbarH, width: metrics.headerH, ...(dock === "left" ? { left: 0 } : { right: 0 }) };
 
   return (
     <>
@@ -277,7 +279,7 @@ export function DashboardHeader() {
         }}
         style={dockedStyle}
         className={cn(
-          "acrylic menu-in fixed z-[9200] flex select-none items-center border-foreground/10 shadow-sm",
+          "acrylic menu-in fixed z-[9200] flex select-none items-center border-foreground/10 shadow-sm transition-[height,width,bottom] duration-300",
           vertical ? "flex-col gap-1.5 px-1 py-2" : "flex-row gap-2 px-2 sm:px-3",
           dock === "top" && "border-b",
           dock === "left" && "border-r",
@@ -296,8 +298,8 @@ export function DashboardHeader() {
             className="menu-in pointer-events-none fixed z-[9150] bg-primary/12 ring-2 ring-inset ring-primary/60"
             style={
               zone === "top"
-                ? { top: 0, left: 0, right: 0, height: THICK }
-                : { top: 0, bottom: TASKBAR_H, width: THICK, ...(zone === "left" ? { left: 0 } : { right: 0 }) }
+                ? { top: 0, left: 0, right: 0, height: metrics.headerH }
+                : { top: 0, bottom: metrics.taskbarH, width: metrics.headerH, ...(zone === "left" ? { left: 0 } : { right: 0 }) }
             }
           >
             <div className="absolute inset-0 flex items-center justify-center">
@@ -312,9 +314,14 @@ export function DashboardHeader() {
 
           <div aria-hidden className="pointer-events-none fixed z-[9600]" style={{ left: drag.x, top: drag.y }}>
             <div
+              style={
+                vertical
+                  ? { width: metrics.headerH }
+                  : { height: metrics.headerH }
+              }
               className={cn(
                 "acrylic flex items-center rounded-xl border border-foreground/10 shadow-2xl ring-2 ring-primary/50",
-                vertical ? "w-[36.4px] flex-col gap-1.5 px-1 py-2" : "h-[36.4px] gap-2 px-2",
+                vertical ? "flex-col gap-1.5 px-1 py-2" : "gap-2 px-2",
               )}
             >
               {content}

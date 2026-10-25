@@ -101,7 +101,7 @@ interface DesktopState {
 
 export const useDesktop = create<DesktopState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       windows: [],
       activeTabId: HOME_TAB_ID,
       startOpen: false,

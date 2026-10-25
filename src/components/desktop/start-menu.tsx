@@ -11,6 +11,8 @@ import { useDfb } from "@/stores/dfb-store";
 import { DfbGlyph } from "@/components/erp/form-builder/dfb-dialogs";
 import { AppTile } from "./app-tile";
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
+import { useChromeMetrics } from "./chrome-metrics";
 
 interface Tile {
   id: string;
@@ -25,6 +27,8 @@ export function StartMenu() {
   const locale = useSettings((s) => s.locale);
   const trMap = useDfbTrMap(); // Task 68 — ترجمهٔ آیکون‌های کاربر
   const { setStartOpen, openWindow } = useDesktop();
+  /* Task 81 — ride above the auto-shrinking footer */
+  const tabbarOpen = useChromeMetrics().tabbarOpen;
   const { apps, load } = useAppRegistry();
   /* Task 45 — user-created main icons join the start-menu grid */
   const dfbUserIcons = useDfb((s) => s.userIcons);
@@ -76,7 +80,11 @@ export function StartMenu() {
     <>
       <div className="fixed inset-0 z-[9400]" onClick={close} onContextMenu={(e) => e.preventDefault()} />
       <div
-        className="menu-in acrylic-strong fixed bottom-[60px] left-1/2 z-[9500] w-[min(560px,calc(100vw-24px))] -translate-x-1/2 rounded-2xl border p-5 shadow-2xl win-shadow"
+        className={cn(
+          "menu-in acrylic-strong fixed left-1/2 z-[9500] w-[min(560px,calc(100vw-24px))] -translate-x-1/2 rounded-2xl border p-5 shadow-2xl win-shadow transition-[bottom] duration-300",
+          /* Task 81 — ride above the auto-shrinking footer */
+          tabbarOpen ? "bottom-[46px]" : "bottom-[60px]",
+        )}
         dir="auto"
       >
         <div className="relative mb-4">

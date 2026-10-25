@@ -5,10 +5,11 @@ import { Search, Network, Languages, Pin, PinOff } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useSettings, useT } from "@/stores/settings-store";
-import { useDesktop, type WindowKind } from "@/stores/desktop-store";
+import { useDesktop, HOME_TAB_ID, type WindowKind } from "@/stores/desktop-store";
 import { LOCALES, LOCALE_NAMES, type Locale } from "@/i18n/config";
 import { AppTile } from "./app-tile";
 import { FloatingMenu } from "./floating-menu";
+import { useChromeMetrics } from "./chrome-metrics";
 import { useDfb, findMenuNode } from "@/stores/dfb-store";
 import { DfbGlyph } from "@/components/erp/form-builder/dfb-dialogs";
 import {
@@ -102,11 +103,14 @@ export function Taskbar() {
   const locale = useSettings((s) => s.locale);
   const setLocale = useSettings((s) => s.setLocale);
   const activeLocales = useSettings((s) => s.activeLocales); // Task 70
-  const { windows, openWindow, focusWindow, minimizeWindow, startOpen, setStartOpen } =
-    useDesktop();
+  const { windows, openWindow, startOpen, setStartOpen } = useDesktop();
+  const activeTabId = useDesktop((s) => s.activeTabId);
+  const activateTab = useDesktop((s) => s.activateTab);
   const pinned = useDesktop((s) => s.pinned);
   const dragOverTaskbar = useDesktop((s) => s.dragOverTaskbar);
   const unpinFromTaskbar = useDesktop((s) => s.unpinFromTaskbar);
+  /* Task 81 — the footer auto-shrinks while the tab strip is open */
+  const metrics = useChromeMetrics();
   const seconds = React.useSyncExternalStore(subscribeClock, clientSeconds, serverSeconds);
   const now = seconds > 0 ? new Date(seconds * 1_000) : null;
   const [menu, setMenu] = React.useState<{ x: number; y: number; id: string } | null>(null);
@@ -125,12 +129,14 @@ export function Taskbar() {
   }, []);
 
   /* §Task-19 smart sizing: the more icons are pinned in the dashboard footer,
-     the smaller every icon becomes — continuously, clamped to a usable range. */
+     the smaller every icon becomes — continuously, clamped to a usable range.
+     Task 81 — the compact footer (tab strip open) caps the glyphs smaller. */
   const count = pinned.length;
+  const maxIcon = metrics.tabbarOpen ? 28 : 40;
   const size =
     count === 0
-      ? 40
-      : Math.max(22, Math.min(40, Math.floor((dockW - 8 - (count - 1) * DOCK_GAP) / count) || 22));
+      ? maxIcon - 12
+      : Math.max(20, Math.min(maxIcon, Math.floor((dockW - 8 - (count - 1) * DOCK_GAP) / count) || 20));
 
   const time = now ? now.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" }) : "--:--";
   const date = now
@@ -144,22 +150,18 @@ export function Taskbar() {
       openWindow(meta.kind, meta.appKey);
       return;
     }
-    if (win.minimized) {
-      focusWindow(win.id);
-      useDesktop.setState((s) => ({
-        windows: s.windows.map((w) => (w.id === win.id ? { ...w, minimized: false } : w)),
-      }));
-      return;
-    }
-    const isTop = Math.max(...windows.filter((w) => !w.minimized).map((w) => w.z)) === win.z;
-    if (isTop && windows.filter((w) => !w.minimized).length > 1) minimizeWindow(win.id);
-    else focusWindow(win.id);
+    /* Task 81 — tabs: clicking an open pin activates its tab; clicking the
+       pin of the ACTIVE tab reveals the desktop (the old minimize-to-desktop,
+       now = switching to the «صفحه اصلی» tab) */
+    if (win.id === activeTabId) activateTab(HOME_TAB_ID);
+    else activateTab(win.id);
   };
 
   return (
     <div
       data-taskbar
-      className="taskbar-shadow acrylic-strong absolute inset-x-0 bottom-0 z-[9000] flex h-[52px] items-center gap-1.5 px-2 sm:px-3"
+      style={{ height: metrics.taskbarH }}
+      className="taskbar-shadow acrylic-strong absolute inset-x-0 bottom-0 z-[9000] flex items-center gap-1.5 px-2 transition-[height] duration-300 sm:px-3"
     >
       {/* start + search */}
       <div className="flex shrink-0 items-center gap-1">
@@ -167,7 +169,8 @@ export function Taskbar() {
           aria-label="Start"
           onClick={() => setStartOpen(!startOpen)}
           className={cn(
-            "flex h-10 w-10 items-center justify-center rounded-lg transition-colors hover:bg-foreground/10 cursor-pointer",
+            "flex items-center justify-center rounded-lg transition-colors hover:bg-foreground/10 cursor-pointer",
+            metrics.tabbarOpen ? "h-8 w-8" : "h-10 w-10",
             startOpen && "bg-foreground/10",
           )}
         >
@@ -197,7 +200,8 @@ export function Taskbar() {
           {pinned.map((id) => {
             const meta = pinnedMeta(id);
             const win = windows.find((w) => w.kind === meta.kind && w.appKey === meta.appKey);
-            const running = Boolean(win) && !win?.minimized;
+            /* Task 81 — a pin lights up while its tab is the active one */
+            const isActiveTab = Boolean(win) && win?.id === activeTabId;
             const dotW = Math.max(5, Math.round(size * 0.3));
             /* Task 45 — dfb pins show their DB title (not a dictionary key) */
             const dfbLabel = id.startsWith("dfb-menu-")
@@ -217,16 +221,16 @@ export function Taskbar() {
                 style={{ width: size, height: size }}
                 className={cn(
                   "relative flex shrink-0 items-center justify-center rounded-lg transition-all hover:bg-foreground/10 cursor-pointer",
-                  running && "bg-foreground/8",
+                  win && "bg-foreground/8",
                 )}
               >
                 <PinnedGlyph id={id} size={size} />
                 {win && (
                   <span
-                    style={{ width: win.minimized ? Math.max(3, Math.round(dotW * 0.45)) : dotW }}
+                    style={{ width: isActiveTab ? dotW : Math.max(3, Math.round(dotW * 0.5)) }}
                     className={cn(
                       "absolute bottom-0.5 left-1/2 -translate-x-1/2 h-[3px] rounded-full transition-all",
-                      running ? "bg-primary" : "bg-muted-foreground/70",
+                      isActiveTab ? "bg-primary" : "bg-muted-foreground/70",
                     )}
                   />
                 )}
@@ -242,7 +246,10 @@ export function Taskbar() {
           <DropdownMenuTrigger asChild>
             <button
               aria-label={t("common.language")}
-              className="flex h-9 items-center gap-1.5 rounded-lg px-2.5 text-xs font-medium transition-colors hover:bg-foreground/10 cursor-pointer"
+              className={cn(
+                "flex items-center gap-1.5 rounded-lg px-2.5 text-xs font-medium transition-colors hover:bg-foreground/10 cursor-pointer",
+                metrics.tabbarOpen ? "h-8" : "h-9",
+              )}
             >
               <Languages className="h-4 w-4 text-muted-foreground" />
               {locale.toUpperCase()}
@@ -263,8 +270,8 @@ export function Taskbar() {
         </DropdownMenu>
 
         <div className="flex flex-col items-end leading-tight" dir="ltr">
-          <span className="text-xs font-medium tabular-nums">{time}</span>
-          <span className="text-[10px] text-muted-foreground tabular-nums">{date}</span>
+          <span className={cn("font-medium tabular-nums", metrics.tabbarOpen ? "text-[11px]" : "text-xs")}>{time}</span>
+          <span className={cn("text-muted-foreground tabular-nums", metrics.tabbarOpen ? "text-[9px]" : "text-[10px]")}>{date}</span>
         </div>
       </div>
 

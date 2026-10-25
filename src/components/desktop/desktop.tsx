@@ -778,13 +778,16 @@ export function Desktop() {
   const t = useT();
   const dir = useSettings((s) => s.dir());
   const locale = useSettings((s) => s.locale);
-  const { windows, setStartOpen, startOpen } = useDesktop();
+  const { windows, activeTabId, activateTab, closeWindow, setStartOpen, startOpen } =
+    useDesktop();
   const headerDock = useDesktop((s) => s.headerDock);
   const { resolvedTheme } = useTheme();
   /* Task 45 — dfb tree feeds the dynamic window titles/icons (dfb-menu/dfb-form) */
   const dfbTree = useDfb((s) => s.tree);
   const dfbLoad = useDfb((s) => s.load);
   const trMap = useDfbTrMap(); // Task 68
+  /* Task 81 — chrome metrics (header/tabbar/taskbar heights) */
+  const metrics = useChromeMetrics();
 
   React.useEffect(() => {
     void dfbLoad();
@@ -796,6 +799,31 @@ export function Desktop() {
     document.documentElement.dir = dir;
     document.documentElement.lang = locale;
   }, [dir, locale]);
+
+  /* Task 81 — tab-bar contract: «تب اول صفحه اصلی باشد و فرم از تب دوم باز شود»
+     homeActive → the desktop (icons/sidebar) owns the workspace;
+     every form lives in its own tab of the strip below the header. */
+  const homeActive = activeTabId === HOME_TAB_ID;
+  const tabsOpen = windows.length > 0;
+
+  /* resolve every tab's title/icon/content once per render — the strip and
+     the workspace panels share the same meta (Task 64 live titles included) */
+  const metas = windows.map((win) => resolveWindowMeta(win, t, dfbTree, locale, trMap));
+
+  /* the strip sits under the header (top dock) or beside a vertical one */
+  const tabbarStyle: React.CSSProperties =
+    headerDock === "top"
+      ? { top: metrics.headerH, left: 0, right: 0 }
+      : headerDock === "left"
+        ? { top: 0, left: metrics.headerH, right: 0 }
+        : { top: 0, right: metrics.headerH, left: 0 };
+
+  const panelsStyle: React.CSSProperties = {
+    top: metrics.contentTop,
+    bottom: metrics.taskbarH + 6,
+    left: headerDock === "left" ? metrics.headerH + 8 : 8,
+    right: headerDock === "right" ? metrics.headerH + 8 : 8,
+  };
 
   return (
     <DirectionProvider dir={dir}>
@@ -809,31 +837,45 @@ export function Desktop() {
           if (e.target === e.currentTarget) setStartOpen(false);
         }}
       >
-        <DesktopIcons />
+        {/* Task 81 — the desktop (icons + sidebar) is the HOME tab content;
+            it yields the workspace while a form tab is active */}
+        {homeActive && <DesktopIcons />}
 
         {/* Task 22 — dockable dashboard header (drag to top / left / right edges) */}
         <DashboardHeader />
 
-        {/* windows layer — clipped around the docked header strip + footer (Task 22);
-            pointer-events-none so empty areas fall through to desktop icons */}
-        <div
-          className="pointer-events-none absolute z-[100]"
-          style={{
-            top: headerDock === "top" ? HEADER_THICK : 0,
-            left: headerDock === "left" ? HEADER_THICK : 0,
-            right: headerDock === "right" ? HEADER_THICK : 0,
-            bottom: 52,
-          }}
-        >
-          {windows.map((win) => {
-            const meta = resolveWindowMeta(win, t, dfbTree, locale, trMap);
-            return (
-              <AppWindow key={win.id} win={win} title={win.titleOverride ?? meta.title} icon={meta.icon}>
-                {meta.content}
-              </AppWindow>
-            );
-          })}
-        </div>
+        {/* Task 81 — the tab strip below the header; appears with the first
+            form tab and disappears when the last one closes */}
+        {tabsOpen && (
+          <TabBar
+            tabs={windows.map((win, i) => ({
+              id: win.id,
+              title: win.titleOverride ?? metas[i].title,
+              icon: metas[i].icon,
+            }))}
+            activeId={activeTabId}
+            homeLabel={t("tabs.home")}
+            homeActive={homeActive}
+            closeLabel={t("tabs.close")}
+            onActivateHome={() => activateTab(HOME_TAB_ID)}
+            onActivate={activateTab}
+            onClose={closeWindow}
+            style={tabbarStyle}
+          />
+        )}
+
+        {/* Task 81 — workspace panels: every open tab stays MOUNTED (hidden
+            while inactive) so unsaved drafts / undo history survive switches;
+            panels sit between the strip and the auto-shrunk taskbar */}
+        {tabsOpen && (
+          <div className="pointer-events-none absolute z-[100]" style={panelsStyle}>
+            {windows.map((win, i) => (
+              <TabSurface key={win.id} win={win} active={win.id === activeTabId}>
+                {metas[i].content}
+              </TabSurface>
+            ))}
+          </div>
+        )}
 
         {startOpen && <StartMenu />}
         <Taskbar />

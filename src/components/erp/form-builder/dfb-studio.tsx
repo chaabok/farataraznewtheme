@@ -391,13 +391,11 @@ function StudioInner({ formId }: { formId: number }) {
   const [failed, setFailed] = React.useState(false);
   const [isSystem, setIsSystem] = React.useState(false);
 
-  /* Task 62 — the studio window is CHROMELESS (no light title bar): this
-     component hosts the caption buttons (minimize / maximize / close) in its
-     own toolbar row and lets the toolbar act as the drag strip. */
+  /* Task 62 — the studio window was chromeless (its toolbar hosted the
+     caption buttons and acted as the drag strip). Task 81 — windows became
+     TABS: the drag pass-throughs stay wired (no-ops) and the minimize/
+     maximize captions are gone — the tab strip owns those duties now. */
   const chrome = useWindowChrome();
-  const winMaximized = useDesktop(
-    (s) => s.windows.find((w) => w.kind === "dfb-studio" && w.appKey === String(formId))?.maximized ?? false,
-  );
 
   /* undo/redo history — every mutation commits a snapshot;
      idx 0 = saved/loaded baseline ⇒ dirty = idx !== 0 */
@@ -1364,19 +1362,14 @@ function StudioInner({ formId }: { formId: number }) {
           {preview ? <EyeOff className="h-4 w-4" aria-hidden /> : <Eye className="h-4 w-4" aria-hidden />}
         </Button>
 
-        {/* Task 62 — the «ذخیره قالب» row carries the window caption cluster
-            (save · minimize · maximize · close): RTL flow puts the trio at
-            the visual window edge, Windows-caption order */}
+        {/* Task 62 — the «ذخیره قالب» row used to carry the window caption
+            cluster (save · minimize · maximize · close). Task 81 — tabs:
+            minimize/maximize retired with the floating chrome; save + exit
+            remain (exit closes the hosting TAB). */}
         <span className="ms-auto flex items-center gap-1.5">
           <Button type="button" size="sm" data-window-btn onClick={save} disabled={busy || !dirty} aria-label={t("dfb.studio.save")}>
             {busy ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <Save className="h-4 w-4" aria-hidden />}
             <span className="hidden sm:inline">{t("dfb.studio.save")}</span>
-          </Button>
-          <Button type="button" size="sm" variant="ghost" data-window-btn onClick={chrome?.onMinimize} aria-label={t("common.minimize")} title={t("common.minimize")}>
-            <Minus className="h-4 w-4" aria-hidden />
-          </Button>
-          <Button type="button" size="sm" variant="ghost" data-window-btn onClick={chrome?.onToggleMaximize} aria-label={t("common.maximize")} title={t("common.maximize")}>
-            {winMaximized ? <Copy className="h-3.5 w-3.5 -scale-x-100" aria-hidden /> : <Square className="h-3.5 w-3.5" aria-hidden />}
           </Button>
           <Button type="button" size="sm" variant="ghost" data-window-btn onClick={requestExit} aria-label={t("dfb.studio.exit")} title={t("dfb.studio.exit")}>
             <X className="h-4 w-4" aria-hidden />
