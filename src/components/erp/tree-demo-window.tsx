@@ -11,7 +11,7 @@ import {
 } from "@/components/forms/simple-tree-form";
 import type { SimpleFormField } from "@/components/forms/simple-form-two-row-tabbed";
 import type { ActionBarListItem } from "@/components/forms/action-bar";
-import { useWindowChrome } from "@/components/desktop/app-window";
+import { useWindowChrome, useTabDirty } from "@/components/desktop/app-window";
 
 const delay = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
@@ -101,17 +101,23 @@ export function TreeDemoWindow() {
   /* legacy screenshot state: a province leaf is selected on open */
   const [selectedId, setSelectedId] = React.useState<string | null>("tehran-province");
   const [values, setValues] = React.useState<DemoValues>(() => valuesOf("tehran-province"));
+  /* Task 82 — unsaved-data flag of the hosting tab (demo form obeys the
+     same fiscal-year alarm contract as real forms) */
+  const [dirty, setDirty] = React.useState(false);
+  useTabDirty(dirty);
 
   const onSelect = React.useCallback(
     (node: SimpleTreeFormNode | null) => {
       const id = node?.id ?? null;
       setSelectedId(id);
       setValues(valuesOf(id ?? "geo"));
+      setDirty(false); // Task 82 — رکورد (گره) ذخیره‌شده باز شد
     },
     [valuesOf],
   );
 
   const onFieldChange = React.useCallback((id: string, value: string | boolean) => {
+    setDirty(true); // Task 82 — ویرایش ذخیره‌نشده
     setValues((v) => ({ ...v, [id]: value }));
   }, []);
 
@@ -155,10 +161,12 @@ export function TreeDemoWindow() {
       onFieldChange={onFieldChange}
       onReset={() => {
         setValues(valuesOf(selectedId ?? "geo"));
+        setDirty(false); // Task 82 — بازنشانی به مقادیر ذخیره‌شده
         toast.success(t("abar.resetToast"));
       }}
       onSave={async () => {
         await delay(550);
+        setDirty(false); // Task 82 — ذخیرهٔ نمونه
         toast.success(t("abar.savedToast"));
       }}
       onCopy={() => {

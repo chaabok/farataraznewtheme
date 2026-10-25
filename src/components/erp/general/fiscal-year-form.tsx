@@ -12,6 +12,7 @@ import {
 } from "@/lib/calendar-date";
 import { useT, useSettings } from "@/stores/settings-store";
 import { useDesktop } from "@/stores/desktop-store";
+import { useTabDirty } from "@/components/desktop/app-window";
 import {
   SimpleFormTwoRowTabbed,
   type SimpleFormField,
@@ -128,6 +129,10 @@ export function FiscalYearForm({ onBack }: { onBack?: () => void }) {
   const [listLoading, setListLoading] = React.useState(true);
   const [currentId, setCurrentId] = React.useState<number | null>(null);
   const [values, setValues] = React.useState<FormValues>(BLANK);
+  /* Task 82 — unsaved-data flag of the tab (owner alarm contract):
+     true از اولین ویرایش تا ذخیره/بازکردن رکورد/خالی‌کردن فرم */
+  const [dirty, setDirty] = React.useState(false);
+  useTabDirty(dirty);
   const [monthsLimit, setMonthsLimit] = React.useState<number>(DEFAULT_FISCAL_MONTHS);
   /* Task 80 — سالِ شمسی‌ای که تاریخ‌های نمایشی از روی آن محاسبه می‌شوند؛
      null = تاریخ‌های values بی‌واسطه (فرم خالی، رکورد باز یا کپی) نمایش داده شوند. */
@@ -197,6 +202,7 @@ export function FiscalYearForm({ onBack }: { onBack?: () => void }) {
     (r: FiscalYearDto) => {
       setAutoYear(null); // Task 80 — مقادیر ذخیره‌شده‌اند، نه محاسبه‌شده
       setCurrentId(r.id);
+      setDirty(false); // Task 82 — رکورد ذخیره‌شده باز شد
       setValues({
         code: r.code,
         title: r.title,
@@ -212,6 +218,7 @@ export function FiscalYearForm({ onBack }: { onBack?: () => void }) {
   const newRecord = React.useCallback(() => {
     setAutoYear(null); // Task 80 — فرم خالی، تا ورود سال بعدی
     setCurrentId(null);
+    setDirty(false); // Task 82 — فرم خالی، هیچ ویرایش ذخیره‌نشده‌ای نیست
     setValues(BLANK);
     void refreshMonthsLimit(); // Task 80 — همگام با آخرین پیکربندی
   }, [refreshMonthsLimit]);
@@ -238,6 +245,7 @@ export function FiscalYearForm({ onBack }: { onBack?: () => void }) {
      Task 80 — سالِ معتبر ۴رقمی ⇔ تاریخ‌ها از همان سال محاسبه می‌شوند؛
      خراب/خالی‌شدن عنوان ⇔ بازگشت به مقادیر values (خالی یا رکورد باز). */
   const onFieldChange = React.useCallback((id: string, value: string | boolean) => {
+    setDirty(true); // Task 82 — هر ویرایش = اطلاعات ذخیره‌نشده
     if (id === "title" && typeof value === "string") {
       const title = normalizeDigits(value).replace(/[^0-9]/g, "").slice(0, 4);
       setAutoYear(/^[0-9]{4}$/.test(title) ? Number(title) : null);
@@ -293,6 +301,10 @@ export function FiscalYearForm({ onBack }: { onBack?: () => void }) {
       const rows = await fetchRecords().catch(() => [] as FiscalYearDto[]);
       applyRecords(rows);
       applyRecord(res);
+      /* Task 82 — فوتر دسکتاپ (فهرست سال‌های مالی) زنده تازه می‌شود */
+      window.dispatchEvent(
+        new CustomEvent("erp:records-changed", { detail: { entity: "fiscal-year" } }),
+      );
       return true;
     } catch (e) {
       const msg = e instanceof Error && e.message ? e.message : t("common.error");
@@ -312,6 +324,10 @@ export function FiscalYearForm({ onBack }: { onBack?: () => void }) {
       const rows = await fetchRecords().catch(() => [] as FiscalYearDto[]);
       applyRecords(rows);
       newRecord();
+      /* Task 82 — فوتر دسکتاپ (فهرست سال‌های مالی) زنده تازه می‌شود */
+      window.dispatchEvent(
+        new CustomEvent("erp:records-changed", { detail: { entity: "fiscal-year" } }),
+      );
     } catch (e) {
       const msg = e instanceof Error && e.message ? e.message : t("common.error");
       toast.error(msg);

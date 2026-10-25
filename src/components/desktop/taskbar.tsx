@@ -10,6 +10,7 @@ import { LOCALES, LOCALE_NAMES, type Locale } from "@/i18n/config";
 import { AppTile } from "./app-tile";
 import { FloatingMenu } from "./floating-menu";
 import { useChromeMetrics } from "./chrome-metrics";
+import { FiscalYearFooter } from "./fiscal-year-footer";
 import { useDfb, findMenuNode } from "@/stores/dfb-store";
 import { DfbGlyph } from "@/components/erp/form-builder/dfb-dialogs";
 import {
@@ -242,6 +243,10 @@ export function Taskbar() {
 
       {/* tray */}
       <div className="flex shrink-0 items-center gap-2">
+        {/* Task 82 — fiscal-year selector of the dashboard footer:
+            changing it closes every open form tab (unsaved-data alarm first) */}
+        <FiscalYearFooter />
+
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button

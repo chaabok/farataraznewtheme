@@ -11,7 +11,7 @@ import {
   type SimpleFormTab,
 } from "@/components/forms/simple-form-two-row-tabbed";
 import type { ActionBarListItem } from "@/components/forms/action-bar";
-import { useWindowChrome } from "@/components/desktop/app-window";
+import { useWindowChrome, useTabDirty } from "@/components/desktop/app-window";
 
 const delay = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
@@ -80,16 +80,22 @@ export function FormDemoWindow() {
 
   const [recIndex, setRecIndex] = React.useState(0);
   const [values, setValues] = React.useState<DemoValues>(() => ({ ...records[0] }));
+  /* Task 82 — unsaved-data flag of the hosting tab (demo form obeys the
+     same fiscal-year alarm contract as real forms) */
+  const [dirty, setDirty] = React.useState(false);
+  useTabDirty(dirty);
 
   const applyRecord = React.useCallback(
     (i: number) => {
       setRecIndex(i);
       setValues({ ...records[i] });
+      setDirty(false); // Task 82 — رکورد ذخیره‌شده باز شد
     },
     [records],
   );
 
   const onFieldChange = React.useCallback((id: string, value: string | boolean) => {
+    setDirty(true); // Task 82 — ویرایش ذخیره‌نشده
     setValues((v) => ({ ...v, [id]: value }));
   }, []);
 
@@ -191,6 +197,7 @@ export function FormDemoWindow() {
       }}
       onSave={async () => {
         await delay(550);
+        setDirty(false); // Task 82 — ذخیرهٔ نمونه
         toast.success(t("abar.savedToast"));
       }}
       onCopy={() => {

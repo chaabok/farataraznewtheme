@@ -16,6 +16,7 @@ import {
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useT } from "@/stores/settings-store";
+import { useTabDirty } from "@/components/desktop/app-window";
 import type { DictKey } from "@/i18n/dictionaries";
 import { LanguageSettingsSections } from "@/components/erp/settings/language-settings";
 
@@ -94,6 +95,10 @@ export function SoftwareConfigBody() {
   const t = useT();
   const [activeTab, setActiveTab] = React.useState<string>("general");
   const [values, setValues] = React.useState<Record<string, ValuesMap>>({});
+  /* Task 82 — unsaved-data flag of the hosting tab (owner alarm contract):
+     با اولین تغییر مقدار روشن و پس از ذخیرهٔ موفق خاموش می‌شود */
+  const [cfgDirty, setCfgDirty] = React.useState(false);
+  useTabDirty(cfgDirty);
 
   const fields = SOFTWARE_CONFIG_FIELDS[activeTab] ?? [];
 
@@ -131,8 +136,10 @@ export function SoftwareConfigBody() {
     };
   }, [activeTab, values, fetchValues, applyValues]);
 
-  const setVal = (key: string, v: string) =>
+  const setVal = (key: string, v: string) => {
+    setCfgDirty(true); // Task 82 — ویرایش ذخیره‌نشده
     setValues((prev) => ({ ...prev, [activeTab]: { ...(prev[activeTab] ?? {}), [key]: v } }));
+  };
 
   const save = async () => {
     if (fields.length === 0) return;
@@ -179,6 +186,7 @@ export function SoftwareConfigBody() {
         return;
       }
       toast.success(t("common.save"));
+      setCfgDirty(false); // Task 82 — ذخیره شد
       applyValues(activeTab, await fetchValues(activeTab)); // بازخوانی پس از ذخیره
     } catch {
       toast.error(t("common.error"));

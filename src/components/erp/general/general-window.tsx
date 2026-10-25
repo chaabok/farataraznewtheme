@@ -13,6 +13,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSettings, useT } from "@/stores/settings-store";
+import { useDesktop } from "@/stores/desktop-store";
+import { useWindowChrome } from "@/components/desktop/app-window";
 import { FiscalYearForm } from "@/components/erp/general/fiscal-year-form";
 
 /**
@@ -32,6 +34,23 @@ export function GeneralWindow() {
   const dir = useSettings((s) => s.dir());
   const [page, setPage] = React.useState<GeneralPage>("home");
   const [basicInfoOpen, setBasicInfoOpen] = React.useState(true);
+  /* Task 82 — the hosting TAB retitles itself while the سال مالی sub-page is
+     open, so the footer's unsaved-data alarm names the real form
+     («عمومی — سال مالی جدید») exactly like the tab strip shows it. */
+  const chrome = useWindowChrome();
+  const setWindowTitle = useDesktop((s) => s.setWindowTitle);
+  const go = React.useCallback(
+    (p: GeneralPage) => {
+      setPage(p);
+      if (chrome?.windowId) {
+        setWindowTitle(
+          chrome.windowId,
+          p === "fiscal-year" ? `${t("app.general")} — ${t("fy.formTitle")}` : undefined,
+        );
+      }
+    },
+    [chrome, setWindowTitle, t],
+  );
 
   /* §1.4 — direction-aware navigation glyphs (no hardcoded physical sides) */
   const BackIcon = dir === "rtl" ? ArrowRight : ArrowLeft;
@@ -43,7 +62,7 @@ export function GeneralWindow() {
         {/* slim sub-page bar: عمومی / اطلاعات پایه / سال مالی جدید */}
         <div className="flex h-10 shrink-0 items-center gap-1.5 overflow-x-auto border-b border-border/60 px-2 scrollbar-slim">
           <button
-            onClick={() => setPage("home")}
+            onClick={() => go("home")}
             className="flex h-8 shrink-0 items-center gap-1.5 rounded-lg px-2.5 text-xs font-medium text-foreground/80 transition-colors hover:bg-foreground/10 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
           >
             <BackIcon className="h-3.5 w-3.5" aria-hidden />
@@ -63,7 +82,7 @@ export function GeneralWindow() {
           </span>
         </div>
         <div className="min-h-0 flex-1">
-          <FiscalYearForm onBack={() => setPage("home")} />
+          <FiscalYearForm onBack={() => go("home")} />
         </div>
       </div>
     );
@@ -114,7 +133,7 @@ export function GeneralWindow() {
             <div className="space-y-1 border-t border-border/60 p-2">
               {/* فرم «سال مالی جدید» — اولین آیتم اعلام‌شدهٔ مالک (Task 75) */}
               <button
-                onClick={() => setPage("fiscal-year")}
+                onClick={() => go("fiscal-year")}
                 className="flex w-full items-center gap-3 rounded-lg p-3 pe-6 text-start transition-colors hover:bg-accent/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
               >
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-teal-500 to-emerald-600 text-white shadow-sm">

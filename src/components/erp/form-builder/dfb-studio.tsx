@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import { ApiError } from "@/lib/api";
 import { useT, useSettings } from "@/stores/settings-store";
 import { useDesktop } from "@/stores/desktop-store";
-import { useWindowChrome } from "@/components/desktop/app-window";
+import { useWindowChrome, useTabDirty } from "@/components/desktop/app-window";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -402,6 +402,7 @@ function StudioInner({ formId }: { formId: number }) {
   const [hist, setHist] = React.useState<{ stack: StudioState[]; idx: number } | null>(null);
   const state = hist?.stack[hist.idx] ?? null;
   const dirty = hist != null && hist.idx !== 0;
+  useTabDirty(dirty); // Task 82 — «طراحی ذخیره‌نشده» همان آلارم فوتر را می‌گیرد
 
   const commit = React.useCallback((mutate: (draft: StudioState) => void) => {
     setHist((h) => {

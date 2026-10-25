@@ -14,7 +14,7 @@ import {
 import type { SimpleFormField } from "@/components/forms/simple-form-two-row-tabbed";
 import type { FormAction } from "@/components/forms/action-bar";
 import { ConfirmDeleteDialog } from "@/components/forms/action-bar";
-import { useWindowChrome } from "@/components/desktop/app-window";
+import { useWindowChrome, useTabDirty } from "@/components/desktop/app-window";
 import {
   useDfb, findMenuNode, fetchFormDetail, dfbNodeTitle, dfbFormTitle,
   type DfbMenuNode, type DfbFormDetail, type DfbFormSummary,
@@ -184,6 +184,7 @@ export function FormBuilderWindow() {
     return (pending.title !== undefined && pending.title !== baseTitle) ||
       (pending.titleEn !== undefined && pending.titleEn !== baseTitleEn);
   }, [selected, selectedId, edits]);
+  useTabDirty(dirty); // Task 82 — عنوان ویرایش‌شدهٔ ذخیره‌نشده = آلارم فوتر
 
   const onSave = React.useCallback(async () => {
     if (!selected || !selectedId) return;

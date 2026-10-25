@@ -16,7 +16,7 @@ import {
 } from "@/components/forms/simple-tree-form";
 import type { FormAction } from "@/components/forms/action-bar";
 import { ACTION_BAR_KEYS } from "@/components/forms/action-bar";
-import { useWindowChrome } from "@/components/desktop/app-window";
+import { useWindowChrome, useTabDirty } from "@/components/desktop/app-window";
 import { dfbShellTheme, dfbBankAlign, type DfbFormStyle } from "@/lib/dfb-theme";
 import {
   fetchFormDetail, saveFormData, loadFormData,
@@ -73,6 +73,10 @@ function RuntimeInner({ formId }: { formId: number }) {
      (با اولین ویرایش کاربر، مقدار واقعی دیده می‌شود و ذخیره همیشه
      مقدار پایه/ویرایش‌شده را می‌فرستد — ترجمه هرگز در EAV ذخیره نمی‌شود) */
   const [baseValues, setBaseValues] = React.useState<Record<string, string | boolean>>({});
+  /* Task 82 — unsaved-data flag of the hosting tab (owner alarm contract):
+     با اولین ویرایش رکورد روشن؛ با ذخیره/ریست/بازکردن رکورد خاموش می‌شود */
+  const [dirty, setDirty] = React.useState(false);
+  useTabDirty(dirty);
   /* Task 70 — فیلدهایی که کاربر روی آن‌ها فوکوس کرده (مقدار پایه آشکار می‌شود) */
   const [revealedIds, setRevealedIds] = React.useState<ReadonlySet<string>>(new Set());
   const revealField = React.useCallback((id: string) => {
@@ -192,6 +196,7 @@ function RuntimeInner({ formId }: { formId: number }) {
   }, [detail, loadRecords]);
 
   const onFieldChange = React.useCallback((id: string, value: string | boolean) => {
+    setDirty(true); // Task 82 — ویرایش ذخیره‌نشده
     setValues((v) => ({ ...v, [id]: value }));
   }, []);
 
@@ -232,6 +237,7 @@ function RuntimeInner({ formId }: { formId: number }) {
           : undefined,
       );
       setCurrentDataId(res.dataId);
+      setDirty(false); // Task 82 — ذخیره شد
       toast.success(t("abar.savedToast"));
       await loadRecords(detail);
     } catch {
@@ -246,6 +252,7 @@ function RuntimeInner({ formId }: { formId: number }) {
     setCurrentDataId(null);
     setBaseValues({}); // Task 70
     setRevealedIds(new Set()); // Task 70
+    setDirty(false); // Task 82 — فرم خالی شد
   }, []);
 
   const openRecord = React.useCallback(
@@ -256,6 +263,7 @@ function RuntimeInner({ formId }: { formId: number }) {
       setRevealedIds(new Set()); // Task 70
       setValues(rec.values);
       setCurrentDataId(rec.dataId);
+      setDirty(false); // Task 82 — رکورد ذخیره‌شده باز شد
     },
     [records],
   );
@@ -517,6 +525,7 @@ function RuntimeInner({ formId }: { formId: number }) {
       setRevealedIds(new Set()); // Task 70
       setValues(rec.values);
       setCurrentDataId(rec.dataId);
+      setDirty(false); // Task 82 — رکورد ذخیره‌شده باز شد
     } else {
       reset();
     }

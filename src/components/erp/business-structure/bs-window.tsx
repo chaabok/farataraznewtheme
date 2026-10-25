@@ -24,7 +24,7 @@ import {
   ConfirmDeleteDialog,
   type ActionBarListItem,
 } from "@/components/forms/action-bar";
-import { useWindowChrome } from "@/components/desktop/app-window";
+import { useWindowChrome, useTabDirty } from "@/components/desktop/app-window";
 import { Badge } from "@/components/ui/badge";
 import { BsLogoUploader, BsTypeIcon, parseTypes } from "./bs-detail";
 import {
@@ -123,6 +123,10 @@ export function BusinessStructureWindow({
      the confirm step is the SAME ConfirmDeleteDialog the ActionBar
      delete-family tiles use (single confirmation, Task-32 decision). */
   const [contextDeleteId, setContextDeleteId] = React.useState<string | null>(null);
+  /* Task 82 — unsaved-data flag of the hosting tab (owner alarm contract):
+     با اولین ویرایش فرم روشن و با تعویض گره/ذخیره/خالی‌کردن خاموش می‌شود */
+  const [bsDirty, setBsDirty] = React.useState(false);
+  useTabDirty(bsDirty);
 
   const load = React.useCallback(async () => {
     setLoading(true);
@@ -212,6 +216,7 @@ export function BusinessStructureWindow({
   if (renderedKey !== formKey) {
     setRenderedKey(formKey);
     setForm(mode === "create" ? { ...EMPTY } : selectedNode ? formFromNode(selectedNode) : EMPTY);
+    setBsDirty(false); // Task 82 — فرم تازه/رکورد ذخیره‌شده = بدون ویرایش باز
   }
 
   /* ---- navigation ---- */
@@ -288,6 +293,7 @@ export function BusinessStructureWindow({
       } else if (mode === "view" && selectedNode) {
         await api.put<{ item: BsNode }>(`business-structure/${selectedNode.id}`, payload);
         toast.success(t("bs.msg.saved"));
+        setBsDirty(false); // Task 82 — ذخیره شد (formKey هم ریست می‌کند)
         await load();
         /* Task 35 — save-close: standalone closes the window, embedded
            returns to the settings home (same closeThisWindow funnel) */
@@ -537,6 +543,7 @@ export function BusinessStructureWindow({
     if (id.startsWith("activeType")) {
       const v = Number(id.slice("activeType".length));
       if (v === 1) return;
+      setBsDirty(true); // Task 82 — ویرایش ذخیره‌نشده
       setForm((f) => ({
         ...f,
         activeStructureTypes:
@@ -546,6 +553,7 @@ export function BusinessStructureWindow({
       }));
       return;
     }
+    setBsDirty(true); // Task 82 — ویرایش ذخیره‌نشده
     setForm((f) => ({ ...f, [id]: value }));
   };
 
@@ -554,7 +562,10 @@ export function BusinessStructureWindow({
       return (
         <BsLogoUploader
           logoUrl={form.logoUrl}
-          onChange={(v) => setForm((f) => ({ ...f, logoUrl: v }))}
+          onChange={(v) => {
+            setBsDirty(true); // Task 82 — لوگوی جدید = ویرایش ذخیره‌نشده
+            setForm((f) => ({ ...f, logoUrl: v }));
+          }}
         />
       );
     }
@@ -585,7 +596,10 @@ export function BusinessStructureWindow({
       <>
         <BsLogoUploader
           logoUrl={form.logoUrl}
-          onChange={(v) => setForm((f) => ({ ...f, logoUrl: v }))}
+          onChange={(v) => {
+            setBsDirty(true); // Task 82 — لوگوی جدید = ویرایش ذخیره‌نشده
+            setForm((f) => ({ ...f, logoUrl: v }));
+          }}
         />
         <p className="mt-2 text-[11px] text-muted-foreground">{t("bs.hint.codeAuto")}</p>
       </>
