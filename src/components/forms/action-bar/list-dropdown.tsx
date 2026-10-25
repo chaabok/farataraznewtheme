@@ -175,7 +175,23 @@ export function RecordListDropdown({
       await navigator.clipboard.writeText(tsv);
       toast.success(t("abar.listCopiedToast"));
     } catch {
-      toast.error(t("common.error"));
+      /* fallback for permission-restricted contexts (async clipboard needs
+         transient activation; execCommand covers the rest) */
+      try {
+        const ta = document.createElement("textarea");
+        ta.value = tsv;
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        ta.remove();
+        /* a removed selection anchor can leave stray document highlights */
+        window.getSelection()?.removeAllRanges();
+        toast.success(t("abar.listCopiedToast"));
+      } catch {
+        toast.error(t("common.error"));
+      }
     }
   }, [columns, rows, t]);
 
@@ -370,7 +386,12 @@ export function RecordListDropdown({
               disabled={empty || activeFilterCount === 0}
               onClick={() => setFilters({})}
             >
-              <FilterX className="h-3.5 w-3.5" aria-hidden />
+              {/* the image's plain funnel when idle; FilterX once filters are live */}
+              {activeFilterCount > 0 ? (
+                <FilterX className="h-3.5 w-3.5" aria-hidden />
+              ) : (
+                <Filter className="h-3.5 w-3.5" aria-hidden />
+              )}
             </ListTool>
             {onRefresh && (
               <ListTool
