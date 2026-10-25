@@ -11,6 +11,7 @@ import { AppTile } from "./app-tile";
 import { FloatingMenu } from "./floating-menu";
 import { useChromeMetrics } from "./chrome-metrics";
 import { FiscalYearFooter } from "./fiscal-year-footer";
+import { FiscalYearMissingPrompt } from "./fiscal-year-missing-prompt";
 import { useDfb, findMenuNode } from "@/stores/dfb-store";
 import { DfbGlyph } from "@/components/erp/form-builder/dfb-dialogs";
 import {
@@ -246,6 +247,11 @@ export function Taskbar() {
         {/* Task 82 — fiscal-year selector of the dashboard footer:
             changing it closes every open form tab (unsaved-data alarm first) */}
         <FiscalYearFooter />
+
+        {/* Task 85 — «سال مالی وجود ندارد…» prompt: the owner dialog when the
+            app is installed but no fiscal year is defined; «بلی» opens the
+            فرم تعریف سال مالی directly (portal — DOM position is irrelevant) */}
+        <FiscalYearMissingPrompt />
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

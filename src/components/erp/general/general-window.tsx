@@ -15,6 +15,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useSettings, useT } from "@/stores/settings-store";
 import { useDesktop } from "@/stores/desktop-store";
+import { useGeneralNav, type GeneralSubPage } from "@/stores/general-nav-store";
 import { useWindowChrome } from "@/components/desktop/app-window";
 import { FiscalYearForm } from "@/components/erp/general/fiscal-year-form";
 import { PartyForm } from "@/components/forms/common/Party";
@@ -29,7 +30,7 @@ import { PartyForm } from "@/components/forms/common/Party";
  * فرم اضافه کنید بنام سال مالی جدید» — منو = عمومی، زیرمنو = اطلاعات پایه.
  */
 
-type GeneralPage = "home" | "fiscal-year" | "party";
+type GeneralPage = GeneralSubPage;
 
 export function GeneralWindow() {
   const t = useT();
@@ -59,6 +60,20 @@ export function GeneralWindow() {
   /* §1.4 — direction-aware navigation glyphs (no hardcoded physical sides) */
   const BackIcon = dir === "rtl" ? ArrowRight : ArrowLeft;
   const ForwardIcon = dir === "rtl" ? ChevronLeft : ChevronRight;
+
+  /* Task 85 — the shell can request a sub-page (the fiscal-year-missing
+     prompt's «بلی» opens سال مالی جدید directly): consume the pending request
+     on mount (fresh window) and follow unseen request ids while mounted.
+     Requests are id-keyed one-shots ⇒ language changes / re-renders never
+     re-navigate. */
+  const navReq = useGeneralNav((s) => s.req);
+  const navHandledRef = React.useRef(-1);
+  React.useEffect(() => {
+    if (navReq && navReq.id !== navHandledRef.current) {
+      navHandledRef.current = navReq.id;
+      go(navReq.page);
+    }
+  }, [navReq, go]);
 
   if (page === "party") {
     return (

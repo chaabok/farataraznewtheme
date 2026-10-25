@@ -35,6 +35,9 @@ interface FiscalYearState {
   items: FiscalYearItem[];
   loaded: boolean;
   loading: boolean;
+  /** Task 85 — the last load failed (the missing-year prompt never fires on
+      an unknown state; a service hiccup must not raise a false dialog) */
+  failed: boolean;
   /** persisted last user selection (null = default → first defined year) */
   fiscalYearId: number | null;
   load: () => Promise<void>;
@@ -47,15 +50,16 @@ export const useFiscalYear = create<FiscalYearState>()(
       items: [],
       loaded: false,
       loading: false,
+      failed: false,
       fiscalYearId: null,
       load: async () => {
         if (get().loading) return;
         set({ loading: true });
         try {
           const res = await api.get<{ items?: FiscalYearItem[] }>("fiscal-year");
-          set({ items: res.items ?? [], loaded: true, loading: false });
+          set({ items: res.items ?? [], loaded: true, loading: false, failed: false });
         } catch {
-          set({ loading: false, loaded: true });
+          set({ loading: false, loaded: true, failed: true });
         }
       },
       setFiscalYearId: (id) => set({ fiscalYearId: id }),
