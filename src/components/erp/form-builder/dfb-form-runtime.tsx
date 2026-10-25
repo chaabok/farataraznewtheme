@@ -177,12 +177,14 @@ function RuntimeInner({ formId }: { formId: number }) {
   }, [formId]);
 
   /* Task 78 — رکوردها بر اساس سطح سازمانی انتخابی هدر (شرکت/شعبه/نمایندگی/فروشگاه)؛
-     تغییر هر سطح = فیلتر دوبارهٔ فهرست رکوردهای همین فرم */
+     تغییر هر سطح = فیلتر دوبارهٔ فهرست رکوردهای همین فرم. واکشی خارج از بدنهٔ
+     همگام افکت انجام می‌شود (همان الگوی افکت اصلی بالا). */
   React.useEffect(() => {
     if (!detail) return;
     let alive = true;
-    void loadRecords(detail).catch(() => {
-      /* record list is best-effort */
+    void Promise.resolve().then(() => {
+      if (!alive) return undefined;
+      return loadRecords(detail);
     });
     return () => {
       alive = false;

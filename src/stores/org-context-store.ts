@@ -204,6 +204,39 @@ const scopeKeyOf = (l: OrgLists): string =>
   `${l.companyId ?? ""}|${l.branchId ?? ""}|${l.agencyId ?? ""}|${l.shopId ?? ""}`;
 
 /**
+ * Task 78 — زنجیرهٔ اقامت کامل عمیق‌ترین گرهٔ انتخاب‌شده (قرارداد AppBase:
+ * «Anchors resolved from the node's ancestry»). حتی وقتی کاربر مثلاً فقط
+ * فروشگاه را انتخاب کرده (بدون عبور از شعبه)، ستون‌های زنجیرهٔ رکورد باید
+ * جایگاه واقعی آن را در درخت نشان دهند تا فیلتر هر سطح بالاتر هم رکوردهای
+ * زیرمجموعه را ببیند: نوع ۵→ShopRef، ۴→AgencyRef، ۳→BranchRef، ۱|۲→CompanyRef.
+ */
+function ancestryChain(
+  tree: BsNode[],
+  deepestId: number | null,
+): { companyRef: number | null; branchRef: number | null; agencyRef: number | null; shopRef: number | null } {
+  const byId = new Map(tree.map((n) => [Number(n.id), n]));
+  let companyRef: number | null = null;
+  let branchRef: number | null = null;
+  let agencyRef: number | null = null;
+  let shopRef: number | null = null;
+  let cur = deepestId != null ? byId.get(deepestId) : undefined;
+  let guard = 0;
+  while (cur && guard++ <= 6) {
+    const id = Number(cur.id);
+    if (cur.businessStructureType === BS_TYPE_STORE && shopRef == null) shopRef = id;
+    else if (cur.businessStructureType === BS_TYPE_AGENCY && agencyRef == null) agencyRef = id;
+    else if (cur.businessStructureType === BS_TYPE_BRANCH && branchRef == null) branchRef = id;
+    else if (
+      (cur.businessStructureType === BS_TYPE_COMPANY || cur.businessStructureType === BS_TYPE_HOLDING) &&
+      companyRef == null
+    )
+      companyRef = id;
+    cur = Number(cur.parentRef) > 0 ? byId.get(Number(cur.parentRef)) : undefined;
+  }
+  return { companyRef, branchRef, agencyRef, shopRef };
+}
+
+/**
  * Reactive org cascade for UI + data scoping. Returns the four lists (already
  * narrowed along the selected path), the effective ids and a memoized
  * OrgScope/scopeKey — scopeKey changing means open form views must re-filter.
@@ -227,16 +260,19 @@ export function useOrgScope(): {
     [tree, companyId, branchId, agencyId, shopId, locale],
   );
   const root = React.useMemo(() => rootNodeOf(tree), [tree]);
+  const deepest = lists.shopId ?? lists.agencyId ?? lists.branchId ?? lists.companyId;
+  /* زنجیرهٔ اقامت = تبار کامل عمیق‌ترین گره (نه فقط مسیر انتخاب کاربر) */
+  const chain = React.useMemo(() => ancestryChain(tree, deepest), [tree, deepest]);
   const scope = React.useMemo<OrgScope>(
     () => ({
-      businessStructureRef: lists.shopId ?? lists.agencyId ?? lists.branchId ?? lists.companyId,
-      companyRef: lists.companyId,
-      branchRef: lists.branchId,
-      agencyRef: lists.agencyId,
-      shopRef: lists.shopId,
+      businessStructureRef: deepest,
+      companyRef: chain.companyRef,
+      branchRef: chain.branchRef,
+      agencyRef: chain.agencyRef,
+      shopRef: chain.shopRef,
       shared: root?.isBasicInfoShared ?? false,
     }),
-    [lists, root],
+    [deepest, chain, root],
   );
   const scopeKey = React.useMemo(() => scopeKeyOf(lists), [lists]);
   return { lists, scope, scopeKey, loaded };
