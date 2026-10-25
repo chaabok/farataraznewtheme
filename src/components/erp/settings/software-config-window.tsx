@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useT } from "@/stores/settings-store";
 import type { DictKey } from "@/i18n/dictionaries";
+import { LanguageSettingsSections } from "@/components/erp/settings/language-settings";
 
 /* Task 72 (owner-approved consultation) — «پیکربندی نرم افزارها» hub inside
    the Settings window: one tab per system software (7 announced by the owner;
@@ -25,7 +26,12 @@ import type { DictKey } from "@/i18n/dictionaries";
    the server) so FUTURE field announcements need NO database migration — only
    an entry in SOFTWARE_CONFIG_FIELDS below (+ backend whitelist mirror +
    i18n labels). Until a tab's fields are announced it renders the pending
-   placeholder. */
+   placeholder.
+
+   Task 73 (owner request) — the «عمومی» tab hosts the FIRST announced
+   content: the language + active-languages sections (moved out of the
+   settings home). They are client-side settings (erp.settings persist) and
+   render ABOVE the future SoftwareConfig rows of this tab. */
 
 export interface SwConfigFieldDef {
   /** پایدار — کلید ردیف در SoftwareConfig.ConfigKey (پس از انتشار تغییر نکنید). */
@@ -177,7 +183,13 @@ export function SoftwareConfigBody() {
       {/* tab content */}
       <div className="min-h-0 flex-1 overflow-y-auto scrollbar-slim" dir="auto">
         <div className="mx-auto max-w-xl space-y-4 p-4">
-          {fields.length === 0 ? (
+          {activeTab === "general" && (
+            /* Task 73 — محتوای اعلام‌شدهٔ تب «عمومی»: زبان + زبان‌های فعال
+               (تنظیمات سمت کلاینت با ماندگاری erp.settings؛ ردیف‌های
+               SoftwareConfig این تب هنوز اعلام نشده‌اند) */
+            <LanguageSettingsSections />
+          )}
+          {fields.length === 0 && activeTab !== "general" && (
             /* placeholder — فیلدهای این تب هنوز اعلام نشده‌اند */
             <div className="rounded-2xl border border-dashed border-border/80 bg-card/40 p-8">
               <div className="flex flex-col items-center gap-4 text-center">
@@ -189,7 +201,8 @@ export function SoftwareConfigBody() {
                 </p>
               </div>
             </div>
-          ) : (
+          )}
+          {fields.length > 0 && (
             /* فرم فیلدهای اعلام‌شده — هر اعلام جدید فقط از رجیستری می‌آید */
             <section className="rounded-xl border border-border/70 bg-card/60 p-4">
               <div className="space-y-4">

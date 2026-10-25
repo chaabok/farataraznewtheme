@@ -27,6 +27,7 @@ import { useAlignedLabels, type AlignedLabelsScope } from "@/components/forms/us
    form-primitives module so SimpleTreeForm reuses the identical visual
    contract (Task 25.1 label markup, Task 27 metrics, Task 26 RTL classes). */
 import { FieldCell, FlowFieldGrid, GridCellInput, HeaderButton, NavButton } from "@/components/forms/form-primitives";
+import { FormThemeToggle } from "@/components/forms/form-theme-toggle";
 
 /* ------------------------------------------------------------------ */
 /* Public API — SimpleFormTwoRowTabbed (Task 24)                        */
@@ -502,6 +503,8 @@ export function SimpleFormTwoRowTabbed({
           </span>
         )}
         <div className="ms-auto flex items-center gap-0.5">
+          {/* Task 73 — دکمهٔ تم شب/روز (درخواست مالک): ابتدای خوشهٔ caption */}
+          <FormThemeToggle />
           {onHeaderMinimize && (
             <HeaderButton onClick={onHeaderMinimize} label={t("common.minimize")}>
               <Minus className="h-4 w-4" aria-hidden />

@@ -26,6 +26,7 @@ import {
 } from "@/components/forms/action-bar";
 import { useAlignedLabels, type AlignedLabelsScope } from "@/components/forms/use-aligned-labels";
 import { FieldCell, FlowFieldGrid, HeaderButton } from "@/components/forms/form-primitives";
+import { FormThemeToggle } from "@/components/forms/form-theme-toggle";
 import type { SimpleFormField } from "@/components/forms/simple-form-two-row-tabbed";
 
 /* ------------------------------------------------------------------ */
@@ -488,6 +489,8 @@ export function SimpleTreeForm({
             </span>
           )}
           <div className="ms-auto flex items-center gap-0.5">
+            {/* Task 73 — دکمهٔ تم شب/روز (درخواست مالک): ابتدای خوشهٔ caption */}
+            <FormThemeToggle />
             {onHeaderMinimize && (
               <HeaderButton onClick={onHeaderMinimize} label={t("common.minimize")}>
                 <Minus className="h-4 w-4" aria-hidden />
