@@ -88,6 +88,9 @@ export const useDfbTranslations = create<DfbTranslationsState>()(
     {
       name: "erp.dfb-translations",
       partialize: (s) => ({ byLang: s.byLang }),
+      /* Task 94 — hydration-safe: کش ماندگار پس از mount بازخوانی می‌شود
+          (Desktop) — برچسب‌های ترجمه‌شده در رندر اول با SSR یکی‌اند. */
+      skipHydration: true,
     },
   ),
 );

@@ -48,6 +48,10 @@ export const useSettings = create<SettingsState>()(
     {
       name: "erp.settings",
       version: 1,
+      /* Task 94 — hydration-safe: زبان ماندگارِ کاربر پس از mount بازخوانی
+          می‌شود (Desktop) — رندر اول کلاینت با پیش‌فرض fa با SSR یکی است
+          وگرنه dir/متن‌ها در hydration mismatch می‌دهد (خطای کُنسول مالک). */
+      skipHydration: true,
       /* Task 71 — زبان‌های تازه (de/ru) برای کاربران موجود هم به‌صورت پیش‌فرض فعال شوند */
       migrate: (persisted, version) => {
         const p = (persisted ?? {}) as Partial<SettingsState>;

@@ -155,6 +155,10 @@ export const useOrgContext = create<OrgState>()(
     {
       name: "erp.orgContext",
       version: 1,
+      /* Task 94 — hydration-safe: انتخاب‌های ذخیره‌شده پس از mount بازخوانی
+          می‌شوند (Desktop) — برچسب‌های کسکاد هدر در SSR با پیش‌فرض null
+          رندر می‌شوند تا با hydration یکی بمانند. */
+      skipHydration: true,
       /* فقط انتخاب کاربر ذخیره می‌شود — درخت هر بار از سرویس می‌آید */
       partialize: (s) => ({ companyId: s.companyId, branchId: s.branchId, agencyId: s.agencyId, shopId: s.shopId }),
     },

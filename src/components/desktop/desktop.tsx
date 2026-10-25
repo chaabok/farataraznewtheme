@@ -40,7 +40,8 @@ import {
   useDfb,
   dfbNodeTitle,
 } from "@/stores/dfb-store";
-import { ensureDfbTranslations, useDfbTrMap } from "@/stores/dfb-translations";
+import { ensureDfbTranslations, useDfbTrMap, useDfbTranslations } from "@/stores/dfb-translations";
+import { useOrgContext } from "@/stores/org-context-store";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Toaster } from "sonner";
@@ -621,6 +622,17 @@ export function Desktop() {
     void dfbLoad();
     void ensureDfbTranslations(); // Task 68 — واکشی یک‌بارهٔ نقشهٔ ترجمه (کش آفلاین)
   }, [dfbLoad]);
+
+  /* Task 94 (خطای hydration در کُنسول مالک) — بازخوانی وضعیت ماندگار کاربر
+     پس از mount — همان قرارداد erp.desktop.layout (skipHydration):
+     رندر اولِ کلاینت با پیش‌فرض‌ها (fa/rtl) انجام می‌شود و با سرور یکسان است،
+     پس hydration هیچ‌گاه mismatch نمی‌دهد (icon toggler/DOM dir/برچسب‌ها)؛
+     زبان/انتخاب‌های واقعی کاربر بلافاصله پس از hydration اعمال می‌شود. */
+  React.useEffect(() => {
+    void Promise.resolve(useSettings.persist.rehydrate());
+    void Promise.resolve(useOrgContext.persist.rehydrate());
+    void Promise.resolve(useDfbTranslations.persist.rehydrate());
+  }, []);
 
   /* apply locale direction + language to <html> */
   React.useEffect(() => {

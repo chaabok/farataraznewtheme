@@ -3237,3 +3237,19 @@ Stage Summary:
 - «اطلاعات داخل اینپوت» اکنون واقعاً ترجمه می‌شود: با زبان غیر-fa و رکورد بازِ ذخیره‌شده، فیلدهای اصلی نام/نام خانوادگی ترجمهٔ همان زبان را از انبار DataTranslation نشان می‌دهند؛ فوکوس = مقدار پایه، ویرایش = مقدار واقعی، بدون ترجمه = مقدار اصلی؛ ترجمهٔ آنلاین و ورود دستی هر دو بلافاصله در اینپوت دیده می‌شوند. ذخیره هرگز متن ترجمه را روی دادهٔ پایه نمی‌نویسد.
 - قرارداد عین فرم‌ساز (Task 70): overlay فقط فیلدهای اصلی متنی است؛ سلول‌های گرید (افراد مرتبط/نشانی) مقدار پایه را نشان می‌دهند و ترجمهٔشان از «ورود دستی» مدیریت می‌شود — در صورت درخواست مالک، overlay گرید به‌عنوان تسک جدا قابل افزودن است (نیازمند API reveal در شِل گرید).
 - artifacts: src/components/forms/common/Party.tsx (تنها فایل تغییرکرده).
+---
+Task ID: 94
+Agent: Z.ai Code (main)
+Task: گزارش مالک — «خطای تصویر را بررسی و برطرف کنید» (اسکرین‌شات Console Error: hydration attribute mismatch — panel-left-open در کلاینت vs panel-right-open در سرور)
+
+Work Log:
+- ریشه‌یابی: دو آیکون در diff دقیقاً انتخابِ ToggleIcon در desktop.tsx است (dir==='rtl' ? PanelRightOpen : PanelLeftOpen) — یعنی dir سرور rtl (پیش‌فرض fa) و dir کلاینت ltr در لحظهٔ hydration. منبع: settings-store (erp.settings) با persist/localStorage و locale ذخیره‌شدهٔ کاربر (مالک با UI انگلیسی) — zustand persist وضعیت را «همگام در اولین رندر کلاینت» بازخوانی می‌کند، در حالی که سرور با پیش‌فرض fa رندر کرده → mismatch (آیکون فقط اولین diff گزارش‌شده است؛ متن‌ها هم در معرض همان خطا هستند).
+- قرارداد موجود کدبیس کشف شد: desktop-store و fiscal-year-store همین مشکل را قبلاً با «skipHydration: true + بازخوانی بعد از mount» حل کرده‌اند (کامنت: «skipHydration keeps SSR markup deterministic; Desktop rehydrates after mount») — اما سه استور ماندگار دیگر این قرارداد را نداشتند: erp.settings (locale/dir/activeLocales) و erp.orgContext (انتخاب شرکت/شعبه/نمایندگی/فروشگاه — برچسب کسکاد هدر) و erp.dfb-translations (کش برچسب‌های ترجمه).
+- بازتولید خطا (agent-browser): نوشتن erp.settings با locale=en در localStorage + reload → همان خطای کُنسول مالک عیناً ظاهر شد ✓.
+- اصلاح: skipHydration: true برای هر سه استور + افکت بازخوانی در Desktop (ریشه): useSettings/useOrgContext/useDfbTranslations persist.rehydrate() بلافاصله پس از mount — رندر اول کلاینت با پیش‌فرض‌ها = یکی با SSR؛ وضعیت واقعی کاربر (زبان/انتخاب‌ها/کش ترجمه) بلافاصله پس از hydration اعمال می‌شود. ensureDfbTranslations قبلی دست‌نخورده (کش آفلاین اول، تازه‌سازی شبکه بعد).
+- lint = ۰/۰؛ tsc = همان ۱۱ خطای baseline — صفر خطای جدید.
+- E2E مرورگر: با locale=en ماندگار → reload → کُنسول صفر hydration error، UI انگلیسی، html dir/lang = «ltr / en»، دکمهٔ toggler سایدبار حاضر ✓؛ با locale=fa ماندگار → کُنسول پاک، «rtl / fa» ✓؛ سوییچ زبان در زمان اجرا (fa→en→fa) فوری و سالم ✓ و پس از reload ماندگار بدون هیچ hydration error ✓؛ دود: بازشدن پنجرهٔ عمومی و زیرمنوی اطلاعات پایه ✓؛ کنسول و page errors تا انتها صفر.
+
+Stage Summary:
+- خطای hydration ریشه‌ای برطرف شد: همهٔ پنج استور ماندگار اکنون یک قرارداد واحد دارند — رندر SSR/اولین رندر کلاینت با پیش‌فرض‌ها قطعی است و وضعیت ماندگار کاربر فقط بعد از mount بازخوانی می‌شود (erp.settings/erp.orgContext/erp.dfb-translations به erp.desktop.layout/erp.fiscalYear ملحق شدند). عارضهٔ جانبی: کاربر غیرفارسی‌زبان یک لحظه فلش fa در اولین رندر می‌بیند (همان سازش پذیرفته‌شدهٔ قبلی برای layout/سال مالی).
+- artifacts: src/stores/settings-store.ts؛ src/stores/org-context-store.ts؛ src/stores/dfb-translations.ts؛ src/components/desktop/desktop.tsx (فقط این چهار فایل).
