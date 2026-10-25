@@ -2898,3 +2898,90 @@ Stage Summary:
   بازنشسته شد)؛ «صفحه اصلی» = دسکتاپِ آیکون‌ها؛ پینِ فعالِ نوار پایین = بازگشت به خانه؛
   برگه‌ها بین reloadها persist نمی‌شوند (رفتار مرورگر تازه)؛ محدودیت شناخته‌شده: آیکون‌های
   دسکتاپ فقط در تب خانه در دسترس‌اند (کشیدن آیکون به نوار برای سنجاق هم فقط از خانه).
+---
+Task ID: 82
+Agent: Z.ai Code (main orchestrator)
+Task: درخواست مالک — «در فوتر دسکتاپ، لیست سال‌های مالی تعریف شده توسط کاربر نمایش داده شود و
+کاربر اگر سال مالی را تغییر داد تمامی فرم‌های باز در تب بار باید بسته شود و اگر فرمی در تب بار
+باز بود که دارای اطلاعات بود و ذخیره نشده بود باید به کاربر آلارم داده شود که اطلاعات ذخیره نشده
+در فرم [نام فرم] وجود دارد. آیا ادامه می‌دهید؟ اگر کاربر تایید کرد فرم بسته شود و اگر خیر را
+انتخاب کرد فرم مورد نظر در تب بار برای کاربر نمایش داده شود» (انتخابگر سال مالی در فوتر +
+آلارم اطلاعات ذخیره‌نشده هنگام تعویض).
+
+Work Log:
+- قرارداد تفسیری (اعلام‌شده): «فوتر دسکتاپ» = همان نوار پایین (taskbar) پوستهٔ تب‌محور Task 81؛
+  مقدار پیش‌فرض نمایش = نخستین سال مالی تعریف‌شده (هم‌الگو با «اولین شرکت» Task 78) و انتخاب
+  کاربر در erp.fiscalYear ماندگار می‌شود (id نامعتبر در اجرا به نخستین مورد برمی‌گردد و تا
+  تغییر واقعی کاربر persist نمی‌شود)؛ «فرم» = هر برگهٔ نوار تب (صفحه اصلی ضمنی می‌ماند).
+- desktop-store.ts: ثبت‌گر وضعیت «کثیف» session-local — dirtyTabs + setTabDirty (no-op با
+  مرجع برابر)، closeAllFormTabs (پاک‌کردن همهٔ برگه‌ها + بازگشت به خانه + صفرکردن ثبت‌گر)،
+  closeWindow حالا مدخل dirty برگهٔ بسته‌شده را هم حذف می‌کند؛ setWindowTitle مقدار undefined
+  را می‌پذیرد (حذف override و بازگشت به عنوان metadata).
+- app-window.tsx: WindowChromeApi += windowId (TabSurface آن را تأمین می‌کند) + هوک
+  useTabDirty(dirty) — هر فرم داخل برگه وضعیت ذخیره‌نشدهٔ خود را اعلام می‌کند؛ بیرون برگه
+  no-op و در unmount همیشه «پاک» گزارش می‌شود.
+- window-meta.tsx (جدید): STATIC_WINDOWS + resolveWindowMeta از desktop.tsx استخراج شد تا
+  فوترِ سال مالی بتواند «عنوانِ برگه» را دقیقاً مثل نوار تب حل کند — بدون import چرخه‌ای
+  (desktop.tsx فقط import می‌کند؛ عنوان آلارم = titleOverride ?? resolveWindowMeta().title).
+- fiscal-year-store.ts (جدید): فهرست سال‌های مالی از GET /api/settings/fiscal-year با الگوی
+  org-context (loading/loaded) + persisted fiscalYearId (name: "erp.fiscalYear"،
+  skipHydration + rehydrate پس از مانت) + effectiveFiscalYearId (fallback نخستین مورد)؛
+  شنوندهٔ erp:records-changed (entity=fiscal-year) برای همگامی زنده.
+- fiscal-year-footer.tsx (جدید): دکمهٔ جمع‌وجور tray (CalendarDays + عنوان + نقطهٔ زمردی
+  برای سال فعال + ChevronDown؛ هم‌قد با h-8/h-9 حالت فشرده/آرام) + DropdownMenu فهرست
+  سال‌ها با تیک انتخاب؛ ماشین حالت گارد event-driven بدون effect: beginChange → advance
+  (اولین برگهٔ dirty = آلارم، صف پاک = commit فوری) → تأیید: closeWindow همان برگه و ادامهٔ
+  صف (آلارم‌های پشت‌سرهم)، خیر/Escape/کلیک بیرون: activateTab همان برگه (نمایش در تب بار) +
+  بازگشت انتخاب + toast لغو؛ commit: closeAllFormTabs + setFiscalYearId + toast «سال مالی
+  فعال: {fy}». آلارم = Dialog شیشه‌ای با نشان مثلث کهربایی، متن دقیق مالک با «{form}»،
+  خیر (outline) و تأیید (destructive سرخ)؛ Dialog z-[11000/11500] از قبل بالای taskbar z-9000.
+- سیم‌کشی dirty هشت سطح: fiscal-year-form (اولین ویرایش تا ذخیره/بازکردن رکورد/فرم خالی)،
+  bs-window (onFieldChange + آپلودر لوگو + ریست derive-and-reset formKey + پس از ذخیره)،
+  dfb-form-runtime (onFieldChange/reset/openRecord/پس از ذخیره — هر دو runtime ساده و درختی)،
+  dfb-studio (dirty موجود hist.idx!==0)، form-builder-window (dirty موجود عنوان‌ها)،
+  software-config-window (setVal تا ذخیرهٔ موفق)، form-demo و tree-demo (نمونه‌ها هم تابع
+  همان قرارداد). settings/user-management (اعمال آنی) و placeholderها عمداً همیشه پاک‌اند.
+- general-window.tsx: عنوان زندهٔ برگه هنگام باز بودن زیرصفحه («عمومی — سال مالی جدید»)
+  با همان مکانیزم titleOverride Task 64 — نام فرم در آلارم دقیقاً چیزی است که کاربر در
+  نوار تب می‌بیند؛ الگوی go() بدون setState-in-effect.
+- fiscal-year-form.tsx: پس از ذخیره/حذف موفق رخ‌داد erp:records-changed
+  (entity=fiscal-year) منتشر می‌شود — فوتر بی‌reload تازه می‌شود (E2E: ذخیرهٔ ۱۴۰۴ →
+  فوتر همان لحظه ۱۴۰۴؛ حذف → «سال مالی تعریف نشده است»).
+- i18n: هشت کلید fy.footerAria/footerEmpty/unsavedTitle/unsavedBody({form})/unsavedYes/
+  unsavedNo/changedToast({fy})/changeCancelled ×۱۳ زبان بعد از fy.datesAutoHint (۱۳/۱۳).
+- E2E مرورگر (agent-browser 1280×800 + 375×720، fa و en و تم شب): فوتر پیش‌فرض ۱۴۰۲
+  ✓؛ بازکردن عمومی → نوار تب + هدر ۲۸/فوتر ۳۸ ✓؛ عنوان زندهٔ «عمومی — سال مالی جدید» ✓؛
+  تایپ کد → تعویض به ۱۴۰۳ → آلارم با متن دقیق مالک و نام فرم ✓؛ «خیر» → دیالوگ بسته،
+  برگه باز و فعال مانده، فوتر ۱۴۰۲، toast لغو ✓؛ دوباره → «تأیید» → همهٔ برگه‌ها بسته،
+  نوار محو، فوتر ۱۴۰۳، toast فعال، هدر/فوتر به ۳۶٫۴/۵۲ برگشت ✓؛ برچسب انتخاب پس از
+  reload = ۱۴۰۳ (erp.fiscalYear) ✓؛ برگهٔ تمیز (تنظیمات بدون ویرایش) → تعویض بی‌آلارم
+  و بستن فوری ✓؛ دو برگهٔ کثیف → آلارم عمومی → تأیید → آلارم نمونه فرم → «خیر» → همان
+  برگه فعال ماند و فوتر برگشت ✓؛ زبان en → "Select fiscal year"/«Unsaved data … Do you
+  want to continue?»/No/Yes, continue + toast انگلیسی و LTR ✓؛ ۳۷۵px بدون سرریز ✓؛ تم شب
+  هماهنگ ✓؛ ذخیره/حذف فرم سال مالی → فوتر زنده ✓؛ پاک‌سازی داده‌های آزمون (۱۴۰۲/۱۴۰۳/۱۴۰۴
+  حذف؛ جدول سروری خالی) و بازگشت وضعیت خالی «سال مالی تعریف نشده است» با دکمهٔ disable ✓؛
+  صفر خطای کنسول؛ خطای تاریخیِ «resolveWindowMeta defined multiple times» در dev.log
+  فقط مربوط به وضعیت میانهٔ ویرایش است (فایل نهایی یک تعریف دارد؛ کامپایل‌های بعدی پاک).
+- lint نهایی = ۰/۰؛ tsc = baseline ۳ خطای قدیمی (start-menu/field-translations —
+  git diff اثبات دست‌نخوردگی) — صفر خطای جدید.
+
+Stage Summary:
+- فوتر دسکتاپ حالا انتخابگر سال مالی است: فهرست سال‌های تعریف‌شدهٔ کاربر، ماندگاری آخرین
+  انتخاب (erp.fiscalYear) و نقطهٔ زمردی سال فعال؛ تعویض سال کل قرارداد مالک را اجرا
+  می‌کند — هر برگهٔ دارای ویرایش ذخیره‌نشده با آلارم «اطلاعات ذخیره نشده در فرم «{نام}»
+  وجود دارد. آیا ادامه می‌دهید؟» رضایت می‌گیرد، تأیید = بستن و ادامه، خیر = بازگشت کامل
+  و نمایش همان فرم در تب بار؛ صف پاک بلافاصله commit می‌شود و همهٔ برگه‌ها بسته و پوسته
+  به آرامش اول برمی‌گردد.
+- artifacts: src/stores/fiscal-year-store.ts؛ src/components/desktop/{fiscal-year-footer.tsx
+  (جدید)، window-meta.tsx (جدید)، app-window.tsx، desktop.tsx، taskbar.tsx}؛
+  src/stores/desktop-store.ts؛ src/components/erp/general/{fiscal-year-form.tsx،
+  general-window.tsx}؛ src/components/erp/business-structure/bs-window.tsx؛
+  src/components/erp/form-builder/{dfb-form-runtime.tsx، dfb-studio.tsx،
+  form-builder-window.tsx}؛ src/components/erp/settings/software-config-window.tsx؛
+  src/components/erp/{form-demo-window.tsx، tree-demo-window.tsx}؛
+  src/i18n/dictionaries.ts (fy.* ×۸ ×۱۳).
+- تصمیم‌های تفسیری اعلام‌شده: پیش‌فرض نمایش = نخستین سال مالی تعریف‌شده (بدون دستور صریح
+  مالک، هم‌الگو با Task 78)؛ «فوتر» = taskbar؛ آلارم به‌ازای هر برگهٔ کثیف (پشت‌سرهم،
+  به ترتیب بازشدن) با نامِ دقیقِ برگه؛ بستن مجدد انتخاب همان سال = no-op؛ محدودیت
+  شناخته‌شده: حذف سال از مسیر سروری (خارج از فرم) فوتر را تا رویداد بعدی/reload تازه
+  نمی‌کند (همان رفتار شنونده‌های erp:records-changed در کل اپ).
