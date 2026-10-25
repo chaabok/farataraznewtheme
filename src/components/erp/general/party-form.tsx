@@ -280,7 +280,6 @@ export function PartyForm({ onBack }: { onBack?: () => void }) {
         marriageDate: storedToDisplayDate(r.other.marriageDate, locale),
         birthDate: storedToDisplayDate(r.other.birthDate, locale),
       });
-      const empty = Object.fromEntries(GRID_TABS.map((k) => [k, []]));
       setRows({
         [TAB_PEOPLE]: r.persons.map((p) => ({
           firstName: p.firstName,
@@ -304,7 +303,6 @@ export function PartyForm({ onBack }: { onBack?: () => void }) {
           extension: p.extension,
           notes: p.notes,
         })),
-        ...empty,
       });
       setFormKey((k) => k + 1); // remount — ردیف‌های داخلی دوباره seed شوند
     },
@@ -429,8 +427,8 @@ export function PartyForm({ onBack }: { onBack?: () => void }) {
     };
     const role = (r: RoleState) =>
       r.checked
-        ? { checked: true, balance: num(r.balance), side: r.side }
-        : { checked: false, balance: null, side: "" };
+        ? { checked: true, balance: num(r.balance), side: r.side === "" ? null : r.side }
+        : { checked: false, balance: null, side: null };
     const sup = role(details.supplier);
     const cus = role(details.customer);
     const ag = role(details.salesAgent);
