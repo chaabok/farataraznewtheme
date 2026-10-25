@@ -107,8 +107,15 @@ export function TabBar({
               key={tab.id}
               role="tab"
               aria-selected={active}
+              tabIndex={0}
               title={tab.title}
               onClick={() => onActivate(tab.id)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  onActivate(tab.id);
+                }
+              }}
               className={cn(TAB_SHAPE, "group", active ? TAB_ACTIVE : TAB_IDLE)}
             >
               <span className={TAB_ICON_WRAP}>{tab.icon}</span>
