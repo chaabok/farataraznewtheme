@@ -305,6 +305,43 @@ model Party {
   @@map("Party")
 }
 
+/// DataTranslation — Task 92 (تأیید مالک): «انبار ترجمهٔ دادهٔ فرم‌های سیستمی».
+/// ترجمهٔ «دادهٔ» رکوردهای فرم‌های سیستمی (مثل Party) به زبان‌های فعال —
+/// قرارداد هم‌سان با DfbTranslation فرم‌ساز (Task 70) ولی روی بانک اصلی:
+///   · EntityType  — نام مدل سیستمی («Party»، بعداً «FiscalYear» و …)
+///   · EntityID    — شناسهٔ رکورد در همان مدل
+///   · FieldKey    — کلید فیلد (فیلد ساده «name» یا مسیر ردیف جدولی
+///                   «address.0.fullAddress» / «persons.1.notes»)
+///   · Locale      — زبان ترجمه (غیر-fa؛ fa خودِ مقدار اصلی رکورد است)
+///   · Value       — متن ترجمه‌شده
+/// هر دو مسیرِ ترجمهٔ آنلاین (یک فراخوانی LLM در BFF) و ورود دستی (آفلاین)
+/// با upsert روی unique چهارگانه می‌نویسند؛ مقدار خالی در ورود دستی = حذف
+/// ترجمه (fallback به fa — عین قرارداد DfbTranslationsBody).
+/// §16: ID دستی از IDGeneration ("DataTranslation")؛ بلوک کامل ارث‌بری
+/// AppBaseEntity ۸فیلدی (قرارداد اجباری مالک) — تا استقرار IAM = SYSTEM_ACTOR.
+model DataTranslation {
+  id                   BigInt   @id @map("ID")
+  entityType           String   @map("EntityType") // سقف ۴۰ نویسه در DTO/service
+  entityId             BigInt   @map("EntityID")
+  fieldKey             String   @map("FieldKey") // سقف ۱۲۰ نویسه در DTO/service
+  locale               String   @map("Locale") // سقف ۸ نویسه در DTO/service
+  value                String   @map("Value") // سقف ۱۰۰۰ نویسه در DTO/service
+  version              Int      @default(1) @map("Version")
+  creator              String   @map("Creator")
+  lastModifier         String?  @map("LastModifier")
+  businessStructureRef BigInt   @map("BusinessStructureRef")
+  companyRef           BigInt?  @map("CompanyRef")
+  branchRef            BigInt?  @map("BranchRef")
+  agencyRef            BigInt?  @map("AgencyRef")
+  shopRef              BigInt?  @map("ShopRef")
+  createdAt            DateTime @default(now()) @map("CreatedAt")
+  updatedAt            DateTime @updatedAt @map("UpdatedAt")
+
+  @@unique([entityType, entityId, fieldKey, locale])
+  @@index([entityType, entityId])
+  @@map("DataTranslation")
+}
+
 /// PartyPerson — تب «افراد مرتبط»: نام / نام خانوادگی (اجباری) / نسبت /
 /// کد ملی / شماره تلفن / توضیحات. با ثبت/ویرایشِ طرف حساب بازنویسی می‌شود.
 model PartyPerson {

@@ -37,6 +37,7 @@ const VERSIONED_MODELS: ReadonlySet<string> = new Set([
   "PartyPerson", // Task 84 — افراد مرتبط
   "PartyAddress", // Task 84 — نشانی
   "PartyPhone", // Task 84 — تلفن
+  "DataTranslation", // Task 92 — انبار ترجمهٔ دادهٔ فرم‌های سیستمی
 ]);
 
 const VERSION_ACTIONS = new Set(["update", "updateMany", "upsert"]);

@@ -25,7 +25,8 @@ export type TableKey =
   | "PartyPerson" // Task 84 — افراد مرتبطِ طرف حساب
   | "PartyAddress" // Task 84 — نشانی‌های طرف حساب
   | "PartyPhone" // Task 84 — تلفن‌های طرف حساب
-  | "City"; // Task 84 — جدول شهرها (مرجع)
+  | "City" // Task 84 — جدول شهرها (مرجع)
+  | "DataTranslation"; // Task 92 — انبار ترجمهٔ دادهٔ فرم‌های سیستمی
 
 export const TABLE_REGISTRY: Record<TableKey, TableEntry> = {
   IDGeneration: {
@@ -72,6 +73,10 @@ export const TABLE_REGISTRY: Record<TableKey, TableEntry> = {
   },
   City: {
     canonical: "City", // Task 84 — جدول شهرها (مرجع؛ seed دستی)
+    pk: "ID",
+  },
+  DataTranslation: {
+    canonical: "DataTranslation", // Task 92 — ترجمهٔ دادهٔ فرم‌های سیستمی
     pk: "ID",
   },
 };

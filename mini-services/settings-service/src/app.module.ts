@@ -9,6 +9,7 @@ import { SystemsModule } from "./systems/systems.module";
 import { SoftwareConfigModule } from "./software-config/software-config.module";
 import { FiscalYearModule } from "./fiscal-year/fiscal-year.module";
 import { PartyModule } from "./party/party.module";
+import { DataTranslationsModule } from "./data-translations/data-translations.module";
 import { HealthController } from "./health/health.controller";
 import { SeedModule } from "./seed/seed.module";
 
@@ -22,6 +23,7 @@ import { SeedModule } from "./seed/seed.module";
     SoftwareConfigModule,
     FiscalYearModule,
     PartyModule,
+    DataTranslationsModule, // Task 92 — انبار ترجمهٔ دادهٔ فرم‌های سیستمی
     SeedModule,
   ],
   controllers: [HealthController],
