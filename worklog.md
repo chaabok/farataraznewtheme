@@ -2536,3 +2536,22 @@ Stage Summary:
 - هاب «پیکربندی نرم افزارها» فعال است: ۷ تب اعلام‌شدهٔ مالک با placeholder منتظرِ فیلدها؛ زیرساخت کامل (جدول ارث‌بری ۱۲فیلدی + IDGeneration + API whitelist + رندرکنندهٔ فرم چندنوعی) طوری بسته شد که هر اعلام فیلد جدید فقط «رجیستری + ترجمه» است — بدون مهاجرت دیتابیس و بدون کد جدید.
 - artifacts: mini-services/settings-service/{prisma/schema.prisma، src/software-config/*، src/app.module.ts، src/id-generation/table-registry.ts، src/prisma/prisma.service.ts}، src/components/erp/settings/software-config-window.tsx، src/components/erp/settings-window.tsx، src/i18n/dictionaries.ts؛ جدول SoftwareConfig در db/custom.db.
 - تصمیم‌های تأییدشدهٔ مالک در مشاوره: کارت پرتابگر + زیرصفحه؛ برچسب «حقوق»؛ جدول واحد key-value؛ unique شامل BusinessStructureRef (برای پیکربندی تفکیکی شعب در آینده).
+
+---
+Task ID: 73
+Agent: Z.ai Code (main orchestrator)
+Task: درخواست مالک — «در منوی تنظیمات، زبان و زبان های فعال را در منوی عمومی قرار دهید» + «دکمه تم شب و روز را در هدر فرم قرار دهید».
+
+Work Log:
+- انتقال بخش‌ها: «زبان» و «زبان‌های فعال» (قبلآ در خانهٔ پنجرهٔ تنظیمات) به تب «عمومی» هاب «پیکربندی نرم افزارها» منتقل شدند — کامپوننت مشترک جدید LanguageSettingsSections در src/components/erp/settings/language-settings.tsx (JSX عینأ منتقل‌شده؛ ماندگاری همچنان سمت کلاینت erp.settings).
+- settings-window.tsx: دو بخش + importهای بلااستفاده (Globe/Languages/Badge/cn/LOCALES/LOCALE_NAMES/Locale و selectorهای setLocale/activeLocales/toggleActiveLocale) حذف شدند؛ بخش «ظاهر» و سه کارت پرتابگر دست‌نخورده ماندند.
+- software-config-window.tsx: تب عمومی اکنون «اولین محتوای اعلام‌شده» را رندر می‌کند (LanguageSettingsSections بالای ردیف‌های آیندهٔ SoftwareConfig همین تب)؛ placeholder خط‌چین فقط برای ۶ تب بدون فیلد؛ شاخهٔ فرم فیلدها از ternary به شرط مستقل fields.length > 0 شکسته شد تا وقتی فیلدهای عمومی اعلام شوند بخش زبان‌ها از بین نرود.
+- دکمهٔ تم شب/روز: کامپوننت جدید FormThemeToggle در src/components/forms/form-theme-toggle.tsx (HeaderButton سفید-روی-گرادیان با data-window-btn؛ Sun/Moon؛ tooltip = برچسب حالت مقصد با کلیدهای موجود settings.light/settings.dark — بدون کلید i18n جدید) به ابتدای خوشهٔ caption [تم – □ ✕] هدر گرادیانی هر دو پوستهٔ فرم (SimpleFormTwoRowTabbed + SimpleTreeForm) اضافه شد — همهٔ فرم‌های ران‌تایم (dfb-form-runtime)، نمونه‌ها و ساختار کسب‌وکار را پوشش می‌دهد؛ در حالت embedded هم فعال است.
+- الگوی hydration-safe: setState-in-effect پرچم react-hooks/set-state-in-effect را گرفت → به useSyncExternalStore (subscribe هیچ‌گاه، snapshot سرور=false/کلاینت=true) بازنویسی شد؛ پیش از mount آیکون با تم پیش‌فرض «روشن» یکی است.
+- دو خطای lint حین کار (parsing error باق‌ماندن */ در ویرایش کامنت بالای settings-window + set-state-in-effect) اصلاح شدند؛ lint نهایی صفر خطا/هشدار.
+- dfb-service (:3003) پایین بود (۵۰۲ در dev.log) → با bun run start راه‌اندازی مجدد شد؛ همهٔ مسیرها 200.
+
+Stage Summary:
+- تب «عمومی» پیکربندی نرم‌افزارها زنده شد: انتخاب زبان + مدیریت زبان‌های فعال (۱۳ زبانه) از همان‌جا سرویس می‌شوند و سوییچ فوری کل UI را همان‌جا اعمال می‌کند؛ خانهٔ تنظیمات فقط «ظاهر» + پرتابگرهاست. دکمهٔ تم شب/روز روی هدر گرادیانی همهٔ فرم‌ها (کنار captionهای پنجره) در دسترس است و تم سراسری next-themes را بین روشن/تیره جابه‌جا می‌کند.
+- artifacts: src/components/erp/settings/language-settings.tsx (جدید)، src/components/forms/form-theme-toggle.tsx (جدید)، src/components/erp/settings-window.tsx، src/components/erp/settings/software-config-window.tsx، src/components/forms/simple-form-two-row-tabbed.tsx، src/components/forms/simple-tree-form.tsx.
+- E2E مرورگر: خانهٔ تنظیمات بدون بخش زبان ✓؛ عمومی = زبان + زبان‌های فعال با بج 13/13 ✓؛ سوییچ en→ کل UI انگلیسی، de→ آلمانی (هر دو جهت از همان تب) ✓؛ toggle خاموش/روشن زبان فعال ✓؛ state به locale=fa و هر ۱۳ زبان فعال بازگردانده شد ✓. دکمهٔ تم: هدر «مشتری جدید» (دو‌ردیفه‌ای) و «نمونه درختی» (درختی) → dark (html.dark + آیکون Sun/«روشن») → light (Moon/«تیره») ✓؛ اسکرین‌شات‌های light/dark/موبایل ذخیره شدند. موبایل 375px: ۷ تب اسکرول‌پذیر + گرید دوستونهٔ زبان‌ها ✓. صفر خطای کنسول/دواِرور در بارگذاری عادی fa.

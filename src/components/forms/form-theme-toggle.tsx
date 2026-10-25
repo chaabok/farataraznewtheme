@@ -13,11 +13,20 @@ import { HeaderButton } from "@/components/forms/form-primitives";
    (کلیدهای موجود settings.light / settings.dark — بدون کلید i18n جدید).
    Hydration-safe: تا پیش از mount آیکون مطابق تم پیش‌فرض «روشن» رندر
    می‌شود تا با SSR یکی باشد. */
+/* no-op subscribe — the store never changes; only the server/client snapshot
+   distinction matters (false during SSR+hydration, true afterwards) */
+const subscribeNever = () => () => {};
+
 export function FormThemeToggle() {
   const t = useT();
   const { resolvedTheme, setTheme } = useTheme();
-  const [mounted, setMounted] = React.useState(false);
-  React.useEffect(() => setMounted(true), []);
+  /* hydration-safe «is mounted» probe — the recommended useSyncExternalStore
+     pattern (no setState-in-effect): server snapshot = false, client = true */
+  const mounted = React.useSyncExternalStore(
+    subscribeNever,
+    () => true,
+    () => false,
+  );
   const isDark = mounted && resolvedTheme === "dark";
   return (
     <HeaderButton

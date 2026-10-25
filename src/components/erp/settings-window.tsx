@@ -38,7 +38,7 @@ import { AppTile } from "@/components/desktop/app-tile";
    gradually; full AppBaseEntity inheritance on SoftwareConfig rows).
 
    Task 73 — the language + active-languages sections moved OUT of «home»
-   into the hub's «عمومی» tab (owner request) — see language-settings.tsx.
+   into the hub's «عمومی» tab (owner request) — see language-settings.tsx. */
 
 type SettingsPage = "home" | "business-structure" | "user-management" | "software-config";
 
