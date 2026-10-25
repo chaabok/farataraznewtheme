@@ -15,6 +15,13 @@ export type WindowKind =
   | "dfb-studio"
   | "dfb-list";
 
+/**
+ * Task 81 — a "window" is now a TAB of the desktop shell (owner request):
+ * the floating-window chrome retired and every form opens inside the tab
+ * strip below the dashboard header. The type keeps its historical name and
+ * the `maximized` flag (always true — a tab always fills the workspace)
+ * because form shells subscribe to it for their full-bleed styling.
+ */
 export interface WinState {
   id: string;
   kind: WindowKind;
@@ -23,15 +30,13 @@ export interface WinState {
   /** Task 64 — dynamic title override (MainDataGrid list windows append the
       live record count: «فهرست کلّی خدمات (12)») — undefined = resolveWindowMeta title */
   titleOverride?: string;
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-  z: number;
-  minimized: boolean;
+  /** tabs are always full-area (legacy floating-window flag, kept for
+      `windows.find(...)?.maximized` consumers) */
   maximized: boolean;
-  prev?: { x: number; y: number; w: number; h: number };
 }
+
+/** id of the implicit first tab — «صفحه اصلی» (the desktop itself) */
+export const HOME_TAB_ID = "home";
 
 /** free (px) position of a desktop icon inside the icons layer — Task 19 */
 export interface IconPos {
@@ -54,8 +59,10 @@ export type HeaderDock = "top" | "left" | "right";
 export type IconMode = "grid" | "sidebar";
 
 interface DesktopState {
+  /** open form tabs, in open order (the home tab is implicit and always first) */
   windows: WinState[];
-  zTop: number;
+  /** the active tab — HOME_TAB_ID shows the desktop itself */
+  activeTabId: string;
   startOpen: boolean;
   /** dragged-free positions of desktop icons (id → px); absent id = default grid slot */
   iconPositions: Record<string, IconPos>;
@@ -69,14 +76,13 @@ interface DesktopState {
   sidebarCollapsed: boolean;
   /** transient: a desktop icon is currently dragged over the taskbar (drop affordance) */
   dragOverTaskbar: boolean;
+  /** open a form as a tab (deduped by kind+appKey) and activate it */
   openWindow: (kind: WindowKind, appKey?: string) => void;
+  /** close a tab; closing the active one activates its neighbour (or home) */
   closeWindow: (id: string) => void;
-  focusWindow: (id: string) => void;
-  minimizeWindow: (id: string) => void;
-  toggleMaximize: (id: string) => void;
-  moveWindow: (id: string, x: number, y: number) => void;
-  resizeWindow: (id: string, w: number, h: number, x?: number, y?: number) => void;
-  /** Task 64 — live window title (record-count in list windows) */
+  /** switch the active tab */
+  activateTab: (id: string) => void;
+  /** Task 64 — live tab title (record-count in list windows) */
   setWindowTitle: (id: string, title: string) => void;
   setStartOpen: (open: boolean) => void;
   setIconPos: (id: string, pos: IconPos) => void;
@@ -93,36 +99,11 @@ interface DesktopState {
   setDragOverTaskbar: (over: boolean) => void;
 }
 
-const MIN_W = 520;
-const MIN_H = 400;
-
-function clamp(v: number, min: number, max: number) {
-  return Math.min(Math.max(v, min), max);
-}
-
-function defaultBounds(): { x: number; y: number; w: number; h: number } {
-  const vw = typeof window !== "undefined" ? window.innerWidth : 1280;
-  const vh = typeof window !== "undefined" ? window.innerHeight : 800;
-  const taskbar = 52;
-  if (vw < 640) {
-    return { x: 12, y: 12, w: vw - 24, h: vh - taskbar - 24 };
-  }
-  const w = clamp(Math.round(vw * 0.78), MIN_W, 1240);
-  const h = clamp(Math.round((vh - taskbar) * 0.86), MIN_H, 940);
-  const n = Math.floor(Math.random() * 3);
-  return {
-    x: Math.max(12, Math.round((vw - w) / 2) + n * 26 - 26),
-    y: Math.max(12, Math.round((vh - taskbar - h) / 2) + n * 18 - 18),
-    w,
-    h,
-  };
-}
-
 export const useDesktop = create<DesktopState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       windows: [],
-      zTop: 10,
+      activeTabId: HOME_TAB_ID,
       startOpen: false,
       iconPositions: {},
       pinned: DEFAULT_PINNED,
@@ -155,70 +136,36 @@ export const useDesktop = create<DesktopState>()(
           kind = "dfb-menu";
           appKey = "app:advancedTools";
         }
+        /* Task 81 — tabs: an already-open form is re-activated in place
+           (browser semantics) instead of stacking a second instance. */
         const existing = get().windows.find((w) => w.kind === kind && w.appKey === appKey);
         if (existing) {
-          set((s) => ({
-            zTop: s.zTop + 1,
-            startOpen: false,
-            windows: s.windows.map((w) =>
-              w.id === existing.id ? { ...w, z: s.zTop + 1, minimized: false } : w,
-            ),
-          }));
+          set({ activeTabId: existing.id, startOpen: false });
           return;
         }
-        const b = defaultBounds();
+        const id = `${kind}:${appKey ?? ""}-${Date.now()}`;
         set((s) => ({
           startOpen: false,
-          zTop: s.zTop + 1,
-          windows: [
-            ...s.windows,
-            {
-              id: `${kind}:${appKey ?? ""}-${Date.now()}`,
-              kind,
-              appKey,
-              x: b.x,
-              y: b.y,
-              w: b.w,
-              h: b.h,
-              z: s.zTop + 1,
-              minimized: false,
-              maximized: false,
-            },
-          ],
+          windows: [...s.windows, { id, kind, appKey, maximized: true }],
+          activeTabId: id,
         }));
       },
-      closeWindow: (id) => set((s) => ({ windows: s.windows.filter((w) => w.id !== id) })),
-      focusWindow: (id) =>
-        set((s) => ({ zTop: s.zTop + 1, windows: s.windows.map((w) => (w.id === id ? { ...w, z: s.zTop + 1 } : w)) })),
-      minimizeWindow: (id) =>
-        set((s) => ({ windows: s.windows.map((w) => (w.id === id ? { ...w, minimized: true } : w)) })),
-      toggleMaximize: (id) =>
-        set((s) => ({
-          windows: s.windows.map((w) => {
-            if (w.id !== id) return w;
-            if (w.maximized) {
-              const p = w.prev ?? { x: 40, y: 40, w: 900, h: 600 };
-              return { ...w, maximized: false, ...p, prev: undefined };
-            }
-            return { ...w, maximized: true, prev: { x: w.x, y: w.y, w: w.w, h: w.h } };
-          }),
-        })),
-      moveWindow: (id, x, y) =>
-        set((s) => ({ windows: s.windows.map((w) => (w.id === id ? { ...w, x, y } : w)) })),
-      resizeWindow: (id, w, h, x, y) =>
-        set((s) => ({
-          windows: s.windows.map((win) =>
-            win.id === id
-              ? {
-                  ...win,
-                  w: Math.max(MIN_W, w),
-                  h: Math.max(MIN_H, h),
-                  x: x !== undefined ? x : win.x,
-                  y: y !== undefined ? y : win.y,
-                }
-              : win,
-          ),
-        })),
+      closeWindow: (id) =>
+        set((s) => {
+          const idx = s.windows.findIndex((w) => w.id === id);
+          const windows = s.windows.filter((w) => w.id !== id);
+          /* browser rule: closing the ACTIVE tab activates its neighbour —
+             prefer the tab before it, fall back to the one after, else home */
+          let activeTabId = s.activeTabId;
+          if (s.activeTabId === id) {
+            /* idx-1 in the filtered array = the tab BEFORE the closed one;
+               closing the first tab falls forward to the new first */
+            activeTabId =
+              windows[Math.min(Math.max(idx - 1, 0), windows.length - 1)]?.id ?? HOME_TAB_ID;
+          }
+          return { windows, activeTabId };
+        }),
+      activateTab: (id) => set({ activeTabId: id }),
       setWindowTitle: (id, title) =>
         set((s) => ({
           windows: s.windows.map((w) => (w.id === id ? { ...w, titleOverride: title } : w)),
@@ -241,7 +188,9 @@ export const useDesktop = create<DesktopState>()(
     }),
     {
       /* Task 19/22: persist ONLY the desktop layout (icon positions + footer pins + header dock).
-         skipHydration keeps SSR markup deterministic; Desktop rehydrates after mount. */
+         skipHydration keeps SSR markup deterministic; Desktop rehydrates after mount.
+         Task 81 — tabs stay session-local on purpose: a fresh load always lands
+         on the home tab with an empty strip (like a freshly opened browser). */
       name: "erp.desktop.layout",
       version: 2,
       /* Task 35/37 — one-time migrations: retired desktop shortcuts (the

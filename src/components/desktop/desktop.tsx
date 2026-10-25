@@ -23,9 +23,16 @@ import { DirectionProvider } from "@radix-ui/react-direction";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useSettings, useT } from "@/stores/settings-store";
-import { useDesktop, type WinState, type WindowKind } from "@/stores/desktop-store";
+import {
+  useDesktop,
+  HOME_TAB_ID,
+  type WinState,
+  type WindowKind,
+} from "@/stores/desktop-store";
 import { useAppRegistry } from "@/stores/app-registry-store";
-import { AppWindow } from "./app-window";
+import { TabSurface } from "./app-window";
+import { TabBar } from "./tab-bar";
+import { useChromeMetrics } from "./chrome-metrics";
 import { AppTile } from "./app-tile";
 import { Taskbar } from "./taskbar";
 import { DashboardHeader } from "./dashboard-header";
@@ -220,9 +227,8 @@ const ICON_H = 100;
 const GRID_STEP_X = 88;
 const GRID_STEP_Y = 106;
 const GRID_PAD = 8;
-/* Task 22: header thickness = 52 × 0.7 = 36.4px (owner height contract).
-   Docked header reserves its strip: layers below/beside it get this + the 8px pad. */
-const HEADER_THICK = 36.4;
+/* Task 81 — header thickness lives in chrome-metrics.ts now (dynamic:
+   the header auto-shrinks while the tab strip is open) */
 const DRAG_THRESHOLD = 6;
 
 interface IconEntry {
@@ -249,6 +255,8 @@ function DesktopIcons() {
   const pinToTaskbar = useDesktop((s) => s.pinToTaskbar);
   const setDragOverTaskbar = useDesktop((s) => s.setDragOverTaskbar);
   const headerDock = useDesktop((s) => s.headerDock);
+  /* Task 81 — the icon layer clears the header AND the tab strip while it is open */
+  const metrics = useChromeMetrics();
   /* Task 38 — sidebar presentation state (owner request) */
   const iconMode = useDesktop((s) => s.iconMode);
   const sidebarCollapsed = useDesktop((s) => s.sidebarCollapsed);
@@ -502,8 +510,9 @@ function DesktopIcons() {
   const sidebarOpen = iconMode === "sidebar";
   const startDockedHeader =
     (dir === "rtl" && headerDock === "right") || (dir === "ltr" && headerDock === "left");
-  const startOffset = startDockedHeader ? HEADER_THICK + GRID_PAD : GRID_PAD;
-  const topOffset = headerDock === "top" ? HEADER_THICK + GRID_PAD : GRID_PAD;
+  const startOffset = startDockedHeader ? metrics.headerH + GRID_PAD : GRID_PAD;
+  const topOffset =
+    (headerDock === "top" ? metrics.headerH : 0) + metrics.tabbarH + GRID_PAD;
   const SIDEBAR_W = "min(272px, 100vw - 72px)";
   const toggleStart = sidebarOpen
     ? `calc(${startOffset}px + ${sidebarCollapsed ? "64px" : SIDEBAR_W} + 8px)`
@@ -543,10 +552,10 @@ function DesktopIcons() {
         ref={layerRef}
         aria-label={t("startmenu.pinned")}
       style={{
-        top: headerDock === "top" ? HEADER_THICK + GRID_PAD : GRID_PAD,
-        bottom: 60,
-        left: headerDock === "left" ? HEADER_THICK + GRID_PAD : GRID_PAD,
-        right: headerDock === "right" ? HEADER_THICK + GRID_PAD : GRID_PAD,
+        top: topOffset,
+        bottom: metrics.taskbarH + 8,
+        left: headerDock === "left" ? metrics.headerH + GRID_PAD : GRID_PAD,
+        right: headerDock === "right" ? metrics.headerH + GRID_PAD : GRID_PAD,
       }}
       className={cn(
         "absolute z-0 select-none",
@@ -611,7 +620,7 @@ function DesktopIcons() {
           style={{
             insetInlineStart: startOffset,
             top: topOffset,
-            bottom: 60,
+            bottom: metrics.taskbarH + 8,
             width: sidebarCollapsed ? 64 : SIDEBAR_W,
           }}
           className="acrylic-strong menu-in win-shadow absolute z-[80] flex flex-col overflow-hidden rounded-2xl border border-border/60 shadow-xl transition-[width] duration-300"
@@ -709,7 +718,7 @@ function DesktopIcons() {
             }}
             aria-pressed={sidebarOpen}
             aria-label={sidebarOpen ? t("sidebar.toGrid") : t("sidebar.toSidebar")}
-            style={{ bottom: 64, insetInlineStart: toggleStart }}
+            style={{ bottom: metrics.taskbarH + 12, insetInlineStart: toggleStart }}
             className="acrylic-strong win-shadow absolute z-[9300] flex h-10 w-10 items-center justify-center rounded-full border text-foreground/90 shadow-lg transition-[inset-inline-start] duration-300 hover:bg-foreground/10 cursor-pointer"
           >
             <ToggleIcon className="h-4 w-4 shrink-0" aria-hidden />
