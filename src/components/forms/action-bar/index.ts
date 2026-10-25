@@ -33,6 +33,7 @@ export { DeleteNewButton } from "./delete-new-button";
 export { DeleteCloseButton } from "./delete-close-button";
 export { PrintFormButton } from "./print-button";
 export { RecordListDropdown } from "./list-dropdown";
+export { TranslateButton } from "./translate-button";
 export { HelpButton } from "./help-button";
 export { useActionRun } from "./use-action-run";
 export type { ActionBarButtonProps, ActionBarListItem, FormAction } from "./types";

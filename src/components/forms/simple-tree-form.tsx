@@ -126,6 +126,10 @@ export interface SimpleTreeFormProps {
   /* Task 86 — mini-grid dropdown: highlight of the open record + reload */
   listActiveId?: string | null;
   onListRefresh?: () => void | Promise<void>;
+  /* Task 90 — «ترجمه» behavior of the current record (owner: the button
+     exists in ALL forms; enablement lives inside TranslateButton) */
+  onTranslateOnline?: FormAction;
+  onTranslateOffline?: FormAction;
   canSave?: boolean;
   canCopy?: boolean;
   canDelete?: boolean;
@@ -229,6 +233,8 @@ export function SimpleTreeForm({
   onOpenListItem,
   listActiveId,
   onListRefresh,
+  onTranslateOnline,
+  onTranslateOffline,
   canSave = true,
   canCopy = true,
   canDelete = true,
@@ -542,6 +548,8 @@ export function SimpleTreeForm({
             onOpenListItem={onOpenListItem}
             listActiveId={listActiveId}
             onListRefresh={onListRefresh}
+            onTranslateOnline={onTranslateOnline}
+            onTranslateOffline={onTranslateOffline}
             canSave={canSave}
             canCopy={canCopy}
             canDelete={canDelete}

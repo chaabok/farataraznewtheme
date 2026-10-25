@@ -2,9 +2,17 @@
 
 import * as React from "react";
 import { toast } from "sonner";
-import { FileText, Sigma } from "lucide-react";
+import { FileText, Languages, Sigma } from "lucide-react";
 import { useT, useSettings } from "@/stores/settings-store";
+import { LOCALES } from "@/i18n/config";
 import { useDesktop } from "@/stores/desktop-store";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   SimpleFormTwoRowTabbed,
   type SimpleFormField,
@@ -25,7 +33,8 @@ import {
   fieldConfigItems, fieldItemsScript, rowsToItems, DFB_ITEM_FIELD_TYPES,
   type DfbFormDetail, type DfbFieldDef, type DfbFieldItem,
 } from "@/stores/dfb-store";
-import { useDfbTrMap, dfbTransKey } from "@/stores/dfb-translations";
+import { useDfbTrMap, dfbTransKey, useDfbTranslations } from "@/stores/dfb-translations";
+import { DfbTranslationsBody } from "./field-translations";
 import { storedToDisplayDate } from "@/lib/calendar-date";
 import { useOrgScope } from "@/stores/org-context-store";
 
@@ -45,6 +54,7 @@ export function DfbFormRuntime({ formId }: { formId: number }) {
 function RuntimeInner({ formId }: { formId: number }) {
   const t = useT();
   const locale = useSettings((s) => s.locale);
+  const activeLocales = useSettings((s) => s.activeLocales); // Task 90
   const trMap = useDfbTrMap(); // Task 68 — برچسب/عنوان‌ها به زبان فعلی (آفلاین)
   const chrome = useWindowChrome();
   const headerMaximized = useDesktop(
@@ -269,6 +279,49 @@ function RuntimeInner({ formId }: { formId: number }) {
     [records],
   );
 
+  /* Task 90 — «ترجمه» در اکشن بار همهٔ فرم‌ها (فرمان مالک). اینجا رفتارِ
+     رکوردِ بازِ فرم‌های فرم‌ساز بسته می‌شود — همان قرارداد «فهرست کلّی»
+     (Task 70): یک فراخوانی LLM برای همهٔ فیلدهای متنی رکورد، ذخیره در
+     DfbTranslation و بازخوانی نقشهٔ کش کلاینت. */
+  const translateOnline = React.useCallback(async () => {
+    if (currentDataId == null) {
+      toast.info(t("dfb.noRecordSelected"));
+      return;
+    }
+    const langs = LOCALES.filter((l) => l !== "fa" && activeLocales.includes(l));
+    if (langs.length === 0) {
+      toast.info(t("settings.activeLangs"));
+      return;
+    }
+    try {
+      const res = await fetch("/api/dfb-translations/auto-translate", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ formId, dataId: currentDataId, langs }),
+      });
+      const json = (await res.json().catch(() => null)) as
+        | { ok?: boolean; message?: string }
+        | null;
+      if (!res.ok || !json?.ok) {
+        throw new Error(json?.message || t("common.error"));
+      }
+      await useDfbTranslations.getState().load(); // نقشهٔ ترجمهٔ تازه (ردیف‌های Value)
+      toast.success(t("dfb.list.translateDone"));
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : t("common.error"));
+    }
+  }, [currentDataId, formId, activeLocales, t]);
+
+  /* Task 90 — ورود دستی (آفلاین): دیالوگ ترجمهٔ فیلدهای متنی رکورد باز */
+  const [offlineOpen, setOfflineOpen] = React.useState(false);
+  const openTranslateOffline = React.useCallback(() => {
+    if (currentDataId == null) {
+      toast.info(t("dfb.noRecordSelected"));
+      return;
+    }
+    setOfflineOpen(true);
+  }, [currentDataId, t]);
+
   if (error) {
     return <div className="grid h-full place-items-center p-6 text-sm text-muted-foreground">{t("dfb.formNotFound")}</div>;
   }
@@ -289,6 +342,20 @@ function RuntimeInner({ formId }: { formId: number }) {
      to the running form — what the owner designed is what runs */
   const shellStyle = (header.style ?? null) as DfbFormStyle | null;
   const shellTheme = dfbShellTheme(shellStyle);
+
+  /* Task 90 — دیالوگ «ورود دستی (آفلاین)» رکورد باز — در هر دو مسیر ران‌تایم
+     (فرم دو‌ردیفه و درختی) مشترک است؛ ذخیرهٔ فوری با debounce داخل خود پنل */
+  const translateDialogEl = (
+    <RuntimeTranslateDialog
+      open={offlineOpen}
+      onOpenChange={setOfflineOpen}
+      fields={detail.fields}
+      entityRef={currentDataId}
+      values={baseValues}
+      locale={locale}
+      trMap={trMap}
+    />
+  );
 
   const toShellType = (ft: string): SimpleFormField["type"] =>
     (["text", "number", "select", "lookup", "checkbox", "date", "textarea", "radio",
@@ -462,8 +529,9 @@ function RuntimeInner({ formId }: { formId: number }) {
     }
 
     return (
-      <SimpleFormTwoRowTabbed
-        title={dfbFormTitle(detail, locale, trMap)}
+      <>
+        <SimpleFormTwoRowTabbed
+          title={dfbFormTitle(detail, locale, trMap)}
         badge={(header.badge as string) ?? undefined}
         icon={<FileText className="h-3.5 w-3.5" aria-hidden />}
         headerClassName={shellTheme.headerClassName}
@@ -495,6 +563,8 @@ function RuntimeInner({ formId }: { formId: number }) {
         onHeaderDoubleClick={chrome?.onDoubleClick}
         onHelp={() => { toast.info(t("dfb.builderNote")); }}
         canSave={!busy}
+        onTranslateOnline={translateOnline}
+        onTranslateOffline={openTranslateOffline}
         listItems={records.map((r) => ({
           id: String(r.dataId),
           title: String(r.dataId),
@@ -517,7 +587,9 @@ function RuntimeInner({ formId }: { formId: number }) {
         listActiveId={currentDataId != null ? String(currentDataId) : null}
         onListRefresh={detail ? () => loadRecords(detail) : undefined}
         onOpenListItem={(item) => openRecord(item.id)}
-      />
+        />
+        {translateDialogEl}
+      </>
     );
   }
 
@@ -553,7 +625,8 @@ function RuntimeInner({ formId }: { formId: number }) {
   };
 
   return (
-    <SimpleTreeForm
+    <>
+      <SimpleTreeForm
       treeTitle={dfbFormTitle(detail, locale, trMap)}
       treeEmptyText={t("dfb.noRecords")}
       nodes={nodes}
@@ -597,6 +670,76 @@ function RuntimeInner({ formId }: { formId: number }) {
       onHeaderDoubleClick={chrome?.onDoubleClick}
       onHelp={() => { toast.info(t("dfb.builderNote")); }}
       canSave={!busy}
+      onTranslateOnline={translateOnline}
+      onTranslateOffline={openTranslateOffline}
     />
+      {translateDialogEl}
+    </>
+  );
+}
+
+/* Task 90 — دیالوگ «ورود دستی (آفلاین)» رکورد باز (عین الگوی فهرست کلّی،
+   Task 70): پنل ترجمهٔ زبان‌های فعال برای هر فیلد متنی؛ ذخیرهٔ خودکار با
+   debounce داخل خود DfbTranslationsBody انجام می‌شود. */
+function RuntimeTranslateDialog({
+  open,
+  onOpenChange,
+  fields,
+  entityRef,
+  values,
+  locale,
+  trMap,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  fields: DfbFieldDef[];
+  entityRef: number | null;
+  values: Record<string, string | boolean>;
+  locale: ReturnType<typeof useSettings.getState>["locale"];
+  trMap: ReturnType<typeof useDfbTrMap>;
+}) {
+  const t = useT();
+  const textual = React.useMemo(
+    () =>
+      fields
+        .filter((f) => f.fieldType === "text" || f.fieldType === "textarea")
+        .sort((a, b) => a.orderIndex - b.orderIndex),
+    [fields],
+  );
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[85vh] max-w-lg overflow-y-auto scrollbar-slim">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-base">
+            <Languages className="h-4 w-4 text-purple-600 dark:text-purple-400" aria-hidden />
+            {t("dfb.list.translateManualTitle")}
+          </DialogTitle>
+          <DialogDescription>
+            {t("dfb.list.translateOfflineHint")}
+            <span className="mx-1 font-mono text-[10px]" dir="ltr">#{entityRef ?? ""}</span>
+          </DialogDescription>
+        </DialogHeader>
+        {entityRef == null ? null : textual.length === 0 ? (
+          <p className="rounded-lg border border-dashed border-border/70 p-4 text-center text-xs text-muted-foreground">
+            {t("dfb.list.translateNoTextFields")}
+          </p>
+        ) : (
+          <div className="grid gap-3">
+            {textual.map((f) => (
+              <div key={f.fieldKey} className="grid gap-1">
+                <span className="text-xs font-medium">{dfbFieldLabel(f, locale, trMap)}</span>
+                <DfbTranslationsBody
+                  entityType="Value"
+                  entityRef={entityRef}
+                  fieldKey={f.fieldKey}
+                  fallbackFa={String(values[String(f.id)] ?? "")}
+                  labelKey="dfb.i18n.valueTitle"
+                />
+              </div>
+            ))}
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }

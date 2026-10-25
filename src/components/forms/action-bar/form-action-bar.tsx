@@ -12,6 +12,7 @@ import { DeleteNewButton } from "./delete-new-button";
 import { DeleteCloseButton } from "./delete-close-button";
 import { PrintFormButton } from "./print-button";
 import { RecordListDropdown } from "./list-dropdown";
+import { TranslateButton } from "./translate-button";
 import { HelpButton } from "./help-button";
 import type { ActionBarListItem, FormAction } from "./types";
 
@@ -39,6 +40,13 @@ export interface FormActionBarProps {
   /* Task 86 — mini-grid dropdown: highlight of the open record + reload */
   listActiveId?: string | null;
   onListRefresh?: () => void | Promise<void>;
+
+  /* action 12 — «ترجمه» (Task 90 — owner: the button exists in ALL forms,
+     system and non-system, and activates when ≥2 languages are selected in
+     settings). Callers own the behavior: DFB forms wire their current
+     record; system forms may leave them undefined (items show a hint). */
+  onTranslateOnline?: FormAction;
+  onTranslateOffline?: FormAction;
 
   /* capability gates (e.g. delete only when a saved record is loaded) */
   canSave?: boolean;
@@ -71,6 +79,7 @@ function Divider() {
  *
  *   1 ریست  |  2 ذخیره  3 ذخیره و جدید  4 ذخیره و بستن  |  5 کپی
  *   6 حذف  7 حذف و جدید  8 حذف و بستن  |  9 پرینت  10 لیست (dropdown)
+ *   (+ 12 ترجمه — Task 90، در همهٔ فرم‌ها)
  *   (+ optional 11 راهنما — Task 28, rendered right after «لیست»)
  *
  * Legacy semantics are composed automatically when granular handlers are not
@@ -96,6 +105,8 @@ export function FormActionBar({
   onOpenListItem,
   listActiveId,
   onListRefresh,
+  onTranslateOnline,
+  onTranslateOffline,
   canSave = true,
   canCopy = true,
   canDelete = true,
@@ -145,6 +156,13 @@ export function FormActionBar({
           onRefresh={onListRefresh}
         />
       )}
+      {/* Task 90 — «ترجمه» renders in EVERY form (system + non-system),
+          deliberately OUTSIDE the stored-actions allowlist per the owner's
+          blanket rule; its enablement (≥2 active languages) lives inside. */}
+      <TranslateButton
+        onTranslateOnline={onTranslateOnline}
+        onTranslateOffline={onTranslateOffline}
+      />
       {onHelp && <HelpButton onClick={onHelp} />}
     </div>
   );
