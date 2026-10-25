@@ -124,40 +124,53 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    /* ② یک فراخوانی LLM برای کل رکورد — خروجی JSON سخت */
+    /* ② یک فراخوانی LLM «به‌ازای هر فیلد» — خروجی JSON سخت.
+       تجربهٔ زنده (Task 92): پاسخِ کلِ رکوردِ چندفیلدی گاهی در میانه بریده
+       می‌شود (JSON ناقص) و درست‌نما نیست؛ پاسخِ تک‌فیلدی همیشه کامل آمده است.
+       پس هر فیلد جدا صدا زده می‌شود و روی خطای نخوانایی یک بار تلاش مجدد. */
     if (process.env.NODE_ENV !== "production") {
-      console.error("[auto-translate] calling LLM fields:", texts.length, "langs:", langs.length);
+      console.error("[auto-translate] fields:", texts.length, "langs:", langs.length);
     }
     const zai = await ZAI.create();
-    const payload = {
-      source_language: "fa",
-      target_languages: langs,
-      fields: Object.fromEntries(texts.map((tx) => [tx.key, tx.value])),
-    };
-    const completion = await zai.chat.completions.create({
-      messages: [
-        {
-          role: "assistant",
-          content:
-            "You are a professional translator for business/ERP records. Translate faithfully and naturally, keeping numbers, codes and proper nouns intact. Respond with STRICT JSON only — no markdown fences, no commentary.",
-        },
-        {
-          role: "user",
-          content: `Translate every field value into EACH target language.\nInput JSON:\n${JSON.stringify(payload)}\n\nRespond with exactly this JSON shape:\n{"translations":{"<fieldKey>":{"<lang>":"<translation>"}}}`,
-        },
-      ],
-      thinking: { type: "disabled" },
-    });
-    const raw = completion.choices[0]?.message?.content ?? "";
-    if (process.env.NODE_ENV !== "production") {
-      console.error("[auto-translate] RAW FULL:", JSON.stringify(raw));
-    }
-    const parsed = parseLooseJson(raw) as
-      | { translations?: Record<string, Record<string, string>> }
-      | null;
-    const tr = parsed?.translations;
-    if (!tr || typeof tr !== "object") {
-      return Response.json({ ok: false, message: "پاسخ سرویس ترجمه قابل خواندن نبود" }, { status: 502 });
+    const askLLM = (single: { key: string; value: string }) =>
+      zai.chat.completions.create({
+        messages: [
+          {
+            role: "assistant",
+            content:
+              "You are a professional translator for business/ERP records. Translate faithfully and naturally, keeping numbers, codes and proper nouns intact. Respond with STRICT JSON only — no markdown fences, no commentary.",
+          },
+          {
+            role: "user",
+            content: `Translate the field value into EACH target language.\nInput JSON:\n${JSON.stringify({
+              source_language: "fa",
+              target_languages: langs,
+              fields: { [single.key]: single.value },
+            })}\n\nRespond with exactly this JSON shape:\n{"translations":{"<fieldKey>":{"<lang>":"<translation>"}}}`,
+          },
+        ],
+        thinking: { type: "disabled" },
+      });
+
+    const tr: Record<string, Record<string, string>> = {};
+    for (const tx of texts) {
+      let ok = false;
+      for (let attempt = 0; attempt < 2 && !ok; attempt++) {
+        const completion = await askLLM(tx);
+        const raw = completion.choices[0]?.message?.content ?? "";
+        if (process.env.NODE_ENV !== "production") {
+          console.error("[auto-translate]", tx.key, "attempt", attempt + 1, "raw len:", raw.length);
+        }
+        const parsed = parseLooseJson(raw) as
+          | { translations?: Record<string, Record<string, string>> }
+          | null;
+        const perField = parsed?.translations?.[tx.key];
+        if (perField && typeof perField === "object") {
+          tr[tx.key] = perField;
+          ok = true;
+        }
+      }
+      /* فیلدی که هر دو تلاشش نخوانا بود رد می‌شود — بقیهٔ فیلدها ذخیره می‌شوند */
     }
 
     /* ③ upsert به DataTranslation (مقدار خالی = skip، نه حذف) */
