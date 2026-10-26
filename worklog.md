@@ -3815,3 +3815,23 @@ Stage Summary:
 - نخستین فرم سیستمیِ زیرمنوی «اطلاعات پایه»ٔ حسابداری با موتور استاندارد فرم‌های سیستم نشست: شِل TwoRowTabbed + زنجیرهٔ اعتبارسنجی دولایه + کاشی ترجمه + فهرست MainDataGrid + ثبت در درختوارهٔ فرمساز با راه‌انداز واقعی — عین قرارداد Task 114/116 و بدون هیچ دوبلی.
 - الگوی «فرم جدید حسابداری» از این پس: یک مدل در schema + یک ماژول settings-service + یک مدخل SYSTEM_FORMS با anchorSubmenuCode accBasicInfo + یک کامپوننت form + یک زیرصفحه در accounting-window + یک آیتم در ACCOUNTING_MENU_GROUPS + کلیدهای dt.*.
 - artifacts: mini-services/settings-service/src/detail-type/* (جدید)؛ prisma/schema.prisma؛ id-generation/table-registry.ts؛ prisma/prisma.service.ts؛ app.module.ts؛ seed/seed.service.ts؛ mini-services/dfb-service/src/seed/seed.service.ts؛ src/components/erp/accounting/detail-type-form.tsx (جدید)؛ accounting-window.tsx؛ accounting-menu-home.tsx؛ src/stores/accounting-nav-store.ts (جدید)؛ src/components/erp/form-builder/dfb-system-forms.ts؛ src/i18n/dictionaries.ts (۱۳۰ ردیف).
+
+---
+Task ID: 121
+Agent: Z.ai Code (اصلی)
+Task: «این سورس و بک‌آپ داخل آن را ریستور کنید» — ریستور کامل پروژه از فایل ارسالی farataraznewtheme-main (8).zip (سورس + بک‌آپ‌های دیتابیس)
+
+Work Log:
+- بازبینی بسته: ۷۱۲ فایل — سورس کامل (src/، mini-services/، prisma، Caddyfile، AGENTS.md) + db/custom.db و db/dfb.db + زنجیرهٔ بک‌آپ‌های §۰.۹ (bak-t76…bak-t120) + پوشهٔ «backup db» تاریخی؛ خط اول آرشیو = هش کامیت 84b5c81 (خروجی Download ZIP از شاخهٔ main گیت‌هاب).
+- تشخیص وضعیت: سندباکس قبلاً ریست شده بود — دیتابیس زنده به ۲۰۰KB (حالت قدیمی t76) برگشته و node_modules سرویس‌ها حذف شده بود؛ بستهٔ ارسالی جدیدترین وضعیت (t120، custom.db = ۲.۲MB) را داشت.
+- عکس فوری: بک‌آپ دیتابیس‌های زندهٔ آسیب‌دیده در db/custom.db.bak-pre-restore و db/dfb.db.bak-pre-restore.
+- rsync با --delete و استثناهای node_modules/.next/.git/upload/dev.log → درخت سورس دقیقاً برابر بسته شد؛ فایل‌های t120 (detail-type-form.tsx، ماژول detail-type، مدل DetailType، seed acc.detailType) تأیید شد.
+- bun install ریشه + ۴ سرویس؛ راه‌اندازی با dev.sh → ۶ پورت (3000/3001/3002/3003/3010/81) بالا.
+- E2E (agent-browser): دسکتاپ فارسی/RTL با نشست فعال ✓؛ پنجرهٔ حسابداری ← اطلاعات پایه ← فرم «نوع تفصیل جدید» با ۴ فیلد و بدون عنوان لاتین ✓؛ فهرست «فهرست انواع تفصیل» با گرید فیلتردار و ۶ رکورد seed بازیابی‌شده ✓؛ سال مالی ۱۴۰۵ و تب‌های بازیابی‌شده ✓؛ صفر خطای کنسول ✓.
+- هم‌راستاسازی گیت: origin/main دقیقاً روی 84b5c81 (t120) = محتوای بسته بود؛ شاخهٔ محلی (منحرف‌شده به‌خاطر ریست) با `git reset --hard origin/main` به ریموت چسباند شد — صفر اتلاف از تاریخچهٔ ریموت (۱۰۵ کامیت دست‌نخورده)؛ بک‌آپ‌های pre-restore به‌عنوان کامیت b050733 اضافه شد.
+- حادثهٔ باقی‌مانده: توکن گیت‌هاب داخل .git/config منقضی/باطل است (API = 401؛ push = Invalid username or token) → کامیت b050733 (فقط ۲ فایل بک‌آپ pre-restore) هنوز پوش نشده؛ ریموت در اوج سالم است چون خودش همان محتوای بسته است. پس از تعویض توکن توسط مالک، سرویس auto-push خودکار آن را پوش می‌کند.
+
+Stage Summary:
+- پروژه دقیقاً روی وضعیت t120 بستهٔ ارسالی بازنشانی شد: سورس + دیتابیس‌های ۲.۲MB + تمام بک‌آپ‌ها؛ برنامه تأیید مرورگری شد و داده‌ها (۶ تفصیل، سال مالی ۱۴۰۵، ترجمه‌ها) زنده‌اند.
+- گیت: محلی = origin/main (84b5c81) + ۱ کامیت بک‌آپ در انتظار پوش؛ تنها مانع، توکن منقضی گیت‌هاب است — تعویض توکن لازم است.
+- artifacts: کل درخت پروژه (ریستور)؛ db/custom.db.bak-pre-restore + db/dfb.db.bak-pre-restore (شواهد وضعیت پیش از ریستور).
