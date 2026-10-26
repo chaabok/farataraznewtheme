@@ -3699,3 +3699,20 @@ Stage Summary:
 - فرم سیستمی «نوع ارز جدید» به اطلاعات پایهٔ منوی عمومی اضافه شد: فیلدها عین تصویر مالک، seed ۲۵ ارز معتبر بین‌المللی ISO 4217 (از ریال ایران تا دلار/یورو/درهم/دینارها)، CRUD کامل دولایه، و حضور هم‌زمان در منوی عمومی + درختوارهٔ فرمساز با بازکردن فرم واقعی (قرارداد Task 112/113).
 - معماری سیستمیک حفظ شد: فرم‌های سیستمی جدید فقط با یک مدخل در SYSTEM_FORMS (dfb seed) + یک زیرصفحه در پنجرهٔ عمومی + ماژول سرویس تنظیمات اضافه می‌شوند؛ هیچ دوبلی در هیچ پنجره‌ای (قرارداد Task 113: پنجرهٔ عمومی بدنهٔ بومی دارد، فرم‌ساز فقط ثبت رجیستری را نشان می‌دهد).
 - artifacts: mini-services/settings-service/src/currency-type/* (جدید)؛ prisma/schema.prisma؛ seed/seed.service.ts؛ id-generation/table-registry.ts؛ prisma/prisma.service.ts؛ src/components/erp/general/currency-type-form.tsx (جدید)؛ general-window.tsx؛ general-nav-store.ts؛ dfb-system-forms.ts؛ mini-services/dfb-service/src/seed/seed.service.ts؛ src/i18n/dictionaries.ts.
+---
+Task ID: 115
+Agent: Z.ai Code (main)
+Task: «دکمه ترجمه در فرم نوع ارز جدید غیرفعال می باشد» — فعال‌سازی کاشی «ترجمه»ٔ فرم «نوع ارز جدید» (Task 114) با قلاب عمومی ترجمهٔ رکورد + نمایش ترجمه در فیلدها و فهرست.
+
+Work Log:
+- ریشه‌یابی: فرم ارز (currency-type-form.tsx) هرگز onTranslateOnline/onTranslateOffline به SimpleFormTwoRowTabbed نداده بود؛ TranslateButton (Task 90) با دو handlerِ بی‌واسطه، هر دو آیتم منو را غیرفعال رندر می‌کرد (قرارداد wired).
+- اتصال با قلاب عمومی Task 107 (useRecordTranslation): entityType «CurrencyType» (با regex endpoint سازگار — بررسی شد)، entityId = رکورد باز؛ فیلدهای قابل ترجمه = متن‌های fa رکورد: title + decimalTitle (کد/لاتین/اعداد ترجمه نمی‌گیرند).
+- نمایش ترجمه (الگوی Party Task 93/99): نقشهٔ ترجمهٔ رکورد باز (loadTr با گارد currentIdRef برای پاسخ‌های کهنه) → در زبان غیر-fa فیلد عنوان/عنوان اعشارِ رکورد ذخیره‌شده تا فوکوس/ویرایش نشده ترجمهٔ زبان جاری را نشان می‌دهد (onRevealFocus = نمایان‌شدن مقدار پایه)؛ فهرست رکوردها با endpoint دسته‌ای (fieldKeys=title,decimalTitle) هنگام تعویض زبان نرم می‌شود.
+- onTranslated/onOfflineClose → تازه‌سازی هم‌زمان overlay رکورد باز + نسخهٔ فهرست؛ دیالوگ ورود دستی (خروجی قلاب) در انتهای فرم رندر شد.
+- E2E (agent-browser): دکمهٔ «ترجمه» بدون disabled ✓؛ منو: «ترجمهٔ خودکار (آنلاین) — ۱۲ زبان فعال» و «ورود دستی (آفلاین)» هر دو فعال ✓؛ ترجمهٔ آنلاین واقعی رکورد AED = POST /api/data-translations/auto-translate 200 (۲ فیلد × ۱۲ زبان، 3.5s) + دو GET تازه‌سازی ✓؛ سوییچ به tr: فیلد عنوان «BAE Dirhemi» و سطر فهرست «AED - BAE Dirhemi» ✓؛ بازگشت fa: مقادیر پایه «درهم امارات»/«فلس» ✓؛ دیالوگ ورود دستی با مقادیر انبار باز شد ✓؛ کنسول پاک، همهٔ APIها 200.
+- lint = ۰/۰؛ tsc = همان ۱۳ baseline (صفر خطای جدید)؛ بکاپ §0.9: db/dfb.db.bak-t115 + db/custom.db.bak-t115.
+
+Stage Summary:
+- کاشی «ترجمه»ٔ فرم «نوع ارز جدید» کاملاً فعال شد: ترجمهٔ خودکار آنلاین (LLM، ۱۲ زبان) و ورود دستی (دیالوگ عمومی) روی انبار DataTranslation با entityType «CurrencyType» کار می‌کنند و نتیجه بلافاصله در فیلدها (زبان غیر-fa) و فهرست رکوردها دیده می‌شود.
+- فرم ارز حالا عین قرارداد فرم‌های سیستمی دیگر (طرف‌حساب/محل‌های جغرافیایی/ساختار کسب‌وکار) است — قلاب عمومی Task 107 دوباره ثابت کرد فعال‌سازی ترجمهٔ هر فرم جدید فقط چند خط است.
+- artifacts: src/components/erp/general/currency-type-form.tsx (قلاب + overlay فیلدها + ترجمهٔ فهرست + دیالوگ).
