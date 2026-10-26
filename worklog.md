@@ -3605,3 +3605,21 @@ Stage Summary:
 - «ترجمهٔ آنلاین» زنجیره‌ای از این پس «به‌ازای هر کلیک» فقط کارِ واقعاً جامانده را می‌کند: اجرای دوبارهٔ شاخهٔ ترجمه‌شده آنی است (صفر LLM)، رکورد ناقص فقط زبان‌های کم‌دارش را می‌گیرد (چند ثانیه)، و فراخوانی LLM معلق هرگز توست را ابدی نمی‌خواباند — همان سه شکایت مالک (زمان زیاد، «هیچ آیتمی ترجمه نشده»، انتظار سرعت بسیار زیاد).
 - بهینه‌سازی برای همهٔ فرم‌های درختی آینده هم خودکار است (قلاب عمومی)؛ رفتار فرم‌های بدون زیرشاخه بدون تغییر ماند.
 - artifacts: src/components/forms/common/use-record-translation.tsx (+fetchCoverageMap +امضای زبان جامانده +پایان فوری)؛ src/app/api/data-translations/auto-translate-batch/route.ts (+withTimeout 75s +تلاش‌مجدد منضبط).
+---
+Task ID: 110
+Agent: Z.ai Code (main orchestrator)
+Task: درخواست مالک — «در فرم محل های جغرافیایی عنوان ترجمه نشده است و عنوان لاتین ترجمه شده است؛ ما دیگر نیازی به فیلد عنوان لاتین در فرم‌ها نداریم؛ اطلاعات فیلدهای عنوان باید ترجمه شود و با تغییر زبان، عنوان ترجمه‌شده به آن زبان نمایش داده شود؛ در محل های جغرافیایی و بقیه فرم‌ها همه فیلدهای ترجمه‌نشده باید ترجمه شوند.» (اسکرین‌شات: Shiraz — Title=شیراز، Latin Title=Shiraz در UI انگلیسی)
+
+Work Log:
+- حذف فیلد «عنوان لاتین» از همهٔ فرم‌های داده: geo-locations-form (titleLatin: state/validate/payload/fields)، bs-window (titleEn: state/validate/payload/فیلد create+view)، tree-demo-window (latinTitle نمونه)؛ ستون‌های legacy در DB و DTOها ماندند اما Create DTO (geo: titleLatin، bs: titleEn) optional شد تا ثبت بدون لاتین کار کند (settings-service).
+- «عنوان» زبان‌آگاه شد (geo + bs): نمایش = ترجمهٔ زبان جاری از انبار DataTranslation (نبودِ ترجمه = عنوان پایهٔ fa)؛ فرم با کلید بازمشقِ شامل locale + trEpoch (نسخهٔ نقشهٔ ترجمه) با تغییر زبان خودش را تازه می‌کند؛ ویرایش عنوان در fa = ستون پایه، در سایر زبان‌ها = POST data-translations/save همان زبان (عنوان پایه دست‌نخورده) — با تشخیص «ویرایش واقعی» از طریق origTitle داخل state (نه ref — رعایت react-hooks/refs) تا ترجمهٔ غایب به اشتباه قفل نشود.
+- سیم‌کشی ترجمهٔ ساختار کسب‌وکار (بقیهٔ فرم‌ها): trMap دسته‌ای (entityIds ≤۵۰۰) برای درخت/فهرست/فرم + قلاب useRecordTranslation (آنلاین زنجیره‌ای زیرشاخه‌ها + دستی) + مبدأ ترجمه = عنوان پایهٔ fa (اصلاح getFields که قبلاً مقدار نمایشی می‌فرستاد).
+- برچسب‌های زبان‌آگاه در سطوح دیگر: org-context-store (کاسکاد هلدینگ/شرکت/شعبه/نمایندگی/فروشگاه هدر — trMap در load)، user-role-form (مسیرهای «محدودهٔ دسترسی» با useMemo بر bsTr + locale).
+- پاکسازی داده (همهٔ ترجمه‌نشده‌ها): scripts/sweep-translations.ts — ① بذر en از ستون‌های لاتین legacy (۳۸۶ geo + ۱ bs — صفر LLM) ② ترجمهٔ زبان‌های جامانده با endpoint دسته‌ای موجود (دستهٔ ۱۰ رکوردی — دسته‌های ۲۵×۱۲ پرتکرار ۵۰۲ «JSON ناقص» می‌دادند؛ کوچک‌تر = تفسیرپذیر) + هم‌زمانی ۲ + تلاش‌مجدد؛ جبرانِ مکمل تک‌رکوردی (قاهره zh). نتیجهٔ نهایی انبار: GeoLocation ۱۰۵۷۲ = ۸۸۱×۱۲ و BusinessStructure ۸۴ = ۷×۱۲ — پوشش ۱۰۰٪.
+- E2E (agent-browser، fa→en→de→ar→fa): fa: Iran → جزئیات: ایران، عنوان=ایران، بدون فیلد لاتین ✓؛ en: درخت کامل انگلیسی (۸۸۱ گره)، Title=Iran، ویرایش «Iran-EN-test» ذخیره → درخت فوری انگلیسی شد و پایهٔ fa دست‌نخورده ماند (بازگشت به fa = ایران ✓) → بازگردانی en=Iran ✓؛ de: Deutschland/Schiras ✓؛ ar (RTL): إيران/شیراز/العنوان ✓؛ bs-window در en: درخت Headquarters/Sample Company/Second Company…، Title=Second Company، منوی ترجمه آنلاین/دستی فعال ✓؛ ثبت رکورد آزمونی بدون لاتین + حذف ✓؛ کنسول/خطاها پاک.
+- lint = ۰/۰؛ tsc = فقط ۹ baseline. نکتهٔ زیرساختی: فرایند پس‌زمینهٔ sweep با nohup/setsid هم به‌مرور کشته می‌شد — با اجرای عین‌حالِ idempotent (پوشش‌محور) تا «SWEEP COMPLETE» بسته شد.
+
+Stage Summary:
+- فیلد «عنوان لاتین» از فرم‌ها حذف و «عنوان» جایگزین تک‌فیلدیِ چندزبانه شد: هر زبان ترجمهٔ خودش را می‌بیند/ویرایش می‌کند و ترجمه‌ها در انبار DataTranslation می‌مانند (عنوان پایهٔ fa = مرجع).
+- کل دادهٔ مرجع (۸۸۱ محل جغرافیایی + ۷ گرهٔ ساختار) اکنون ۱۲/۱۲ زبان ترجمه دارد — «همهٔ فیلدهای ترجمه‌نشده ترجمه شدند»؛ فرم‌های دادهٔ آینده با همان قلاب عمومی، بدون کار اضافه، همین رفتار را می‌گیرند.
+- artifacts: geo-locations-form.tsx؛ business-structure/bs-window.tsx؛ settings/user-role-form.tsx؛ stores/org-context-store.ts؛ tree-demo-window.tsx؛ mini-services/settings-service (geo/bs DTO+service)؛ scripts/sweep-translations.ts؛ «backup db/custom-2026-10-26_1500.db» + «dfb-2026-10-26_1500.db» (bak-t110).
