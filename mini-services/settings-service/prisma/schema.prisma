@@ -240,6 +240,42 @@ model CurrencyType {
   @@map("CurrencyType")
 }
 
+/// ExchangeRate — Task 116 (درخواست مالک): فرم «نرخ برابری جدید» در نرم‌افزار
+/// «عمومی» → زیرمنوی «عملیات» (گروه نوپای منوی عمومی). فیلدها عین تصویر مالک
+/// (بدون فیلد شناسه به فرمان مالک: «نیازی به فیلد شناسه نمی باشد»):
+///   · تاریخ موثر*          — میلادی 'YYYY-MM-DD' در بانک (قرارداد Task 77)؛
+///                            نمایش در تقویم زبان انتخابی سمت فرانت.
+///   · ارز مبنا*            — ارجاع به CurrencyType (استخراج نرخ از مبنا).
+///   · ارز مورد مبادله*     — ارجاع به CurrencyType؛ ≠ ارز مبنا.
+///   · واحد مبادله          — اختیاری؛ خالی = از واحد مبنای ارز مبنای استخراج
+///                            می‌شود (placeholder تصویر: «ارز مبنا مبنای استخراج
+///                            می‌باشد»).
+///   · نرخ برابری 1 واحد*   — عدد مثبت (Decimal روی SQLite پشتیبانی نمی‌شود —
+///                            به‌صورت رشتهٔ عددی نرمال‌شده ذخیره می‌شود).
+/// یکتایی: (تاریخ موثر + ارز مبنا + ارز مورد مبادله) در ساختار سازمانی —
+/// نرخ تکراری همان جفت‌ارز در همان روز رد می‌شود (409 با پیام روشن).
+model ExchangeRate {
+  id                BigInt   @id @map("ID")
+  effectiveDate     String   @map("EffectiveDate") // میلادی 'YYYY-MM-DD' (Task 77)
+  baseCurrencyRef   BigInt   @map("BaseCurrencyRef")
+  quoteCurrencyRef  BigInt   @map("QuoteCurrencyRef")
+  exchangeUnit      Int?     @map("ExchangeUnit") // اختیاری — خالی = از ارز مبنا
+  rate              String   @map("Rate") // عدد مثبت به‌صورت رشتهٔ نرمال
+  version           Int      @default(1) @map("Version") // §2.5 auto-rowversion
+  creator           String   @map("Creator")
+  lastModifier      String?  @map("LastModifier")
+  businessStructureRef BigInt @map("BusinessStructureRef")
+  companyRef        BigInt?  @map("CompanyRef")
+  branchRef         BigInt?  @map("BranchRef")
+  agencyRef         BigInt?  @map("AgencyRef")
+  shopRef           BigInt?  @map("ShopRef")
+  createdAt         DateTime @default(now()) @map("CreatedAt")
+  updatedAt         DateTime @updatedAt @map("UpdatedAt")
+
+  @@unique([effectiveDate, baseCurrencyRef, quoteCurrencyRef, businessStructureRef])
+  @@map("ExchangeRate")
+}
+
 /// City — Task 84 (درخواست مالک): جدول شهرها برای دراپ‌داونِ «شهر» در تب
 /// «نشانی» فرم «طرف حساب جدید» (ستون‌ها: کد / عنوان / عنوان لاتین / نام استان /
 /// نام کشور). جدول مرجعِ اطلاعات پایه؛ seed اولیه با شهرهای major ایران

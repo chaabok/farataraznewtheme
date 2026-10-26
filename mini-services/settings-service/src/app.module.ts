@@ -13,6 +13,7 @@ import { DataTranslationsModule } from "./data-translations/data-translations.mo
 import { UserRolesModule } from "./user-roles/user-roles.module";
 import { GeoLocationModule } from "./geo-location/geo-location.module";
 import { CurrencyTypeModule } from "./currency-type/currency-type.module";
+import { ExchangeRateModule } from "./exchange-rate/exchange-rate.module";
 import { HealthController } from "./health/health.controller";
 import { SeedModule } from "./seed/seed.module";
 
@@ -30,6 +31,7 @@ import { SeedModule } from "./seed/seed.module";
     UserRolesModule, // Task 100 — نقش‌های کاربری (مدیریت کاربران)
     GeoLocationModule, // Task 103 — محل‌های جغرافیایی (اطلاعات پایه)
     CurrencyTypeModule, // Task 114 — نوع ارز (اطلاعات پایه)
+    ExchangeRateModule, // Task 116 — نرخ برابری ارز (عملیات)
     SeedModule,
   ],
   controllers: [HealthController],

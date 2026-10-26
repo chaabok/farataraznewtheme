@@ -30,7 +30,8 @@ export type TableKey =
   | "UserRole" // Task 100 — نقش‌های کاربری (مدیریت کاربران)
   | "UserRoleScope" // Task 100 — محدودهٔ دسترسی نقش‌ها
   | "GeoLocation" // Task 103 — محل‌های جغرافیایی (درخت اطلاعات پایه)
-  | "CurrencyType"; // Task 114 — نوع ارز (اطلاعات پایهٔ عمومی)
+  | "CurrencyType" // Task 114 — نوع ارز (اطلاعات پایهٔ عمومی)
+  | "ExchangeRate"; // Task 116 — نرخ برابری ارز (عملیات عمومی)
 
 export const TABLE_REGISTRY: Record<TableKey, TableEntry> = {
   IDGeneration: {
@@ -97,6 +98,10 @@ export const TABLE_REGISTRY: Record<TableKey, TableEntry> = {
   },
   CurrencyType: {
     canonical: "CurrencyType", // Task 114 — نوع ارز (اطلاعات پایهٔ عمومی)
+    pk: "ID",
+  },
+  ExchangeRate: {
+    canonical: "ExchangeRate", // Task 116 — نرخ برابری ارز (عملیات عمومی)
     pk: "ID",
   },
 };

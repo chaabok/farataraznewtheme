@@ -25,7 +25,8 @@ export type GeneralSubPage =
   | "fiscal-year"
   | "party"
   | "geo-location"
-  | "currency-type"; // Task 114 — نوع ارز (اطلاعات پایه)
+  | "currency-type" // Task 114 — نوع ارز (اطلاعات پایه)
+  | "exchange-rate"; // Task 116 — نرخ برابری (عملیات)
 
 interface GeneralNavState {
   /** درخواست در انتظار (null = هیچ) */

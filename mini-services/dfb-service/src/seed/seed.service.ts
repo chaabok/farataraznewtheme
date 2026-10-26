@@ -57,6 +57,18 @@ const SYSTEM_SUBMENUS: SystemSubmenuSeed[] = [
     sortOrder: 1,
     dictKey: "fy.menuBasicInfo",
   },
+  {
+    /* Task 116 (درخواست مالک) — زیرمنوی «عملیات» عمومی: گروه فرم‌های عملیاتی
+       (اولین آیتم: نرخ برابری جدید). عین الگوی basicInfo — گره DfbMenu
+       NodeType=2 زیر آیکون عمومی با AppKey=null (قرارداد Task 112). */
+    anchorAppKey: "general",
+    code: "operations",
+    titleFa: "عملیات",
+    titleEn: "Operations",
+    iconKey: "folder",
+    sortOrder: 2,
+    dictKey: "rate.menuGroup",
+  },
 ];
 
 const SYSTEM_FORMS: SystemFormSeed[] = [
@@ -128,6 +140,20 @@ const SYSTEM_FORMS: SystemFormSeed[] = [
     titleEn: "New Currency Type",
     componentKey: "simpleTwoRowTabbed",
     dictKey: "currency.formTitle",
+  },
+  {
+    /* Task 116 (درخواست مالک) — فرم «نرخ برابری جدید»: زیرمنوی نوپای «عملیات»
+       عمومی؛ بدنهٔ واقعی React (exchange-rate-form) با ارجاع به انواع ارز
+       (CurrencyType — Task 114)؛ راه‌انداز واقعی = زیرصفحهٔ exchange-rate
+       پنجرهٔ عمومی (قرارداد gnr.* — Task 112). */
+    systemKey: "gnr.exchangeRate",
+    anchorAppKey: "general",
+    anchorSubmenuCode: "operations",
+    code: "EXR",
+    titleFa: "نرخ برابری جدید",
+    titleEn: "New Exchange Rate",
+    componentKey: "simpleTwoRowTabbed",
+    dictKey: "rate.formTitle",
   },
 ];
 

@@ -30,6 +30,7 @@ const SYSTEM_GENERAL_PAGES: Record<string, GeneralSubPage> = {
   "gnr.party": "party",
   "gnr.geoLocations": "geo-location",
   "gnr.currencyType": "currency-type", // Task 114 — نوع ارز
+  "gnr.exchangeRate": "exchange-rate", // Task 116 — نرخ برابری (عملیات)
 };
 
 /** آیا این فرم سیستمی «فرم واقعی» جداگانه‌ای دارد (برای نمایش دکمهٔ باز کردن)؟ */

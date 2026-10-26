@@ -3,6 +3,7 @@
 import * as React from "react";
 import {
   ArrowLeft,
+  ArrowLeftRight,
   ArrowRight,
   Boxes,
   CalendarPlus,
@@ -13,6 +14,7 @@ import {
   Earth,
   FolderOpen,
   UserRoundPlus,
+  Workflow,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSettings, useT } from "@/stores/settings-store";
@@ -23,6 +25,7 @@ import { FiscalYearForm } from "@/components/erp/general/fiscal-year-form";
 import { PartyForm } from "@/components/forms/common/Party";
 import { GeoLocationsForm } from "@/components/erp/general/geo-locations-form";
 import { CurrencyTypeForm } from "@/components/erp/general/currency-type-form";
+import { ExchangeRateForm } from "@/components/erp/general/exchange-rate-form";
 import { DfbAppFormsSection } from "@/components/erp/form-builder/dfb-app-forms";
 
 /**
@@ -42,6 +45,8 @@ export function GeneralWindow() {
   const dir = useSettings((s) => s.dir());
   const [page, setPage] = React.useState<GeneralPage>("home");
   const [basicInfoOpen, setBasicInfoOpen] = React.useState(true);
+  /* Task 116 — گروه نوپای «عملیات» منوی عمومی (اولین آیتم: نرخ برابری جدید) */
+  const [operationsOpen, setOperationsOpen] = React.useState(true);
   /* Task 82 — the hosting TAB retitles itself while the سال مالی sub-page is
      open, so the footer's unsaved-data alarm names the real form
      («عمومی — سال مالی جدید») exactly like the tab strip shows it. */
@@ -66,7 +71,9 @@ export function GeneralWindow() {
             ? "geo.formTitle"
             : page === "currency-type"
               ? "currency.formTitle"
-              : null;
+              : page === "exchange-rate"
+                ? "rate.formTitle"
+                : null;
     setWindowTitle(
       chrome.windowId,
       titleKey ? `${t("app.general")} — ${t(titleKey as never)}` : undefined,
@@ -182,6 +189,38 @@ export function GeneralWindow() {
         </div>
         <div className="min-h-0 flex-1">
           <CurrencyTypeForm onBack={() => go("home")} />
+        </div>
+      </div>
+    );
+  }
+
+  if (page === "exchange-rate") {
+    return (
+      <div className="flex h-full flex-col">
+        {/* slim sub-page bar: عمومی / عملیات / نرخ برابری جدید (Task 116) */}
+        <div className="flex h-10 shrink-0 items-center gap-1.5 overflow-x-auto border-b border-border/60 px-2 scrollbar-slim">
+          <button
+            onClick={() => go("home")}
+            className="flex h-8 shrink-0 items-center gap-1.5 rounded-lg px-2.5 text-xs font-medium text-foreground/80 transition-colors hover:bg-foreground/10 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
+          >
+            <BackIcon className="h-3.5 w-3.5" aria-hidden />
+            {t("settings.back")}
+          </button>
+          <span className="shrink-0 text-xs text-muted-foreground/50" aria-hidden>
+            /
+          </span>
+          <span className="shrink-0 text-xs font-medium text-muted-foreground">
+            {t("rate.menuGroup")}
+          </span>
+          <span className="shrink-0 text-xs text-muted-foreground/50" aria-hidden>
+            /
+          </span>
+          <span className="shrink-0 truncate text-xs font-semibold text-foreground/90">
+            {t("rate.formTitle")}
+          </span>
+        </div>
+        <div className="min-h-0 flex-1">
+          <ExchangeRateForm onBack={() => go("home")} />
         </div>
       </div>
     );
@@ -324,6 +363,58 @@ export function GeneralWindow() {
                 <span className="min-w-0 flex-1">
                   <span className="block text-sm font-medium">{t("currency.formTitle")}</span>
                   <span className="block text-xs text-muted-foreground">{t("currency.formDesc")}</span>
+                </span>
+                <ForwardIcon className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+              </button>
+
+              {/* آیتم‌های بعدی «به‌مرور» اعلام می‌شوند (قرارداد پنجره‌های اعلامی) */}
+              <div className="flex items-center gap-2 rounded-lg border border-dashed border-border/80 px-3 py-2.5">
+                <span className="text-xs leading-relaxed text-muted-foreground/80">
+                  {t("fy.menuPending")}
+                </span>
+              </div>
+            </div>
+          )}
+        </section>
+
+        {/* Task 116 — زیرمنوی نوپای «عملیات» — collapsible classic-ERP menu group */}
+        <section className="overflow-hidden rounded-xl border border-border/70 bg-card/60">
+          <button
+            onClick={() => setOperationsOpen((v) => !v)}
+            aria-expanded={operationsOpen}
+            className="flex w-full items-center gap-3 p-4 text-start transition-colors hover:bg-accent/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring cursor-pointer"
+          >
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-rose-500 to-red-600 text-white shadow-md">
+              <Workflow className="h-5 w-5" aria-hidden />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-semibold">{t("rate.menuGroup")}</span>
+              <span className="block text-xs text-muted-foreground">
+                {t("rate.menuGroupDesc")}
+              </span>
+            </span>
+            <ChevronDown
+              className={cn(
+                "h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200",
+                !operationsOpen && (dir === "rtl" ? "rotate-90" : "-rotate-90"),
+              )}
+              aria-hidden
+            />
+          </button>
+
+          {operationsOpen && (
+            <div className="space-y-1 border-t border-border/60 p-2">
+              {/* فرم «نرخ برابری جدید» — اولین آیتم گروه عملیات (Task 116) */}
+              <button
+                onClick={() => go("exchange-rate")}
+                className="flex w-full items-center gap-3 rounded-lg p-3 pe-6 text-start transition-colors hover:bg-accent/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
+              >
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-teal-500 to-emerald-600 text-white shadow-sm">
+                  <ArrowLeftRight className="h-4 w-4" aria-hidden />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-medium">{t("rate.formTitle")}</span>
+                  <span className="block text-xs text-muted-foreground">{t("rate.formDesc")}</span>
                 </span>
                 <ForwardIcon className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
               </button>

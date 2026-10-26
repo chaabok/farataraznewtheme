@@ -3716,3 +3716,24 @@ Stage Summary:
 - کاشی «ترجمه»ٔ فرم «نوع ارز جدید» کاملاً فعال شد: ترجمهٔ خودکار آنلاین (LLM، ۱۲ زبان) و ورود دستی (دیالوگ عمومی) روی انبار DataTranslation با entityType «CurrencyType» کار می‌کنند و نتیجه بلافاصله در فیلدها (زبان غیر-fa) و فهرست رکوردها دیده می‌شود.
 - فرم ارز حالا عین قرارداد فرم‌های سیستمی دیگر (طرف‌حساب/محل‌های جغرافیایی/ساختار کسب‌وکار) است — قلاب عمومی Task 107 دوباره ثابت کرد فعال‌سازی ترجمهٔ هر فرم جدید فقط چند خط است.
 - artifacts: src/components/erp/general/currency-type-form.tsx (قلاب + overlay فیلدها + ترجمهٔ فهرست + دیالوگ).
+---
+Task ID: 116
+Agent: Z.ai Code (main)
+Task: «توی منوی عمومی و در منوی عملیات یک فرم جدید ایجاد کنید بنام نرخ برابری جدید و فیلدهای داخل تصویر را اضافه نمایید. نیازی به فیلد شناسه نمی باشد.» — فرم سیستمی «نرخ برابری جدید» تمام‌-stack در گروه نوپای «عملیات» منوی عمومی (بدون فیلد شناسه).
+
+Work Log:
+- Backend (settings-service): مدل Prisma ExchangeRate (EffectiveDate میلادی Task 77 / BaseCurrencyRef / QuoteCurrencyRef / ExchangeUnit اختیاری / Rate رشتهٔ عددی نرمال — Decimal روی SQLite پشتیبانی نمی‌شود + AppBase ۸فیلدی؛ unique چهارگوشهٔ تاریخ+جفت‌ارز+ساختار)؛ db:push + db:generate؛ ماژول NestJS کامل (GET/POST/PUT/DELETE /exchange-rate با InternalAuthGuard)؛ DTO class-validator؛ TABLE_REGISTRY += ExchangeRate؛ VERSIONED_MODELS += ExchangeRate (§2.5).
+- زنجیرهٔ اعتبارسنجی سرور: تاریخ 'YYYY-MM-DD' میلادی واقعی؛ ارزها باید در CurrencyType موجود و متمایز باشند (422 پیام روشن)؛ نرخ > ۰ با regex اعشاری؛ واحد اختیاری ≥ ۱؛ نرخ تکراری همان جفت‌ارز در همان تاریخ = 409.
+- dfb seed: SYSTEM_SUBMENUS += «عملیات» (operations, sortOrder=2, dictKey rate.menuGroup) زیر آیکون عمومی + SYSTEM_FORMS += EXR (gnr.exchangeRate, anchorSubmenuCode=operations, dictKey rate.formTitle) — بوت سرویس dfb خودکار ثبت کرد: زیرمنو ID=34، فرم ID=25.
+- Frontend: src/components/erp/general/exchange-rate-form.tsx با SimpleFormTwoRowTabbed — ۵ فیلد عین تصویر و بدون شناسه (تاریخ موثر* ماسک‌دار Task 49 / ارز مبنا* و ارز مورد مبادله* دراپ‌داون از CurrencyType با placeholder «انتخاب کنید...» / واحد مبادله اختیاری با placeholder «ارز مبنا مبنای استخراج می‌باشد» / نرخ برابری 1 واحد*)؛ نوار عملیات کامل + dirty-flag Task 82؛ اعتبارسنجی دولایه؛ واحدِ لیست = ورودی کاربر وگرنه واحد مبنای ارز مبنا.
+- Task 115 (الگوی تثبیت‌شده) — کاشی «ترجمه» از ابتدا با قلاب عمومی Task 107 وصل است (entityType ExchangeRate)؛ رکورد فیلد متنی ندارد ⇒ توست/دیالوگ راهنمای شفاف «بدون فیلد متنی» (بدون کلیک مرده — قرارداد Task 90).
+- Task 77/49 — تاریخ: ذخیرهٔ میلادی 'YYYY-MM-DD'، نمایش در تقویم زبان انتخابی؛ نمایشِ رکورد باز «مشتق» از dateISO است (بدون setState-in-effect — قاعده react-hooks) ⇒ با تعویض زبان تقویمِ رکورد باز بلافاصله عوض می‌شود؛ تایپ کاربر نمایش مشتق را باطل می‌کند.
+- یکپارچگی: general-window (کارت جمع‌شوندهٔ «عملیات» با آیکون Workflow + آیتم «نرخ برابری جدید» با ArrowLeftRight + زیرصفحه + نان‌بار عمومی/عملیات/نرخ برابری جدید + عنوان زندهٔ برگه)؛ general-nav-store += "exchange-rate"؛ dfb-system-forms += gnr.exchangeRate (بازکردن فرم واقعی از درخت)؛ dictionaries.ts += ۱۹ کلید rate.* در هر ۱۳ زبان (۲۴۷ ردیف).
+- E2E (agent-browser): کارت «عملیات» در منوی عمومی ✓؛ زیرصفحه با ۵ فیلد و بدون شناسه ✓؛ ثبت USD→IRR تاریخ ۱۴۰۴/۰۸/۰۴ نرخ 6150000 = POST 201 + توست ✓؛ لیست: سطر «USD → IRR» با واحد استخراجی ۱ ✓؛ تکراری = 409 پیام فارسی ✓؛ هم‌ارز = 422 ✓؛ تاریخ شمسی↔میلادی (1404/08/04 ↔ 2025/10/26) در هر دو جهت و با تعویض زبانِ رکورد باز ✓؛ درخت فرمساز: عمومی ← عملیات ← نرخ برابری جدید ✓؛ «باز کردن فرم» از درخت = زیرصفحهٔ واقعی ✓؛ en/LTR: General — New Exchange Rate / Operations / Effective Date / Base Currency / Quoted Currency / Exchange Unit / Rate per 1 Unit ✓؛ برگشت fa سالم ✓؛ کنسول پاک؛ APIها 200/201.
+- lint = ۰/۰؛ tsc = همان ۱۳ baseline (صفر خطای جدید)؛ بکاپ §0.9: db/dfb.db.bak-t116 + db/custom.db.bak-t116.
+
+Stage Summary:
+- فرم سیستمی «نرخ برابری جدید» در گروه نوپای «عملیات» منوی عمومی ثبت شد: فیلدها عین تصویر مالک و بدون شناسه، CRUD کامل دولایه با گیت جفت‌ارز متمایز و یکتایی روزانه، و حضور هم‌زمان در کارت عملیات + درختوارهٔ فرمساز با بازکردن فرم واقعی (قرارداد Task 112/113).
+- الگوی سیستمی تکرار شد: یک زیرمنو در SYSTEM_SUBMENUS + یک فرم در SYSTEM_FORMS + یک ماژول سرویس تنظیمات + یک زیرصفحهٔ عمومی؛ هیچ دوبلی در هیچ پنجره‌ای.
+- آگاهی Task 115 لحاظ شد: کاشی ترجمه از ابتدا وصل است؛ برای دادهٔ عددی/کدی با پیام راهنمای شفاف پاسخ می‌دهد.
+- artifacts: mini-services/settings-service/src/exchange-rate/* (جدید)؛ prisma/schema.prisma؛ id-generation/table-registry.ts؛ prisma/prisma.service.ts؛ mini-services/dfb-service/src/seed/seed.service.ts؛ src/components/erp/general/exchange-rate-form.tsx (جدید)؛ general-window.tsx؛ general-nav-store.ts؛ dfb-system-forms.ts؛ src/i18n/dictionaries.ts.
