@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { ArrowLeftRight } from "lucide-react";
+import { ArrowLeftRight, FolderOpen, Plus, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
 import { useT, useSettings } from "@/stores/settings-store";
@@ -14,6 +14,12 @@ import {
 import { normalizeDigits } from "@/components/forms/form-primitives";
 import { displayToStoredDate, storedToDisplayDate } from "@/lib/calendar-date";
 import { useRecordTranslation } from "@/components/forms/common/use-record-translation";
+import {
+  MainDataGrid,
+  GridActionButton,
+  type MainGridColumn,
+  type MainGridRow,
+} from "@/components/erp/form-builder/main-data-grid";
 
 /**
  * ExchangeRateForm — Task 116 (درخواست مالک): فرم «نرخ برابری جدید» در نرم‌افزار
@@ -277,6 +283,42 @@ export function ExchangeRateForm({ onBack }: { onBack?: () => void }) {
     return base ? String(base.baseUnit) : "—";
   };
 
+  /* Task 118 — فهرست کامل با MainDataGrid (الگوی تصویر مالک در فرم ارز):
+     فیلتر عملگردار هر ستون + سورت + CSV + نوار پایین؛ دبل‌کلیک = بازکردن
+     رکورد در فرم؛ تاریخ در تقویم زبان جاری نمایش داده می‌شود (Task 77). */
+  const [gridSelectedId, setGridSelectedId] = React.useState<string | null>(null);
+  const openGridRow = React.useCallback(
+    (r: ExchangeRateDto) => {
+      applyRecord(r);
+      setGridSelectedId(String(r.id));
+      toast.success(t("abar.itemOpened"));
+    },
+    [applyRecord, t],
+  );
+  const gridRows = React.useMemo<MainGridRow[]>(
+    () =>
+      records.map((r) => ({
+        __id: String(r.id),
+        effectiveDate: storedToDisplayDate(r.effectiveDate, locale) || r.effectiveDate,
+        base: currencyLabel(r.baseCurrencyRef),
+        quote: currencyLabel(r.quoteCurrencyRef),
+        unit: effectiveUnitOf(r),
+        rate: r.rate,
+      })),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [records, currencies, locale, t],
+  );
+  const gridColumns = React.useMemo<MainGridColumn[]>(
+    () => [
+      { key: "effectiveDate", label: t("rate.effectiveDate"), width: 130, align: "center" },
+      { key: "base", label: t("rate.baseCurrency"), width: 170 },
+      { key: "quote", label: t("rate.quoteCurrency"), width: 170 },
+      { key: "unit", label: t("rate.exchangeUnit"), width: 110, align: "center" },
+      { key: "rate", label: t("rate.ratePerUnit"), width: 150, align: "end" },
+    ],
+    [t],
+  );
+
   const fields = React.useMemo<SimpleFormField[]>(
     () => [
       {
@@ -405,6 +447,64 @@ export function ExchangeRateForm({ onBack }: { onBack?: () => void }) {
     {/* Task 115 — دیالوگ ورود دستی (خروجی قلاب عمومی)؛ رکورد بدون فیلد متنی
         = پیام راهنمای شفاف داخل دیالوگ */}
     {recordTr.dialog}
+
+    {/* Task 118 — فهرست نرخ‌های برابری با MainDataGrid (الگوی Task 64) */}
+    <section className="mt-4" aria-label={t("rate.listTitle")}>
+      <div className="mb-2 flex items-center gap-2">
+        <ArrowLeftRight className="h-4 w-4 text-muted-foreground" aria-hidden />
+        <h3 className="text-xs font-semibold text-muted-foreground">{t("rate.listTitle")}</h3>
+      </div>
+      <MainDataGrid
+        columns={gridColumns}
+        rows={gridRows}
+        loading={listLoading}
+        selectedId={gridSelectedId}
+        onSelectedIdChange={setGridSelectedId}
+        onRowDoubleClick={(row) => {
+          const r = records.find((x) => String(x.id) === row.__id);
+          if (r) openGridRow(r);
+        }}
+        csvFileName="exchange-rates"
+        className="max-h-96"
+        actions={
+          <>
+            <GridActionButton
+              icon={Plus}
+              label={t("bs.action.new")}
+              tint="emerald"
+              onClick={() => {
+                newRecord();
+                setGridSelectedId(null);
+              }}
+            />
+            <GridActionButton
+              icon={FolderOpen}
+              label={t("dfb.list.open")}
+              tint="teal"
+              disabled={!gridSelectedId}
+              onClick={() => {
+                const r = records.find((x) => String(x.id) === gridSelectedId);
+                if (r) openGridRow(r);
+              }}
+            />
+            <GridActionButton
+              icon={RefreshCw}
+              label={t("abar.listRefresh")}
+              tint="violet"
+              onClick={() => {
+                void (async () => {
+                  try {
+                    applyRecords(await fetchRecords());
+                  } catch {
+                    applyRecords([]);
+                  }
+                })();
+              }}
+            />
+          </>
+        }
+      />
+    </section>
     </>
   );
 }

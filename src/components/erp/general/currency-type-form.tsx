@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Coins } from "lucide-react";
+import { Coins, FolderOpen, Plus, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
 import { useT, useSettings } from "@/stores/settings-store";
@@ -12,8 +12,15 @@ import {
   type SimpleFormField,
 } from "@/components/forms/simple-form-two-row-tabbed";
 import { normalizeDigits } from "@/components/forms/form-primitives";
+import { cn } from "@/lib/utils";
 import { useRecordTranslation } from "@/components/forms/common/use-record-translation";
 import type { DataTranslationField } from "@/components/forms/common/data-translations-dialog";
+import {
+  MainDataGrid,
+  GridActionButton,
+  type MainGridColumn,
+  type MainGridRow,
+} from "@/components/erp/form-builder/main-data-grid";
 
 /**
  * CurrencyTypeForm — Task 114 (درخواست مالک): فرم «نوع ارز جدید» در نرم‌افزار
@@ -353,6 +360,65 @@ export function CurrencyTypeForm({ onBack }: { onBack?: () => void }) {
     return tr || r.decimalTitle || "";
   };
 
+  /* Task 118 — فهرست کامل با MainDataGrid (طرح تصویر مالک): انتخابِ مستقل
+     گرید (کلیک) جدا از رکورد باز فرم؛ دبل‌کلیک/«بازکردن» رکورد را در فرم
+     باز می‌کند. ستون‌ها عین تصویر مالک: کد/عنوان/لاتین/واحد/اعشار/... */
+  const [gridSelectedId, setGridSelectedId] = React.useState<string | null>(null);
+  const openGridRow = React.useCallback(
+    (r: CurrencyTypeDto) => {
+      applyRecord(r);
+      setGridSelectedId(String(r.id));
+      toast.success(t("abar.itemOpened"));
+    },
+    [applyRecord, t],
+  );
+  const gridRows = React.useMemo<MainGridRow[]>(
+    () =>
+      records.map((r) => ({
+        __id: String(r.id),
+        code: r.code,
+        title: listTitleOf(r),
+        titleLatin: r.titleLatin || "",
+        baseUnit: String(r.baseUnit),
+        decimalPlaces: String(r.decimalPlaces),
+        decimalTitle: listDecimalOf(r),
+        decimalTitleLatin: r.decimalTitleLatin || "",
+        active: r.isActive ? t("abar.listYes") : t("abar.listNo"),
+      })),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [records, listTr, locale, t],
+  );
+  const gridColumns = React.useMemo<MainGridColumn[]>(
+    () => [
+      { key: "code", label: t("currency.code"), width: 90, align: "center" },
+      { key: "title", label: t("currency.title"), width: 170 },
+      { key: "titleLatin", label: t("currency.titleLatin"), width: 150 },
+      { key: "baseUnit", label: t("currency.baseUnit"), width: 90, align: "center" },
+      { key: "decimalPlaces", label: t("currency.decimalPlaces"), width: 90, align: "center" },
+      { key: "decimalTitle", label: t("currency.decimalTitle"), width: 130 },
+      { key: "decimalTitleLatin", label: t("currency.decimalTitleLatin"), width: 140 },
+      {
+        key: "active",
+        label: t("currency.active"),
+        width: 110,
+        align: "center",
+        render: (row) => (
+          <span
+            className={cn(
+              "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium",
+              String(row.active) === t("abar.listYes")
+                ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
+                : "bg-muted text-muted-foreground",
+            )}
+          >
+            {String(row.active)}
+          </span>
+        ),
+      },
+    ],
+    [t],
+  );
+
   const fields = React.useMemo<SimpleFormField[]>(
     () => [
       { id: "code", label: t("currency.code"), required: true, value: values.code },
@@ -463,6 +529,67 @@ export function CurrencyTypeForm({ onBack }: { onBack?: () => void }) {
     {/* Task 115 — دیالوگ ورود دستی (آفلاین) ترجمهٔ دادهٔ رکورد باز؛ خروجی
         قلاب عمومی — پس از بستن، overlay و فهرست خودکار تازه می‌شوند */}
     {recordTr.dialog}
+
+    {/* Task 118 (مشاورهٔ مالک) — فهرست ارزها با کامپوننت عمومی MainDataGrid
+        (Task 64) — عین طرح تصویر مالک: ردیف فیلتر قیفیِ هر ستون، سورت هدری،
+        انتخابگر ستون، CSV و نوار پایین. دبل‌کلیک/دکمهٔ «بازکردن» = بازکردن
+        رکورد در فرم؛ ترجمهٔ زبان‌های غیر-fa هم از همین‌جا می‌آید. */}
+    <section className="mt-4" aria-label={t("currency.listTitle")}>
+      <div className="mb-2 flex items-center gap-2">
+        <Coins className="h-4 w-4 text-muted-foreground" aria-hidden />
+        <h3 className="text-xs font-semibold text-muted-foreground">{t("currency.listTitle")}</h3>
+      </div>
+      <MainDataGrid
+        columns={gridColumns}
+        rows={gridRows}
+        loading={listLoading}
+        selectedId={gridSelectedId}
+        onSelectedIdChange={setGridSelectedId}
+        onRowDoubleClick={(row) => {
+          const r = records.find((x) => String(x.id) === row.__id);
+          if (r) openGridRow(r);
+        }}
+        csvFileName="currency-types"
+        className="max-h-96"
+        actions={
+          <>
+            <GridActionButton
+              icon={Plus}
+              label={t("bs.action.new")}
+              tint="emerald"
+              onClick={() => {
+                newRecord();
+                setGridSelectedId(null);
+              }}
+            />
+            <GridActionButton
+              icon={FolderOpen}
+              label={t("dfb.list.open")}
+              tint="teal"
+              disabled={!gridSelectedId}
+              onClick={() => {
+                const r = records.find((x) => String(x.id) === gridSelectedId);
+                if (r) openGridRow(r);
+              }}
+            />
+            <GridActionButton
+              icon={RefreshCw}
+              label={t("abar.listRefresh")}
+              tint="violet"
+              onClick={() => {
+                void (async () => {
+                  try {
+                    applyRecords(await fetchRecords());
+                  } catch {
+                    applyRecords([]);
+                  }
+                })();
+              }}
+            />
+          </>
+        }
+      />
+    </section>
     </>
   );
 }
