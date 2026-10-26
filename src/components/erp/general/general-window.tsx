@@ -1,22 +1,7 @@
 "use client";
 
 import * as React from "react";
-import {
-  ArrowLeft,
-  ArrowLeftRight,
-  ArrowRight,
-  Boxes,
-  CalendarPlus,
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  Coins,
-  Earth,
-  FolderOpen,
-  UserRoundPlus,
-  Workflow,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { useSettings, useT } from "@/stores/settings-store";
 import { useDesktop } from "@/stores/desktop-store";
 import { useGeneralNav, type GeneralSubPage } from "@/stores/general-nav-store";
@@ -26,7 +11,7 @@ import { PartyForm } from "@/components/forms/common/Party";
 import { GeoLocationsForm } from "@/components/erp/general/geo-locations-form";
 import { CurrencyTypeForm } from "@/components/erp/general/currency-type-form";
 import { ExchangeRateForm } from "@/components/erp/general/exchange-rate-form";
-import { DfbAppFormsSection } from "@/components/erp/form-builder/dfb-app-forms";
+import { GeneralMenuHome } from "@/components/erp/general/general-menu-view";
 
 /**
  * GeneralWindow — Task 75 (درخواست مالک): پنجرهٔ نرم‌افزار «عمومی» (appKey
@@ -44,9 +29,6 @@ export function GeneralWindow() {
   const t = useT();
   const dir = useSettings((s) => s.dir());
   const [page, setPage] = React.useState<GeneralPage>("home");
-  const [basicInfoOpen, setBasicInfoOpen] = React.useState(true);
-  /* Task 116 — گروه نوپای «عملیات» منوی عمومی (اولین آیتم: نرخ برابری جدید) */
-  const [operationsOpen, setOperationsOpen] = React.useState(true);
   /* Task 82 — the hosting TAB retitles itself while the سال مالی sub-page is
      open, so the footer's unsaved-data alarm names the real form
      («عمومی — سال مالی جدید») exactly like the tab strip shows it. */
@@ -82,7 +64,6 @@ export function GeneralWindow() {
 
   /* §1.4 — direction-aware navigation glyphs (no hardcoded physical sides) */
   const BackIcon = dir === "rtl" ? ArrowRight : ArrowLeft;
-  const ForwardIcon = dir === "rtl" ? ChevronLeft : ChevronRight;
 
   /* Task 85 — the shell can request a sub-page (the fiscal-year-missing
      prompt's «بلی» opens سال مالی جدید directly): consume the pending request
@@ -258,177 +239,8 @@ export function GeneralWindow() {
     );
   }
 
-  return (
-    <div className="h-full overflow-y-auto scrollbar-slim">
-      {/* window header */}
-      <div className="border-b border-border/60 bg-gradient-to-l from-primary/10 via-transparent to-transparent p-4">
-        <div className="flex items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-sky-500 to-cyan-600 text-white shadow-md">
-            <Boxes className="h-5 w-5" aria-hidden />
-          </span>
-          <div>
-            <h2 className="text-sm font-bold">{t("app.general")}</h2>
-            <p className="text-xs text-muted-foreground">{t("app.name")}</p>
-          </div>
-        </div>
-      </div>
-
-      <div className="mx-auto max-w-xl space-y-4 p-4" dir="auto">
-        {/* Task 111/113 — فقط فرم‌های ساختهٔ کاربر در فرمساز؛ فرم‌های سیستمی
-            (اطلاعات پایه و…) بدنهٔ بومی خودشان را در همین پنجره دارند و
-            فهرست‌شدن دوباره‌شان = دوبل (درخواست مالک). تا وقتی فرمی از
-            ساخته‌های کاربر نباشد کل این بخش رندر نمی‌شود. */}
-        <DfbAppFormsSection appKey="general" hideSystem />
-
-        {/* زیرمنوی «اطلاعات پایه» — collapsible classic-ERP menu group */}
-        <section className="overflow-hidden rounded-xl border border-border/70 bg-card/60">
-          <button
-            onClick={() => setBasicInfoOpen((v) => !v)}
-            aria-expanded={basicInfoOpen}
-            className="flex w-full items-center gap-3 p-4 text-start transition-colors hover:bg-accent/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring cursor-pointer"
-          >
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-md">
-              <FolderOpen className="h-5 w-5" aria-hidden />
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block text-sm font-semibold">{t("fy.menuBasicInfo")}</span>
-              <span className="block text-xs text-muted-foreground">
-                {t("fy.menuBasicInfoDesc")}
-              </span>
-            </span>
-            <ChevronDown
-              className={cn(
-                "h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200",
-                !basicInfoOpen && (dir === "rtl" ? "rotate-90" : "-rotate-90"),
-              )}
-              aria-hidden
-            />
-          </button>
-
-          {basicInfoOpen && (
-            <div className="space-y-1 border-t border-border/60 p-2">
-              {/* فرم «سال مالی جدید» — اولین آیتم اعلام‌شدهٔ مالک (Task 75) */}
-              <button
-                onClick={() => go("fiscal-year")}
-                className="flex w-full items-center gap-3 rounded-lg p-3 pe-6 text-start transition-colors hover:bg-accent/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
-              >
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-teal-500 to-emerald-600 text-white shadow-sm">
-                  <CalendarPlus className="h-4 w-4" aria-hidden />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block text-sm font-medium">{t("fy.formTitle")}</span>
-                  <span className="block text-xs text-muted-foreground">{t("fy.formDesc")}</span>
-                </span>
-                <ForwardIcon className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
-              </button>
-
-              {/* فرم «طرف حساب جدید» — Task 84 (درخواست مالک) */}
-              <button
-                onClick={() => go("party")}
-                className="flex w-full items-center gap-3 rounded-lg p-3 pe-6 text-start transition-colors hover:bg-accent/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
-              >
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-sky-500 to-cyan-600 text-white shadow-sm">
-                  <UserRoundPlus className="h-4 w-4" aria-hidden />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block text-sm font-medium">{t("party.formTitle")}</span>
-                  <span className="block text-xs text-muted-foreground">{t("party.formDesc")}</span>
-                </span>
-                <ForwardIcon className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
-              </button>
-
-              {/* فرم «محل های جغرافیایی» — Task 103 (درخواست مالک، SimpleTreeForm) */}
-              <button
-                onClick={() => go("geo-location")}
-                className="flex w-full items-center gap-3 rounded-lg p-3 pe-6 text-start transition-colors hover:bg-accent/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
-              >
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-teal-500 to-emerald-600 text-white shadow-sm">
-                  <Earth className="h-4 w-4" aria-hidden />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block text-sm font-medium">{t("geo.formTitle")}</span>
-                  <span className="block text-xs text-muted-foreground">{t("geo.formDesc")}</span>
-                </span>
-                <ForwardIcon className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
-              </button>
-
-              {/* فرم «نوع ارز جدید» — Task 114 (درخواست مالک، seed ارزهای ISO 4217) */}
-              <button
-                onClick={() => go("currency-type")}
-                className="flex w-full items-center gap-3 rounded-lg p-3 pe-6 text-start transition-colors hover:bg-accent/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
-              >
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-amber-500 to-yellow-600 text-white shadow-sm">
-                  <Coins className="h-4 w-4" aria-hidden />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block text-sm font-medium">{t("currency.formTitle")}</span>
-                  <span className="block text-xs text-muted-foreground">{t("currency.formDesc")}</span>
-                </span>
-                <ForwardIcon className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
-              </button>
-
-              {/* آیتم‌های بعدی «به‌مرور» اعلام می‌شوند (قرارداد پنجره‌های اعلامی) */}
-              <div className="flex items-center gap-2 rounded-lg border border-dashed border-border/80 px-3 py-2.5">
-                <span className="text-xs leading-relaxed text-muted-foreground/80">
-                  {t("fy.menuPending")}
-                </span>
-              </div>
-            </div>
-          )}
-        </section>
-
-        {/* Task 116 — زیرمنوی نوپای «عملیات» — collapsible classic-ERP menu group */}
-        <section className="overflow-hidden rounded-xl border border-border/70 bg-card/60">
-          <button
-            onClick={() => setOperationsOpen((v) => !v)}
-            aria-expanded={operationsOpen}
-            className="flex w-full items-center gap-3 p-4 text-start transition-colors hover:bg-accent/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring cursor-pointer"
-          >
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-rose-500 to-red-600 text-white shadow-md">
-              <Workflow className="h-5 w-5" aria-hidden />
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block text-sm font-semibold">{t("rate.menuGroup")}</span>
-              <span className="block text-xs text-muted-foreground">
-                {t("rate.menuGroupDesc")}
-              </span>
-            </span>
-            <ChevronDown
-              className={cn(
-                "h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200",
-                !operationsOpen && (dir === "rtl" ? "rotate-90" : "-rotate-90"),
-              )}
-              aria-hidden
-            />
-          </button>
-
-          {operationsOpen && (
-            <div className="space-y-1 border-t border-border/60 p-2">
-              {/* فرم «نرخ برابری جدید» — اولین آیتم گروه عملیات (Task 116) */}
-              <button
-                onClick={() => go("exchange-rate")}
-                className="flex w-full items-center gap-3 rounded-lg p-3 pe-6 text-start transition-colors hover:bg-accent/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
-              >
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-teal-500 to-emerald-600 text-white shadow-sm">
-                  <ArrowLeftRight className="h-4 w-4" aria-hidden />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block text-sm font-medium">{t("rate.formTitle")}</span>
-                  <span className="block text-xs text-muted-foreground">{t("rate.formDesc")}</span>
-                </span>
-                <ForwardIcon className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
-              </button>
-
-              {/* آیتم‌های بعدی «به‌مرور» اعلام می‌شوند (قرارداد پنجره‌های اعلامی) */}
-              <div className="flex items-center gap-2 rounded-lg border border-dashed border-border/80 px-3 py-2.5">
-                <span className="text-xs leading-relaxed text-muted-foreground/80">
-                  {t("fy.menuPending")}
-                </span>
-              </div>
-            </div>
-          )}
-        </section>
-      </div>
-    </div>
-  );
+  /* Task 117 — بدنهٔ home (منوی عمومی + سوییچر حالت‌های نمایش زیرمنو) به
+     GeneralMenuHome منتقل شد؛ تک‌منبع دادهٔ MENU_GROUPS با ۴ چیدمان
+     (کشویی/کنار‌هم/لیستی/کاشی) و ماندگاری انتخاب کاربر. */
+  return <GeneralMenuHome go={go} />;
 }

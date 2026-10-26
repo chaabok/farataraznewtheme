@@ -3737,3 +3737,22 @@ Stage Summary:
 - الگوی سیستمی تکرار شد: یک زیرمنو در SYSTEM_SUBMENUS + یک فرم در SYSTEM_FORMS + یک ماژول سرویس تنظیمات + یک زیرصفحهٔ عمومی؛ هیچ دوبلی در هیچ پنجره‌ای.
 - آگاهی Task 115 لحاظ شد: کاشی ترجمه از ابتدا وصل است؛ برای دادهٔ عددی/کدی با پیام راهنمای شفاف پاسخ می‌دهد.
 - artifacts: mini-services/settings-service/src/exchange-rate/* (جدید)؛ prisma/schema.prisma؛ id-generation/table-registry.ts؛ prisma/prisma.service.ts؛ mini-services/dfb-service/src/seed/seed.service.ts؛ src/components/erp/general/exchange-rate-form.tsx (جدید)؛ general-window.tsx؛ general-nav-store.ts؛ dfb-system-forms.ts؛ src/i18n/dictionaries.ts.
+---
+Task ID: 117
+Agent: Z.ai Code (main)
+Task: «توی منوی عمومی، زیرمنوها را بتوان به چند شکل به کاربر نمایش بدهید مثلاً بصورت کشویی، یا بصورت کنار هم یا بصورت لیست. از تجربیات ارزشمند خودت استفاده کن و چند مدل نمایش را به کاربر پیشنهاد بده. دکمه‌ها کنار منو قرار داشته باشد و کاربر هر کدام را انتخاب کرد نحوه نمایش زیرمنوها تغییر کند. فقط کاربرپسند باشد و UX/UI را مدنظر قرار دهید.» — حالت‌های نمایش زیرمنوی منوی عمومی.
+
+Work Log:
+- ۴ مدل نمایش (سه نمونهٔ مالک + یک پیشنهاد از تجربه): «کشویی» (رفتار کلاسیک ERP — کارت‌های جمع‌شونده؛ پیش‌فرض)، «کنار هم» (grid دوستونه sm: — هر دو گروه هم‌زمان دیده می‌شوند، بدون جمع‌شدن)، «لیستی» (یک کارت فشردهٔ واحد با سرگروه‌های کوچک و سطرهای تک‌خطی — اسکن سریع؛ توضیح در tooltip)، «کاشی» (پیشنهاد ما — شبکهٔ کاشی‌های آیکونی ۲/۳ستونه با hover-lift و scale آیکون، الگوی سنجاق‌شدهٔ وین ۱۱ و لمس‌پسند).
+- بازآرایی معماری: بدنهٔ home پنجرهٔ عمومی به کامپوننت جدید general-menu-view.tsx منتقل شد؛ تک‌منبع دادهٔ MENU_GROUPS (گروه + آیتم‌ها با آیکون/گرادیان/کلید i18n) ⇒ هر ۴ چیدمان از یک مدل رندر می‌شوند و افزودن فرم/گروه بعدی فقط یک مدخل است (قرارداد پنجره‌های اعلامی). general-window.tsx از ۴۳۴ به ۲۴۷ خط رسید و فقط زیرصفحه‌ها را نگه داشت.
+- سوییچر «کنار منو» (درخواست صریح مالک): segmented control در نوار عنوانِ پنجره، کنار عنوان (justify-between — در RTL انتهای چپ، در LTR راست)؛ ۴ دکمهٔ آیکونی (ChevronsDownUp/Columns2/List/LayoutGrid) با برچسب «نمایش»، tooltip هر حالت، aria-pressed، حلقهٔ فوکوس و استایل active=bg-primary؛ برچسب در موبایل مخفی (sm:inline).
+- ماندگاری انتخاب کاربر در localStorage (کلید general.menuView) با استور خارجی کوچک + useSyncExternalStore — الگوی رسمی React: هم hydration-safe (اسنپ‌شات سروری «accordion»، رندر کلاینت مقدار ذخیره‌شده) هم بدون setState-in-effect (که ESLint react-hooks نمی‌پذیرفت — خطای اول به همین علت اصلاح شد).
+- UX ریزه‌ها: fade-in ملایم (کلاس موجود globals) با key={view} هنگام تغییر حالت؛ chevronهای سرگروه جهت‌آگاه dir؛ placeholder «فرم‌های بعدی به‌مرور اعلان می‌شوند» در هر ۴ حالت (در کاشی‌ها به شکل کاشی خط‌چین)؛ سطرها title/desc کامل در کشویی و کنار هم، فشرده تک‌خطی در لیستی، کاشی با خط‌کشی دو سطری در کاشی‌ها.
+- i18n: ۵ کلید جدید menuView.label/accordion/columns/list/tiles در هر ۱۳ زبان (fa/en/tr/ar/hi/ps/ckb/pt/ko/fr/zh/de/ru = ۶۵ ردیف) بعد از fy.menuPending در هر بلوک.
+- E2E (agent-browser): سوییچر در هدر کنار عنوان ✓؛ پیش‌فرض کشویی با aria-pressed درست ✓؛ هر ۴ حالت با اسکرین‌شات (accordion/columns دوستونه/list تک‌کارت فشرده/tiles شبکهٔ کاشی) ✓؛ جمع‌کردن/بازکردن گروه در کشویی (expanded true↔false) ✓؛ کلیک کاشی «نرخ برابری جدید» = بازشدن زیرصفحه واقعی با عنوان برگه «عمومی — نرخ برابری جدید» ✓؛ برگشت = حالت کاشی حفظ شده ✓؛ localStorage = "tiles" ✓؛ reload کامل + بازکردن دوبارهٔ پنجره = کاشی هنوز فعال ✓؛ en/LTR: سوییچر راست هدر، «View / Accordion / …»، چیدمان آینه‌ای درست ✓؛ برگشت fa/rtl سالم ✓؛ کنسول پاک (فقط Fast Refresh)، صفر خطا ✓.
+- lint = ۰/۰؛ tsc = همان ۱۳ baseline (صفر خطای جدید)؛ بکاپ §0.9: db/dfb.db.bak-t117 + db/custom.db.bak-t117 (تسک فقط-UI، بدون تغییر دیتابیس).
+
+Stage Summary:
+- منوی عمومی حالا ۴ مدل نمایش زیرمنو دارد (کشویی/کنار هم/لیستی/کاشی) با سوییچرِ همیشه‌در‌دسترس کنار عنوان پنجره؛ انتخاب کاربر ماندگار است و با تعویض زبان/جهت و بازوبند کردن پنجره حفظ می‌شود.
+- معماری تک‌منبع: MENU_GROUPS یگانه مرجع منو است؛ ۴ چیدمان، ۱۳ زبان و RTL/LTR همه از یک مدل تغذیه می‌شوند — فرم بعدی فقط یک مدخل در آرایه + کلیدهای i18n.
+- artifacts: src/components/erp/general/general-menu-view.tsx (جدید، ~۴۹۸ خط)؛ src/components/erp/general/general-window.tsx (لاغرشده)؛ src/i18n/dictionaries.ts (+۶۵ ردیف).
