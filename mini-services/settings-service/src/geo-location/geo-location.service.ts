@@ -133,7 +133,8 @@ export class GeoLocationService {
           levelType: dto.levelType,
           code: dto.code,
           title: dto.title.trim(),
-          titleLatin: dto.titleLatin.trim(),
+          /* Task 110 — عنوان لاتین از فرم‌ها حذف شد؛ ستون legacy با مقدار پیش‌فرض */
+          titleLatin: dto.titleLatin?.trim() ?? "",
           isActive: dto.isActive ?? true,
           ...appBaseOnCreate(SYSTEM_ACTOR),
         },

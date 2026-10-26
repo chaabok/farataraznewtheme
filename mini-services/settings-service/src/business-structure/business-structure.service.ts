@@ -176,7 +176,8 @@ export class BusinessStructureService {
             parentRef: BigInt(dto.parentRef),
             code,
             title: dto.title.trim(),
-            titleEn: dto.titleEn.trim(),
+            /* Task 110 — عنوان لاتین از فرم‌ها حذف شد؛ ستون legacy خالی می‌ماند */
+            titleEn: dto.titleEn?.trim() || null,
             businessStructureType: dto.businessStructureType,
             manager: dto.manager?.trim() || null,
             logoUrl: dto.logoUrl ?? null,

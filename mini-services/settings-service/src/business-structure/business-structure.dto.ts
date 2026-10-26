@@ -24,10 +24,12 @@ export class CreateBsDto {
   @MaxLength(200)
   title!: string;
 
+  /* Task 110 (درخواست مالک): «فیلد عنوان لاتین» حذف شد — ترجمهٔ هر زبان
+     روی انبار DataTranslation نگهداری می‌شود؛ ستون قدیمی legacy می‌ماند. */
+  @IsOptional()
   @IsString()
-  @IsNotEmpty({ message: "عنوان لاتین الزامی است" })
   @MaxLength(200)
-  titleEn!: string;
+  titleEn?: string;
 
   @IsInt()
   @Min(1)

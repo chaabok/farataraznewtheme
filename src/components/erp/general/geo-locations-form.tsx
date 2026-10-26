@@ -5,9 +5,12 @@
    کسب‌وکار — Task 32). درخت مرجع مکان‌ها با قواعد والد-محور مالک:
    «اولین شاخه کشور؛ زیر کشور فقط استان؛ زیر استان فقط شهر» (تک‌منبع حقیقت
    روی سرور است — آینهٔ فرانت برای گیتِ UI در types/geo-location).
-   فیلدها (عین اسکرین‌شات مالک): نوع (دراپ‌داون، آیتم‌های مجاز والد) /
-   کد (عددی، پیشنهاد خودکار = بیشینهٔ خواهرها + ۱) / عنوان / عنوان (لاتین) /
-   فعال (پیش‌فرض تیک). */
+   فیلدها: نوع (دراپ‌داون، آیتم‌های مجاز والد) / کد (عددی، پیشنهاد خودکار =
+   بیشینهٔ خواهرها + ۱) / عنوان / فعال (پیش‌فرض تیک).
+   Task 110 (درخواست مالک) — فیلد «عنوان لاتین» حذف شد؛ فیلد «عنوان» خودش
+   زبان‌آware است: با تغییر زبان، ترجمهٔ همان زبان از انبار DataTranslation
+   نمایش داده می‌شود؛ ویرایش عنوان در fa = عنوان پایه، در سایر زبان‌ها =
+   ذخیرهٔ ترجمهٔ همان زبان در انبار (fallback نبودِ ترجمه = عنوان پایه). */
 
 import * as React from "react";
 import { Building2, CornerDownRight, EarthIcon, MapPinned, Route, TreePine } from "lucide-react";
@@ -44,8 +47,8 @@ type Mode = "idle" | "view" | "create";
 interface GeoFormState {
   levelType: string; // "" unset
   code: string;
+  /** عنوان در زبان جاری — fa = عنوان پایه؛ سایر زبان‌ها = ترجمهٔ همان زبان */
   title: string;
-  titleLatin: string;
   isActive: boolean;
 }
 
@@ -53,7 +56,6 @@ const EMPTY: GeoFormState = {
   levelType: "",
   code: "",
   title: "",
-  titleLatin: "",
   isActive: true,
 };
 
@@ -87,12 +89,17 @@ function GeoTypeIcon({ type, className }: { type: number; className?: string }) 
   );
 }
 
-function formFromNode(node: GeoNode): GeoFormState {
+/** عنوان نمایشی/ویرایشی رکورد در زبان جاری — نبودِ ترجمه = عنوان پایهٔ fa */
+function nodeTitleIn(n: GeoNode, locale: string, tr?: Record<string, string>): string {
+  if (locale === "fa") return n.title ?? "";
+  return tr?.[locale] || n.title || "";
+}
+
+function formFromNode(node: GeoNode, locale: string, tr?: Record<string, string>): GeoFormState {
   return {
     levelType: String(node.levelType),
     code: String(node.code),
-    title: node.title ?? "",
-    titleLatin: node.titleLatin ?? "",
+    title: nodeTitleIn(node, locale, tr),
     isActive: node.isActive,
   };
 }
@@ -119,6 +126,8 @@ export function GeoLocationsForm({ onBack }: { onBack?: () => void }) {
   /* Task 82 — پرچم ویرایش ذخیره‌نشدهٔ برگه میزبان */
   const [dirty, setDirty] = React.useState(false);
   useTabDirty(dirty);
+  /* Task 110 — عنوانی که فرم با آن بار شده (مبنا برای تشخیص ویرایش ترجمه) */
+  const loadedTitleRef = React.useRef("");
 
   const load = React.useCallback(async () => {
     setLoading(true);
@@ -147,6 +156,8 @@ export function GeoLocationsForm({ onBack }: { onBack?: () => void }) {
     Record<string, Record<string, string>>
   >({});
   const [trVersion, setTrVersion] = React.useState(0);
+  /* Task 110 — نسخهٔ نقشهٔ ترجمه برای بازمشقِ عنوانِ زبان‌آگاهِ فرمِ باز */
+  const [trEpoch, setTrEpoch] = React.useState(0);
 
   React.useEffect(() => {
     const ids = items.map((n) => n.id);
@@ -179,6 +190,8 @@ export function GeoLocationsForm({ onBack }: { onBack?: () => void }) {
           }
         }
         setTrMap(next);
+        /* Task 110 — فرمِ باز (عنوانِ زبان جاری) با نقشهٔ تازه بازمشق می‌شود */
+        setTrEpoch((e) => e + 1);
       })
       .catch(() => {
         /* واکشی ناموفق — درخت/فهرست با عناوین پایه می‌مانند */
@@ -190,10 +203,7 @@ export function GeoLocationsForm({ onBack }: { onBack?: () => void }) {
 
   /** عنوان نمایشی رکورد در زبان جاری — نبودِ ترجمه = عنوان پایهٔ fa (Task 99) */
   const displayTitle = React.useCallback(
-    (n: GeoNode): string => {
-      if (locale === "fa") return n.title;
-      return trMap[String(n.id)]?.[locale] || n.title;
-    },
+    (n: GeoNode): string => nodeTitleIn(n, locale, trMap[String(n.id)]),
     [locale, trMap],
   );
 
@@ -248,18 +258,21 @@ export function GeoLocationsForm({ onBack }: { onBack?: () => void }) {
       ? byId.get(String(selectedNode.parentRef)) ?? null
       : null;
 
-  /* ---- form state — الگوی derive-and-reset هنگام رندر (از BsDetail/Task 32) ---- */
-  const formKey = `${mode}:${mode === "create" ? createParentId ?? "root" : selectedId ?? "-"}:${selectedNode?.version ?? "-"}`;
+  /* ---- form state — الگوی derive-and-reset هنگام رندر (از BsDetail/Task 32) ----
+     Task 110 — کلید بازمشق شامل زبان + نسخهٔ نقشهٔ ترجمه است تا با تغییر
+     زبان، عنوانِ فرم به ترجمهٔ همان زبان تغییر کند (حکم مالک). */
+  const formKey = `${mode}:${mode === "create" ? createParentId ?? "root" : selectedId ?? "-"}:${selectedNode?.version ?? "-"}:${locale}:${trEpoch}`;
   const [renderedKey, setRenderedKey] = React.useState(formKey);
   if (renderedKey !== formKey) {
     setRenderedKey(formKey);
-    setForm(
+    const nextForm =
       mode === "create"
         ? { ...EMPTY, code: String(nextSiblingCode(createParentId)) }
         : selectedNode
-          ? formFromNode(selectedNode)
-          : EMPTY,
-    );
+          ? formFromNode(selectedNode, locale, trMap[String(selectedNode.id)])
+          : EMPTY;
+    loadedTitleRef.current = nextForm.title.trim(); // مبنای تشخیص ویرایش ترجمه
+    setForm(nextForm);
     setDirty(false); // فرم تازه/رکورد ذخیره‌شده = بدون ویرایش باز
   }
 
@@ -334,6 +347,21 @@ export function GeoLocationsForm({ onBack }: { onBack?: () => void }) {
         }
       } else if (mode === "view" && selectedNode) {
         await api.put<{ item: GeoNode }>(`geo-location/${selectedNode.id}`, payload);
+        /* Task 110 — ویرایش عنوان در زبان غیر-fa = ذخیرهٔ ترجمهٔ همان زبان
+           در انبار DataTranslation (عنوان پایهٔ fa دست‌نخورده می‌ماند)؛
+           فقط وقتی کاربر واقعاً عنوان را عوض کرده باشد (نبودِ ترجمه =
+           نمایش عنوان پایه — نباید آن را به‌عنوان ترجمه قفل کنیم) */
+        if (
+          locale !== "fa" &&
+          form.title.trim() !== loadedTitleRef.current.trim()
+        ) {
+          await api.post("data-translations/save", {
+            entityType: "GeoLocation",
+            entityId: selectedNode.id,
+            items: [{ fieldKey: "title", locale, value: form.title.trim() }],
+          });
+          setTrVersion((v) => v + 1); // بازخوانی نقشهٔ نمایش درخت/فهرست/فرم
+        }
         toast.success(t("bs.msg.saved"));
         setDirty(false);
         await load();
@@ -358,7 +386,9 @@ export function GeoLocationsForm({ onBack }: { onBack?: () => void }) {
     }
   };
 
-  /* ---- اعتبارسنجی + payload ---- */
+  /* ---- اعتبارسنجی + payload ----
+     Task 110 — «عنوان لاتین» حذف شد؛ عنوان در fa به ستون پایه می‌رود و در
+     سایر زبان‌ها فقط ترجمهٔ همان زبان ذخیره می‌شود (عنوان پایه تغییر نمی‌کند). */
   const validate = (): string[] => {
     const errs: string[] = [];
     if (!form.levelType) errs.push(t("bs.val.typeRequired"));
@@ -366,7 +396,6 @@ export function GeoLocationsForm({ onBack }: { onBack?: () => void }) {
       errs.push(t("geo.val.codeRequired"));
     }
     if (!form.title.trim()) errs.push(t("bs.val.titleRequired"));
-    if (!form.titleLatin.trim()) errs.push(t("bs.val.titleEnRequired"));
     return errs;
   };
 
@@ -377,14 +406,13 @@ export function GeoLocationsForm({ onBack }: { onBack?: () => void }) {
         levelType: Number(form.levelType),
         code: Number(form.code),
         title: form.title.trim(),
-        titleLatin: form.titleLatin.trim(),
         isActive: form.isActive,
       };
     }
     return {
       levelType: Number(form.levelType),
-      title: form.title.trim(),
-      titleLatin: form.titleLatin.trim(),
+      /* عنوان فقط در fa به پایه می‌رود؛ در سایر زبان‌ها ترجمهٔ جدا ذخیره می‌شود */
+      ...(locale === "fa" ? { title: form.title.trim() } : {}),
       isActive: form.isActive,
     };
   };
@@ -500,14 +528,6 @@ export function GeoLocationsForm({ onBack }: { onBack?: () => void }) {
         : { id: "codeView", label: t("bs.field.code"), value: form.code, readOnly: true },
       { id: "title", label: t("bs.field.title"), required: true, value: form.title },
       {
-        id: "titleLatin",
-        label: t("bs.field.titleEn"),
-        required: true,
-        value: form.titleLatin,
-        ltr: true,
-        placeholder: t("bs.hint.latinTitle"),
-      },
-      {
         id: "isActive",
         label: t("fy.active"),
         type: "checkbox" as const,
@@ -525,7 +545,7 @@ export function GeoLocationsForm({ onBack }: { onBack?: () => void }) {
   const detailTitleOverride =
     mode === "create"
       ? `${t("bs.action.new")} — ${t("bs.field.parent")}: ${
-          createParent ? `${createParent.title} (${createParent.code})` : t("geo.formTitle")
+          createParent ? `${displayTitle(createParent)} (${createParent.code})` : t("geo.formTitle")
         }`
       : null;
 
@@ -535,12 +555,13 @@ export function GeoLocationsForm({ onBack }: { onBack?: () => void }) {
      قلاب عمومی useRecordTranslation: همین دو handler کاشی «ترجمه» را در ALL
      فرم‌های آینده فعال می‌کند؛ انبار = DataTranslation (entityType GeoLocation).
      در حالت ثبت هنوز شناسه‌ای نیست — توست راهنما (قرارداد Party)؛ فیلدِ
-     قابل ترجمه = عنوان (کد عددی است و عنوان لاتین ورودِ خود مالک). */
+     قابل ترجمه = عنوان (کد عددی است). Task 110 — مبدأ ترجمه همیشه «عنوان
+     پایهٔ fa» رکورد است (نه مقدار نمایشی زبان جاری). */
   const recordTr = useRecordTranslation({
     entityType: "GeoLocation",
     entityId: mode === "view" && selectedNode ? selectedNode.id : null,
     getFields: (): DataTranslationField[] => {
-      const v = form.title.trim();
+      const v = selectedNode?.title?.trim() ?? "";
       return v ? [{ key: "title", label: t("bs.field.title"), value: v }] : [];
     },
     /* Task 108 (درخواست مالک) — ترجمهٔ زنجیرهٔ درخت: با «ترجمهٔ آنلاین»،

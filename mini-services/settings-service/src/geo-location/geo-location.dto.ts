@@ -27,10 +27,12 @@ export class CreateGeoDto {
   @MaxLength(120)
   title!: string;
 
+  /* Task 110 (درخواست مالک): «فیلد عنوان لاتین» حذف شد — ترجمهٔ هر زبان
+     روی انبار DataTranslation نگهداری می‌شود؛ ستون قدیمی legacy می‌ماند. */
+  @IsOptional()
   @IsString()
-  @IsNotEmpty({ message: "عنوان لاتین الزامی است" })
   @MaxLength(120)
-  titleLatin!: string;
+  titleLatin?: string;
 
   @IsOptional()
   @IsBoolean()
