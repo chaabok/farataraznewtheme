@@ -6,7 +6,10 @@ import {
   appBaseOnUpdate,
   SYSTEM_ACTOR,
 } from "../../../_shared/app-base-entity";
-import { SaveDataTranslationsDto } from "./data-translations.dto";
+import {
+  SaveDataTranslationsDto,
+  SaveDataTranslationsManyDto,
+} from "./data-translations.dto";
 
 /**
  * DataTranslation service — Task 92 (تأیید مالک): انبار ترجمهٔ «دادهٔ» فرم‌های
@@ -79,69 +82,94 @@ export class DataTranslationsService {
    * تعداد ردیف‌های ساخته‌شده/به‌روزشده/حذف‌شده برمی‌گردد.
    */
   async save(dto: SaveDataTranslationsDto) {
-    const entityId = BigInt(dto.entityId);
-    let created = 0;
-    let updated = 0;
-    let deleted = 0;
+    const [res] = await this.saveRecords(dto.entityType, [
+      { entityId: dto.entityId, items: dto.items },
+    ]);
+    return { ok: true, ...res };
+  }
+
+  /**
+   * Task 108 (درخواست مالک) — ذخیرهٔ «چند رکورد» در یک درخواست (upsert؛
+   * قرارداد عین save تک‌رکوردی): برای «ترجمهٔ آنلاین زیرشاخه‌ها» در فرم‌های
+   * درختی — BFF نتایج هر دستهٔ LLM را یک‌جا می‌فرستد. IDهای همهٔ ردیف‌های
+   * جدید یک‌جا از شمارندهٔ مرکزی §16 گرفته می‌شوند (بلاک پیوسته).
+   */
+  async saveMany(dto: SaveDataTranslationsManyDto) {
+    const [res] = await this.saveRecords(dto.entityType, dto.records);
+    this.logger.log(
+      `data-translations save-many ${dto.entityType} ×${dto.records.length}: +${res.created} ~${res.updated} -${res.deleted}`,
+    );
+    return { ok: true, ...res };
+  }
+
+  /** هستهٔ مشترک save/saveMany — تک‌منبع حقیقت upsert ترجمهٔ داده */
+  private async saveRecords(
+    entityType: string,
+    records: Array<{ entityId: number; items: SaveDataTranslationsDto["items"] }>,
+  ): Promise<Array<{ created: number; updated: number; deleted: number }>> {
     /* IDهای ردیف‌های جدید یک‌جا از شمارندهٔ مرکزی گرفته می‌شود (§16) —
        generateNextIdBlock «شناسهٔ آغازین» برمی‌گرداند (startId..startId+n-1) */
-    const fresh = dto.items.filter((it) => (it.value ?? "").trim() !== "");
-    let startId = 0;
-    if (fresh.length > 0) {
-      startId = await this.idGen.generateNextIdBlock("DataTranslation", fresh.length);
-    }
-
-    for (let i = 0; i < dto.items.length; i++) {
-      const it = dto.items[i];
-      const value = (it.value ?? "").trim();
-      if (value === "") {
-        /* deleteMany فیلتر معمولی می‌گیرد (نه کلید یکتای مرکب) */
-        const res = await this.prisma.dataTranslation.deleteMany({
-          where: {
-            entityType: dto.entityType,
-            entityId,
-            fieldKey: it.fieldKey,
-            locale: it.locale,
-          },
-        });
-        deleted += res.count;
-        continue;
-      }
-      const existing = await this.prisma.dataTranslation.findUnique({
-        where: {
-          entityType_entityId_fieldKey_locale: {
-            entityType: dto.entityType,
-            entityId,
-            fieldKey: it.fieldKey,
-            locale: it.locale,
-          },
-        },
-      });
-      if (existing) {
-        await this.prisma.dataTranslation.update({
-          where: { id: existing.id },
-          data: { value, ...appBaseOnUpdate(SYSTEM_ACTOR) },
-        });
-        updated += 1;
-      } else {
-        await this.prisma.dataTranslation.create({
-          data: {
-            id: BigInt(startId + created),
-            entityType: dto.entityType,
-            entityId,
-            fieldKey: it.fieldKey,
-            locale: it.locale,
-            value,
-            ...appBaseOnCreate(SYSTEM_ACTOR),
-          },
-        });
-        created += 1;
-      }
-    }
-
-    this.logger.log(
-      `data-translations save ${dto.entityType}#${dto.entityId}: +${created} ~${updated} -${deleted}`,
+    const freshTotal = records.reduce(
+      (acc, r) => acc + r.items.filter((it) => (it.value ?? "").trim() !== "").length,
+      0,
     );
-    return { ok: true, created, updated, deleted };
+    let nextId = 0;
+    if (freshTotal > 0) {
+      nextId = await this.idGen.generateNextIdBlock("DataTranslation", freshTotal);
+    }
+    /* مکان‌نمای سراسری ID — در طول همهٔ رکوردها پیوسته پیش می‌رود (فقط روی
+       «ایجاد»؛ ردیف‌های به‌روزشده از بلاک مصرف نمی‌کنند) */
+    let idCursor = nextId;
+
+    const results: Array<{ created: number; updated: number; deleted: number }> = [];
+    for (const rec of records) {
+      const entityId = BigInt(rec.entityId);
+      let created = 0;
+      let updated = 0;
+      let deleted = 0;
+      for (const it of rec.items) {
+        const value = (it.value ?? "").trim();
+        if (value === "") {
+          /* deleteMany فیلتر معمولی می‌گیرد (نه کلید یکتای مرکب) */
+          const res = await this.prisma.dataTranslation.deleteMany({
+            where: { entityType, entityId, fieldKey: it.fieldKey, locale: it.locale },
+          });
+          deleted += res.count;
+          continue;
+        }
+        const existing = await this.prisma.dataTranslation.findUnique({
+          where: {
+            entityType_entityId_fieldKey_locale: {
+              entityType,
+              entityId,
+              fieldKey: it.fieldKey,
+              locale: it.locale,
+            },
+          },
+        });
+        if (existing) {
+          await this.prisma.dataTranslation.update({
+            where: { id: existing.id },
+            data: { value, ...appBaseOnUpdate(SYSTEM_ACTOR) },
+          });
+          updated += 1;
+        } else {
+          await this.prisma.dataTranslation.create({
+            data: {
+              id: BigInt(idCursor++),
+              entityType,
+              entityId,
+              fieldKey: it.fieldKey,
+              locale: it.locale,
+              value,
+              ...appBaseOnCreate(SYSTEM_ACTOR),
+            },
+          });
+          created += 1;
+        }
+      }
+      results.push({ created, updated, deleted });
+    }
+    return results;
   }
 }

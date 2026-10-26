@@ -71,3 +71,34 @@ export class SaveDataTranslationsDto {
   @Type(() => SaveDataTranslationItemDto)
   items!: SaveDataTranslationItemDto[];
 }
+
+/**
+ * Task 108 (درخواست مالک) — ذخیرهٔ «چند رکورد» در یک درخواست:
+ * «ترجمهٔ آنلاین» روی فرم‌های درختی (SimpleTreeForm) حالا همهٔ زیرشاخه‌های
+ * سرشاخهٔ انتخابی را ترجمه می‌کند (۴۹۲ زیرشاخه برای ایران!)؛ BFF نتایج هر
+ * دستهٔ LLM را یک‌جا ذخیره می‌کند تا ۲۵ درخواست جداگانهٔ save لازم نیاید —
+ * هم‌قرارداد خواندن دسته‌ای listMany (Task 99).
+ */
+export class SaveDataTranslationsRecordDto {
+  @IsInt()
+  @Min(1)
+  entityId!: number;
+
+  @IsArray()
+  @ArrayMaxSize(120)
+  @ValidateNested({ each: true })
+  @Type(() => SaveDataTranslationItemDto)
+  items!: SaveDataTranslationItemDto[];
+}
+
+export class SaveDataTranslationsManyDto {
+  @IsString()
+  @Matches(/^[A-Za-z][A-Za-z0-9_]{0,39}$/)
+  entityType!: string;
+
+  @IsArray()
+  @ArrayMaxSize(50)
+  @ValidateNested({ each: true })
+  @Type(() => SaveDataTranslationsRecordDto)
+  records!: SaveDataTranslationsRecordDto[];
+}

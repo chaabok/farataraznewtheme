@@ -15,17 +15,27 @@
  *     فعال؛ ذخیرهٔ دکمه‌ای) — خودکار رندر می‌شود (dialog خروجی قلاب)؛
  *   · رکوردی باز نبود (entityId = null) → توست راهنما، بدون کرش.
  *
+ * Task 108 (درخواست مالک) — ترجمهٔ زنجیرهٔ درخت: فرم‌های درختی (SimpleTreeForm)
+ * با گزینهٔ اختیاری getSubtreeRecords همهٔ زیرشاخه‌های سرشاخهٔ انتخابی را هم
+ * می‌دهند؛ «ترجمهٔ آنلاین» حالا شاخهٔ انتخابی + «تمامی زیرشاخه‌هایش» را در
+ * دسته‌های ≤ CHUNK_RECORDS با endpoint دسته‌ای /api/data-translations/
+ * auto-translate-batch (یک LLM به‌ازای هر دسته + save-many سرور) ترجمه می‌کند
+ * — پیشرفت = توست شمارش‌دار «{done}/{total}»؛ کاربر دیگر نباید روی تک‌تک
+ * زیرشاخه‌ها کلیک کند. فرم‌های بدون زیرشاخه (Party و…) عین رفتار قبلی.
+ *
  * مصرف (حداقلی — عین فرم محل های جغرافیایی):
  *   const tr = useRecordTranslation({
  *     entityType: "GeoLocation", entityId: selectedId,
  *     getFields: () => [{ key: "title", label: t("bs.field.title"), value: form.title }],
+ *     getSubtreeRecords: (rootId) => collectDescendants(rootId), // اختیاری — فرم درختی
  *     onTranslated: () => setTrVersion((v) => v + 1),
  *   });
  *   <FormShell onTranslateOnline={tr.translateOnline} onTranslateOffline={tr.openTranslateOffline} … />
  *   {tr.dialog}
  *
  * TranslateButton (Task 90) با رسیدن همین دو handler فعال می‌شود — پس «هر فرم
- * جدید» با چند خط، هر دو گزینهٔ منوی ترجمه را فعال دارد.
+ * جدید» با چند خط، هر دو گزینهٔ منوی ترجمه را فعال دارد (و فرم درختی، ترجمهٔ
+ * زنجیره‌ای زیرشاخه‌ها را خودکار می‌گیرد).
  */
 
 import * as React from "react";
@@ -37,6 +47,12 @@ import {
   type DataTranslationField,
 } from "./data-translations-dialog";
 
+/** یک رکورد زیرمجموعه برای ترجمهٔ زنجیره‌ای (Task 108) */
+export interface SubtreeTranslationRecord {
+  entityId: number;
+  fields: DataTranslationField[];
+}
+
 export interface UseRecordTranslationOptions {
   /** مدل انبار DataTranslation («GeoLocation»، «Party»، … — ^[A-Za-z][A-Za-z0-9_]{0,39}$) */
   entityType: string;
@@ -44,6 +60,9 @@ export interface UseRecordTranslationOptions {
   entityId: number | null;
   /** فیلدهای متنیِ قابل ترجمهٔ رکورد باز (کلید پایدار / برچسب فرم / مقدار پایهٔ fa) */
   getFields: () => DataTranslationField[];
+  /** Task 108 — (اختیاری؛ فرم درختی) همهٔ زیرشاخه‌های سرشاخهٔ انتخابی —
+   * با رسیدنش، «ترجمهٔ آنلاین» زنجیره‌ای می‌شود: سرشاخه + تمامی زیرشاخه‌ها */
+  getSubtreeRecords?: (rootEntityId: number) => SubtreeTranslationRecord[];
   /** پس از ترجمهٔ آنلاین موفق — تازه‌سازی نقشهٔ نمایش/فهرست (مثلاً bump نسخه) */
   onTranslated?: () => void | Promise<void>;
   /** هنگام بستن دیالوگ ورود دستی — برای تازه‌سازی ترجمه‌های ذخیره‌شدهٔ دستی */
@@ -61,15 +80,26 @@ export interface UseRecordTranslationResult {
   dialog: React.ReactNode;
 }
 
+/** اندازهٔ دستهٔ ارسالی به endpoint دسته‌ای — = MAX_RECORDS سمت BFF */
+const CHUNK_RECORDS = 25;
+/** هم‌زمانی حلقهٔ دسته‌ها — LLM × ۳ موازی (سقف معقول برای پاسخ‌گویی بدون فشار) */
+const CHUNK_CONCURRENCY = 3;
+
 export function useRecordTranslation(
   opts: UseRecordTranslationOptions,
 ): UseRecordTranslationResult {
-  const { entityType, entityId, getFields, onTranslated, onOfflineClose } = opts;
+  const { entityType, entityId, getFields, getSubtreeRecords, onTranslated, onOfflineClose } = opts;
   const t = useT();
   const activeLocales = useSettings((s) => s.activeLocales);
   const [offlineOpen, setOfflineOpen] = React.useState(false);
+  /* گارد ورود دوباره — ترجمهٔ زنجیره‌ای ممکن است دقیقه‌ها طول بکشد */
+  const runningRef = React.useRef(false);
 
   const translateOnline = React.useCallback(async () => {
+    if (runningRef.current) {
+      toast.info(t("dfb.list.translateTreeBusy"));
+      return;
+    }
     if (entityId == null) {
       toast.info(t("dfb.noRecordSelected"));
       return;
@@ -84,31 +114,110 @@ export function useRecordTranslation(
       toast.info(t("settings.activeLangs"));
       return;
     }
+
+    /* Task 108 — رکورد باز + همهٔ زیرشاخه‌های دارای فیلد متنی (فرم درختی) */
+    const subtree = getSubtreeRecords?.(entityId) ?? [];
+    const records: SubtreeTranslationRecord[] = [
+      { entityId, fields },
+      ...subtree.filter((r) => Number.isInteger(r.entityId) && r.entityId > 0 && r.fields.length > 0),
+    ];
+    /* برگ/فرم بدون زیرشاخه = عین مسیر تک‌رکوردی Task 92-99 */
+    const chained = records.length > 1;
+
+    runningRef.current = true;
     try {
-      const res = await fetch("/api/data-translations/auto-translate", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ entityType, entityId, langs, fields }),
-      });
-      const json = (await res.json().catch(() => null)) as
-        | { ok?: boolean; message?: string }
-        | null;
-      if (!res.ok || !json?.ok) {
-        throw new Error(json?.message || t("common.error"));
+      if (!chained) {
+        const res = await fetch("/api/data-translations/auto-translate", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ entityType, entityId, langs, fields }),
+        });
+        const json = (await res.json().catch(() => null)) as
+          | { ok?: boolean; message?: string }
+          | null;
+        if (!res.ok || !json?.ok) {
+          throw new Error(json?.message || t("common.error"));
+        }
+        /* Task 98 (حکم مالک): در ترجمهٔ آنلاین هیچ مودالی باز نمی‌شود —
+           ترجمه‌ها همین‌جا در انبار ذخیره شده‌اند؛ بازخورد = توست شمارش‌دار
+           + onTranslated (نشستن فوری ترجمه در درخت/فهرست فرم). */
+        await onTranslated?.();
+        toast.success(
+          t("dfb.list.translateDoneCounts")
+            .replace("{n}", String(fields.length))
+            .replace("{m}", String(langs.length)),
+        );
+        return;
       }
-      /* Task 98 (حکم مالک): در ترجمهٔ آنلاین هیچ مودالی باز نمی‌شود —
-         ترجمه‌ها همین‌جا در انبار ذخیره شده‌اند؛ بازخورد = توست شمارش‌دار
-         + onTranslated (نشستن فوری ترجمه در درخت/فهرست فرم). */
-      await onTranslated?.();
-      toast.success(
-        t("dfb.list.translateDoneCounts")
-          .replace("{n}", String(fields.length))
-          .replace("{m}", String(langs.length)),
+
+      /* --- مسیر زنجیره‌ای (Task 108): دسته‌های ≤۲۵ رکورد، هم‌زمانی ×۳ --- */
+      const chunks: SubtreeTranslationRecord[][] = [];
+      for (let i = 0; i < records.length; i += CHUNK_RECORDS) {
+        chunks.push(records.slice(i, i + CHUNK_RECORDS));
+      }
+      const progressToastId = `tr-tree-${Date.now()}`;
+      const progressMsg = () =>
+        t("dfb.list.translateTreeProgress")
+          .replace("{done}", String(doneCount))
+          .replace("{total}", String(records.length));
+      let doneCount = 0;
+      let failedChunks = 0;
+      toast.loading(progressMsg(), { id: progressToastId, duration: Infinity });
+
+      const queue = [...chunks];
+      const worker = async () => {
+        for (;;) {
+          const chunk = queue.shift();
+          if (!chunk) return;
+          try {
+            const res = await fetch("/api/data-translations/auto-translate-batch", {
+              method: "POST",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify({ entityType, langs, records: chunk }),
+            });
+            const json = (await res.json().catch(() => null)) as
+              | { ok?: boolean; message?: string }
+              | null;
+            if (!res.ok || !json?.ok) {
+              throw new Error(json?.message || t("common.error"));
+            }
+          } catch {
+            /* دستهٔ ناموفق گزارش می‌شود ولی زنجیره ادامه می‌یابد —
+               اجرای دوباره همان سرشاخه فقط زیرشاخه‌های جامانده را ترجمه می‌کند
+               (upsert سرور = امن برای تکرار) */
+            failedChunks += 1;
+          }
+          doneCount += chunk.length;
+          toast.loading(progressMsg(), { id: progressToastId, duration: Infinity });
+        }
+      };
+      await Promise.all(
+        Array.from({ length: Math.min(CHUNK_CONCURRENCY, chunks.length) }, () => worker()),
       );
+
+      await onTranslated?.();
+      if (failedChunks === 0) {
+        toast.success(
+          t("dfb.list.translateTreeDone")
+            .replace("{n}", String(records.length))
+            .replace("{m}", String(langs.length)),
+          { id: progressToastId, duration: 6000 },
+        );
+      } else {
+        toast.warning(
+          t("dfb.list.translateTreePartial")
+            .replace("{n}", String(records.length - Math.min(failedChunks * CHUNK_RECORDS, records.length)))
+            .replace("{m}", String(langs.length))
+            .replace("{k}", String(failedChunks)),
+          { id: progressToastId, duration: 8000 },
+        );
+      }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : t("common.error"));
+    } finally {
+      runningRef.current = false;
     }
-  }, [entityId, entityType, getFields, activeLocales, onTranslated, t]);
+  }, [entityId, entityType, getFields, getSubtreeRecords, activeLocales, onTranslated, t]);
 
   const openTranslateOffline = React.useCallback(() => setOfflineOpen(true), []);
   const handleOfflineChange = React.useCallback(
