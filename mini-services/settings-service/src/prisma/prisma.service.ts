@@ -41,6 +41,7 @@ const VERSIONED_MODELS: ReadonlySet<string> = new Set([
   "UserRole", // Task 100 — نقش‌های کاربری (مدیریت کاربران)
   "UserRoleScope", // Task 100 — محدودهٔ دسترسی نقش‌ها
   "GeoLocation", // Task 103 — محل‌های جغرافیایی
+  "CurrencyType", // Task 114 — نوع ارز
 ]);
 
 const VERSION_ACTIONS = new Set(["update", "updateMany", "upsert"]);

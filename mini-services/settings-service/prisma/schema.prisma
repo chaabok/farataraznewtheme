@@ -208,6 +208,38 @@ model FiscalYear {
   @@map("FiscalYear")
 }
 
+/// CurrencyType — Task 114 (درخواست مالک): فرم «نوع ارز جدید» در نرم‌افزار
+/// «عمومی» → زیرمنوی «اطلاعات پایه» (اطلاعات پایهٔ ارزی سیستم).
+/// فیلدها عین تصویر مالک: کد*، عنوان*، عنوان لاتین*، واحد مبنا*،
+/// تعداد اعشار*، عنوان اعشار، عنوان اعشار لاتین، ثبت فعال.
+/// کد یکتا در ساختار سازمانی؛ seed اولیه = ارزهای معتبر بین‌المللی ISO 4217
+/// (idempotent by Code) — ریال ایران + ارزهای major جهان و همسایگان.
+model CurrencyType {
+  id                BigInt   @id @map("ID")
+  code              String   @map("Code") // کد ارز (مثلاً IRR/USD — ISO 4217)
+  title             String   @map("Title") // عنوان فارسی
+  titleLatin        String   @map("TitleLatin") // عنوان لاتین (اجباری)
+  baseUnit          Int      @default(1) @map("BaseUnit") // واحد مبنا
+  decimalPlaces     Int      @default(0) @map("DecimalPlaces") // تعداد اعشار (۰..۳)
+  decimalTitle      String?  @map("DecimalTitle") // عنوان اعشار
+  decimalTitleLatin String?  @map("DecimalTitleLatin") // عنوان اعشار لاتین
+  isActive          Boolean  @default(true) @map("IsActive") // ثبت فعال
+  version           Int      @default(1) @map("Version") // §2.5 auto-rowversion
+  creator           String   @map("Creator")
+  lastModifier      String?  @map("LastModifier")
+  businessStructureRef BigInt @map("BusinessStructureRef")
+  companyRef        BigInt?  @map("CompanyRef")
+  branchRef         BigInt?  @map("BranchRef")
+  agencyRef         BigInt?  @map("AgencyRef")
+  shopRef           BigInt?  @map("ShopRef")
+  createdAt         DateTime @default(now()) @map("CreatedAt")
+  updatedAt         DateTime @updatedAt @map("UpdatedAt")
+
+  @@unique([code, businessStructureRef])
+  @@unique([title, businessStructureRef])
+  @@map("CurrencyType")
+}
+
 /// City — Task 84 (درخواست مالک): جدول شهرها برای دراپ‌داونِ «شهر» در تب
 /// «نشانی» فرم «طرف حساب جدید» (ستون‌ها: کد / عنوان / عنوان لاتین / نام استان /
 /// نام کشور). جدول مرجعِ اطلاعات پایه؛ seed اولیه با شهرهای major ایران

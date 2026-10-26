@@ -29,6 +29,7 @@ const SYSTEM_GENERAL_PAGES: Record<string, GeneralSubPage> = {
   "gnr.fiscalYear": "fiscal-year",
   "gnr.party": "party",
   "gnr.geoLocations": "geo-location",
+  "gnr.currencyType": "currency-type", // Task 114 — نوع ارز
 };
 
 /** آیا این فرم سیستمی «فرم واقعی» جداگانه‌ای دارد (برای نمایش دکمهٔ باز کردن)؟ */

@@ -9,6 +9,7 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  Coins,
   Earth,
   FolderOpen,
   UserRoundPlus,
@@ -21,6 +22,7 @@ import { useWindowChrome } from "@/components/desktop/app-window";
 import { FiscalYearForm } from "@/components/erp/general/fiscal-year-form";
 import { PartyForm } from "@/components/forms/common/Party";
 import { GeoLocationsForm } from "@/components/erp/general/geo-locations-form";
+import { CurrencyTypeForm } from "@/components/erp/general/currency-type-form";
 import { DfbAppFormsSection } from "@/components/erp/form-builder/dfb-app-forms";
 
 /**
@@ -62,7 +64,9 @@ export function GeneralWindow() {
           ? "party.formTitle"
           : page === "geo-location"
             ? "geo.formTitle"
-            : null;
+            : page === "currency-type"
+              ? "currency.formTitle"
+              : null;
     setWindowTitle(
       chrome.windowId,
       titleKey ? `${t("app.general")} — ${t(titleKey as never)}` : undefined,
@@ -146,6 +150,38 @@ export function GeneralWindow() {
         </div>
         <div className="min-h-0 flex-1">
           <FiscalYearForm onBack={() => go("home")} />
+        </div>
+      </div>
+    );
+  }
+
+  if (page === "currency-type") {
+    return (
+      <div className="flex h-full flex-col">
+        {/* slim sub-page bar: عمومی / اطلاعات پایه / نوع ارز جدید (Task 114) */}
+        <div className="flex h-10 shrink-0 items-center gap-1.5 overflow-x-auto border-b border-border/60 px-2 scrollbar-slim">
+          <button
+            onClick={() => go("home")}
+            className="flex h-8 shrink-0 items-center gap-1.5 rounded-lg px-2.5 text-xs font-medium text-foreground/80 transition-colors hover:bg-foreground/10 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
+          >
+            <BackIcon className="h-3.5 w-3.5" aria-hidden />
+            {t("settings.back")}
+          </button>
+          <span className="shrink-0 text-xs text-muted-foreground/50" aria-hidden>
+            /
+          </span>
+          <span className="shrink-0 text-xs font-medium text-muted-foreground">
+            {t("fy.menuBasicInfo")}
+          </span>
+          <span className="shrink-0 text-xs text-muted-foreground/50" aria-hidden>
+            /
+          </span>
+          <span className="shrink-0 truncate text-xs font-semibold text-foreground/90">
+            {t("currency.formTitle")}
+          </span>
+        </div>
+        <div className="min-h-0 flex-1">
+          <CurrencyTypeForm onBack={() => go("home")} />
         </div>
       </div>
     );
@@ -273,6 +309,21 @@ export function GeneralWindow() {
                 <span className="min-w-0 flex-1">
                   <span className="block text-sm font-medium">{t("geo.formTitle")}</span>
                   <span className="block text-xs text-muted-foreground">{t("geo.formDesc")}</span>
+                </span>
+                <ForwardIcon className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+              </button>
+
+              {/* فرم «نوع ارز جدید» — Task 114 (درخواست مالک، seed ارزهای ISO 4217) */}
+              <button
+                onClick={() => go("currency-type")}
+                className="flex w-full items-center gap-3 rounded-lg p-3 pe-6 text-start transition-colors hover:bg-accent/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
+              >
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-amber-500 to-yellow-600 text-white shadow-sm">
+                  <Coins className="h-4 w-4" aria-hidden />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-medium">{t("currency.formTitle")}</span>
+                  <span className="block text-xs text-muted-foreground">{t("currency.formDesc")}</span>
                 </span>
                 <ForwardIcon className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
               </button>

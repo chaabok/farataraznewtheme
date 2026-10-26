@@ -116,6 +116,19 @@ const SYSTEM_FORMS: SystemFormSeed[] = [
     componentKey: "treeForm",
     dictKey: "geo.formTitle",
   },
+  {
+    /* Task 114 — فرم «نوع ارز جدید»: اطلاعات پایهٔ ارزی سیستم؛ بدنهٔ واقعی
+       React (currency-type-form) با seed ۲۵ ارز معتبر بین‌المللی ISO 4217
+       در سرویس تنظیمات؛ راه‌انداز واقعی = زیرصفحهٔ currency-type پنجرهٔ عمومی. */
+    systemKey: "gnr.currencyType",
+    anchorAppKey: "general",
+    anchorSubmenuCode: "basicInfo",
+    code: "CUR",
+    titleFa: "نوع ارز جدید",
+    titleEn: "New Currency Type",
+    componentKey: "simpleTwoRowTabbed",
+    dictKey: "currency.formTitle",
+  },
 ];
 
 /**

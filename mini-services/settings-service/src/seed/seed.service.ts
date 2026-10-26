@@ -218,5 +218,70 @@ export class SeedService implements OnModuleInit {
       });
       this.logger.log(`seeded system UserRole ADMIN (مدیر سیستم) ID=${roleId}`);
     }
+
+    /* 7) Task 114 — انواع ارز (idempotent by Code): فرم «نوع ارز جدید» در
+       اطلاعات پایهٔ عمومی. Seed = ارزهای معتبر بین‌المللی ISO 4217:
+       ریال ایران + ارزهای major جهان و همسایگان؛ تعداد اعشار = exponent
+       استاندارد ISO (دینارها تا ۳ اعشار)؛ واحد مبنا = ۱. */
+    const CURRENCIES: Array<{
+      code: string;
+      title: string;
+      titleLatin: string;
+      decimalPlaces: number;
+      decimalTitle?: string;
+      decimalTitleLatin?: string;
+    }> = [
+      { code: "IRR", title: "ریال ایران", titleLatin: "Iranian Rial", decimalPlaces: 0 },
+      { code: "USD", title: "دلار آمریکا", titleLatin: "US Dollar", decimalPlaces: 2, decimalTitle: "سنت", decimalTitleLatin: "Cent" },
+      { code: "EUR", title: "یورو", titleLatin: "Euro", decimalPlaces: 2, decimalTitle: "سنت", decimalTitleLatin: "Cent" },
+      { code: "AED", title: "درهم امارات", titleLatin: "UAE Dirham", decimalPlaces: 2, decimalTitle: "فلس", decimalTitleLatin: "Fils" },
+      { code: "SAR", title: "ریال سعودی", titleLatin: "Saudi Riyal", decimalPlaces: 2, decimalTitle: "هلله", decimalTitleLatin: "Halala" },
+      { code: "QAR", title: "ریال قطر", titleLatin: "Qatari Riyal", decimalPlaces: 2, decimalTitle: "درهم", decimalTitleLatin: "Dirham" },
+      { code: "OMR", title: "ریال عمان", titleLatin: "Omani Rial", decimalPlaces: 3, decimalTitle: "بیسا", decimalTitleLatin: "Baisa" },
+      { code: "KWD", title: "دینار کویت", titleLatin: "Kuwaiti Dinar", decimalPlaces: 3, decimalTitle: "فلس", decimalTitleLatin: "Fils" },
+      { code: "BHD", title: "دینار بحرین", titleLatin: "Bahraini Dinar", decimalPlaces: 3, decimalTitle: "فلس", decimalTitleLatin: "Fils" },
+      { code: "IQD", title: "دینار عراق", titleLatin: "Iraqi Dinar", decimalPlaces: 3, decimalTitle: "فلس", decimalTitleLatin: "Fils" },
+      { code: "AFN", title: "افغانی افغانستان", titleLatin: "Afghan Afghani", decimalPlaces: 2, decimalTitle: "پول", decimalTitleLatin: "Pul" },
+      { code: "TRY", title: "لیر ترکیه", titleLatin: "Turkish Lira", decimalPlaces: 2, decimalTitle: "کوروش", decimalTitleLatin: "Kurus" },
+      { code: "AZN", title: "منات آذربایجان", titleLatin: "Azerbaijani Manat", decimalPlaces: 2, decimalTitle: "قپیک", decimalTitleLatin: "Qapik" },
+      { code: "TJS", title: "سومونی تاجیکستان", titleLatin: "Tajikistani Somoni", decimalPlaces: 2, decimalTitle: "دیرم", decimalTitleLatin: "Diram" },
+      { code: "PKR", title: "روپیه پاکستان", titleLatin: "Pakistani Rupee", decimalPlaces: 2, decimalTitle: "پیسه", decimalTitleLatin: "Paisa" },
+      { code: "INR", title: "روپیه هند", titleLatin: "Indian Rupee", decimalPlaces: 2, decimalTitle: "پیسه", decimalTitleLatin: "Paisa" },
+      { code: "CNY", title: "یوان چین", titleLatin: "Chinese Yuan", decimalPlaces: 2, decimalTitle: "فن", decimalTitleLatin: "Fen" },
+      { code: "JPY", title: "ین ژاپن", titleLatin: "Japanese Yen", decimalPlaces: 0 },
+      { code: "KRW", title: "وون کره جنوبی", titleLatin: "South Korean Won", decimalPlaces: 0 },
+      { code: "RUB", title: "روبل روسیه", titleLatin: "Russian Ruble", decimalPlaces: 2, decimalTitle: "کپیک", decimalTitleLatin: "Kopek" },
+      { code: "GBP", title: "پوند انگلیس", titleLatin: "British Pound", decimalPlaces: 2, decimalTitle: "پنی", decimalTitleLatin: "Penny" },
+      { code: "CHF", title: "فرانک سوئیس", titleLatin: "Swiss Franc", decimalPlaces: 2, decimalTitle: "راپن", decimalTitleLatin: "Rappen" },
+      { code: "CAD", title: "دلار کانادا", titleLatin: "Canadian Dollar", decimalPlaces: 2, decimalTitle: "سنت", decimalTitleLatin: "Cent" },
+      { code: "AUD", title: "دلار استرالیا", titleLatin: "Australian Dollar", decimalPlaces: 2, decimalTitle: "سنت", decimalTitleLatin: "Cent" },
+      { code: "MYR", title: "رینگیت مالزی", titleLatin: "Malaysian Ringgit", decimalPlaces: 2, decimalTitle: "سن", decimalTitleLatin: "Sen" },
+    ];
+    let seededCur = 0;
+    for (const c of CURRENCIES) {
+      const exists = await this.prisma.currencyType.findFirst({
+        where: { businessStructureRef: 1n, code: c.code },
+      });
+      if (exists) continue;
+      const newId = await this.idGen.generateNextId("CurrencyType");
+      await this.prisma.currencyType.create({
+        data: {
+          id: BigInt(newId),
+          code: c.code,
+          title: c.title,
+          titleLatin: c.titleLatin,
+          baseUnit: 1,
+          decimalPlaces: c.decimalPlaces,
+          decimalTitle: c.decimalTitle ?? null,
+          decimalTitleLatin: c.decimalTitleLatin ?? null,
+          isActive: true,
+          ...appBaseOnCreate(SYSTEM_ACTOR),
+        },
+      });
+      seededCur++;
+    }
+    if (seededCur > 0) {
+      this.logger.log(`seeded ${seededCur} CurrencyType rows (ISO 4217, Task 114)`);
+    }
   }
 }

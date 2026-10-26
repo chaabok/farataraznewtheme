@@ -20,7 +20,12 @@
 import { create } from "zustand";
 
 /** زیرصفحه‌های پنجرهٔ «عمومی» — هم‌نوع GeneralPage در general-window */
-export type GeneralSubPage = "home" | "fiscal-year" | "party" | "geo-location";
+export type GeneralSubPage =
+  | "home"
+  | "fiscal-year"
+  | "party"
+  | "geo-location"
+  | "currency-type"; // Task 114 — نوع ارز (اطلاعات پایه)
 
 interface GeneralNavState {
   /** درخواست در انتظار (null = هیچ) */
