@@ -27,6 +27,30 @@ const MAX_RECORDS = 25; // سقف رکورد در هر دسته (عناوین ک
 const MAX_FIELDS_PER_RECORD = 3; // فرم درختی معمولاً فقط «عنوان» دارد
 const MAX_VALUE_CHARS = 300; // سقف هر مقدار ورودی (عنوان گرهٔ درخت)
 const OUT_VALUE_CHARS = 1000; // سقف Value در DataTranslation (§DTO)
+/** Task 109 — سقف زمان هر فراخوانی LLM: فراخوانی hang‌شده دیگر نمی‌تواند
+ * دسته را برای همیشه معلق کند (توست «0/total» ابدی مالک)؛ تایم‌اوت
+ * = خطای قابل‌تلاش‌مجدد (همین attempt-loop + صف تلاش‌مجدد قلاب). */
+const LLM_TIMEOUT_MS = 75_000;
+
+/** race با تایمر — تایم‌اوت = Error با پیام «timed out» (قابل تلاش‌مجدد) */
+function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(
+      () => reject(new Error(`LLM request timed out after ${ms}ms`)),
+      ms,
+    );
+    p.then(
+      (v) => {
+        clearTimeout(timer);
+        resolve(v);
+      },
+      (e) => {
+        clearTimeout(timer);
+        reject(e instanceof Error ? e : new Error(String(e)));
+      },
+    );
+  });
+}
 
 interface InputField {
   key: string;
@@ -141,46 +165,47 @@ export async function POST(req: NextRequest) {
     for (let attempt = 0; attempt < 2 && !tr; attempt++) {
       /* Task 108 (تجربهٔ زنده) — سرویس LLM زیر فشار دسته‌های موازی 429
          «Too many requests» می‌دهد؛ پیش از اعلام شکست، با انتظار تدریجی
-         (۴s/۸s) دوباره تلاش می‌کنیم — مکمل صف تلاش‌مجدد سمت قلاب. */
-      const backoffs = [4000, 8000];
-      const completion = await (async () => {
-        for (let i = 0; ; i++) {
-          try {
-            return await zai.chat.completions.create({
-              messages: [
-                {
-                  role: "assistant",
-                  content:
-                    "You are a professional translator for business/ERP records. Translate faithfully and naturally, keeping numbers, codes and proper nouns intact. Respond with STRICT JSON only — no markdown fences, no commentary.",
-                },
-                {
-                  role: "user",
-                  content: `Translate EVERY text field of EVERY item below into EACH target language.\nInput JSON:\n${JSON.stringify(
-                    { source_language: "fa", target_languages: langs, items },
-                  )}\n\nRespond with exactly this JSON shape (keep item ids and field keys unchanged):\n{"translations":{"<id>":{"<fieldKey>":{"<lang>":"<translation>"}}}}`,
-                },
-              ],
-              thinking: { type: "disabled" },
-            });
-          } catch (e) {
-            const msg = e instanceof Error ? e.message : String(e);
-            if (i >= backoffs.length || !/429|too many requests/i.test(msg)) throw e;
-            await new Promise((r) => setTimeout(r, backoffs[i]));
-          }
-        }
-      })();
-      const raw = completion.choices[0]?.message?.content ?? "";
-      if (process.env.NODE_ENV !== "production") {
-        console.error(
-          "[auto-translate-batch] attempt", attempt + 1,
-          "records:", records.length, "raw len:", raw.length,
+         (۴s) دوباره تلاش می‌کنیم — مکمل صف تلاش‌مجدد سمت قلاب.
+         Task 109 — هر تلاش با تایم‌اوت ۷۵s محصور شده است. */
+      if (attempt > 0) await new Promise((r) => setTimeout(r, 4000));
+      try {
+        const completion = await withTimeout(
+          zai.chat.completions.create({
+            messages: [
+              {
+                role: "assistant",
+                content:
+                  "You are a professional translator for business/ERP records. Translate faithfully and naturally, keeping numbers, codes and proper nouns intact. Respond with STRICT JSON only — no markdown fences, no commentary.",
+              },
+              {
+                role: "user",
+                content: `Translate EVERY text field of EVERY item below into EACH target language.\nInput JSON:\n${JSON.stringify(
+                  { source_language: "fa", target_languages: langs, items },
+                )}\n\nRespond with exactly this JSON shape (keep item ids and field keys unchanged):\n{"translations":{"<id>":{"<fieldKey>":{"<lang>":"<translation>"}}}}`,
+              },
+            ],
+            thinking: { type: "disabled" },
+          }),
+          LLM_TIMEOUT_MS,
         );
-      }
-      const parsed = parseLooseJson(raw) as {
-        translations?: Record<string, Record<string, Record<string, string>>>;
-      } | null;
-      if (parsed?.translations && typeof parsed.translations === "object") {
-        tr = parsed.translations;
+        const raw = completion.choices[0]?.message?.content ?? "";
+        if (process.env.NODE_ENV !== "production") {
+          console.error(
+            "[auto-translate-batch] attempt", attempt + 1,
+            "records:", records.length, "raw len:", raw.length,
+          );
+        }
+        const parsed = parseLooseJson(raw) as {
+          translations?: Record<string, Record<string, Record<string, string>>>;
+        } | null;
+        if (parsed?.translations && typeof parsed.translations === "object") {
+          tr = parsed.translations;
+        }
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        /* 429 / تایم‌اوت = قابل‌تلاش‌مجدد (attempt بعدی)؛ خطای دیگر = همان
+           لحظه به‌عنوان شکست این دسته اعلام می‌شود */
+        if (!/429|too many requests|timeout|timed out|aborted/i.test(msg)) throw e;
       }
     }
     /* دستهٔ نخوانا پس از دو تلاش = خطا برای همین دسته — فرانت ادامه می‌دهد

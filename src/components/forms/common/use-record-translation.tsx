@@ -23,6 +23,18 @@
  * — پیشرفت = توست شمارش‌دار «{done}/{total}»؛ کاربر دیگر نباید روی تک‌تک
  * زیرشاخه‌ها کلیک کند. فرم‌های بدون زیرشاخه (Party و…) عین رفتار قبلی.
  *
+ * Task 109 (درخواست مالک — «با سرعت بسیار زیاد باید ترجمه انجام گردد»):
+ * ① انبارشناسی پوشش — پیش از هر چیز از GET دسته‌ای data-translations
+ *   می‌پرسیم کدام (رکورد:فیلد) کدام زبان‌ها را از قبل دارد؛ رکورد
+ *   «کامل‌پوشش» فوراً انجام‌شده شمرده می‌شود (صفر فراخوانی LLM) — پس
+ *   اجرای دوبارهٔ یک شاخهٔ ترجمه‌شده (مثل ایرانِ ۴۹۲ رکوردی) «آنی» است و
+ *   دیگر زمانِ زیادی صرف ترجمهٔ دوباره نمی‌شود؛
+ * ② رکورد ناقص فقط زبان‌های «جامانده» را از LLM می‌گیرد — دسته‌ها بر اساس
+ *   «امضای زبان جامانده» بسته‌بندی می‌شوند تا خروجی هر فراخوانی LLM
+ *   کوچک‌تر و پاسخ هر دسته بسیار سریع‌تر باشد؛
+ * ③ (سمت endpoint) تایم‌اوت ضد-hang — فراخوانی LLM معلق دیگر توست را
+ *   برای همیشه روی «0/total» نگه نمی‌دارد.
+ *
  * مصرف (حداقلی — عین فرم محل های جغرافیایی):
  *   const tr = useRecordTranslation({
  *     entityType: "GeoLocation", entityId: selectedId,
@@ -42,6 +54,7 @@ import * as React from "react";
 import { toast } from "sonner";
 import { useT, useSettings } from "@/stores/settings-store";
 import { LOCALES } from "@/i18n/config";
+import { api } from "@/lib/api";
 import {
   DataTranslationsDialog,
   type DataTranslationField,
@@ -82,6 +95,52 @@ export interface UseRecordTranslationResult {
 
 /** اندازهٔ دستهٔ ارسالی به endpoint دسته‌ای — = MAX_RECORDS سمت BFF */
 const CHUNK_RECORDS = 25;
+/** Task 109 — سقف رکورد در هر واکشی دسته‌ایِ انبار (قرارداد GET entityIds) */
+const COVERAGE_IDS_PER_GET = 500;
+/** Task 109 — انبارشناسی پوشش ترجمهٔ زیردرخت: کلید «entityId:fieldKey» →
+ * مجموعهٔ زبان‌های موجود در انبار DataTranslation. null = انبار در دسترس
+ * نبود (واکشی ناموفق) → عین رفتار قبلی: همهٔ رکوردها به LLM می‌روند. */
+async function fetchCoverageMap(
+  entityType: string,
+  records: SubtreeTranslationRecord[],
+): Promise<Map<string, Set<string>> | null> {
+  const ids = [...new Set(records.map((r) => r.entityId))].sort((a, b) => a - b);
+  const keys = [...new Set(records.flatMap((r) => r.fields.map((f) => f.key)))];
+  if (ids.length === 0 || keys.length === 0) return new Map();
+  const idChunks: string[] = [];
+  for (let i = 0; i < ids.length; i += COVERAGE_IDS_PER_GET) {
+    idChunks.push(ids.slice(i, i + COVERAGE_IDS_PER_GET).join(","));
+  }
+  try {
+    const results = await Promise.all(
+      idChunks.map((q) =>
+        api
+          .get<{
+            items?: Array<{ entityId: number; fieldKey: string; locale: string }>;
+          }>(
+            `data-translations?entityType=${encodeURIComponent(entityType)}&entityIds=${q}&fieldKeys=${keys
+              .slice(0, 60)
+              .map(encodeURIComponent)
+              .join(",")}`,
+          )
+          .catch(() => null),
+      ),
+    );
+    const map = new Map<string, Set<string>>();
+    for (const res of results) {
+      for (const it of res?.items ?? []) {
+        if (!it?.entityId || !it?.fieldKey || !it?.locale) continue;
+        const k = `${it.entityId}:${it.fieldKey}`;
+        const set = map.get(k);
+        if (set) set.add(it.locale);
+        else map.set(k, new Set([it.locale]));
+      }
+    }
+    return map;
+  } catch {
+    return null;
+  }
+}
 /** هم‌زمانی حلقهٔ دسته‌ها — تجربهٔ زندهٔ Task 108: سرویس LLM زیر فشار ×۳
  * 429 می‌دهد؛ ×۲ + صف تلاش‌مجدد + backoff = نرخ پایدار */
 const CHUNK_CONCURRENCY = 2;
@@ -153,17 +212,41 @@ export function useRecordTranslation(
         return;
       }
 
-      /* --- مسیر زنجیره‌ای (Task 108): دسته‌های ≤۲۵ رکورد، هم‌زمانی ×۳ --- */
-      const chunks: SubtreeTranslationRecord[][] = [];
-      for (let i = 0; i < records.length; i += CHUNK_RECORDS) {
-        chunks.push(records.slice(i, i + CHUNK_RECORDS));
+      /* --- مسیر زنجیره‌ای (Task 108/109): انبارشناسی + دسته‌های هوشمند ---
+         Task 109 — رکورد «کامل‌پوشش» (همهٔ زبان‌های فعالش در انبار هست)
+         همین‌جا تمام می‌شود؛ بقیه فقط زبان‌های جامانده‌شان را می‌گیرند. */
+      const coverage = await fetchCoverageMap(entityType, records);
+      const pending: Array<{ rec: SubtreeTranslationRecord; langs: string[] }> = [];
+      let skippedCount = 0;
+      for (const r of records) {
+        const missing = new Set<string>();
+        for (const f of r.fields) {
+          const have = coverage?.get(`${r.entityId}:${f.key}`);
+          for (const l of langs) if (!have?.has(l)) missing.add(l);
+        }
+        if (missing.size === 0) skippedCount += 1;
+        else pending.push({ rec: r, langs: [...missing].sort() });
       }
+
+      /* هیچ دسته‌ای باقی نماند — کل زیردرخت از قبل کامل است؛ پایان فوری
+         (اجرای دوبارهٔ ایران ۴۹۲ رکوردی = توست موفقیت در چند ثانیه) */
+      if (pending.length === 0) {
+        await onTranslated?.();
+        toast.success(
+          t("dfb.list.translateTreeDone")
+            .replace("{n}", String(records.length))
+            .replace("{m}", String(langs.length)),
+          { duration: 6000 },
+        );
+        return;
+      }
+
       const progressToastId = `tr-tree-${Date.now()}`;
       const progressMsg = () =>
         t("dfb.list.translateTreeProgress")
           .replace("{done}", String(doneCount))
           .replace("{total}", String(records.length));
-      let doneCount = 0;
+      let doneCount = skippedCount;
       let failedChunks = 0;
       let failedRecords = 0;
       toast.loading(progressMsg(), { id: progressToastId, duration: Infinity });
@@ -173,15 +256,35 @@ export function useRecordTranslation(
          ترجمه شوند؛ upsert سرور = امن برای تکرار. */
       interface ChunkJob {
         records: SubtreeTranslationRecord[];
+        langs: string[];
         attempt: number;
       }
-      const queue: ChunkJob[] = chunks.map((records) => ({ records, attempt: 1 }));
+      /* Task 109 — دسته‌بندی بر اساس «امضای زبان جامانده»: هر دسته فقط
+         زبان‌های واقعاً جامانده را از LLM می‌خواهد (خروجی کوچک‌تر = سریع‌تر) */
+      const bySig = new Map<string, SubtreeTranslationRecord[]>();
+      for (const p of pending) {
+        const sig = p.langs.join(",");
+        const arr = bySig.get(sig);
+        if (arr) arr.push(p.rec);
+        else bySig.set(sig, [p.rec]);
+      }
+      const queue: ChunkJob[] = [];
+      for (const [sig, group] of bySig) {
+        const sigLangs = sig.split(",");
+        for (let i = 0; i < group.length; i += CHUNK_RECORDS) {
+          queue.push({
+            records: group.slice(i, i + CHUNK_RECORDS),
+            langs: sigLangs,
+            attempt: 1,
+          });
+        }
+      }
       const runChunk = async (job: ChunkJob): Promise<boolean> => {
         try {
           const res = await fetch("/api/data-translations/auto-translate-batch", {
             method: "POST",
             headers: { "content-type": "application/json" },
-            body: JSON.stringify({ entityType, langs, records: job.records }),
+            body: JSON.stringify({ entityType, langs: job.langs, records: job.records }),
           });
           const json = (await res.json().catch(() => null)) as
             | { ok?: boolean; message?: string }
@@ -203,7 +306,7 @@ export function useRecordTranslation(
             doneCount += job.records.length;
             toast.loading(progressMsg(), { id: progressToastId, duration: Infinity });
           } else if (job.attempt < CHUNK_MAX_ATTEMPTS) {
-            queue.push({ records: job.records, attempt: job.attempt + 1 });
+            queue.push({ records: job.records, langs: job.langs, attempt: job.attempt + 1 });
             /* backoff — نفس‌کشیدن برای سقف نرخ سرویس LLM */
             await new Promise((r) => setTimeout(r, 3500 * job.attempt));
           } else {
@@ -215,7 +318,7 @@ export function useRecordTranslation(
         }
       };
       await Promise.all(
-        Array.from({ length: Math.min(CHUNK_CONCURRENCY, chunks.length) }, () => worker()),
+        Array.from({ length: Math.min(CHUNK_CONCURRENCY, queue.length) }, () => worker()),
       );
 
       await onTranslated?.();
