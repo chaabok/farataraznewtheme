@@ -74,8 +74,13 @@ interface ScopeNode {
   path: string;
 }
 
-/** DFS از ریشه (ParentRef=0) — فقط گره‌های فعال؛ برچسب fa = Title، en = Title_En. */
-function flattenTree(tree: BsNode[], locale: string): ScopeNode[] {
+/** DFS از ریشه (ParentRef=0) — فقط گره‌های فعال؛ برچسب = عنوان در زبان جاری
+ *  از انبار DataTranslation (Task 110؛ نبودِ ترجمه = عنوان پایهٔ fa). */
+function flattenTree(
+  tree: BsNode[],
+  locale: string,
+  tr?: Record<string, Record<string, string>>,
+): ScopeNode[] {
   const byParent = new Map<number, BsNode[]>();
   for (const n of tree) {
     const key = Number(n.parentRef);
@@ -83,7 +88,8 @@ function flattenTree(tree: BsNode[], locale: string): ScopeNode[] {
     list.push(n);
     byParent.set(key, list);
   }
-  const label = (n: BsNode) => (locale === "en" && n.titleEn ? n.titleEn : n.title);
+  const label = (n: BsNode) =>
+    locale === "fa" ? n.title : tr?.[String(n.id)]?.[locale] || n.title;
   const out: ScopeNode[] = [];
   const walk = (parentId: number, prefix: string) => {
     for (const n of (byParent.get(parentId) ?? []).sort((a, b) => Number(a.id) - Number(b.id))) {
@@ -115,7 +121,9 @@ export function UserRoleForm({ onBack }: { onBack?: () => void }) {
   const [records, setRecords] = React.useState<UserRoleDto[]>([]);
   const [listLoading, setListLoading] = React.useState(true);
   const [systems, setSystems] = React.useState<SystemDto[]>([]);
-  const [nodes, setNodes] = React.useState<ScopeNode[]>([]);
+  /* Task 110 — درخت خام + نقشهٔ ترجمه؛ مسیرها با useMemo بر زبان جاری بازمشق می‌شوند */
+  const [bsItems, setBsItems] = React.useState<BsNode[]>([]);
+  const [bsTr, setBsTr] = React.useState<Record<string, Record<string, string>>>({});
   const [currentId, setCurrentId] = React.useState<number | null>(null);
   const [values, setValues] = React.useState<FormValues>(BLANK);
   const [swMode, setSwMode] = React.useState<"all" | "selected">("all");
@@ -156,14 +164,42 @@ export function UserRoleForm({ onBack }: { onBack?: () => void }) {
     };
   }, [fetchRecords, applyRecords]);
 
-  /* درخت ساختار سازمانی — واکشی اولیه + بازمحاسبهٔ مسیرها با تغییر زبان
-     (قرارداد Task 99 — دادهٔ نمایشی زنده)؛ برچسب fa = Title، en = Title_En */
+  /* درخت ساختار سازمانی — واکشی اولیه (بدون وابستگی زبان)؛ Task 110 —
+     نقشهٔ ترجمهٔ عناوین هم از انبار DataTranslation می‌آید */
   React.useEffect(() => {
     let alive = true;
     api
       .get<BsListResponse>("business-structure")
       .then((res) => {
-        if (alive) setNodes(flattenTree(res.items ?? [], locale));
+        if (!alive) return;
+        const items = res.items ?? [];
+        setBsItems(items);
+        if (items.length === 0) return;
+        api
+          .get<{
+            items?: Array<{
+              entityId: number;
+              fieldKey: string;
+              locale: string;
+              value: string;
+            }>;
+          }>(
+            `data-translations?entityType=BusinessStructure&entityIds=${items
+              .map((n) => n.id)
+              .join(",")}&fieldKeys=title`,
+          )
+          .then((trRes) => {
+            if (!alive) return;
+            const next: Record<string, Record<string, string>> = {};
+            for (const it of trRes.items ?? []) {
+              if (!it?.entityId || it.fieldKey !== "title" || !it?.locale || !it?.value) continue;
+              (next[String(it.entityId)] ??= {})[it.locale] = it.value;
+            }
+            setBsTr(next);
+          })
+          .catch(() => {
+            /* خطا = برچسب‌ها با عنوان پایهٔ fa می‌مانند */
+          });
       })
       .catch(() => {
         /* درخت خالی — چک‌باکس‌های ساختار سازمانی خالی می‌ماند */
@@ -171,7 +207,13 @@ export function UserRoleForm({ onBack }: { onBack?: () => void }) {
     return () => {
       alive = false;
     };
-  }, [locale]);
+  }, []);
+
+  /* مسیرهای ساختار سازمانی — با useMemo بر زبان جاری/نقشهٔ ترجمه بازمشق می‌شوند */
+  const nodes = React.useMemo<ScopeNode[]>(
+    () => flattenTree(bsItems, locale, bsTr),
+    [bsItems, bsTr, locale],
+  );
 
   const applyRecord = React.useCallback((r: UserRoleDto) => {
     setCurrentId(r.id);

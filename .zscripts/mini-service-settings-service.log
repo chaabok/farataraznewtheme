@@ -1964,3 +1964,13 @@ $ NODE_PATH=./node_modules bun --hot src/main.ts
 [Nest] 494  - 10/26/2026, 10:55:21 AM     LOG [Bootstrap] settings-service listening on http://127.0.0.1:3001
 [Nest] 494  - 10/26/2026, 10:55:21 AM     LOG [NestApplication] Nest application successfully started +43ms
 [Nest] 494  - 10/26/2026, 10:55:21 AM     LOG [Bootstrap] settings-service listening on http://127.0.0.1:3001
+[Nest] 494  - 10/26/2026, 11:04:30 AM     LOG [DataTranslationsService] data-translations save-many GeoLocation ×50: +1 ~0 -0
+[Nest] 494  - 10/26/2026, 11:04:31 AM     LOG [DataTranslationsService] data-translations save-many GeoLocation ×50: +1 ~0 -0
+[Nest] 494  - 10/26/2026, 11:04:31 AM     LOG [DataTranslationsService] data-translations save-many GeoLocation ×50: +1 ~0 -0
+[Nest] 494  - 10/26/2026, 11:04:31 AM     LOG [DataTranslationsService] data-translations save-many GeoLocation ×50: +1 ~0 -0
+[Nest] 494  - 10/26/2026, 11:04:31 AM     LOG [DataTranslationsService] data-translations save-many GeoLocation ×50: +1 ~0 -0
+[Nest] 494  - 10/26/2026, 11:04:31 AM     LOG [DataTranslationsService] data-translations save-many GeoLocation ×50: +1 ~0 -0
+[Nest] 494  - 10/26/2026, 11:04:31 AM     LOG [DataTranslationsService] data-translations save-many GeoLocation ×50: +1 ~0 -0
+[Nest] 494  - 10/26/2026, 11:04:31 AM     LOG [DataTranslationsService] data-translations save-many GeoLocation ×36: +1 ~0 -0
+[Nest] 494  - 10/26/2026, 11:05:12 AM     LOG [DataTranslationsService] data-translations save-many GeoLocation ×25: +11 ~0 -0
+[Nest] 494  - 10/26/2026, 11:05:13 AM     LOG [DataTranslationsService] data-translations save-many GeoLocation ×25: +11 ~0 -0

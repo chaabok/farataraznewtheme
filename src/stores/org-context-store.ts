@@ -62,6 +62,8 @@ interface OrgState {
   tree: BsNode[];
   loaded: boolean;
   loading: boolean;
+  /** Task 110 — نقشهٔ ترجمهٔ عناوین از انبار DataTranslation («id → زبان → عنوان») */
+  trMap: Record<string, Record<string, string>>;
   /** persisted user selection (null = default → first company) */
   companyId: number | null;
   branchId: number | null;
@@ -117,10 +119,19 @@ function rootNodeOf(tree: BsNode[]): BsNode | null {
   return tree.find((n) => Number(n.parentRef) === 0) ?? null;
 }
 
-function toOptions(nodes: BsNode[], locale: string): OrgOption[] {
+function toOptions(
+  nodes: BsNode[],
+  locale: string,
+  tr?: Record<string, Record<string, string>>,
+): OrgOption[] {
   return nodes.map((n) => ({
     id: Number(n.id),
-    label: locale === "en" && n.titleEn ? n.titleEn : n.title,
+    /* Task 110 — عنوان در زبان جاری از انبار DataTranslation؛ نبودِ ترجمه =
+       عنوان پایهٔ fa (ستون legacy Title_En دیگر ملاک نمایش نیست) */
+    label:
+      locale === "fa"
+        ? n.title
+        : tr?.[String(n.id)]?.[locale] || n.title,
   }));
 }
 
@@ -132,6 +143,7 @@ export const useOrgContext = create<OrgState>()(
       tree: [],
       loaded: false,
       loading: false,
+      trMap: {},
       companyId: null,
       branchId: null,
       agencyId: null,
@@ -142,6 +154,33 @@ export const useOrgContext = create<OrgState>()(
         try {
           const res = await api.get<BsListResponse>("business-structure");
           set({ tree: res.items ?? [], loaded: true, loading: false });
+          /* Task 110 — نقشهٔ ترجمهٔ عناوین هم همراه درخت می‌آید (درخت کوچک —
+             یک GET ≤۵۰۰ شناسه کافی است)؛ خطا = عناوین پایهٔ fa می‌مانند */
+          const ids = (res.items ?? []).map((n) => n.id);
+          if (ids.length > 0) {
+            api
+              .get<{
+                items?: Array<{
+                  entityId: number;
+                  fieldKey: string;
+                  locale: string;
+                  value: string;
+                }>;
+              }>(
+                `data-translations?entityType=BusinessStructure&entityIds=${ids.join(",")}&fieldKeys=title`,
+              )
+              .then((trRes) => {
+                const next: Record<string, Record<string, string>> = {};
+                for (const it of trRes.items ?? []) {
+                  if (!it?.entityId || it.fieldKey !== "title" || !it?.locale || !it?.value) continue;
+                  (next[String(it.entityId)] ??= {})[it.locale] = it.value;
+                }
+                set({ trMap: next });
+              })
+              .catch(() => {
+                /* بی‌خیال — برچسب‌ها با عنوان پایه می‌مانند */
+              });
+          }
         } catch {
           set({ loading: false, loaded: true });
         }
@@ -193,10 +232,10 @@ function computeLists(state: OrgState, locale: string): OrgLists {
   const shops = descendantsOfType(byParent, agencyId ?? branchId ?? companyId ?? -1, BS_TYPE_STORE);
   const shopId = shops.some((s) => Number(s.id) === state.shopId) ? state.shopId : null;
   return {
-    companies: toOptions(companies, locale),
-    branches: toOptions(branches, locale),
-    agencies: toOptions(agencies, locale),
-    shops: toOptions(shops, locale),
+    companies: toOptions(companies, locale, state.trMap),
+    branches: toOptions(branches, locale, state.trMap),
+    agencies: toOptions(agencies, locale, state.trMap),
+    shops: toOptions(shops, locale, state.trMap),
     companyId,
     branchId,
     agencyId,
@@ -253,6 +292,7 @@ export function useOrgScope(): {
 } {
   const locale = useSettings((s) => s.locale);
   const tree = useOrgContext((s) => s.tree);
+  const trMap = useOrgContext((s) => s.trMap);
   const companyId = useOrgContext((s) => s.companyId);
   const branchId = useOrgContext((s) => s.branchId);
   const agencyId = useOrgContext((s) => s.agencyId);
@@ -260,8 +300,8 @@ export function useOrgScope(): {
   const loaded = useOrgContext((s) => s.loaded);
   /* compute from the raw slice (single source) */
   const lists = React.useMemo(
-    () => computeLists({ tree, companyId, branchId, agencyId, shopId } as OrgState, locale),
-    [tree, companyId, branchId, agencyId, shopId, locale],
+    () => computeLists({ tree, trMap, companyId, branchId, agencyId, shopId } as OrgState, locale),
+    [tree, trMap, companyId, branchId, agencyId, shopId, locale],
   );
   const root = React.useMemo(() => rootNodeOf(tree), [tree]);
   const deepest = lists.shopId ?? lists.agencyId ?? lists.branchId ?? lists.companyId;

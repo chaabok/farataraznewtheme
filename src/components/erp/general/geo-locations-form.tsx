@@ -49,6 +49,8 @@ interface GeoFormState {
   code: string;
   /** عنوان در زبان جاری — fa = عنوان پایه؛ سایر زبان‌ها = ترجمهٔ همان زبان */
   title: string;
+  /** عنوانی که فرم با آن بار شده — مبنای تشخیص ویرایش ترجمه (Task 110) */
+  origTitle: string;
   isActive: boolean;
 }
 
@@ -56,6 +58,7 @@ const EMPTY: GeoFormState = {
   levelType: "",
   code: "",
   title: "",
+  origTitle: "",
   isActive: true,
 };
 
@@ -96,10 +99,12 @@ function nodeTitleIn(n: GeoNode, locale: string, tr?: Record<string, string>): s
 }
 
 function formFromNode(node: GeoNode, locale: string, tr?: Record<string, string>): GeoFormState {
+  const title = nodeTitleIn(node, locale, tr);
   return {
     levelType: String(node.levelType),
     code: String(node.code),
-    title: nodeTitleIn(node, locale, tr),
+    title,
+    origTitle: title, // Task 110 — مبنای تشخیص ویرایش ترجمه
     isActive: node.isActive,
   };
 }
@@ -126,8 +131,6 @@ export function GeoLocationsForm({ onBack }: { onBack?: () => void }) {
   /* Task 82 — پرچم ویرایش ذخیره‌نشدهٔ برگه میزبان */
   const [dirty, setDirty] = React.useState(false);
   useTabDirty(dirty);
-  /* Task 110 — عنوانی که فرم با آن بار شده (مبنا برای تشخیص ویرایش ترجمه) */
-  const loadedTitleRef = React.useRef("");
 
   const load = React.useCallback(async () => {
     setLoading(true);
@@ -271,7 +274,6 @@ export function GeoLocationsForm({ onBack }: { onBack?: () => void }) {
         : selectedNode
           ? formFromNode(selectedNode, locale, trMap[String(selectedNode.id)])
           : EMPTY;
-    loadedTitleRef.current = nextForm.title.trim(); // مبنای تشخیص ویرایش ترجمه
     setForm(nextForm);
     setDirty(false); // فرم تازه/رکورد ذخیره‌شده = بدون ویرایش باز
   }
@@ -353,7 +355,7 @@ export function GeoLocationsForm({ onBack }: { onBack?: () => void }) {
            نمایش عنوان پایه — نباید آن را به‌عنوان ترجمه قفل کنیم) */
         if (
           locale !== "fa" &&
-          form.title.trim() !== loadedTitleRef.current.trim()
+          form.title.trim() !== form.origTitle.trim()
         ) {
           await api.post("data-translations/save", {
             entityType: "GeoLocation",

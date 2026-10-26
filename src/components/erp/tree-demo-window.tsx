@@ -17,19 +17,19 @@ const delay = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve,
 
 type PlaceKind = "country" | "province" | "city";
 
-/* sample detail data of the demo tree — NOT business data (§4.6); the
-   «latin» strings are sample DATA (the legacy form's own «Tehran Provine»
-   column), not UI chrome, so they stay outside the 11 dictionaries */
-const PLACES: Record<string, { labelKey: string; latin: string; code: string; kind: PlaceKind }> = {
-  geo: { labelKey: "stf.geoTitle", latin: "Geographic Locations", code: "0", kind: "country" },
-  iran: { labelKey: "stf.iran", latin: "Iran", code: "1", kind: "country" },
-  "tehran-province": { labelKey: "stf.tehranProvince", latin: "Tehran Province", code: "10", kind: "province" },
-  tehran: { labelKey: "stf.tehran", latin: "Tehran", code: "101", kind: "city" },
-  alborz: { labelKey: "stf.alborz", latin: "Alborz Province", code: "20", kind: "province" },
-  karaj: { labelKey: "stf.karaj", latin: "Karaj", code: "201", kind: "city" },
+/* sample detail data of the demo tree — NOT business data (§4.6);
+   Task 110 — ستون «عنوان لاتین» فرم‌ها حذف شد (ترجمه = انبار DataTranslation)،
+   پس نمونهٔ دمو هم فقط عنوان دارد. */
+const PLACES: Record<string, { labelKey: string; code: string; kind: PlaceKind }> = {
+  geo: { labelKey: "stf.geoTitle", code: "0", kind: "country" },
+  iran: { labelKey: "stf.iran", code: "1", kind: "country" },
+  "tehran-province": { labelKey: "stf.tehranProvince", code: "10", kind: "province" },
+  tehran: { labelKey: "stf.tehran", code: "101", kind: "city" },
+  alborz: { labelKey: "stf.alborz", code: "20", kind: "province" },
+  karaj: { labelKey: "stf.karaj", code: "201", kind: "city" },
 };
 
-type DemoValues = { type: string; code: string; title: string; latinTitle: string; active: boolean };
+type DemoValues = { type: string; code: string; title: string; active: boolean };
 
 /**
  * TreeDemoWindow (Task 30) — live sample of the SimpleTreeForm shell
@@ -91,7 +91,6 @@ export function TreeDemoWindow() {
         type: p.kind,
         code: p.code,
         title: t(p.labelKey as never),
-        latinTitle: p.latin,
         active: true,
       };
     },
@@ -137,7 +136,6 @@ export function TreeDemoWindow() {
       },
       { id: "code", label: t("fdf.code"), required: true, type: "number" as const, value: values.code },
       { id: "title", label: t("fdf.name"), required: true, value: values.title },
-      { id: "latinTitle", label: t("stf.latinTitle"), required: true, value: values.latinTitle },
       { id: "active", label: t("fdf.active"), type: "checkbox" as const, checked: values.active },
     ],
     [t, values],

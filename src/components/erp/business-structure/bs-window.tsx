@@ -7,12 +7,16 @@
    behavior is preserved: load/CRUD against the settings-service via the BFF,
    parent-driven type rules (allowedChildTypes), guarded delete, the
    save / save-new / save-close semantics and the erp:records-changed event
-   (§5.6). */
+   (§5.6).
+   Task 110 (درخواست مالک) — فیلد «عنوان لاتین» حذف شد؛ فیلد «عنوان» زبان‌آگاه
+   است (نمایش ترجمهٔ زبان جاری از انبار DataTranslation؛ ویرایش در fa = عنوان
+   پایه، در سایر زبان‌ها = ترجمهٔ همان زبان). کاشی‌های «ترجمهٔ آنلاین/دستی»
+   هم مثل فرم محل های جغرافیایی فعال شدند (با ترجمهٔ زنجیره‌ای زیرشاخه‌ها). */
 
 import * as React from "react";
 import { AlertTriangle, Network } from "lucide-react";
 import { toast } from "sonner";
-import { useT } from "@/stores/settings-store";
+import { useT, useSettings } from "@/stores/settings-store";
 import { useDesktop } from "@/stores/desktop-store";
 import { api, ApiError } from "@/lib/api";
 import {
@@ -28,6 +32,11 @@ import { useWindowChrome, useTabDirty } from "@/components/desktop/app-window";
 import { Badge } from "@/components/ui/badge";
 import { BsLogoUploader, BsTypeIcon, parseTypes } from "./bs-detail";
 import {
+  useRecordTranslation,
+  type SubtreeTranslationRecord,
+} from "@/components/forms/common/use-record-translation";
+import type { DataTranslationField } from "@/components/forms/common/data-translations-dialog";
+import {
   allowedChildTypes,
   ROOT_ALLOWED_TYPES,
   type BsListResponse,
@@ -39,7 +48,8 @@ type Mode = "idle" | "view" | "create";
 
 interface BsFormState {
   title: string;
-  titleEn: string;
+  /** عنوانی که فرم با آن بار شده — مبنای تشخیص ویرایش ترجمه (Task 110) */
+  origTitle: string;
   type: string; // "" unset
   manager: string;
   logoUrl: string | null;
@@ -50,7 +60,7 @@ interface BsFormState {
 
 const EMPTY: BsFormState = {
   title: "",
-  titleEn: "",
+  origTitle: "",
   type: "",
   manager: "",
   logoUrl: null,
@@ -59,10 +69,17 @@ const EMPTY: BsFormState = {
   activeStructureTypes: [],
 };
 
-function formFromNode(node: BsNode): BsFormState {
+/** عنوان نمایشی/ویرایشی رکورد در زبان جاری — نبودِ ترجمه = عنوان پایهٔ fa */
+function nodeTitleIn(n: BsNode, locale: string, tr?: Record<string, string>): string {
+  if (locale === "fa") return n.title ?? "";
+  return tr?.[locale] || n.title || "";
+}
+
+function formFromNode(node: BsNode, locale: string, tr?: Record<string, string>): BsFormState {
+  const title = nodeTitleIn(node, locale, tr);
   return {
-    title: node.title ?? "",
-    titleEn: node.titleEn ?? "",
+    title,
+    origTitle: title, // Task 110 — مبنای تشخیص ویرایش ترجمه
     type: node.businessStructureType != null ? String(node.businessStructureType) : "",
     manager: node.manager ?? "",
     logoUrl: node.logoUrl,
@@ -87,6 +104,7 @@ export function BusinessStructureWindow({
   onEmbeddedClose,
 }: BusinessStructureWindowProps) {
   const t = useT();
+  const locale = useSettings((s) => s.locale);
 
   /* Task 28 contract — chromeless host: the green form header hosts the
      caption buttons and drags the window; maximized state subscribes reactively.
@@ -167,6 +185,54 @@ export function BusinessStructureWindow({
     return m;
   }, [items]);
 
+  /* ---- Task 110 — نقشهٔ ترجمهٔ عناوین از انبار DataTranslation (entityType
+     BusinessStructure) — درخت/فهرست/فرم در زبان جاری نمایش داده می‌شوند. */
+  const [trMap, setTrMap] = React.useState<Record<string, Record<string, string>>>({});
+  const [trVersion, setTrVersion] = React.useState(0);
+  const [trEpoch, setTrEpoch] = React.useState(0);
+
+  React.useEffect(() => {
+    const ids = items.map((n) => n.id);
+    if (ids.length === 0) return;
+    let alive = true;
+    const chunks: number[][] = [];
+    for (let i = 0; i < ids.length; i += 500) chunks.push(ids.slice(i, i + 500));
+    void Promise.all(
+      chunks.map((chunk) =>
+        api.get<{
+          items?: Array<{ entityId: number; fieldKey: string; locale: string; value: string }>;
+        }>(
+          `data-translations?entityType=BusinessStructure&entityIds=${chunk.join(",")}&fieldKeys=title`,
+        ),
+      ),
+    )
+      .then((results) => {
+        if (!alive) return;
+        const next: Record<string, Record<string, string>> = {};
+        for (const res of results) {
+          for (const it of res.items ?? []) {
+            if (!it?.entityId || it.fieldKey !== "title" || !it?.locale || !it?.value) continue;
+            const rec = (next[String(it.entityId)] ??= {});
+            rec[it.locale] = it.value;
+          }
+        }
+        setTrMap(next);
+        setTrEpoch((e) => e + 1); // فرمِ باز هم عنوانِ زبان جاری را تازه می‌کند
+      })
+      .catch(() => {
+        /* واکشی ناموفق — عناوین پایهٔ fa می‌مانند */
+      });
+    return () => {
+      alive = false;
+    };
+  }, [items, trVersion]);
+
+  /** عنوان نمایشی رکورد در زبان جاری — نبودِ ترجمه = عنوان پایهٔ fa */
+  const displayTitle = React.useCallback(
+    (n: BsNode): string => nodeTitleIn(n, locale, trMap[String(n.id)]),
+    [locale, trMap],
+  );
+
   /* nested tree for the shell pane — items order preserved, every branch
      expanded by default (shell behavior); icons keep the Task-17 type colors */
   const treeNodes = React.useMemo<SimpleTreeFormNode[]>(() => {
@@ -174,7 +240,7 @@ export function BusinessStructureWindow({
     for (const n of items) {
       map.set(String(n.id), {
         id: String(n.id),
-        label: n.title,
+        label: displayTitle(n),
         icon: <BsTypeIcon type={n.businessStructureType} className="h-4 w-4" />,
         children: [],
       });
@@ -189,7 +255,7 @@ export function BusinessStructureWindow({
       else roots.push(me);
     }
     return roots;
-  }, [items]);
+  }, [items, displayTitle]);
 
   /* Task 79 — effective enabled structure types = union of the system-mandated
      Holding (1 — ticked by default on install, cannot be removed) and the
@@ -210,12 +276,19 @@ export function BusinessStructureWindow({
   const isRoot = mode === "view" && selectedNode?.id === 1;
 
   /* ---- form state — derive-and-reset during render (React-recommended
-     "adjusting state on prop change" pattern, carried over from BsDetail) ---- */
-  const formKey = `${mode}:${mode === "create" ? createParentId ?? "root" : selectedId ?? "-"}:${selectedNode?.version ?? "-"}`;
+     "adjusting state on prop change" pattern, carried over from BsDetail) ----
+     Task 110 — کلید بازمشق شامل زبان + نسخهٔ نقشهٔ ترجمه (عنوان زبان‌آگاه). */
+  const formKey = `${mode}:${mode === "create" ? createParentId ?? "root" : selectedId ?? "-"}:${selectedNode?.version ?? "-"}:${locale}:${trEpoch}`;
   const [renderedKey, setRenderedKey] = React.useState(formKey);
   if (renderedKey !== formKey) {
     setRenderedKey(formKey);
-    setForm(mode === "create" ? { ...EMPTY } : selectedNode ? formFromNode(selectedNode) : EMPTY);
+    const nextForm =
+      mode === "create"
+        ? { ...EMPTY }
+        : selectedNode
+          ? formFromNode(selectedNode, locale, trMap[String(selectedNode.id)])
+          : EMPTY;
+    setForm(nextForm);
     setBsDirty(false); // Task 82 — فرم تازه/رکورد ذخیره‌شده = بدون ویرایش باز
   }
 
@@ -292,6 +365,16 @@ export function BusinessStructureWindow({
         }
       } else if (mode === "view" && selectedNode) {
         await api.put<{ item: BsNode }>(`business-structure/${selectedNode.id}`, payload);
+        /* Task 110 — ویرایش عنوان در زبان غیر-fa = ذخیرهٔ ترجمهٔ همان زبان
+           در انبار DataTranslation (عنوان پایهٔ fa دست‌نخورده می‌ماند) */
+        if (locale !== "fa" && form.title.trim() !== form.origTitle.trim()) {
+          await api.post("data-translations/save", {
+            entityType: "BusinessStructure",
+            entityId: selectedNode.id,
+            items: [{ fieldKey: "title", locale, value: form.title.trim() }],
+          });
+          setTrVersion((v) => v + 1);
+        }
         toast.success(t("bs.msg.saved"));
         setBsDirty(false); // Task 82 — ذخیره شد (formKey هم ریست می‌کند)
         await load();
@@ -311,12 +394,13 @@ export function BusinessStructureWindow({
     }
   };
 
-  /* ---- validation + payload (carried over from BsDetail) ---- */
+  /* ---- validation + payload (carried over from BsDetail) ----
+     Task 110 — «عنوان لاتین» حذف شد؛ عنوان در fa به پایه می‌رود، در سایر
+     زبان‌ها فقط ترجمهٔ همان زبان ذخیره می‌شود (عنوان پایه تغییر نمی‌کند). */
   const validate = (): string[] => {
     const errs: string[] = [];
     if (!isRoot) {
       if (!form.title.trim()) errs.push(t("bs.val.titleRequired"));
-      if (!form.titleEn.trim()) errs.push(t("bs.val.titleEnRequired"));
       if (!form.type) errs.push(t("bs.val.typeRequired"));
     }
     return errs;
@@ -337,7 +421,6 @@ export function BusinessStructureWindow({
       return {
         parentRef: createParent ? createParent.id : 1,
         title: form.title.trim(),
-        titleEn: form.titleEn.trim(),
         businessStructureType: Number(form.type),
         manager: form.manager.trim() || null,
         logoUrl: form.logoUrl,
@@ -345,8 +428,8 @@ export function BusinessStructureWindow({
       };
     }
     return {
-      title: form.title.trim(),
-      titleEn: form.titleEn.trim(),
+      /* عنوان فقط در fa به پایه می‌رود؛ در سایر زبان‌ها ترجمهٔ جدا ذخیره می‌شود */
+      ...(locale === "fa" ? { title: form.title.trim() } : {}),
       businessStructureType: Number(form.type),
       manager: form.manager.trim() || null,
       logoUrl: form.logoUrl,
@@ -413,20 +496,21 @@ export function BusinessStructureWindow({
     if (ok) closeThisWindow();
   };
 
-  /* ---- records list (Task-20 action 10) — every tree node opens on click ---- */
+  /* ---- records list (Task-20 action 10) — every tree node opens on click ----
+     Task 110 — عنوان در زبان جاری (ترجمهٔ انبار DataTranslation). */
   const listItems = React.useMemo<ActionBarListItem[]>(
     () =>
       items.map((n) => ({
         id: String(n.id),
-        title: n.title,
+        title: displayTitle(n),
         subtitle: n.code,
         /* Task 86 — مینی‌گرید دراپ‌داون لیست */
         cells: [
           { label: t("abar.listColCode"), value: n.code },
-          { label: t("abar.listColTitle"), value: n.title },
+          { label: t("abar.listColTitle"), value: displayTitle(n) },
         ],
       })),
-    [items, t],
+    [items, t, displayTitle],
   );
 
   /* ---- detail fields (shell contract) ---- */
@@ -463,14 +547,6 @@ export function BusinessStructureWindow({
       return [
         { id: "title", label: t("bs.field.title"), required: true, value: form.title },
         {
-          id: "titleEn",
-          label: t("bs.field.titleEn"),
-          required: true,
-          value: form.titleEn,
-          ltr: true,
-          placeholder: t("bs.hint.latinTitle"),
-        },
-        {
           id: "type",
           label: t("bs.field.type"),
           required: true,
@@ -490,7 +566,7 @@ export function BusinessStructureWindow({
     if (isRoot && selectedNode) {
       return [
         { id: "code", label: t("bs.field.code"), value: selectedNode.code, readOnly: true },
-        { id: "hqTitle", label: t("bs.field.title"), value: selectedNode.title, readOnly: true },
+        { id: "hqTitle", label: t("bs.field.title"), value: displayTitle(selectedNode), readOnly: true },
         {
           id: "isBasicInfoShared",
           label: t("bs.field.shareHeadquarterData"),
@@ -518,14 +594,6 @@ export function BusinessStructureWindow({
     if (selectedNode) {
       return [
         { id: "title", label: t("bs.field.title"), required: true, value: form.title },
-        {
-          id: "titleEn",
-          label: t("bs.field.titleEn"),
-          required: true,
-          value: form.titleEn,
-          ltr: true,
-          placeholder: t("bs.hint.latinTitle"),
-        },
         {
           id: "type",
           label: t("bs.field.type"),
@@ -619,11 +687,51 @@ export function BusinessStructureWindow({
   const detailTitleOverride =
     mode === "create"
       ? `${t("bs.action.new")} — ${t("bs.field.parent")}: ${
-          createParent ? `${createParent.title} (${createParent.code})` : t("bs.type.hq")
+          createParent ? `${displayTitle(createParent)} (${createParent.code})` : t("bs.type.hq")
         }`
       : null;
 
   const badge = mode === "create" ? t("bs.action.new") : selectedNode?.code || undefined;
+
+  /* ---- Task 110 (درخواست مالک) — ترجمهٔ آنلاین/دستی رکورد باز ----
+     مثل فرم محل های جغرافیایی (Task 107/108/109): آنلاین = ترجمهٔ
+     زنجیره‌ای سرشاخه + تمامی زیرشاخه‌ها (انبارشناسی پوشش + دستهٔ هوشمند)،
+     دستی = دیالوگ عمومی؛ مبدأ ترجمه = عنوان پایهٔ fa رکورد. */
+  const recordTr = useRecordTranslation({
+    entityType: "BusinessStructure",
+    entityId: mode === "view" && selectedNode ? selectedNode.id : null,
+    getFields: (): DataTranslationField[] => {
+      const v = selectedNode?.title?.trim() ?? "";
+      return v ? [{ key: "title", label: t("bs.field.title"), value: v }] : [];
+    },
+    getSubtreeRecords: (rootId): SubtreeTranslationRecord[] => {
+      const kidsOf = new Map<number, number[]>();
+      for (const n of items) {
+        const p = n.parentRef ?? 0;
+        const list = kidsOf.get(p);
+        if (list) list.push(n.id);
+        else kidsOf.set(p, [n.id]);
+      }
+      const out: SubtreeTranslationRecord[] = [];
+      const stack = [...(kidsOf.get(rootId) ?? [])];
+      while (stack.length > 0) {
+        const id = stack.pop() as number;
+        const node = byId.get(String(id));
+        const v = node?.title?.trim();
+        if (node && v) {
+          out.push({
+            entityId: node.id,
+            fields: [{ key: "title", label: t("bs.field.title"), value: v }],
+          });
+        }
+        const kids = kidsOf.get(id);
+        if (kids) stack.push(...kids);
+      }
+      return out;
+    },
+    onTranslated: () => setTrVersion((v) => v + 1),
+    onOfflineClose: () => setTrVersion((v) => v + 1),
+  });
 
   return (
     <>
@@ -671,6 +779,9 @@ export function BusinessStructureWindow({
         listItems={listItems}
         listLoading={loading}
         onOpenListItem={(item) => handleSelect(item.id)}
+        /* Task 110 — کاشی «ترجمه» فعال مثل فرم محل های جغرافیایی */
+        onTranslateOnline={recordTr.translateOnline}
+        onTranslateOffline={recordTr.openTranslateOffline}
         /* Task 35 — embedded mode: no caption buttons / drag on the form
            header (the Settings window owns the chrome); standalone keeps the
            Task-28 chromeless contract verbatim. */
@@ -693,6 +804,7 @@ export function BusinessStructureWindow({
           if (bs) await handleDelete(bs);
         }}
       />
+      {recordTr.dialog}
     </>
   );
 }
