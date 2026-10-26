@@ -587,3 +587,33 @@ model PartyPhone {
 
   @@map("PartyPhone")
 }
+
+/// DetailType — Task 120 (درخواست مالک): فرم «نوع تفصیل جدید» در نرم‌افزار
+/// «حسابداری» → زیرمنوی «اطلاعات پایه». فیلدها عین تصویر مالک و بدون عنوان
+/// لاتین (فرمان صریح مالک: «عنوان لاتین را نیاز نداریم که در فرم باشد»):
+///   · کد*          — یکتا در ساختار سازمانی (مثل CUST/SUPP/BANK).
+///   · عنوان*       — یکتا در ساختار سازمانی (مثل مشتریان/تامین‌کنندگان).
+///   · فعال است     — بولی (پیش‌فرض فعال).
+///   · توضیحات      — اختیاری (متن چندخطی).
+/// بدون فیلد شناسه در فرم — ID از IDGeneration (§16).
+model DetailType {
+  id                   BigInt   @id @map("ID")
+  code                 String   @map("Code") // کد نوع تفصیل (یکتا در ساختار)
+  title                String   @map("Title") // عنوان فارسی (یکتا در ساختار)
+  description          String?  @map("Description") // توضیحات اختیاری
+  isActive             Boolean  @default(true) @map("IsActive") // فعال است
+  version              Int      @default(1) @map("Version") // §2.5 auto-rowversion
+  creator              String   @map("Creator")
+  lastModifier         String?  @map("LastModifier")
+  businessStructureRef BigInt   @map("BusinessStructureRef")
+  companyRef           BigInt?  @map("CompanyRef")
+  branchRef            BigInt?  @map("BranchRef")
+  agencyRef            BigInt?  @map("AgencyRef")
+  shopRef              BigInt?  @map("ShopRef")
+  createdAt            DateTime @default(now()) @map("CreatedAt")
+  updatedAt            DateTime @updatedAt @map("UpdatedAt")
+
+  @@unique([code, businessStructureRef])
+  @@unique([title, businessStructureRef])
+  @@map("DetailType")
+}

@@ -958,3 +958,373 @@ Unique constraint failed on the fields: (`EntityType`,`EntityRef`,`FieldKey`,`La
 [Nest] 25899  - 10/26/2026, 9:07:27 PM     LOG [SeedService] DfbMenu system submenus: 1 created
 [Nest] 25899  - 10/26/2026, 9:07:27 PM     LOG [SeedService] seeded 12 dict-driven translation rows (Task 112)
 [Nest] 25899  - 10/26/2026, 9:07:27 PM     LOG [NestApplication] Nest application successfully started +82ms
+[Nest] 25899  - 10/26/2026, 9:30:28 PM     LOG [NestFactory] Starting Nest application...
+[Nest] 25899  - 10/26/2026, 9:30:28 PM     LOG [InstanceLoader] PrismaModule dependencies initialized +14ms
+[Nest] 25899  - 10/26/2026, 9:30:28 PM     LOG [InstanceLoader] IdGenerationModule dependencies initialized +0ms
+[Nest] 25899  - 10/26/2026, 9:30:28 PM     LOG [InstanceLoader] SeedModule dependencies initialized +1ms
+[Nest] 25899  - 10/26/2026, 9:30:28 PM     LOG [InstanceLoader] AppModule dependencies initialized +0ms
+[Nest] 25899  - 10/26/2026, 9:30:28 PM     LOG [InstanceLoader] TranslationsModule dependencies initialized +0ms
+[Nest] 25899  - 10/26/2026, 9:30:28 PM     LOG [InstanceLoader] MenusModule dependencies initialized +0ms
+[Nest] 25899  - 10/26/2026, 9:30:28 PM     LOG [InstanceLoader] FormsModule dependencies initialized +0ms
+[Nest] 25899  - 10/26/2026, 9:30:28 PM     LOG [InstanceLoader] QueriesModule dependencies initialized +0ms
+[Nest] 25899  - 10/26/2026, 9:30:28 PM     LOG [RoutesResolver] HealthController {/}: +4ms
+[Nest] 25899  - 10/26/2026, 9:30:28 PM     LOG [RouterExplorer] Mapped {/health, GET} route +2ms
+[Nest] 25899  - 10/26/2026, 9:30:28 PM     LOG [RoutesResolver] MenusController {/advancedTools/menus}: +0ms
+[Nest] 25899  - 10/26/2026, 9:30:28 PM     LOG [RouterExplorer] Mapped {/advancedTools/menus/tree, GET} route +1ms
+[Nest] 25899  - 10/26/2026, 9:30:28 PM     LOG [RouterExplorer] Mapped {/advancedTools/menus/icons, GET} route +0ms
+[Nest] 25899  - 10/26/2026, 9:30:28 PM     LOG [RouterExplorer] Mapped {/advancedTools/menus, POST} route +1ms
+[Nest] 25899  - 10/26/2026, 9:30:28 PM     LOG [RouterExplorer] Mapped {/advancedTools/menus/:id, PUT} route +0ms
+[Nest] 25899  - 10/26/2026, 9:30:28 PM     LOG [RouterExplorer] Mapped {/advancedTools/menus/:id, DELETE} route +1ms
+[Nest] 25899  - 10/26/2026, 9:30:28 PM     LOG [RoutesResolver] FormsController {/advancedTools/forms}: +0ms
+[Nest] 25899  - 10/26/2026, 9:30:28 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/schema/tree, GET} route +0ms
+[Nest] 25899  - 10/26/2026, 9:30:28 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/script/execute, POST} route +1ms
+[Nest] 25899  - 10/26/2026, 9:30:28 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/:id, GET} route +0ms
+[Nest] 25899  - 10/26/2026, 9:30:28 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms, POST} route +0ms
+[Nest] 25899  - 10/26/2026, 9:30:28 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/:id, PUT} route +0ms
+[Nest] 25899  - 10/26/2026, 9:30:28 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/:id/fields, POST} route +1ms
+[Nest] 25899  - 10/26/2026, 9:30:28 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/fields/:fieldId, DELETE} route +0ms
+[Nest] 25899  - 10/26/2026, 9:30:28 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/:id/data, POST} route +1ms
+[Nest] 25899  - 10/26/2026, 9:30:28 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/:id/data, GET} route +0ms
+[Nest] 25899  - 10/26/2026, 9:30:28 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/:id/data/:dataId, DELETE} route +0ms
+[Nest] 25899  - 10/26/2026, 9:30:28 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/:id, DELETE} route +0ms
+[Nest] 25899  - 10/26/2026, 9:30:28 PM     LOG [RoutesResolver] QueriesController {/advancedTools/queries}: +0ms
+[Nest] 25899  - 10/26/2026, 9:30:28 PM     LOG [RouterExplorer] Mapped {/advancedTools/queries/tables, GET} route +0ms
+[Nest] 25899  - 10/26/2026, 9:30:28 PM     LOG [RouterExplorer] Mapped {/advancedTools/queries, GET} route +1ms
+[Nest] 25899  - 10/26/2026, 9:30:28 PM     LOG [RouterExplorer] Mapped {/advancedTools/queries, POST} route +0ms
+[Nest] 25899  - 10/26/2026, 9:30:28 PM     LOG [RouterExplorer] Mapped {/advancedTools/queries/:id/execute, POST} route +0ms
+[Nest] 25899  - 10/26/2026, 9:30:28 PM     LOG [RouterExplorer] Mapped {/advancedTools/queries/:id, DELETE} route +0ms
+[Nest] 25899  - 10/26/2026, 9:30:28 PM     LOG [RoutesResolver] TranslationsController {/advancedTools/translations}: +0ms
+[Nest] 25899  - 10/26/2026, 9:30:28 PM     LOG [RouterExplorer] Mapped {/advancedTools/translations, GET} route +0ms
+[Nest] 25899  - 10/26/2026, 9:30:28 PM     LOG [RouterExplorer] Mapped {/advancedTools/translations, POST} route +0ms
+[Nest] 25899  - 10/26/2026, 9:30:28 PM     LOG [RouterExplorer] Mapped {/advancedTools/translations/langs, GET} route +0ms
+[Nest] 25899  - 10/26/2026, 9:30:28 PM     LOG [PrismaService] Prisma connected (dfb.db) — §2.5 auto-rowversion active on: IDGeneration, DfbMenu, DfbForm, DfbFormTab, DfbFormField, DfbQuery, DfbQueryField, DfbFormData, DfbFormDataValue, DfbTranslation
+[Nest] 25899  - 10/26/2026, 9:30:28 PM     LOG [SeedService] seeded system form acc.detailType (ID=26) under "accounting"/accBasicInfo
+[Nest] 25899  - 10/26/2026, 9:30:29 PM     LOG [NestApplication] Nest application successfully started +94ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [NestFactory] Starting Nest application...
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [InstanceLoader] PrismaModule dependencies initialized +65ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [InstanceLoader] IdGenerationModule dependencies initialized +0ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [InstanceLoader] SeedModule dependencies initialized +1ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [InstanceLoader] AppModule dependencies initialized +0ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [InstanceLoader] TranslationsModule dependencies initialized +5ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [InstanceLoader] MenusModule dependencies initialized +0ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [InstanceLoader] FormsModule dependencies initialized +1ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [InstanceLoader] QueriesModule dependencies initialized +0ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [RoutesResolver] HealthController {/}: +3ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [RouterExplorer] Mapped {/health, GET} route +2ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [RoutesResolver] MenusController {/advancedTools/menus}: +0ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [RouterExplorer] Mapped {/advancedTools/menus/tree, GET} route +2ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [RouterExplorer] Mapped {/advancedTools/menus/icons, GET} route +0ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [RouterExplorer] Mapped {/advancedTools/menus, POST} route +1ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [RouterExplorer] Mapped {/advancedTools/menus/:id, PUT} route +2ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [RouterExplorer] Mapped {/advancedTools/menus/:id, DELETE} route +1ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [RoutesResolver] FormsController {/advancedTools/forms}: +0ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/schema/tree, GET} route +1ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/script/execute, POST} route +0ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/:id, GET} route +1ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms, POST} route +0ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/:id, PUT} route +1ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/:id/fields, POST} route +1ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/fields/:fieldId, DELETE} route +0ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/:id/data, POST} route +0ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/:id/data, GET} route +1ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/:id/data/:dataId, DELETE} route +1ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/:id, DELETE} route +1ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [RoutesResolver] QueriesController {/advancedTools/queries}: +0ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [RouterExplorer] Mapped {/advancedTools/queries/tables, GET} route +0ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [RouterExplorer] Mapped {/advancedTools/queries, GET} route +0ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [RouterExplorer] Mapped {/advancedTools/queries, POST} route +0ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [RouterExplorer] Mapped {/advancedTools/queries/:id/execute, POST} route +1ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [RouterExplorer] Mapped {/advancedTools/queries/:id, DELETE} route +0ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [RoutesResolver] TranslationsController {/advancedTools/translations}: +1ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [RouterExplorer] Mapped {/advancedTools/translations, GET} route +3ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [RouterExplorer] Mapped {/advancedTools/translations, POST} route +0ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [RouterExplorer] Mapped {/advancedTools/translations/langs, GET} route +1ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [PrismaService] Prisma connected (dfb.db) — §2.5 auto-rowversion active on: IDGeneration, DfbMenu, DfbForm, DfbFormTab, DfbFormField, DfbQuery, DfbQueryField, DfbFormData, DfbFormDataValue, DfbTranslation
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [NestFactory] Starting Nest application...
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [InstanceLoader] PrismaModule dependencies initialized +17ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [InstanceLoader] IdGenerationModule dependencies initialized +0ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [InstanceLoader] SeedModule dependencies initialized +1ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [InstanceLoader] AppModule dependencies initialized +0ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [InstanceLoader] TranslationsModule dependencies initialized +0ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [InstanceLoader] MenusModule dependencies initialized +1ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [InstanceLoader] FormsModule dependencies initialized +0ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [InstanceLoader] QueriesModule dependencies initialized +0ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [RoutesResolver] HealthController {/}: +2ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [RouterExplorer] Mapped {/health, GET} route +2ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [RoutesResolver] MenusController {/advancedTools/menus}: +0ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [RouterExplorer] Mapped {/advancedTools/menus/tree, GET} route +2ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [RouterExplorer] Mapped {/advancedTools/menus/icons, GET} route +1ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [RouterExplorer] Mapped {/advancedTools/menus, POST} route +1ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [RouterExplorer] Mapped {/advancedTools/menus/:id, PUT} route +1ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [RouterExplorer] Mapped {/advancedTools/menus/:id, DELETE} route +1ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [RoutesResolver] FormsController {/advancedTools/forms}: +0ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/schema/tree, GET} route +1ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/script/execute, POST} route +0ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/:id, GET} route +1ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms, POST} route +0ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/:id, PUT} route +1ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/:id/fields, POST} route +1ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/fields/:fieldId, DELETE} route +0ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/:id/data, POST} route +0ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/:id/data, GET} route +0ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/:id/data/:dataId, DELETE} route +1ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/:id, DELETE} route +1ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [RoutesResolver] QueriesController {/advancedTools/queries}: +0ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [RouterExplorer] Mapped {/advancedTools/queries/tables, GET} route +0ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [RouterExplorer] Mapped {/advancedTools/queries, GET} route +1ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [RouterExplorer] Mapped {/advancedTools/queries, POST} route +0ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [RouterExplorer] Mapped {/advancedTools/queries/:id/execute, POST} route +0ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [RouterExplorer] Mapped {/advancedTools/queries/:id, DELETE} route +1ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [RoutesResolver] TranslationsController {/advancedTools/translations}: +0ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [RouterExplorer] Mapped {/advancedTools/translations, GET} route +1ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [RouterExplorer] Mapped {/advancedTools/translations, POST} route +2ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [RouterExplorer] Mapped {/advancedTools/translations/langs, GET} route +1ms
+[Nest] 25899  - 10/26/2026, 9:31:51 PM     LOG [PrismaService] Prisma connected (dfb.db) — §2.5 auto-rowversion active on: IDGeneration, DfbMenu, DfbForm, DfbFormTab, DfbFormField, DfbQuery, DfbQueryField, DfbFormData, DfbFormDataValue, DfbTranslation
+[Nest] 25899  - 10/26/2026, 9:31:52 PM     LOG [NestApplication] Nest application successfully started +847ms
+[Nest] 25899  - 10/26/2026, 9:31:52 PM     LOG [NestApplication] Nest application successfully started +502ms
+[Nest] 25899  - 10/26/2026, 9:32:39 PM     LOG [NestFactory] Starting Nest application...
+[Nest] 25899  - 10/26/2026, 9:32:39 PM     LOG [InstanceLoader] PrismaModule dependencies initialized +40ms
+[Nest] 25899  - 10/26/2026, 9:32:39 PM     LOG [InstanceLoader] IdGenerationModule dependencies initialized +0ms
+[Nest] 25899  - 10/26/2026, 9:32:39 PM     LOG [InstanceLoader] SeedModule dependencies initialized +2ms
+[Nest] 25899  - 10/26/2026, 9:32:39 PM     LOG [InstanceLoader] AppModule dependencies initialized +0ms
+[Nest] 25899  - 10/26/2026, 9:32:39 PM     LOG [InstanceLoader] TranslationsModule dependencies initialized +3ms
+[Nest] 25899  - 10/26/2026, 9:32:39 PM     LOG [InstanceLoader] MenusModule dependencies initialized +0ms
+[Nest] 25899  - 10/26/2026, 9:32:39 PM     LOG [InstanceLoader] FormsModule dependencies initialized +0ms
+[Nest] 25899  - 10/26/2026, 9:32:39 PM     LOG [InstanceLoader] QueriesModule dependencies initialized +0ms
+[Nest] 25899  - 10/26/2026, 9:32:39 PM     LOG [RoutesResolver] HealthController {/}: +5ms
+[Nest] 25899  - 10/26/2026, 9:32:39 PM     LOG [RouterExplorer] Mapped {/health, GET} route +47ms
+[Nest] 25899  - 10/26/2026, 9:32:39 PM     LOG [RoutesResolver] MenusController {/advancedTools/menus}: +0ms
+[Nest] 25899  - 10/26/2026, 9:32:39 PM     LOG [RouterExplorer] Mapped {/advancedTools/menus/tree, GET} route +3ms
+[Nest] 25899  - 10/26/2026, 9:32:39 PM     LOG [RouterExplorer] Mapped {/advancedTools/menus/icons, GET} route +1ms
+[Nest] 25899  - 10/26/2026, 9:32:39 PM     LOG [RouterExplorer] Mapped {/advancedTools/menus, POST} route +1ms
+[Nest] 25899  - 10/26/2026, 9:32:39 PM     LOG [RouterExplorer] Mapped {/advancedTools/menus/:id, PUT} route +5ms
+[Nest] 25899  - 10/26/2026, 9:32:39 PM     LOG [RouterExplorer] Mapped {/advancedTools/menus/:id, DELETE} route +2ms
+[Nest] 25899  - 10/26/2026, 9:32:39 PM     LOG [RoutesResolver] FormsController {/advancedTools/forms}: +1ms
+[Nest] 25899  - 10/26/2026, 9:32:39 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/schema/tree, GET} route +6ms
+[Nest] 25899  - 10/26/2026, 9:32:39 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/script/execute, POST} route +1ms
+[Nest] 25899  - 10/26/2026, 9:32:39 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/:id, GET} route +1ms
+[Nest] 25899  - 10/26/2026, 9:32:39 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms, POST} route +6ms
+[Nest] 25899  - 10/26/2026, 9:32:39 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/:id, PUT} route +1ms
+[Nest] 25899  - 10/26/2026, 9:32:39 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/:id/fields, POST} route +0ms
+[Nest] 25899  - 10/26/2026, 9:32:39 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/fields/:fieldId, DELETE} route +6ms
+[Nest] 25899  - 10/26/2026, 9:32:39 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/:id/data, POST} route +0ms
+[Nest] 25899  - 10/26/2026, 9:32:39 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/:id/data, GET} route +4ms
+[Nest] 25899  - 10/26/2026, 9:32:39 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/:id/data/:dataId, DELETE} route +5ms
+[Nest] 25899  - 10/26/2026, 9:32:39 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/:id, DELETE} route +7ms
+[Nest] 25899  - 10/26/2026, 9:32:39 PM     LOG [RoutesResolver] QueriesController {/advancedTools/queries}: +1ms
+[Nest] 25899  - 10/26/2026, 9:32:39 PM     LOG [RouterExplorer] Mapped {/advancedTools/queries/tables, GET} route +0ms
+[Nest] 25899  - 10/26/2026, 9:32:39 PM     LOG [RouterExplorer] Mapped {/advancedTools/queries, GET} route +1ms
+[Nest] 25899  - 10/26/2026, 9:32:39 PM     LOG [RouterExplorer] Mapped {/advancedTools/queries, POST} route +0ms
+[Nest] 25899  - 10/26/2026, 9:32:39 PM     LOG [RouterExplorer] Mapped {/advancedTools/queries/:id/execute, POST} route +34ms
+[Nest] 25899  - 10/26/2026, 9:32:39 PM     LOG [RouterExplorer] Mapped {/advancedTools/queries/:id, DELETE} route +0ms
+[Nest] 25899  - 10/26/2026, 9:32:39 PM     LOG [RoutesResolver] TranslationsController {/advancedTools/translations}: +0ms
+[Nest] 25899  - 10/26/2026, 9:32:39 PM     LOG [RouterExplorer] Mapped {/advancedTools/translations, GET} route +4ms
+[Nest] 25899  - 10/26/2026, 9:32:39 PM     LOG [RouterExplorer] Mapped {/advancedTools/translations, POST} route +4ms
+[Nest] 25899  - 10/26/2026, 9:32:39 PM     LOG [RouterExplorer] Mapped {/advancedTools/translations/langs, GET} route +3ms
+[Nest] 25899  - 10/26/2026, 9:32:40 PM     LOG [NestFactory] Starting Nest application...
+[Nest] 25899  - 10/26/2026, 9:32:40 PM     LOG [InstanceLoader] PrismaModule dependencies initialized +56ms
+[Nest] 25899  - 10/26/2026, 9:32:40 PM     LOG [InstanceLoader] IdGenerationModule dependencies initialized +0ms
+[Nest] 25899  - 10/26/2026, 9:32:40 PM     LOG [InstanceLoader] SeedModule dependencies initialized +1ms
+[Nest] 25899  - 10/26/2026, 9:32:40 PM     LOG [InstanceLoader] AppModule dependencies initialized +0ms
+[Nest] 25899  - 10/26/2026, 9:32:40 PM     LOG [InstanceLoader] TranslationsModule dependencies initialized +0ms
+[Nest] 25899  - 10/26/2026, 9:32:40 PM     LOG [InstanceLoader] MenusModule dependencies initialized +6ms
+[Nest] 25899  - 10/26/2026, 9:32:40 PM     LOG [InstanceLoader] FormsModule dependencies initialized +0ms
+[Nest] 25899  - 10/26/2026, 9:32:40 PM     LOG [InstanceLoader] QueriesModule dependencies initialized +0ms
+[Nest] 25899  - 10/26/2026, 9:32:40 PM     LOG [RoutesResolver] HealthController {/}: +11ms
+[Nest] 25899  - 10/26/2026, 9:32:40 PM     LOG [RouterExplorer] Mapped {/health, GET} route +3ms
+[Nest] 25899  - 10/26/2026, 9:32:40 PM     LOG [RoutesResolver] MenusController {/advancedTools/menus}: +0ms
+[Nest] 25899  - 10/26/2026, 9:32:40 PM     LOG [RouterExplorer] Mapped {/advancedTools/menus/tree, GET} route +7ms
+[Nest] 25899  - 10/26/2026, 9:32:40 PM     LOG [RouterExplorer] Mapped {/advancedTools/menus/icons, GET} route +3ms
+[Nest] 25899  - 10/26/2026, 9:32:40 PM     LOG [RouterExplorer] Mapped {/advancedTools/menus, POST} route +0ms
+[Nest] 25899  - 10/26/2026, 9:32:40 PM     LOG [RouterExplorer] Mapped {/advancedTools/menus/:id, PUT} route +1ms
+[Nest] 25899  - 10/26/2026, 9:32:40 PM     LOG [RouterExplorer] Mapped {/advancedTools/menus/:id, DELETE} route +3ms
+[Nest] 25899  - 10/26/2026, 9:32:40 PM     LOG [RoutesResolver] FormsController {/advancedTools/forms}: +0ms
+[Nest] 25899  - 10/26/2026, 9:32:40 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/schema/tree, GET} route +1ms
+[Nest] 25899  - 10/26/2026, 9:32:40 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/script/execute, POST} route +0ms
+[Nest] 25899  - 10/26/2026, 9:32:40 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/:id, GET} route +2ms
+[Nest] 25899  - 10/26/2026, 9:32:40 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms, POST} route +1ms
+[Nest] 25899  - 10/26/2026, 9:32:40 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/:id, PUT} route +1ms
+[Nest] 25899  - 10/26/2026, 9:32:40 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/:id/fields, POST} route +0ms
+[Nest] 25899  - 10/26/2026, 9:32:40 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/fields/:fieldId, DELETE} route +3ms
+[Nest] 25899  - 10/26/2026, 9:32:40 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/:id/data, POST} route +1ms
+[Nest] 25899  - 10/26/2026, 9:32:40 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/:id/data, GET} route +0ms
+[Nest] 25899  - 10/26/2026, 9:32:40 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/:id/data/:dataId, DELETE} route +5ms
+[Nest] 25899  - 10/26/2026, 9:32:40 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/:id, DELETE} route +1ms
+[Nest] 25899  - 10/26/2026, 9:32:40 PM     LOG [RoutesResolver] QueriesController {/advancedTools/queries}: +0ms
+[Nest] 25899  - 10/26/2026, 9:32:40 PM     LOG [RouterExplorer] Mapped {/advancedTools/queries/tables, GET} route +0ms
+[Nest] 25899  - 10/26/2026, 9:32:40 PM     LOG [RouterExplorer] Mapped {/advancedTools/queries, GET} route +1ms
+[Nest] 25899  - 10/26/2026, 9:32:40 PM     LOG [RouterExplorer] Mapped {/advancedTools/queries, POST} route +0ms
+[Nest] 25899  - 10/26/2026, 9:32:40 PM     LOG [RouterExplorer] Mapped {/advancedTools/queries/:id/execute, POST} route +0ms
+[Nest] 25899  - 10/26/2026, 9:32:40 PM     LOG [RouterExplorer] Mapped {/advancedTools/queries/:id, DELETE} route +0ms
+[Nest] 25899  - 10/26/2026, 9:32:40 PM     LOG [RoutesResolver] TranslationsController {/advancedTools/translations}: +0ms
+[Nest] 25899  - 10/26/2026, 9:32:40 PM     LOG [RouterExplorer] Mapped {/advancedTools/translations, GET} route +2ms
+[Nest] 25899  - 10/26/2026, 9:32:40 PM     LOG [RouterExplorer] Mapped {/advancedTools/translations, POST} route +3ms
+[Nest] 25899  - 10/26/2026, 9:32:40 PM     LOG [RouterExplorer] Mapped {/advancedTools/translations/langs, GET} route +0ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [PrismaService] Prisma connected (dfb.db) — §2.5 auto-rowversion active on: IDGeneration, DfbMenu, DfbForm, DfbFormTab, DfbFormField, DfbQuery, DfbQueryField, DfbFormData, DfbFormDataValue, DfbTranslation
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [NestFactory] Starting Nest application...
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [InstanceLoader] PrismaModule dependencies initialized +10ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [InstanceLoader] IdGenerationModule dependencies initialized +0ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [InstanceLoader] SeedModule dependencies initialized +1ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [InstanceLoader] AppModule dependencies initialized +0ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [InstanceLoader] TranslationsModule dependencies initialized +0ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [InstanceLoader] MenusModule dependencies initialized +0ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [InstanceLoader] FormsModule dependencies initialized +0ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [InstanceLoader] QueriesModule dependencies initialized +0ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [RoutesResolver] HealthController {/}: +2ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [RouterExplorer] Mapped {/health, GET} route +1ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [RoutesResolver] MenusController {/advancedTools/menus}: +0ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [RouterExplorer] Mapped {/advancedTools/menus/tree, GET} route +1ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [RouterExplorer] Mapped {/advancedTools/menus/icons, GET} route +0ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [RouterExplorer] Mapped {/advancedTools/menus, POST} route +0ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [RouterExplorer] Mapped {/advancedTools/menus/:id, PUT} route +0ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [RouterExplorer] Mapped {/advancedTools/menus/:id, DELETE} route +1ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [RoutesResolver] FormsController {/advancedTools/forms}: +0ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/schema/tree, GET} route +0ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/script/execute, POST} route +0ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/:id, GET} route +0ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms, POST} route +0ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/:id, PUT} route +0ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/:id/fields, POST} route +1ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/fields/:fieldId, DELETE} route +0ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/:id/data, POST} route +0ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/:id/data, GET} route +0ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/:id/data/:dataId, DELETE} route +0ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/:id, DELETE} route +1ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [RoutesResolver] QueriesController {/advancedTools/queries}: +0ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [RouterExplorer] Mapped {/advancedTools/queries/tables, GET} route +0ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [RouterExplorer] Mapped {/advancedTools/queries, GET} route +0ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [RouterExplorer] Mapped {/advancedTools/queries, POST} route +0ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [RouterExplorer] Mapped {/advancedTools/queries/:id/execute, POST} route +0ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [RouterExplorer] Mapped {/advancedTools/queries/:id, DELETE} route +0ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [RoutesResolver] TranslationsController {/advancedTools/translations}: +0ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [RouterExplorer] Mapped {/advancedTools/translations, GET} route +0ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [RouterExplorer] Mapped {/advancedTools/translations, POST} route +30ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [RouterExplorer] Mapped {/advancedTools/translations/langs, GET} route +0ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [PrismaService] Prisma connected (dfb.db) — §2.5 auto-rowversion active on: IDGeneration, DfbMenu, DfbForm, DfbFormTab, DfbFormField, DfbQuery, DfbQueryField, DfbFormData, DfbFormDataValue, DfbTranslation
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [PrismaService] Prisma connected (dfb.db) — §2.5 auto-rowversion active on: IDGeneration, DfbMenu, DfbForm, DfbFormTab, DfbFormField, DfbQuery, DfbQueryField, DfbFormData, DfbFormDataValue, DfbTranslation
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [NestFactory] Starting Nest application...
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [InstanceLoader] PrismaModule dependencies initialized +9ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [InstanceLoader] IdGenerationModule dependencies initialized +0ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [InstanceLoader] SeedModule dependencies initialized +1ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [InstanceLoader] AppModule dependencies initialized +0ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [InstanceLoader] TranslationsModule dependencies initialized +0ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [InstanceLoader] MenusModule dependencies initialized +0ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [InstanceLoader] FormsModule dependencies initialized +0ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [InstanceLoader] QueriesModule dependencies initialized +0ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [RoutesResolver] HealthController {/}: +3ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [RouterExplorer] Mapped {/health, GET} route +1ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [RoutesResolver] MenusController {/advancedTools/menus}: +1ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [RouterExplorer] Mapped {/advancedTools/menus/tree, GET} route +0ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [RouterExplorer] Mapped {/advancedTools/menus/icons, GET} route +0ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [RouterExplorer] Mapped {/advancedTools/menus, POST} route +1ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [RouterExplorer] Mapped {/advancedTools/menus/:id, PUT} route +0ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [RouterExplorer] Mapped {/advancedTools/menus/:id, DELETE} route +0ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [RoutesResolver] FormsController {/advancedTools/forms}: +0ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/schema/tree, GET} route +1ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/script/execute, POST} route +0ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/:id, GET} route +0ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms, POST} route +0ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/:id, PUT} route +0ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/:id/fields, POST} route +1ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/fields/:fieldId, DELETE} route +0ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/:id/data, POST} route +0ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/:id/data, GET} route +0ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/:id/data/:dataId, DELETE} route +0ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/:id, DELETE} route +0ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [RoutesResolver] QueriesController {/advancedTools/queries}: +0ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [RouterExplorer] Mapped {/advancedTools/queries/tables, GET} route +1ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [RouterExplorer] Mapped {/advancedTools/queries, GET} route +0ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [RouterExplorer] Mapped {/advancedTools/queries, POST} route +0ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [RouterExplorer] Mapped {/advancedTools/queries/:id/execute, POST} route +0ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [RouterExplorer] Mapped {/advancedTools/queries/:id, DELETE} route +0ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [RoutesResolver] TranslationsController {/advancedTools/translations}: +0ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [RouterExplorer] Mapped {/advancedTools/translations, GET} route +0ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [RouterExplorer] Mapped {/advancedTools/translations, POST} route +32ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [RouterExplorer] Mapped {/advancedTools/translations/langs, GET} route +0ms
+[Nest] 25899  - 10/26/2026, 9:32:41 PM     LOG [PrismaService] Prisma connected (dfb.db) — §2.5 auto-rowversion active on: IDGeneration, DfbMenu, DfbForm, DfbFormTab, DfbFormField, DfbQuery, DfbQueryField, DfbFormData, DfbFormDataValue, DfbTranslation
+[Nest] 25899  - 10/26/2026, 9:32:42 PM     LOG [NestApplication] Nest application successfully started +1780ms
+[Nest] 25899  - 10/26/2026, 9:32:42 PM     LOG [NestApplication] Nest application successfully started +1400ms
+[Nest] 25899  - 10/26/2026, 9:32:42 PM     LOG [NestApplication] Nest application successfully started +1402ms
+[Nest] 25899  - 10/26/2026, 9:32:42 PM     LOG [NestApplication] Nest application successfully started +882ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [NestFactory] Starting Nest application...
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [InstanceLoader] PrismaModule dependencies initialized +40ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [InstanceLoader] IdGenerationModule dependencies initialized +0ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [InstanceLoader] SeedModule dependencies initialized +1ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [InstanceLoader] AppModule dependencies initialized +0ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [InstanceLoader] TranslationsModule dependencies initialized +1ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [InstanceLoader] MenusModule dependencies initialized +0ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [InstanceLoader] FormsModule dependencies initialized +0ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [InstanceLoader] QueriesModule dependencies initialized +0ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [RoutesResolver] HealthController {/}: +4ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [RouterExplorer] Mapped {/health, GET} route +3ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [RoutesResolver] MenusController {/advancedTools/menus}: +0ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [RouterExplorer] Mapped {/advancedTools/menus/tree, GET} route +1ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [RouterExplorer] Mapped {/advancedTools/menus/icons, GET} route +0ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [RouterExplorer] Mapped {/advancedTools/menus, POST} route +0ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [RouterExplorer] Mapped {/advancedTools/menus/:id, PUT} route +1ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [RouterExplorer] Mapped {/advancedTools/menus/:id, DELETE} route +1ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [RoutesResolver] FormsController {/advancedTools/forms}: +0ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/schema/tree, GET} route +0ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/script/execute, POST} route +1ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/:id, GET} route +0ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms, POST} route +0ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/:id, PUT} route +0ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/:id/fields, POST} route +1ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/fields/:fieldId, DELETE} route +0ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/:id/data, POST} route +0ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/:id/data, GET} route +0ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/:id/data/:dataId, DELETE} route +1ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/:id, DELETE} route +0ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [RoutesResolver] QueriesController {/advancedTools/queries}: +0ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [RouterExplorer] Mapped {/advancedTools/queries/tables, GET} route +1ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [RouterExplorer] Mapped {/advancedTools/queries, GET} route +0ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [RouterExplorer] Mapped {/advancedTools/queries, POST} route +0ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [RouterExplorer] Mapped {/advancedTools/queries/:id/execute, POST} route +0ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [RouterExplorer] Mapped {/advancedTools/queries/:id, DELETE} route +1ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [RoutesResolver] TranslationsController {/advancedTools/translations}: +0ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [RouterExplorer] Mapped {/advancedTools/translations, GET} route +2ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [RouterExplorer] Mapped {/advancedTools/translations, POST} route +3ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [RouterExplorer] Mapped {/advancedTools/translations/langs, GET} route +0ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [PrismaService] Prisma connected (dfb.db) — §2.5 auto-rowversion active on: IDGeneration, DfbMenu, DfbForm, DfbFormTab, DfbFormField, DfbQuery, DfbQueryField, DfbFormData, DfbFormDataValue, DfbTranslation
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [NestFactory] Starting Nest application...
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [InstanceLoader] PrismaModule dependencies initialized +42ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [InstanceLoader] IdGenerationModule dependencies initialized +0ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [InstanceLoader] SeedModule dependencies initialized +1ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [InstanceLoader] AppModule dependencies initialized +0ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [InstanceLoader] TranslationsModule dependencies initialized +0ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [InstanceLoader] MenusModule dependencies initialized +1ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [InstanceLoader] FormsModule dependencies initialized +0ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [InstanceLoader] QueriesModule dependencies initialized +0ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [RoutesResolver] HealthController {/}: +2ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [RouterExplorer] Mapped {/health, GET} route +1ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [RoutesResolver] MenusController {/advancedTools/menus}: +1ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [RouterExplorer] Mapped {/advancedTools/menus/tree, GET} route +1ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [RouterExplorer] Mapped {/advancedTools/menus/icons, GET} route +2ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [RouterExplorer] Mapped {/advancedTools/menus, POST} route +0ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [RouterExplorer] Mapped {/advancedTools/menus/:id, PUT} route +1ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [RouterExplorer] Mapped {/advancedTools/menus/:id, DELETE} route +1ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [RoutesResolver] FormsController {/advancedTools/forms}: +0ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/schema/tree, GET} route +1ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/script/execute, POST} route +0ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/:id, GET} route +1ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms, POST} route +0ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/:id, PUT} route +1ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/:id/fields, POST} route +1ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/fields/:fieldId, DELETE} route +0ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/:id/data, POST} route +0ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/:id/data, GET} route +0ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/:id/data/:dataId, DELETE} route +1ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [RouterExplorer] Mapped {/advancedTools/forms/:id, DELETE} route +1ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [RoutesResolver] QueriesController {/advancedTools/queries}: +0ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [RouterExplorer] Mapped {/advancedTools/queries/tables, GET} route +0ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [RouterExplorer] Mapped {/advancedTools/queries, GET} route +1ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [RouterExplorer] Mapped {/advancedTools/queries, POST} route +0ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [RouterExplorer] Mapped {/advancedTools/queries/:id/execute, POST} route +0ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [RouterExplorer] Mapped {/advancedTools/queries/:id, DELETE} route +0ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [RoutesResolver] TranslationsController {/advancedTools/translations}: +0ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [RouterExplorer] Mapped {/advancedTools/translations, GET} route +2ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [RouterExplorer] Mapped {/advancedTools/translations, POST} route +2ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [RouterExplorer] Mapped {/advancedTools/translations/langs, GET} route +1ms
+[Nest] 25899  - 10/26/2026, 9:34:54 PM     LOG [PrismaService] Prisma connected (dfb.db) — §2.5 auto-rowversion active on: IDGeneration, DfbMenu, DfbForm, DfbFormTab, DfbFormField, DfbQuery, DfbQueryField, DfbFormData, DfbFormDataValue, DfbTranslation
+[Nest] 25899  - 10/26/2026, 9:34:55 PM     LOG [NestApplication] Nest application successfully started +383ms
+[Nest] 25899  - 10/26/2026, 9:34:55 PM     LOG [NestApplication] Nest application successfully started +707ms

@@ -170,6 +170,21 @@ const SYSTEM_FORMS: SystemFormSeed[] = [
     componentKey: "simpleTwoRowTabbed",
     dictKey: "rate.formTitle",
   },
+  {
+    /* Task 120 (درخواست مالک) — فرم «نوع تفصیل جدید»: نخستین فرم سیستمیِ
+       زیرمنوی «اطلاعات پایه»ٔ حسابداری (Task 119 — accBasicInfo)؛ فیلدها عین
+       تصویر مالک و بدون عنوان لاتین (فرمان صریح مالک)؛ بدنهٔ واقعی React
+       (detail-type-form) با seed تفصیل‌های رایج در سرویس تنظیمات؛ راه‌انداز
+       واقعی = زیرصفحهٔ detail-type پنجرهٔ حسابداری (قرارداد acc.*). */
+    systemKey: "acc.detailType",
+    anchorAppKey: "accounting",
+    anchorSubmenuCode: "accBasicInfo",
+    code: "DTL",
+    titleFa: "نوع تفصیل جدید",
+    titleEn: "New Detail Type",
+    componentKey: "simpleTwoRowTabbed",
+    dictKey: "dt.formTitle",
+  },
 ];
 
 /**

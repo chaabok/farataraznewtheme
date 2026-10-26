@@ -283,5 +283,39 @@ export class SeedService implements OnModuleInit {
     if (seededCur > 0) {
       this.logger.log(`seeded ${seededCur} CurrencyType rows (ISO 4217, Task 114)`);
     }
+
+    /* 7) Task 120 — seed «نوع تفصیل جدید» (حسابداری ← اطلاعات پایه): چند
+       تفصیلِ رایجِ حسابداری ایرانی (idempotent by Code) تا فهرست فرم از
+       ابتدا زنده باشد — مشتریان/تامین‌کنندگان/بانک‌ها/صندوق‌ها/پروژه‌ها. */
+    const DETAIL_TYPES: Array<{ code: string; title: string; description?: string }> = [
+      { code: "CUST", title: "مشتریان", description: "تفصیل مشتریان و فروش" },
+      { code: "SUPP", title: "تامین‌کنندگان", description: "تفصیل تامین‌کنندگان و خرید" },
+      { code: "BANK", title: "بانک‌ها", description: "تفصیل حساب‌های بانکی" },
+      { code: "CASH", title: "صندوق‌ها", description: "تفصیل صندوق‌های نقدی" },
+      { code: "PRJ", title: "پروژه‌ها", description: "تفصیل پروژه‌ها و قراردادها" },
+      { code: "CC", title: "مراکز هزینه", description: "تفصیل مراکز هزینه و درآمد" },
+    ];
+    let seededDt = 0;
+    for (const d of DETAIL_TYPES) {
+      const exists = await this.prisma.detailType.findFirst({
+        where: { businessStructureRef: 1n, code: d.code },
+      });
+      if (exists) continue;
+      const newId = await this.idGen.generateNextId("DetailType");
+      await this.prisma.detailType.create({
+        data: {
+          id: BigInt(newId),
+          code: d.code,
+          title: d.title,
+          description: d.description ?? null,
+          isActive: true,
+          ...appBaseOnCreate(SYSTEM_ACTOR),
+        },
+      });
+      seededDt++;
+    }
+    if (seededDt > 0) {
+      this.logger.log(`seeded ${seededDt} DetailType rows (Task 120 — حسابداری/اطلاعات پایه)`);
+    }
   }
 }

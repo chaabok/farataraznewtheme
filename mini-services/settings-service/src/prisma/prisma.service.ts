@@ -43,6 +43,7 @@ const VERSIONED_MODELS: ReadonlySet<string> = new Set([
   "GeoLocation", // Task 103 — محل‌های جغرافیایی
   "CurrencyType", // Task 114 — نوع ارز
   "ExchangeRate", // Task 116 — نرخ برابری ارز
+  "DetailType", // Task 120 — نوع تفصیل جدید (حسابداری)
 ]);
 
 const VERSION_ACTIONS = new Set(["update", "updateMany", "upsert"]);

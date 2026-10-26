@@ -23,6 +23,7 @@
 
 import { useDesktop } from "@/stores/desktop-store";
 import { useGeneralNav, type GeneralSubPage } from "@/stores/general-nav-store";
+import { useAccountingNav, type AccountingSubPage } from "@/stores/accounting-nav-store";
 
 /** SystemKey فرم‌های سیستمیِ زیرمنوی «اطلاعات پایه»ٔ عمومی → زیرصفحهٔ پنجرهٔ عمومی */
 const SYSTEM_GENERAL_PAGES: Record<string, GeneralSubPage> = {
@@ -33,10 +34,19 @@ const SYSTEM_GENERAL_PAGES: Record<string, GeneralSubPage> = {
   "gnr.exchangeRate": "exchange-rate", // Task 116 — نرخ برابری (عملیات)
 };
 
+/** SystemKey فرم‌های سیستمیِ زیرمنوی «اطلاعات پایه»ٔ حسابداری → زیرصفحهٔ پنجرهٔ حسابداری */
+const SYSTEM_ACCOUNTING_PAGES: Record<string, AccountingSubPage> = {
+  "acc.detailType": "detail-type", // Task 120 — نوع تفصیل جدید
+};
+
 /** آیا این فرم سیستمی «فرم واقعی» جداگانه‌ای دارد (برای نمایش دکمهٔ باز کردن)؟ */
 export function dfbFormHasRealWindow(systemKey: string | null): boolean {
   if (!systemKey) return false;
-  return systemKey === "gnr.businessStructure" || systemKey in SYSTEM_GENERAL_PAGES;
+  return (
+    systemKey === "gnr.businessStructure" ||
+    systemKey in SYSTEM_GENERAL_PAGES ||
+    systemKey in SYSTEM_ACCOUNTING_PAGES
+  );
 }
 
 export function openDfbFormReal(f: {
@@ -60,6 +70,13 @@ export function openDfbFormReal(f: {
   if (page) {
     open("app", "general");
     useGeneralNav.getState().requestGeneralPage(page);
+    return;
+  }
+  /* Task 120 — فرم‌های اطلاعات پایهٔ حسابداری — پنجرهٔ حسابداری + زیرصفحه */
+  const accPage = f.systemKey ? SYSTEM_ACCOUNTING_PAGES[f.systemKey] : undefined;
+  if (accPage) {
+    open("app", "accounting");
+    useAccountingNav.getState().requestAccountingPage(accPage);
     return;
   }
   /* بقیهٔ فرم‌ها — ران‌تایم عمومی تعریف فرم (رفتار همیشگی) */
