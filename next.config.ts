@@ -11,3 +11,4 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
+// Task 105 — touch: instrumentation register (sandbox service self-heal)
