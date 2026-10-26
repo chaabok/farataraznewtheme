@@ -404,6 +404,41 @@ model UserRoleScope {
   @@map("UserRoleScope")
 }
 
+/// GeoLocation — Task 103 (درخواست مالک): فرم «محل های جغرافیایی» در نرم‌افزار
+/// «عمومی» ← زیرمنوی «اطلاعات پایه» با کامپوننت SimpleTreeForm. درخت مرجع
+/// مکان‌ها (legacy "Gnr"."GeoLocation"):
+///   · LevelType — 1=کشور 2=استان 3=شهر 4=روستا 5=خیابان 6=کوچه (ترتیب مالک)
+///   · قواعد درخت (تک‌منبع حقیقت روی سرور، عین عبارت مالک): ریشه (ParentRef=0)
+///     فقط کشور؛ زیر کشور فقط استان؛ زیر استان فقط شهر. ادامهٔ طبیعی سطوح
+///     پایین‌تر (فرض اعلام‌شدهٔ کارنام Task 103): زیر شهر خیابان/روستا؛ زیر
+///     روستا/خیابان کوچه؛ کوچه برگ است.
+///   · Code عددی اجباری و یکتا بین خواهرها (پیشنهاد خودکار = بیشینهٔ خواهرها + ۱)؛
+///     Title/TitleLatin اجباری؛ IsActive پیش‌فرض تیک.
+/// §16: ID دستی از IDGeneration ("GeoLocation")؛ بلوک کامل ارث‌بری
+/// AppBaseEntity ۸فیلدی — تا استقرار IAM = SYSTEM_ACTOR (دفتر مرکزی، ID=1).
+model GeoLocation {
+  id                   BigInt   @id @map("ID")
+  parentRef            BigInt   @default(0) @map("ParentRef") // 0 = ریشهٔ مجازی فرم (کشور)
+  levelType            Int      @map("LevelType") // 1=Country 2=Province 3=City 4=Village 5=Street 6=Alley
+  code                 Int      @map("Code") // عددی، یکتا بین خواهرها
+  title                String   @map("Title")
+  titleLatin           String   @map("TitleLatin")
+  isActive             Boolean  @default(true) @map("IsActive")
+  version              Int      @default(1) @map("Version") // §2.5 auto-rowversion
+  creator              String   @map("Creator") // IAM UserID
+  lastModifier         String?  @map("LastModifier")
+  businessStructureRef BigInt   @map("BusinessStructureRef")
+  companyRef           BigInt?  @map("CompanyRef")
+  branchRef            BigInt?  @map("BranchRef")
+  agencyRef            BigInt?  @map("AgencyRef")
+  shopRef              BigInt?  @map("ShopRef")
+  createdAt            DateTime @default(now()) @map("CreatedAt")
+  updatedAt            DateTime @updatedAt @map("UpdatedAt")
+
+  @@unique([parentRef, code])
+  @@map("GeoLocation")
+}
+
 /// PartyPerson — تب «افراد مرتبط»: نام / نام خانوادگی (اجباری) / نسبت /
 /// کد ملی / شماره تلفن / توضیحات. با ثبت/ویرایشِ طرف حساب بازنویسی می‌شود.
 model PartyPerson {

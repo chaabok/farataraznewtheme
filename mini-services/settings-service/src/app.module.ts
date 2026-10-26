@@ -11,6 +11,7 @@ import { FiscalYearModule } from "./fiscal-year/fiscal-year.module";
 import { PartyModule } from "./party/party.module";
 import { DataTranslationsModule } from "./data-translations/data-translations.module";
 import { UserRolesModule } from "./user-roles/user-roles.module";
+import { GeoLocationModule } from "./geo-location/geo-location.module";
 import { HealthController } from "./health/health.controller";
 import { SeedModule } from "./seed/seed.module";
 
@@ -26,6 +27,7 @@ import { SeedModule } from "./seed/seed.module";
     PartyModule,
     DataTranslationsModule, // Task 92 — انبار ترجمهٔ دادهٔ فرم‌های سیستمی
     UserRolesModule, // Task 100 — نقش‌های کاربری (مدیریت کاربران)
+    GeoLocationModule, // Task 103 — محل‌های جغرافیایی (اطلاعات پایه)
     SeedModule,
   ],
   controllers: [HealthController],

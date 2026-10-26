@@ -539,59 +539,356 @@ error: Failed to start server. Is port 3001 in use?
       at <anonymous> (/home/z/my-project/mini-services/settings-service/node_modules/@nestjs/core/nest-application.js:191:30)
       at new Promise (1:11)
       at listen (/home/z/my-project/mini-services/settings-service/node_modules/@nestjs/core/nest-application.js:181:16)
-est] 15442  - 10/26/2026, 12:27:30 AM     LOG [NestFactory] Starting Nest application...
-[Nest] 15442  - 10/26/2026, 12:27:30 AM     LOG [InstanceLoader] PrismaModule dependencies initialized +21ms
-[Nest] 15442  - 10/26/2026, 12:27:30 AM     LOG [InstanceLoader] IdGenerationModule dependencies initialized +1ms
-[Nest] 15442  - 10/26/2026, 12:27:30 AM     LOG [InstanceLoader] SeedModule dependencies initialized +1ms
-[Nest] 15442  - 10/26/2026, 12:27:30 AM     LOG [InstanceLoader] AppRegistryModule dependencies initialized +0ms
-[Nest] 15442  - 10/26/2026, 12:27:30 AM     LOG [InstanceLoader] AppModule dependencies initialized +0ms
-[Nest] 15442  - 10/26/2026, 12:27:30 AM     LOG [InstanceLoader] DataTranslationsModule dependencies initialized +1ms
-[Nest] 15442  - 10/26/2026, 12:27:30 AM     LOG [InstanceLoader] SystemsModule dependencies initialized +0ms
-[Nest] 15442  - 10/26/2026, 12:27:30 AM     LOG [InstanceLoader] SoftwareConfigModule dependencies initialized +0ms
-[Nest] 15442  - 10/26/2026, 12:27:30 AM     LOG [InstanceLoader] BusinessStructureModule dependencies initialized +1ms
-[Nest] 15442  - 10/26/2026, 12:27:30 AM     LOG [InstanceLoader] FiscalYearModule dependencies initialized +0ms
-[Nest] 15442  - 10/26/2026, 12:27:30 AM     LOG [InstanceLoader] PartyModule dependencies initialized +0ms
-[Nest] 15442  - 10/26/2026, 12:27:30 AM     LOG [InstanceLoader] UserRolesModule dependencies initialized +0ms
-[Nest] 15442  - 10/26/2026, 12:27:30 AM     LOG [RoutesResolver] HealthController {/}: +4ms
-[Nest] 15442  - 10/26/2026, 12:27:30 AM     LOG [RouterExplorer] Mapped {/health, GET} route +2ms
-[Nest] 15442  - 10/26/2026, 12:27:30 AM     LOG [RoutesResolver] BusinessStructureController {/business-structure}: +1ms
-[Nest] 15442  - 10/26/2026, 12:27:30 AM     LOG [RouterExplorer] Mapped {/business-structure, GET} route +0ms
-[Nest] 15442  - 10/26/2026, 12:27:30 AM     LOG [RouterExplorer] Mapped {/business-structure, POST} route +1ms
-[Nest] 15442  - 10/26/2026, 12:27:30 AM     LOG [RouterExplorer] Mapped {/business-structure/:id, PUT} route +1ms
-[Nest] 15442  - 10/26/2026, 12:27:30 AM     LOG [RouterExplorer] Mapped {/business-structure/:id, DELETE} route +0ms
-[Nest] 15442  - 10/26/2026, 12:27:30 AM     LOG [RoutesResolver] AppRegistryController {/app-registry}: +3ms
-[Nest] 15442  - 10/26/2026, 12:27:30 AM     LOG [RouterExplorer] Mapped {/app-registry, GET} route +0ms
-[Nest] 15442  - 10/26/2026, 12:27:30 AM     LOG [RoutesResolver] SystemsController {/systems}: +0ms
-[Nest] 15442  - 10/26/2026, 12:27:30 AM     LOG [RouterExplorer] Mapped {/systems, GET} route +1ms
-[Nest] 15442  - 10/26/2026, 12:27:30 AM     LOG [RouterExplorer] Mapped {/systems/:code, GET} route +0ms
-[Nest] 15442  - 10/26/2026, 12:27:30 AM     LOG [RoutesResolver] SoftwareConfigController {/software-config}: +1ms
-[Nest] 15442  - 10/26/2026, 12:27:30 AM     LOG [RouterExplorer] Mapped {/software-config, GET} route +1ms
-[Nest] 15442  - 10/26/2026, 12:27:30 AM     LOG [RouterExplorer] Mapped {/software-config/:appKey, GET} route +0ms
-[Nest] 15442  - 10/26/2026, 12:27:30 AM     LOG [RouterExplorer] Mapped {/software-config/:appKey, PUT} route +1ms
-[Nest] 15442  - 10/26/2026, 12:27:30 AM     LOG [RoutesResolver] FiscalYearController {/fiscal-year}: +0ms
-[Nest] 15442  - 10/26/2026, 12:27:30 AM     LOG [RouterExplorer] Mapped {/fiscal-year, GET} route +1ms
-[Nest] 15442  - 10/26/2026, 12:27:30 AM     LOG [RouterExplorer] Mapped {/fiscal-year, POST} route +0ms
-[Nest] 15442  - 10/26/2026, 12:27:30 AM     LOG [RouterExplorer] Mapped {/fiscal-year/:id, PUT} route +1ms
-[Nest] 15442  - 10/26/2026, 12:27:30 AM     LOG [RouterExplorer] Mapped {/fiscal-year/:id, DELETE} route +1ms
-[Nest] 15442  - 10/26/2026, 12:27:30 AM     LOG [RoutesResolver] PartyController {/party}: +0ms
-[Nest] 15442  - 10/26/2026, 12:27:30 AM     LOG [RouterExplorer] Mapped {/party, GET} route +0ms
-[Nest] 15442  - 10/26/2026, 12:27:30 AM     LOG [RouterExplorer] Mapped {/party/next-tafsili, GET} route +1ms
-[Nest] 15442  - 10/26/2026, 12:27:30 AM     LOG [RouterExplorer] Mapped {/party/cities, GET} route +0ms
-[Nest] 15442  - 10/26/2026, 12:27:30 AM     LOG [RouterExplorer] Mapped {/party, POST} route +0ms
-[Nest] 15442  - 10/26/2026, 12:27:30 AM     LOG [RouterExplorer] Mapped {/party/:id, PUT} route +0ms
-[Nest] 15442  - 10/26/2026, 12:27:30 AM     LOG [RouterExplorer] Mapped {/party/:id, DELETE} route +0ms
-[Nest] 15442  - 10/26/2026, 12:27:30 AM     LOG [RoutesResolver] DataTranslationsController {/data-translations}: +0ms
-[Nest] 15442  - 10/26/2026, 12:27:30 AM     LOG [RouterExplorer] Mapped {/data-translations, GET} route +0ms
-[Nest] 15442  - 10/26/2026, 12:27:30 AM     LOG [RouterExplorer] Mapped {/data-translations/save, POST} route +1ms
-[Nest] 15442  - 10/26/2026, 12:27:30 AM     LOG [RoutesResolver] UserRolesController {/user-role}: +0ms
-[Nest] 15442  - 10/26/2026, 12:27:30 AM     LOG [RouterExplorer] Mapped {/user-role, GET} route +0ms
-[Nest] 15442  - 10/26/2026, 12:27:30 AM     LOG [RouterExplorer] Mapped {/user-role, POST} route +0ms
-[Nest] 15442  - 10/26/2026, 12:27:30 AM     LOG [RouterExplorer] Mapped {/user-role/:id, PUT} route +0ms
-[Nest] 15442  - 10/26/2026, 12:27:30 AM     LOG [RouterExplorer] Mapped {/user-role/:id, DELETE} route +0ms
-[Nest] 15442  - 10/26/2026, 12:27:30 AM     LOG [PrismaService] Prisma connected — §2.5 auto-rowversion active on: IDGeneration, Setting, BusinessStructure, BusinessStructureUser, AppRegistry, Systems, SoftwareConfig, FiscalYear, City, Party, PartyPerson, PartyAddress, PartyPhone, DataTranslation, UserRole, UserRoleScope
-[Nest] 15442  - 10/26/2026, 12:27:30 AM     LOG [AppRegistryService] AppRegistry synced (28 apps, 0 changed)
-[Nest] 15442  - 10/26/2026, 12:27:30 AM     LOG [SystemsService] Systems synced from APP_CATALOG (total 28, created 0, updated 0)
-[Nest] 15442  - 10/26/2026, 12:27:30 AM     LOG [NestApplication] Nest application successfully started +25ms
-[Nest] 15442  - 10/26/2026, 12:27:30 AM     LOG [Bootstrap] settings-service listening on http://127.0.0.1:3001
-[Nest] 15442  - 10/26/2026, 12:27:37 AM     LOG [UserRolesService] UserRole created — ID=7 Code=T100 Title=نقش آزمونی ۱۰۰
-[Nest] 15442  - 10/26/2026, 12:33:58 AM     LOG [UserRolesService] UserRole created — ID=8 Code=R100 Title=حسابدار آزمونی ۱۰۰
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [NestFactory] Starting Nest application...
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [InstanceLoader] PrismaModule dependencies initialized +14ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [InstanceLoader] IdGenerationModule dependencies initialized +1ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [InstanceLoader] SeedModule dependencies initialized +1ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [InstanceLoader] AppRegistryModule dependencies initialized +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [InstanceLoader] AppModule dependencies initialized +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [InstanceLoader] DataTranslationsModule dependencies initialized +1ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [InstanceLoader] SystemsModule dependencies initialized +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [InstanceLoader] SoftwareConfigModule dependencies initialized +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [InstanceLoader] BusinessStructureModule dependencies initialized +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [InstanceLoader] FiscalYearModule dependencies initialized +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [InstanceLoader] PartyModule dependencies initialized +1ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [InstanceLoader] UserRolesModule dependencies initialized +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RoutesResolver] HealthController {/}: +1ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RouterExplorer] Mapped {/health, GET} route +2ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RoutesResolver] BusinessStructureController {/business-structure}: +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RouterExplorer] Mapped {/business-structure, GET} route +1ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RouterExplorer] Mapped {/business-structure, POST} route +1ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RouterExplorer] Mapped {/business-structure/:id, PUT} route +1ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RouterExplorer] Mapped {/business-structure/:id, DELETE} route +1ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RoutesResolver] AppRegistryController {/app-registry}: +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RouterExplorer] Mapped {/app-registry, GET} route +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RoutesResolver] SystemsController {/systems}: +1ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RouterExplorer] Mapped {/systems, GET} route +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RouterExplorer] Mapped {/systems/:code, GET} route +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RoutesResolver] SoftwareConfigController {/software-config}: +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RouterExplorer] Mapped {/software-config, GET} route +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RouterExplorer] Mapped {/software-config/:appKey, GET} route +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RouterExplorer] Mapped {/software-config/:appKey, PUT} route +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RoutesResolver] FiscalYearController {/fiscal-year}: +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RouterExplorer] Mapped {/fiscal-year, GET} route +1ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RouterExplorer] Mapped {/fiscal-year, POST} route +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RouterExplorer] Mapped {/fiscal-year/:id, PUT} route +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RouterExplorer] Mapped {/fiscal-year/:id, DELETE} route +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RoutesResolver] PartyController {/party}: +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RouterExplorer] Mapped {/party, GET} route +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RouterExplorer] Mapped {/party/next-tafsili, GET} route +1ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RouterExplorer] Mapped {/party/cities, GET} route +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RouterExplorer] Mapped {/party, POST} route +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RouterExplorer] Mapped {/party/:id, PUT} route +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RouterExplorer] Mapped {/party/:id, DELETE} route +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RoutesResolver] DataTranslationsController {/data-translations}: +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RouterExplorer] Mapped {/data-translations, GET} route +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RouterExplorer] Mapped {/data-translations/save, POST} route +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RoutesResolver] UserRolesController {/user-role}: +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RouterExplorer] Mapped {/user-role, GET} route +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RouterExplorer] Mapped {/user-role, POST} route +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RouterExplorer] Mapped {/user-role/:id, PUT} route +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RouterExplorer] Mapped {/user-role/:id, DELETE} route +1ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [NestFactory] Starting Nest application...
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [InstanceLoader] PrismaModule dependencies initialized +15ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [InstanceLoader] IdGenerationModule dependencies initialized +1ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [InstanceLoader] SeedModule dependencies initialized +1ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [InstanceLoader] AppRegistryModule dependencies initialized +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [InstanceLoader] AppModule dependencies initialized +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [InstanceLoader] DataTranslationsModule dependencies initialized +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [InstanceLoader] SystemsModule dependencies initialized +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [InstanceLoader] SoftwareConfigModule dependencies initialized +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [InstanceLoader] BusinessStructureModule dependencies initialized +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [InstanceLoader] FiscalYearModule dependencies initialized +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [InstanceLoader] PartyModule dependencies initialized +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [InstanceLoader] UserRolesModule dependencies initialized +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RoutesResolver] HealthController {/}: +2ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RouterExplorer] Mapped {/health, GET} route +1ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RoutesResolver] BusinessStructureController {/business-structure}: +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RouterExplorer] Mapped {/business-structure, GET} route +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RouterExplorer] Mapped {/business-structure, POST} route +1ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RouterExplorer] Mapped {/business-structure/:id, PUT} route +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RouterExplorer] Mapped {/business-structure/:id, DELETE} route +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RoutesResolver] AppRegistryController {/app-registry}: +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RouterExplorer] Mapped {/app-registry, GET} route +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RoutesResolver] SystemsController {/systems}: +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RouterExplorer] Mapped {/systems, GET} route +1ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RouterExplorer] Mapped {/systems/:code, GET} route +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RoutesResolver] SoftwareConfigController {/software-config}: +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RouterExplorer] Mapped {/software-config, GET} route +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RouterExplorer] Mapped {/software-config/:appKey, GET} route +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RouterExplorer] Mapped {/software-config/:appKey, PUT} route +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RoutesResolver] FiscalYearController {/fiscal-year}: +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RouterExplorer] Mapped {/fiscal-year, GET} route +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RouterExplorer] Mapped {/fiscal-year, POST} route +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RouterExplorer] Mapped {/fiscal-year/:id, PUT} route +1ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RouterExplorer] Mapped {/fiscal-year/:id, DELETE} route +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RoutesResolver] PartyController {/party}: +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RouterExplorer] Mapped {/party, GET} route +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RouterExplorer] Mapped {/party/next-tafsili, GET} route +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RouterExplorer] Mapped {/party/cities, GET} route +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RouterExplorer] Mapped {/party, POST} route +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RouterExplorer] Mapped {/party/:id, PUT} route +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RouterExplorer] Mapped {/party/:id, DELETE} route +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RoutesResolver] DataTranslationsController {/data-translations}: +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RouterExplorer] Mapped {/data-translations, GET} route +1ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RouterExplorer] Mapped {/data-translations/save, POST} route +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RoutesResolver] UserRolesController {/user-role}: +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RouterExplorer] Mapped {/user-role, GET} route +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RouterExplorer] Mapped {/user-role, POST} route +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RouterExplorer] Mapped {/user-role/:id, PUT} route +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [RouterExplorer] Mapped {/user-role/:id, DELETE} route +0ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [PrismaService] Prisma connected — §2.5 auto-rowversion active on: IDGeneration, Setting, BusinessStructure, BusinessStructureUser, AppRegistry, Systems, SoftwareConfig, FiscalYear, City, Party, PartyPerson, PartyAddress, PartyPhone, DataTranslation, UserRole, UserRoleScope
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [PrismaService] Prisma connected — §2.5 auto-rowversion active on: IDGeneration, Setting, BusinessStructure, BusinessStructureUser, AppRegistry, Systems, SoftwareConfig, FiscalYear, City, Party, PartyPerson, PartyAddress, PartyPhone, DataTranslation, UserRole, UserRoleScope, GeoLocation
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [AppRegistryService] AppRegistry synced (28 apps, 0 changed)
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [SystemsService] Systems synced from APP_CATALOG (total 28, created 0, updated 0)
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [AppRegistryService] AppRegistry synced (28 apps, 0 changed)
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [SystemsService] Systems synced from APP_CATALOG (total 28, created 0, updated 0)
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [NestApplication] Nest application successfully started +35ms
+[Nest] 6581  - 10/26/2026, 5:22:25 AM     LOG [NestApplication] Nest application successfully started +32ms
+[Nest] 6581  - 10/26/2026, 5:23:46 AM     LOG [NestFactory] Starting Nest application...
+[Nest] 6581  - 10/26/2026, 5:23:46 AM     LOG [InstanceLoader] PrismaModule dependencies initialized +27ms
+[Nest] 6581  - 10/26/2026, 5:23:46 AM     LOG [InstanceLoader] IdGenerationModule dependencies initialized +0ms
+[Nest] 6581  - 10/26/2026, 5:23:46 AM     LOG [InstanceLoader] SeedModule dependencies initialized +1ms
+[Nest] 6581  - 10/26/2026, 5:23:46 AM     LOG [InstanceLoader] AppRegistryModule dependencies initialized +0ms
+[Nest] 6581  - 10/26/2026, 5:23:46 AM     LOG [InstanceLoader] AppModule dependencies initialized +0ms
+[Nest] 6581  - 10/26/2026, 5:23:46 AM     LOG [InstanceLoader] DataTranslationsModule dependencies initialized +1ms
+[Nest] 6581  - 10/26/2026, 5:23:46 AM     LOG [InstanceLoader] SystemsModule dependencies initialized +0ms
+[Nest] 6581  - 10/26/2026, 5:23:46 AM     LOG [InstanceLoader] SoftwareConfigModule dependencies initialized +0ms
+[Nest] 6581  - 10/26/2026, 5:23:46 AM     LOG [InstanceLoader] BusinessStructureModule dependencies initialized +0ms
+[Nest] 6581  - 10/26/2026, 5:23:46 AM     LOG [InstanceLoader] FiscalYearModule dependencies initialized +0ms
+[Nest] 6581  - 10/26/2026, 5:23:46 AM     LOG [InstanceLoader] PartyModule dependencies initialized +0ms
+[Nest] 6581  - 10/26/2026, 5:23:46 AM     LOG [InstanceLoader] UserRolesModule dependencies initialized +0ms
+[Nest] 6581  - 10/26/2026, 5:23:46 AM     LOG [RoutesResolver] HealthController {/}: +2ms
+[Nest] 6581  - 10/26/2026, 5:23:46 AM     LOG [RouterExplorer] Mapped {/health, GET} route +1ms
+[Nest] 6581  - 10/26/2026, 5:23:46 AM     LOG [RoutesResolver] BusinessStructureController {/business-structure}: +0ms
+[Nest] 6581  - 10/26/2026, 5:23:46 AM     LOG [RouterExplorer] Mapped {/business-structure, GET} route +2ms
+[Nest] 6581  - 10/26/2026, 5:23:46 AM     LOG [RouterExplorer] Mapped {/business-structure, POST} route +1ms
+[Nest] 6581  - 10/26/2026, 5:23:46 AM     LOG [RouterExplorer] Mapped {/business-structure/:id, PUT} route +1ms
+[Nest] 6581  - 10/26/2026, 5:23:46 AM     LOG [RouterExplorer] Mapped {/business-structure/:id, DELETE} route +1ms
+[Nest] 6581  - 10/26/2026, 5:23:46 AM     LOG [RoutesResolver] AppRegistryController {/app-registry}: +1ms
+[Nest] 6581  - 10/26/2026, 5:23:46 AM     LOG [RouterExplorer] Mapped {/app-registry, GET} route +0ms
+[Nest] 6581  - 10/26/2026, 5:23:46 AM     LOG [RoutesResolver] SystemsController {/systems}: +1ms
+[Nest] 6581  - 10/26/2026, 5:23:46 AM     LOG [RouterExplorer] Mapped {/systems, GET} route +0ms
+[Nest] 6581  - 10/26/2026, 5:23:46 AM     LOG [RouterExplorer] Mapped {/systems/:code, GET} route +1ms
+[Nest] 6581  - 10/26/2026, 5:23:46 AM     LOG [RoutesResolver] SoftwareConfigController {/software-config}: +0ms
+[Nest] 6581  - 10/26/2026, 5:23:46 AM     LOG [RouterExplorer] Mapped {/software-config, GET} route +0ms
+[Nest] 6581  - 10/26/2026, 5:23:46 AM     LOG [RouterExplorer] Mapped {/software-config/:appKey, GET} route +0ms
+[Nest] 6581  - 10/26/2026, 5:23:46 AM     LOG [RouterExplorer] Mapped {/software-config/:appKey, PUT} route +0ms
+[Nest] 6581  - 10/26/2026, 5:23:46 AM     LOG [RoutesResolver] FiscalYearController {/fiscal-year}: +1ms
+[Nest] 6581  - 10/26/2026, 5:23:46 AM     LOG [RouterExplorer] Mapped {/fiscal-year, GET} route +0ms
+[Nest] 6581  - 10/26/2026, 5:23:46 AM     LOG [RouterExplorer] Mapped {/fiscal-year, POST} route +0ms
+[Nest] 6581  - 10/26/2026, 5:23:46 AM     LOG [RouterExplorer] Mapped {/fiscal-year/:id, PUT} route +0ms
+[Nest] 6581  - 10/26/2026, 5:23:46 AM     LOG [RouterExplorer] Mapped {/fiscal-year/:id, DELETE} route +0ms
+[Nest] 6581  - 10/26/2026, 5:23:46 AM     LOG [RoutesResolver] PartyController {/party}: +0ms
+[Nest] 6581  - 10/26/2026, 5:23:46 AM     LOG [RouterExplorer] Mapped {/party, GET} route +1ms
+[Nest] 6581  - 10/26/2026, 5:23:46 AM     LOG [RouterExplorer] Mapped {/party/next-tafsili, GET} route +0ms
+[Nest] 6581  - 10/26/2026, 5:23:46 AM     LOG [RouterExplorer] Mapped {/party/cities, GET} route +0ms
+[Nest] 6581  - 10/26/2026, 5:23:46 AM     LOG [RouterExplorer] Mapped {/party, POST} route +0ms
+[Nest] 6581  - 10/26/2026, 5:23:46 AM     LOG [RouterExplorer] Mapped {/party/:id, PUT} route +0ms
+[Nest] 6581  - 10/26/2026, 5:23:46 AM     LOG [RouterExplorer] Mapped {/party/:id, DELETE} route +1ms
+[Nest] 6581  - 10/26/2026, 5:23:46 AM     LOG [RoutesResolver] DataTranslationsController {/data-translations}: +0ms
+[Nest] 6581  - 10/26/2026, 5:23:46 AM     LOG [RouterExplorer] Mapped {/data-translations, GET} route +0ms
+[Nest] 6581  - 10/26/2026, 5:23:46 AM     LOG [RouterExplorer] Mapped {/data-translations/save, POST} route +0ms
+[Nest] 6581  - 10/26/2026, 5:23:46 AM     LOG [RoutesResolver] UserRolesController {/user-role}: +0ms
+[Nest] 6581  - 10/26/2026, 5:23:46 AM     LOG [RouterExplorer] Mapped {/user-role, GET} route +0ms
+[Nest] 6581  - 10/26/2026, 5:23:46 AM     LOG [RouterExplorer] Mapped {/user-role, POST} route +0ms
+[Nest] 6581  - 10/26/2026, 5:23:46 AM     LOG [RouterExplorer] Mapped {/user-role/:id, PUT} route +1ms
+[Nest] 6581  - 10/26/2026, 5:23:46 AM     LOG [RouterExplorer] Mapped {/user-role/:id, DELETE} route +1ms
+[Nest] 6581  - 10/26/2026, 5:23:46 AM     LOG [PrismaService] Prisma connected — §2.5 auto-rowversion active on: IDGeneration, Setting, BusinessStructure, BusinessStructureUser, AppRegistry, Systems, SoftwareConfig, FiscalYear, City, Party, PartyPerson, PartyAddress, PartyPhone, DataTranslation, UserRole, UserRoleScope, GeoLocation
+[Nest] 6581  - 10/26/2026, 5:23:46 AM     LOG [NestFactory] Starting Nest application...
+[Nest] 6581  - 10/26/2026, 5:23:46 AM     LOG [InstanceLoader] PrismaModule dependencies initialized +30ms
+[Nest] 6581  - 10/26/2026, 5:23:46 AM     LOG [InstanceLoader] IdGenerationModule dependencies initialized +1ms
+[Nest] 6581  - 10/26/2026, 5:23:46 AM     LOG [InstanceLoader] SeedModule dependencies initialized +1ms
+[Nest] 6581  - 10/26/2026, 5:23:46 AM     LOG [InstanceLoader] AppRegistryModule dependencies initialized +1ms
+[Nest] 6581  - 10/26/2026, 5:23:46 AM     LOG [InstanceLoader] AppModule dependencies initialized +0ms
+[Nest] 6581  - 10/26/2026, 5:23:46 AM     LOG [InstanceLoader] DataTranslationsModule dependencies initialized +0ms
+[Nest] 6581  - 10/26/2026, 5:23:46 AM     LOG [InstanceLoader] SystemsModule dependencies initialized +0ms
+[Nest] 6581  - 10/26/2026, 5:23:46 AM     LOG [InstanceLoader] SoftwareConfigModule dependencies initialized +0ms
+[Nest] 6581  - 10/26/2026, 5:23:47 AM     LOG [InstanceLoader] BusinessStructureModule dependencies initialized +1ms
+[Nest] 6581  - 10/26/2026, 5:23:47 AM     LOG [InstanceLoader] FiscalYearModule dependencies initialized +0ms
+[Nest] 6581  - 10/26/2026, 5:23:47 AM     LOG [InstanceLoader] PartyModule dependencies initialized +0ms
+[Nest] 6581  - 10/26/2026, 5:23:47 AM     LOG [InstanceLoader] UserRolesModule dependencies initialized +0ms
+[Nest] 6581  - 10/26/2026, 5:23:47 AM     LOG [InstanceLoader] GeoLocationModule dependencies initialized +0ms
+[Nest] 6581  - 10/26/2026, 5:23:47 AM     LOG [RoutesResolver] HealthController {/}: +1ms
+[Nest] 6581  - 10/26/2026, 5:23:47 AM     LOG [RouterExplorer] Mapped {/health, GET} route +2ms
+[Nest] 6581  - 10/26/2026, 5:23:47 AM     LOG [RoutesResolver] BusinessStructureController {/business-structure}: +0ms
+[Nest] 6581  - 10/26/2026, 5:23:47 AM     LOG [RouterExplorer] Mapped {/business-structure, GET} route +2ms
+[Nest] 6581  - 10/26/2026, 5:23:47 AM     LOG [RouterExplorer] Mapped {/business-structure, POST} route +0ms
+[Nest] 6581  - 10/26/2026, 5:23:47 AM     LOG [RouterExplorer] Mapped {/business-structure/:id, PUT} route +2ms
+[Nest] 6581  - 10/26/2026, 5:23:47 AM     LOG [RouterExplorer] Mapped {/business-structure/:id, DELETE} route +2ms
+[Nest] 6581  - 10/26/2026, 5:23:47 AM     LOG [RoutesResolver] AppRegistryController {/app-registry}: +0ms
+[Nest] 6581  - 10/26/2026, 5:23:47 AM     LOG [RouterExplorer] Mapped {/app-registry, GET} route +1ms
+[Nest] 6581  - 10/26/2026, 5:23:47 AM     LOG [RoutesResolver] SystemsController {/systems}: +1ms
+[Nest] 6581  - 10/26/2026, 5:23:47 AM     LOG [RouterExplorer] Mapped {/systems, GET} route +0ms
+[Nest] 6581  - 10/26/2026, 5:23:47 AM     LOG [RouterExplorer] Mapped {/systems/:code, GET} route +0ms
+[Nest] 6581  - 10/26/2026, 5:23:47 AM     LOG [RoutesResolver] SoftwareConfigController {/software-config}: +1ms
+[Nest] 6581  - 10/26/2026, 5:23:47 AM     LOG [RouterExplorer] Mapped {/software-config, GET} route +0ms
+[Nest] 6581  - 10/26/2026, 5:23:47 AM     LOG [RouterExplorer] Mapped {/software-config/:appKey, GET} route +0ms
+[Nest] 6581  - 10/26/2026, 5:23:47 AM     LOG [RouterExplorer] Mapped {/software-config/:appKey, PUT} route +0ms
+[Nest] 6581  - 10/26/2026, 5:23:47 AM     LOG [RoutesResolver] FiscalYearController {/fiscal-year}: +0ms
+[Nest] 6581  - 10/26/2026, 5:23:47 AM     LOG [RouterExplorer] Mapped {/fiscal-year, GET} route +0ms
+[Nest] 6581  - 10/26/2026, 5:23:47 AM     LOG [RouterExplorer] Mapped {/fiscal-year, POST} route +1ms
+[Nest] 6581  - 10/26/2026, 5:23:47 AM     LOG [RouterExplorer] Mapped {/fiscal-year/:id, PUT} route +0ms
+[Nest] 6581  - 10/26/2026, 5:23:47 AM     LOG [RouterExplorer] Mapped {/fiscal-year/:id, DELETE} route +0ms
+[Nest] 6581  - 10/26/2026, 5:23:47 AM     LOG [RoutesResolver] PartyController {/party}: +0ms
+[Nest] 6581  - 10/26/2026, 5:23:47 AM     LOG [RouterExplorer] Mapped {/party, GET} route +1ms
+[Nest] 6581  - 10/26/2026, 5:23:47 AM     LOG [RouterExplorer] Mapped {/party/next-tafsili, GET} route +1ms
+[Nest] 6581  - 10/26/2026, 5:23:47 AM     LOG [RouterExplorer] Mapped {/party/cities, GET} route +0ms
+[Nest] 6581  - 10/26/2026, 5:23:47 AM     LOG [RouterExplorer] Mapped {/party, POST} route +0ms
+[Nest] 6581  - 10/26/2026, 5:23:47 AM     LOG [RouterExplorer] Mapped {/party/:id, PUT} route +0ms
+[Nest] 6581  - 10/26/2026, 5:23:47 AM     LOG [RouterExplorer] Mapped {/party/:id, DELETE} route +0ms
+[Nest] 6581  - 10/26/2026, 5:23:47 AM     LOG [RoutesResolver] DataTranslationsController {/data-translations}: +0ms
+[Nest] 6581  - 10/26/2026, 5:23:47 AM     LOG [RouterExplorer] Mapped {/data-translations, GET} route +1ms
+[Nest] 6581  - 10/26/2026, 5:23:47 AM     LOG [RouterExplorer] Mapped {/data-translations/save, POST} route +0ms
+[Nest] 6581  - 10/26/2026, 5:23:47 AM     LOG [RoutesResolver] UserRolesController {/user-role}: +0ms
+[Nest] 6581  - 10/26/2026, 5:23:47 AM     LOG [RouterExplorer] Mapped {/user-role, GET} route +1ms
+[Nest] 6581  - 10/26/2026, 5:23:47 AM     LOG [RouterExplorer] Mapped {/user-role, POST} route +1ms
+[Nest] 6581  - 10/26/2026, 5:23:47 AM     LOG [RouterExplorer] Mapped {/user-role/:id, PUT} route +1ms
+[Nest] 6581  - 10/26/2026, 5:23:47 AM     LOG [RouterExplorer] Mapped {/user-role/:id, DELETE} route +1ms
+[Nest] 6581  - 10/26/2026, 5:23:47 AM     LOG [RoutesResolver] GeoLocationController {/geo-location}: +0ms
+[Nest] 6581  - 10/26/2026, 5:23:47 AM     LOG [RouterExplorer] Mapped {/geo-location, GET} route +0ms
+[Nest] 6581  - 10/26/2026, 5:23:47 AM     LOG [RouterExplorer] Mapped {/geo-location, POST} route +1ms
+[Nest] 6581  - 10/26/2026, 5:23:47 AM     LOG [RouterExplorer] Mapped {/geo-location/:id, PUT} route +0ms
+[Nest] 6581  - 10/26/2026, 5:23:47 AM     LOG [RouterExplorer] Mapped {/geo-location/:id, DELETE} route +1ms
+[Nest] 6581  - 10/26/2026, 5:23:47 AM     LOG [PrismaService] Prisma connected — §2.5 auto-rowversion active on: IDGeneration, Setting, BusinessStructure, BusinessStructureUser, AppRegistry, Systems, SoftwareConfig, FiscalYear, City, Party, PartyPerson, PartyAddress, PartyPhone, DataTranslation, UserRole, UserRoleScope, GeoLocation
+[Nest] 6581  - 10/26/2026, 5:23:47 AM     LOG [AppRegistryService] AppRegistry synced (28 apps, 0 changed)
+[Nest] 6581  - 10/26/2026, 5:23:47 AM     LOG [SystemsService] Systems synced from APP_CATALOG (total 28, created 0, updated 0)
+[Nest] 6581  - 10/26/2026, 5:23:47 AM     LOG [AppRegistryService] AppRegistry synced (28 apps, 0 changed)
+[Nest] 6581  - 10/26/2026, 5:23:47 AM     LOG [SystemsService] Systems synced from APP_CATALOG (total 28, created 0, updated 0)
+[Nest] 6581  - 10/26/2026, 5:23:47 AM     LOG [NestApplication] Nest application successfully started +21ms
+[Nest] 6581  - 10/26/2026, 5:23:47 AM     LOG [NestApplication] Nest application successfully started +22ms
+3:46 AM     LOG [InstanceLoader] PrismaModule dependencies initialized +8ms
+[Nest] 15442  - 10/26/2026, 5:23:46 AM     LOG [InstanceLoader] IdGenerationModule dependencies initialized +1ms
+[Nest] 15442  - 10/26/2026, 5:23:46 AM     LOG [InstanceLoader] SeedModule dependencies initialized +1ms
+[Nest] 15442  - 10/26/2026, 5:23:46 AM     LOG [InstanceLoader] AppRegistryModule dependencies initialized +0ms
+[Nest] 15442  - 10/26/2026, 5:23:46 AM     LOG [InstanceLoader] AppModule dependencies initialized +0ms
+[Nest] 15442  - 10/26/2026, 5:23:46 AM     LOG [InstanceLoader] DataTranslationsModule dependencies initialized +0ms
+[Nest] 15442  - 10/26/2026, 5:23:46 AM     LOG [InstanceLoader] SystemsModule dependencies initialized +0ms
+[Nest] 15442  - 10/26/2026, 5:23:46 AM     LOG [InstanceLoader] SoftwareConfigModule dependencies initialized +0ms
+[Nest] 15442  - 10/26/2026, 5:23:46 AM     LOG [InstanceLoader] BusinessStructureModule dependencies initialized +0ms
+[Nest] 15442  - 10/26/2026, 5:23:46 AM     LOG [InstanceLoader] FiscalYearModule dependencies initialized +0ms
+[Nest] 15442  - 10/26/2026, 5:23:46 AM     LOG [InstanceLoader] PartyModule dependencies initialized +0ms
+[Nest] 15442  - 10/26/2026, 5:23:46 AM     LOG [InstanceLoader] UserRolesModule dependencies initialized +0ms
+[Nest] 15442  - 10/26/2026, 5:23:46 AM     LOG [InstanceLoader] GeoLocationModule dependencies initialized +0ms
+[Nest] 15442  - 10/26/2026, 5:23:46 AM     LOG [RoutesResolver] HealthController {/}: +2ms
+[Nest] 15442  - 10/26/2026, 5:23:46 AM     LOG [RouterExplorer] Mapped {/health, GET} route +1ms
+[Nest] 15442  - 10/26/2026, 5:23:46 AM     LOG [RoutesResolver] BusinessStructureController {/business-structure}: +0ms
+[Nest] 15442  - 10/26/2026, 5:23:46 AM     LOG [RouterExplorer] Mapped {/business-structure, GET} route +1ms
+[Nest] 15442  - 10/26/2026, 5:23:46 AM     LOG [RouterExplorer] Mapped {/business-structure, POST} route +0ms
+[Nest] 15442  - 10/26/2026, 5:23:46 AM     LOG [RouterExplorer] Mapped {/business-structure/:id, PUT} route +0ms
+[Nest] 15442  - 10/26/2026, 5:23:46 AM     LOG [RouterExplorer] Mapped {/business-structure/:id, DELETE} route +0ms
+[Nest] 15442  - 10/26/2026, 5:23:46 AM     LOG [RoutesResolver] AppRegistryController {/app-registry}: +0ms
+[Nest] 15442  - 10/26/2026, 5:23:46 AM     LOG [RouterExplorer] Mapped {/app-registry, GET} route +1ms
+[Nest] 15442  - 10/26/2026, 5:23:46 AM     LOG [RoutesResolver] SystemsController {/systems}: +0ms
+[Nest] 15442  - 10/26/2026, 5:23:46 AM     LOG [RouterExplorer] Mapped {/systems, GET} route +0ms
+[Nest] 15442  - 10/26/2026, 5:23:46 AM     LOG [RouterExplorer] Mapped {/systems/:code, GET} route +0ms
+[Nest] 15442  - 10/26/2026, 5:23:46 AM     LOG [RoutesResolver] SoftwareConfigController {/software-config}: +0ms
+[Nest] 15442  - 10/26/2026, 5:23:46 AM     LOG [RouterExplorer] Mapped {/software-config, GET} route +0ms
+[Nest] 15442  - 10/26/2026, 5:23:46 AM     LOG [RouterExplorer] Mapped {/software-config/:appKey, GET} route +0ms
+[Nest] 15442  - 10/26/2026, 5:23:46 AM     LOG [RouterExplorer] Mapped {/software-config/:appKey, PUT} route +0ms
+[Nest] 15442  - 10/26/2026, 5:23:46 AM     LOG [RoutesResolver] FiscalYearController {/fiscal-year}: +0ms
+[Nest] 15442  - 10/26/2026, 5:23:46 AM     LOG [RouterExplorer] Mapped {/fiscal-year, GET} route +0ms
+[Nest] 15442  - 10/26/2026, 5:23:46 AM     LOG [RouterExplorer] Mapped {/fiscal-year, POST} route +0ms
+[Nest] 15442  - 10/26/2026, 5:23:46 AM     LOG [RouterExplorer] Mapped {/fiscal-year/:id, PUT} route +1ms
+[Nest] 15442  - 10/26/2026, 5:23:46 AM     LOG [RouterExplorer] Mapped {/fiscal-year/:id, DELETE} route +0ms
+[Nest] 15442  - 10/26/2026, 5:23:46 AM     LOG [RoutesResolver] PartyController {/party}: +0ms
+[Nest] 15442  - 10/26/2026, 5:23:46 AM     LOG [RouterExplorer] Mapped {/party, GET} route +0ms
+[Nest] 15442  - 10/26/2026, 5:23:46 AM     LOG [RouterExplorer] Mapped {/party/next-tafsili, GET} route +0ms
+[Nest] 15442  - 10/26/2026, 5:23:46 AM     LOG [RouterExplorer] Mapped {/party/cities, GET} route +0ms
+[Nest] 15442  - 10/26/2026, 5:23:46 AM     LOG [RouterExplorer] Mapped {/party, POST} route +0ms
+[Nest] 15442  - 10/26/2026, 5:23:46 AM     LOG [RouterExplorer] Mapped {/party/:id, PUT} route +0ms
+[Nest] 15442  - 10/26/2026, 5:23:46 AM     LOG [RouterExplorer] Mapped {/party/:id, DELETE} route +0ms
+[Nest] 15442  - 10/26/2026, 5:23:46 AM     LOG [RoutesResolver] DataTranslationsController {/data-translations}: +0ms
+[Nest] 15442  - 10/26/2026, 5:23:46 AM     LOG [RouterExplorer] Mapped {/data-translations, GET} route +1ms
+[Nest] 15442  - 10/26/2026, 5:23:46 AM     LOG [RouterExplorer] Mapped {/data-translations/save, POST} route +3ms
+[Nest] 15442  - 10/26/2026, 5:23:46 AM     LOG [RoutesResolver] UserRolesController {/user-role}: +0ms
+[Nest] 15442  - 10/26/2026, 5:23:46 AM     LOG [RouterExplorer] Mapped {/user-role, GET} route +0ms
+[Nest] 15442  - 10/26/2026, 5:23:46 AM     LOG [RouterExplorer] Mapped {/user-role, POST} route +0ms
+[Nest] 15442  - 10/26/2026, 5:23:46 AM     LOG [RouterExplorer] Mapped {/user-role/:id, PUT} route +0ms
+[Nest] 15442  - 10/26/2026, 5:23:46 AM     LOG [RouterExplorer] Mapped {/user-role/:id, DELETE} route +0ms
+[Nest] 15442  - 10/26/2026, 5:23:46 AM     LOG [RoutesResolver] GeoLocationController {/geo-location}: +0ms
+[Nest] 15442  - 10/26/2026, 5:23:46 AM     LOG [RouterExplorer] Mapped {/geo-location, GET} route +0ms
+[Nest] 15442  - 10/26/2026, 5:23:46 AM     LOG [RouterExplorer] Mapped {/geo-location, POST} route +1ms
+[Nest] 15442  - 10/26/2026, 5:23:46 AM     LOG [RouterExplorer] Mapped {/geo-location/:id, PUT} route +2ms
+[Nest] 15442  - 10/26/2026, 5:23:46 AM     LOG [RouterExplorer] Mapped {/geo-location/:id, DELETE} route +0ms
+[Nest] 15442  - 10/26/2026, 5:23:46 AM     LOG [PrismaService] Prisma connected — §2.5 auto-rowversion active on: IDGeneration, Setting, BusinessStructure, BusinessStructureUser, AppRegistry, Systems, SoftwareConfig, FiscalYear, City, Party, PartyPerson, PartyAddress, PartyPhone, DataTranslation, UserRole, UserRoleScope, GeoLocation
+[Nest] 15442  - 10/26/2026, 5:23:46 AM     LOG [AppRegistryService] AppRegistry synced (28 apps, 0 changed)
+[Nest] 15442  - 10/26/2026, 5:23:46 AM     LOG [SystemsService] Systems synced from APP_CATALOG (total 28, created 0, updated 0)
+[Nest] 15442  - 10/26/2026, 5:23:47 AM     LOG [AppRegistryService] AppRegistry synced (28 apps, 0 changed)
+[Nest] 15442  - 10/26/2026, 5:23:47 AM     LOG [SystemsService] Systems synced from APP_CATALOG (total 28, created 0, updated 0)
+[Nest] 15442  - 10/26/2026, 5:23:47 AM     LOG [NestApplication] Nest application successfully started +117ms
+[Nest] 15442  - 10/26/2026, 5:23:47 AM     LOG [NestApplication] Nest application successfully started +90ms
+[Nest] 15442  - 10/26/2026, 5:23:47 AM     LOG [Bootstrap] settings-service listening on http://127.0.0.1:3001
+[Nest] 15442  - 10/26/2026, 5:23:47 AM     LOG [Bootstrap] settings-service listening on http://127.0.0.1:3001
+[Nest] 15442  - 10/26/2026, 5:24:16 AM   ERROR [ExceptionsHandler] TypeError: undefined is not an object (evaluating 'this.prisma.geoLocation.findMany')
+    at list (/home/z/my-project/mini-services/settings-service/src/geo-location/geo-location.service.ts:86:19)
+    at intercept (/home/z/my-project/mini-services/settings-service/node_modules/@nestjs/core/interceptors/interceptors-consumer.js:12:20)
+    at <anonymous> (/home/z/my-project/mini-services/settings-service/node_modules/@nestjs/core/router/router-execution-context.js:54:64)
+    at async <anonymous> (/home/z/my-project/mini-services/settings-service/node_modules/@nestjs/core/router/router-proxy.js:9:23)
+    at processTicksAndRejections (native:7:39)
+[Nest] 15442  - 10/26/2026, 5:24:24 AM   ERROR [ExceptionsHandler] TypeError: undefined is not an object (evaluating 'this.prisma.geoLocation.findMany')
+    at list (/home/z/my-project/mini-services/settings-service/src/geo-location/geo-location.service.ts:86:19)
+    at intercept (/home/z/my-project/mini-services/settings-service/node_modules/@nestjs/core/interceptors/interceptors-consumer.js:12:20)
+    at <anonymous> (/home/z/my-project/mini-services/settings-service/node_modules/@nestjs/core/router/router-execution-context.js:54:64)
+    at async <anonymous> (/home/z/my-project/mini-services/settings-service/node_modules/@nestjs/core/router/router-proxy.js:9:23)
+    at processTicksAndRejections (native:7:39)
+[Nest] 24344  - 10/26/2026, 5:24:54 AM     LOG [NestFactory] Starting Nest application...
+[Nest] 24344  - 10/26/2026, 5:24:54 AM     LOG [InstanceLoader] PrismaModule dependencies initialized +17ms
+[Nest] 24344  - 10/26/2026, 5:24:54 AM     LOG [InstanceLoader] IdGenerationModule dependencies initialized +1ms
+[Nest] 24344  - 10/26/2026, 5:24:54 AM     LOG [InstanceLoader] SeedModule dependencies initialized +1ms
+[Nest] 24344  - 10/26/2026, 5:24:54 AM     LOG [InstanceLoader] AppRegistryModule dependencies initialized +0ms
+[Nest] 24344  - 10/26/2026, 5:24:54 AM     LOG [InstanceLoader] AppModule dependencies initialized +0ms
+[Nest] 24344  - 10/26/2026, 5:24:54 AM     LOG [InstanceLoader] DataTranslationsModule dependencies initialized +0ms
+[Nest] 24344  - 10/26/2026, 5:24:54 AM     LOG [InstanceLoader] SystemsModule dependencies initialized +1ms
+[Nest] 24344  - 10/26/2026, 5:24:54 AM     LOG [InstanceLoader] SoftwareConfigModule dependencies initialized +0ms
+[Nest] 24344  - 10/26/2026, 5:24:54 AM     LOG [InstanceLoader] BusinessStructureModule dependencies initialized +0ms
+[Nest] 24344  - 10/26/2026, 5:24:54 AM     LOG [InstanceLoader] FiscalYearModule dependencies initialized +0ms
+[Nest] 24344  - 10/26/2026, 5:24:54 AM     LOG [InstanceLoader] PartyModule dependencies initialized +0ms
+[Nest] 24344  - 10/26/2026, 5:24:54 AM     LOG [InstanceLoader] UserRolesModule dependencies initialized +0ms
+[Nest] 24344  - 10/26/2026, 5:24:54 AM     LOG [InstanceLoader] GeoLocationModule dependencies initialized +0ms
+[Nest] 24344  - 10/26/2026, 5:24:54 AM     LOG [RoutesResolver] HealthController {/}: +3ms
+[Nest] 24344  - 10/26/2026, 5:24:54 AM     LOG [RouterExplorer] Mapped {/health, GET} route +3ms
+[Nest] 24344  - 10/26/2026, 5:24:54 AM     LOG [RoutesResolver] BusinessStructureController {/business-structure}: +0ms
+[Nest] 24344  - 10/26/2026, 5:24:54 AM     LOG [RouterExplorer] Mapped {/business-structure, GET} route +0ms
+[Nest] 24344  - 10/26/2026, 5:24:54 AM     LOG [RouterExplorer] Mapped {/business-structure, POST} route +1ms
+[Nest] 24344  - 10/26/2026, 5:24:54 AM     LOG [RouterExplorer] Mapped {/business-structure/:id, PUT} route +0ms
+[Nest] 24344  - 10/26/2026, 5:24:54 AM     LOG [RouterExplorer] Mapped {/business-structure/:id, DELETE} route +1ms
+[Nest] 24344  - 10/26/2026, 5:24:54 AM     LOG [RoutesResolver] AppRegistryController {/app-registry}: +0ms
+[Nest] 24344  - 10/26/2026, 5:24:54 AM     LOG [RouterExplorer] Mapped {/app-registry, GET} route +0ms
+[Nest] 24344  - 10/26/2026, 5:24:54 AM     LOG [RoutesResolver] SystemsController {/systems}: +0ms
+[Nest] 24344  - 10/26/2026, 5:24:54 AM     LOG [RouterExplorer] Mapped {/systems, GET} route +0ms
+[Nest] 24344  - 10/26/2026, 5:24:54 AM     LOG [RouterExplorer] Mapped {/systems/:code, GET} route +0ms
+[Nest] 24344  - 10/26/2026, 5:24:54 AM     LOG [RoutesResolver] SoftwareConfigController {/software-config}: +0ms
+[Nest] 24344  - 10/26/2026, 5:24:54 AM     LOG [RouterExplorer] Mapped {/software-config, GET} route +1ms
+[Nest] 24344  - 10/26/2026, 5:24:54 AM     LOG [RouterExplorer] Mapped {/software-config/:appKey, GET} route +0ms
+[Nest] 24344  - 10/26/2026, 5:24:54 AM     LOG [RouterExplorer] Mapped {/software-config/:appKey, PUT} route +0ms
+[Nest] 24344  - 10/26/2026, 5:24:54 AM     LOG [RoutesResolver] FiscalYearController {/fiscal-year}: +0ms
+[Nest] 24344  - 10/26/2026, 5:24:54 AM     LOG [RouterExplorer] Mapped {/fiscal-year, GET} route +0ms
+[Nest] 24344  - 10/26/2026, 5:24:54 AM     LOG [RouterExplorer] Mapped {/fiscal-year, POST} route +0ms
+[Nest] 24344  - 10/26/2026, 5:24:54 AM     LOG [RouterExplorer] Mapped {/fiscal-year/:id, PUT} route +1ms
+[Nest] 24344  - 10/26/2026, 5:24:54 AM     LOG [RouterExplorer] Mapped {/fiscal-year/:id, DELETE} route +0ms
+[Nest] 24344  - 10/26/2026, 5:24:54 AM     LOG [RoutesResolver] PartyController {/party}: +0ms
+[Nest] 24344  - 10/26/2026, 5:24:54 AM     LOG [RouterExplorer] Mapped {/party, GET} route +0ms
+[Nest] 24344  - 10/26/2026, 5:24:54 AM     LOG [RouterExplorer] Mapped {/party/next-tafsili, GET} route +0ms
+[Nest] 24344  - 10/26/2026, 5:24:54 AM     LOG [RouterExplorer] Mapped {/party/cities, GET} route +0ms
+[Nest] 24344  - 10/26/2026, 5:24:54 AM     LOG [RouterExplorer] Mapped {/party, POST} route +1ms
+[Nest] 24344  - 10/26/2026, 5:24:54 AM     LOG [RouterExplorer] Mapped {/party/:id, PUT} route +0ms
+[Nest] 24344  - 10/26/2026, 5:24:54 AM     LOG [RouterExplorer] Mapped {/party/:id, DELETE} route +0ms
+[Nest] 24344  - 10/26/2026, 5:24:54 AM     LOG [RoutesResolver] DataTranslationsController {/data-translations}: +0ms
+[Nest] 24344  - 10/26/2026, 5:24:54 AM     LOG [RouterExplorer] Mapped {/data-translations, GET} route +0ms
+[Nest] 24344  - 10/26/2026, 5:24:54 AM     LOG [RouterExplorer] Mapped {/data-translations/save, POST} route +0ms
+[Nest] 24344  - 10/26/2026, 5:24:54 AM     LOG [RoutesResolver] UserRolesController {/user-role}: +0ms
+[Nest] 24344  - 10/26/2026, 5:24:54 AM     LOG [RouterExplorer] Mapped {/user-role, GET} route +0ms
+[Nest] 24344  - 10/26/2026, 5:24:54 AM     LOG [RouterExplorer] Mapped {/user-role, POST} route +1ms
+[Nest] 24344  - 10/26/2026, 5:24:54 AM     LOG [RouterExplorer] Mapped {/user-role/:id, PUT} route +0ms
+[Nest] 24344  - 10/26/2026, 5:24:54 AM     LOG [RouterExplorer] Mapped {/user-role/:id, DELETE} route +0ms
+[Nest] 24344  - 10/26/2026, 5:24:54 AM     LOG [RoutesResolver] GeoLocationController {/geo-location}: +0ms
+[Nest] 24344  - 10/26/2026, 5:24:54 AM     LOG [RouterExplorer] Mapped {/geo-location, GET} route +0ms
+[Nest] 24344  - 10/26/2026, 5:24:54 AM     LOG [RouterExplorer] Mapped {/geo-location, POST} route +0ms
+[Nest] 24344  - 10/26/2026, 5:24:54 AM     LOG [RouterExplorer] Mapped {/geo-location/:id, PUT} route +0ms
+[Nest] 24344  - 10/26/2026, 5:24:54 AM     LOG [RouterExplorer] Mapped {/geo-location/:id, DELETE} route +0ms
+[Nest] 24344  - 10/26/2026, 5:24:54 AM     LOG [PrismaService] Prisma connected — §2.5 auto-rowversion active on: IDGeneration, Setting, BusinessStructure, BusinessStructureUser, AppRegistry, Systems, SoftwareConfig, FiscalYear, City, Party, PartyPerson, PartyAddress, PartyPhone, DataTranslation, UserRole, UserRoleScope, GeoLocation
+[Nest] 24344  - 10/26/2026, 5:24:54 AM     LOG [AppRegistryService] AppRegistry synced (28 apps, 0 changed)
+[Nest] 24344  - 10/26/2026, 5:24:54 AM     LOG [SystemsService] Systems synced from APP_CATALOG (total 28, created 0, updated 0)
+[Nest] 24344  - 10/26/2026, 5:24:54 AM     LOG [NestApplication] Nest application successfully started +24ms
+[Nest] 24344  - 10/26/2026, 5:24:54 AM     LOG [Bootstrap] settings-service listening on http://127.0.0.1:3001

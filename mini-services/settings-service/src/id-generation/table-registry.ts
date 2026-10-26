@@ -28,7 +28,8 @@ export type TableKey =
   | "City" // Task 84 — جدول شهرها (مرجع)
   | "DataTranslation" // Task 92 — انبار ترجمهٔ دادهٔ فرم‌های سیستمی
   | "UserRole" // Task 100 — نقش‌های کاربری (مدیریت کاربران)
-  | "UserRoleScope"; // Task 100 — محدودهٔ دسترسی نقش‌ها
+  | "UserRoleScope" // Task 100 — محدودهٔ دسترسی نقش‌ها
+  | "GeoLocation"; // Task 103 — محل‌های جغرافیایی (درخت اطلاعات پایه)
 
 export const TABLE_REGISTRY: Record<TableKey, TableEntry> = {
   IDGeneration: {
@@ -87,6 +88,10 @@ export const TABLE_REGISTRY: Record<TableKey, TableEntry> = {
   },
   UserRoleScope: {
     canonical: "UserRoleScope", // Task 100 — محدودهٔ دسترسی نقش‌ها
+    pk: "ID",
+  },
+  GeoLocation: {
+    canonical: "GeoLocation", // Task 103 — محل‌های جغرافیایی (درخت اطلاعات پایه)
     pk: "ID",
   },
 };

@@ -40,6 +40,7 @@ const VERSIONED_MODELS: ReadonlySet<string> = new Set([
   "DataTranslation", // Task 92 — انبار ترجمهٔ دادهٔ فرم‌های سیستمی
   "UserRole", // Task 100 — نقش‌های کاربری (مدیریت کاربران)
   "UserRoleScope", // Task 100 — محدودهٔ دسترسی نقش‌ها
+  "GeoLocation", // Task 103 — محل‌های جغرافیایی
 ]);
 
 const VERSION_ACTIONS = new Set(["update", "updateMany", "upsert"]);
