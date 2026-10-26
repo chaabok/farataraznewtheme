@@ -82,8 +82,11 @@ export interface UseRecordTranslationResult {
 
 /** اندازهٔ دستهٔ ارسالی به endpoint دسته‌ای — = MAX_RECORDS سمت BFF */
 const CHUNK_RECORDS = 25;
-/** هم‌زمانی حلقهٔ دسته‌ها — LLM × ۳ موازی (سقف معقول برای پاسخ‌گویی بدون فشار) */
-const CHUNK_CONCURRENCY = 3;
+/** هم‌زمانی حلقهٔ دسته‌ها — تجربهٔ زندهٔ Task 108: سرویس LLM زیر فشار ×۳
+ * 429 می‌دهد؛ ×۲ + صف تلاش‌مجدد + backoff = نرخ پایدار */
+const CHUNK_CONCURRENCY = 2;
+/** بیشینهٔ تلاش هر دسته در صف تلاش‌مجدد قلاب (server-side backoff هم دارد) */
+const CHUNK_MAX_ATTEMPTS = 3;
 
 export function useRecordTranslation(
   opts: UseRecordTranslationOptions,
@@ -165,32 +168,50 @@ export function useRecordTranslation(
       let failedRecords = 0;
       toast.loading(progressMsg(), { id: progressToastId, duration: Infinity });
 
-      const queue = [...chunks];
+      /* صف تلاش‌مجدد (Task 108 — تجربهٔ زندهٔ 429): دستهٔ ناموفق با backoff
+         به انتهای صف برمی‌گردد تا هم‌زمانی پایین بماند و همهٔ دسته‌ها بالاخره
+         ترجمه شوند؛ upsert سرور = امن برای تکرار. */
+      interface ChunkJob {
+        records: SubtreeTranslationRecord[];
+        attempt: number;
+      }
+      const queue: ChunkJob[] = chunks.map((records) => ({ records, attempt: 1 }));
+      const runChunk = async (job: ChunkJob): Promise<boolean> => {
+        try {
+          const res = await fetch("/api/data-translations/auto-translate-batch", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ entityType, langs, records: job.records }),
+          });
+          const json = (await res.json().catch(() => null)) as
+            | { ok?: boolean; message?: string }
+            | null;
+          if (!res.ok || !json?.ok) {
+            throw new Error(json?.message || t("common.error"));
+          }
+          return true;
+        } catch {
+          return false;
+        }
+      };
       const worker = async () => {
         for (;;) {
-          const chunk = queue.shift();
-          if (!chunk) return;
-          try {
-            const res = await fetch("/api/data-translations/auto-translate-batch", {
-              method: "POST",
-              headers: { "content-type": "application/json" },
-              body: JSON.stringify({ entityType, langs, records: chunk }),
-            });
-            const json = (await res.json().catch(() => null)) as
-              | { ok?: boolean; message?: string }
-              | null;
-            if (!res.ok || !json?.ok) {
-              throw new Error(json?.message || t("common.error"));
-            }
-          } catch {
-            /* دستهٔ ناموفق گزارش می‌شود ولی زنجیره ادامه می‌یابد —
-               اجرای دوباره همان سرشاخه فقط زیرشاخه‌های جامانده را ترجمه می‌کند
-               (upsert سرور = امن برای تکرار) */
+          const job = queue.shift();
+          if (!job) return;
+          const ok = await runChunk(job);
+          if (ok) {
+            doneCount += job.records.length;
+            toast.loading(progressMsg(), { id: progressToastId, duration: Infinity });
+          } else if (job.attempt < CHUNK_MAX_ATTEMPTS) {
+            queue.push({ records: job.records, attempt: job.attempt + 1 });
+            /* backoff — نفس‌کشیدن برای سقف نرخ سرویس LLM */
+            await new Promise((r) => setTimeout(r, 3500 * job.attempt));
+          } else {
             failedChunks += 1;
-            failedRecords += chunk.length;
+            failedRecords += job.records.length;
+            doneCount += job.records.length;
+            toast.loading(progressMsg(), { id: progressToastId, duration: Infinity });
           }
-          doneCount += chunk.length;
-          toast.loading(progressMsg(), { id: progressToastId, duration: Infinity });
         }
       };
       await Promise.all(
