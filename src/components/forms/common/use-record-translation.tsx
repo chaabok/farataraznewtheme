@@ -30,7 +30,6 @@
 
 import * as React from "react";
 import { toast } from "sonner";
-import { api } from "@/lib/api";
 import { useT, useSettings } from "@/stores/settings-store";
 import { LOCALES } from "@/i18n/config";
 import {

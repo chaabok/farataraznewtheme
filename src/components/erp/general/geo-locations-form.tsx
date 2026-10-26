@@ -12,7 +12,7 @@
 import * as React from "react";
 import { Building2, CornerDownRight, EarthIcon, MapPinned, Route, TreePine } from "lucide-react";
 import { toast } from "sonner";
-import { useT } from "@/stores/settings-store";
+import { useT, useSettings } from "@/stores/settings-store";
 import { useDesktop } from "@/stores/desktop-store";
 import { api, ApiError } from "@/lib/api";
 import {
@@ -25,6 +25,10 @@ import {
   type ActionBarListItem,
 } from "@/components/forms/action-bar";
 import { useWindowChrome, useTabDirty } from "@/components/desktop/app-window";
+import {
+  useRecordTranslation,
+} from "@/components/forms/common/use-record-translation";
+import type { DataTranslationField } from "@/components/forms/common/data-translations-dialog";
 import { cn } from "@/lib/utils";
 import {
   geoAllowedChildTypes,
@@ -95,6 +99,7 @@ function formFromNode(node: GeoNode): GeoFormState {
 export function GeoLocationsForm({ onBack }: { onBack?: () => void }) {
   const t = useT();
   const chrome = useWindowChrome();
+  const locale = useSettings((s) => s.locale);
   const headerMaximized = useDesktop(
     (s) => s.windows.find((w) => w.kind === "app" && w.appKey === "general")?.maximized ?? false,
   );
@@ -132,6 +137,65 @@ export function GeoLocationsForm({ onBack }: { onBack?: () => void }) {
     void Promise.resolve().then(load);
   }, [load]);
 
+  /* ---- Task 107 (درخواست مالک) — ترجمهٔ دادهٔ رکوردها ----
+     انبار DataTranslation سرویس تنظیمات (entityType = "GeoLocation").
+     نقشهٔ دسته‌ای برای نمایش: کلید = شناسهٔ رکورد → زبان → عنوان ترجمه‌شده.
+     خواندن دسته‌ای در چند تکهٔ ≤۵۰۰ (سقف قرارداد Task 99 — رکوردها ۸۸۱+).
+     واکشی ناموفق = عناوین پایهٔ fa می‌مانند (رفتار Task 99). */
+  const [trMap, setTrMap] = React.useState<
+    Record<string, Record<string, string>>
+  >({});
+  const [trVersion, setTrVersion] = React.useState(0);
+
+  React.useEffect(() => {
+    const ids = items.map((n) => n.id);
+    if (ids.length === 0) return;
+    let alive = true;
+    const chunks: number[][] = [];
+    for (let i = 0; i < ids.length; i += 500) chunks.push(ids.slice(i, i + 500));
+    void Promise.all(
+      chunks.map((chunk) =>
+        api.get<{
+          items?: Array<{
+            entityId: number;
+            fieldKey: string;
+            locale: string;
+            value: string;
+          }>;
+        }>(
+          `data-translations?entityType=GeoLocation&entityIds=${chunk.join(",")}&fieldKeys=title`,
+        ),
+      ),
+    )
+      .then((results) => {
+        if (!alive) return;
+        const next: Record<string, Record<string, string>> = {};
+        for (const res of results) {
+          for (const it of res.items ?? []) {
+            if (!it?.entityId || it.fieldKey !== "title" || !it?.locale || !it?.value) continue;
+            const rec = (next[String(it.entityId)] ??= {});
+            rec[it.locale] = it.value;
+          }
+        }
+        setTrMap(next);
+      })
+      .catch(() => {
+        /* واکشی ناموفق — درخت/فهرست با عناوین پایه می‌مانند */
+      });
+    return () => {
+      alive = false;
+    };
+  }, [items, trVersion]);
+
+  /** عنوان نمایشی رکورد در زبان جاری — نبودِ ترجمه = عنوان پایهٔ fa (Task 99) */
+  const displayTitle = React.useCallback(
+    (n: GeoNode): string => {
+      if (locale === "fa") return n.title;
+      return trMap[String(n.id)]?.[locale] || n.title;
+    },
+    [locale, trMap],
+  );
+
   /* §5.6 — بازخوانی وقتی سطح دیگری رکوردهای geo-location را تغییر داد */
   React.useEffect(() => {
     const onChanged = (e: Event) => {
@@ -158,7 +222,7 @@ export function GeoLocationsForm({ onBack }: { onBack?: () => void }) {
     for (const n of items) {
       map.set(String(n.id), {
         id: String(n.id),
-        label: n.title,
+        label: displayTitle(n),
         icon: <GeoTypeIcon type={n.levelType} />,
         children: [],
       });
@@ -173,7 +237,7 @@ export function GeoLocationsForm({ onBack }: { onBack?: () => void }) {
       else roots.push(me);
     }
     return roots;
-  }, [items]);
+  }, [items, displayTitle]);
 
   const selectedNode: GeoNode | null = selectedId ? byId.get(selectedId) ?? null : null;
   const createParent: GeoNode | null =
@@ -377,21 +441,21 @@ export function GeoLocationsForm({ onBack }: { onBack?: () => void }) {
     if (ok) onBack?.();
   };
 
-  /* ---- لیست رکوردها (اقدام ۱۰ نوار ابزار) ---- */
+  /* ---- لیست رکوردها (اقدام ۱۰ نوار ابزار) — عنوان ترجمه‌شده در زبان جاری ---- */
   const listItems = React.useMemo<ActionBarListItem[]>(
     () =>
       items.map((n) => ({
         id: String(n.id),
-        title: n.title,
+        title: displayTitle(n),
         subtitle: String(n.code),
         cells: [
           { label: t("abar.listColCode"), value: String(n.code) },
-          { label: t("bs.field.title"), value: n.title },
+          { label: t("bs.field.title"), value: displayTitle(n) },
           { label: t("bs.field.type"), value: t(`geo.type.${n.levelType}` as never) },
           { label: t("fy.active"), value: n.isActive ? t("abar.listYes") : t("abar.listNo") },
         ],
       })),
-    [items, t],
+    [items, t, displayTitle],
   );
 
   /* ---- فیلدهای جزئیات (قرارداد پوسته) ---- */
@@ -466,6 +530,22 @@ export function GeoLocationsForm({ onBack }: { onBack?: () => void }) {
 
   const badge = mode === "create" ? t("bs.action.new") : selectedNode ? String(selectedNode.code) : undefined;
 
+  /* ---- Task 107 (درخواست مالک) — ترجمهٔ آنلاین/دستی رکورد باز ----
+     قلاب عمومی useRecordTranslation: همین دو handler کاشی «ترجمه» را در ALL
+     فرم‌های آینده فعال می‌کند؛ انبار = DataTranslation (entityType GeoLocation).
+     در حالت ثبت هنوز شناسه‌ای نیست — توست راهنما (قرارداد Party)؛ فیلدِ
+     قابل ترجمه = عنوان (کد عددی است و عنوان لاتین ورودِ خود مالک). */
+  const recordTr = useRecordTranslation({
+    entityType: "GeoLocation",
+    entityId: mode === "view" && selectedNode ? selectedNode.id : null,
+    getFields: (): DataTranslationField[] => {
+      const v = form.title.trim();
+      return v ? [{ key: "title", label: t("bs.field.title"), value: v }] : [];
+    },
+    onTranslated: () => setTrVersion((v) => v + 1),
+    onOfflineClose: () => setTrVersion((v) => v + 1),
+  });
+
   return (
     <>
       <SimpleTreeForm
@@ -521,6 +601,9 @@ export function GeoLocationsForm({ onBack }: { onBack?: () => void }) {
         listItems={listItems}
         listLoading={loading}
         onOpenListItem={(item) => handleSelect(item.id)}
+        /* Task 107 — کاشی «ترجمه» فعال: آنلاین (LLM) + دستی (دیالوگ عمومی) */
+        onTranslateOnline={recordTr.translateOnline}
+        onTranslateOffline={recordTr.openTranslateOffline}
         /* زیرصفحهٔ پنجرهٔ «عمومی» — میزبان، کپشن پنجره را دارد؛ دکمهٔ ✕ هدر
            به فهرست منو برمی‌گرداند (الگوی embedded سازگار Task 35) */
         onHeaderClose={onBack}
@@ -542,6 +625,7 @@ export function GeoLocationsForm({ onBack }: { onBack?: () => void }) {
           if (g) await handleDelete(g);
         }}
       />
+      {recordTr.dialog}
     </>
   );
 }
