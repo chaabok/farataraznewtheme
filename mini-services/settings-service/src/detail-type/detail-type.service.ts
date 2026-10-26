@@ -10,10 +10,17 @@ import { IdGenerationService } from "../id-generation/id-generation.service";
 import {
   appBaseOnCreate,
   appBaseOnUpdate,
+  baseDataScopeWhere,
   HEAD_OFFICE_NODE_ID,
   SYSTEM_ACTOR,
+  type AppBaseScope,
 } from "../../../_shared/app-base-entity";
 import { UpsertDetailTypeDto } from "./detail-type.dto";
+import {
+  resolveDetailTypeChain,
+  seedCanonicalDetailTypes,
+  sortDetailTypeRows,
+} from "./canonical-detail-types";
 
 /**
  * DetailTypeService — Task 120 (درخواست مالک): فرم «نوع تفصیل جدید» در
@@ -48,17 +55,40 @@ export class DetailTypeService {
     private readonly idGen: IdGenerationService,
   ) {}
 
-  /** فهرست انواع تفصیل (خواندن فعلاً سراسری؛ با اتصال IAM دامنه‌گذاری می‌شود). */
-  async list() {
+  /**
+   * فهرست انواع تفصیل — Task 122 (قاعدهٔ مالک):
+   * با structureId ⇒ قرارداد واحد اشتراک داده (baseDataScopeWhere): ردیف‌های
+   * گرهٔ فعال + در صورت اشتراک (headOfficeShares) ردیف‌های دفتر مرکزی؛
+   * بدون پارامتر ⇒ خواندن سراسری (سازگاری قبلی). ترتیب: عددی-آگاهِ کد
+   * (۱..۲۱ عین تصویر مالک؛ کدهای حرفی در انتها).
+   */
+  async list(q: { structureId?: number; headOfficeShares?: boolean } = {}) {
+    if (q.structureId != null && Number.isFinite(q.structureId) && q.structureId > 0) {
+      const structureRef = BigInt(q.structureId);
+      const chain = await resolveDetailTypeChain(this.prisma, structureRef);
+      const scope: AppBaseScope = { nodeId: structureRef, ...chain };
+      const rows = await this.prisma.detailType.findMany({
+        where: baseDataScopeWhere(scope, q.headOfficeShares === true),
+        orderBy: [{ code: "asc" }],
+      });
+      return { items: sortDetailTypeRows(rows).map((r) => this.toDto(r)) };
+    }
     const rows = await this.prisma.detailType.findMany({
       orderBy: [{ code: "asc" }],
     });
-    return { items: rows.map((r) => this.toDto(r)) };
+    return { items: sortDetailTypeRows(rows).map((r) => this.toDto(r)) };
   }
 
+  /**
+   * ثبت نوع تفصیل — Task 122: رکورد به گرهٔ سازمانی فعال (structureId از
+   * فرانت/OrgScope) تعلق می‌گیرد؛ بدون آن ⇒ دفتر مرکزی. زنجیرهٔ ارث
+   * AppBase با resolveDetailTypeChain مهر می‌شود تا قرارداد اشتراک
+   * (baseDataScopeWhere) در همهٔ سطوح درست کار کند.
+   */
   async create(dto: UpsertDetailTypeDto) {
     const norm = this.normalizeInput(dto);
-    await this.assertNotDuplicate(norm.code, norm.title, null);
+    const target = await this.resolveTargetStructure(dto.structureId);
+    await this.assertNotDuplicate(target.structureRef, norm.code, norm.title, null);
 
     const newId = await this.idGen.generateNextId("DetailType");
     const row = await this.prisma.detailType.create({
@@ -68,11 +98,11 @@ export class DetailTypeService {
         title: norm.title,
         description: norm.description,
         isActive: norm.isActive,
-        ...appBaseOnCreate(SYSTEM_ACTOR),
+        ...appBaseOnCreate({ userId: SYSTEM_ACTOR.userId, nodeId: target.structureRef, ...target.chain }),
       },
     });
     this.logger.log(
-      `DetailType created — ID=${newId} Code=${norm.code} Title=${norm.title}`,
+      `DetailType created — ID=${newId} Code=${norm.code} Title=${norm.title} Structure=${target.structureRef}`,
     );
     return this.toDto(row);
   }
@@ -89,7 +119,7 @@ export class DetailTypeService {
       });
     }
     const norm = this.normalizeInput(dto);
-    await this.assertNotDuplicate(norm.code, norm.title, existing.id);
+    await this.assertNotDuplicate(existing.businessStructureRef, norm.code, norm.title, existing.id);
 
     const row = await this.prisma.detailType.update({
       where: { id: existing.id },
@@ -169,13 +199,14 @@ export class DetailTypeService {
 
   /** قانون یکتایی: کد یا عنوان تکراری در همان ساختار سازمانی رد می‌شود (۴۰۹). */
   private async assertNotDuplicate(
+    structureRef: bigint,
     code: string,
     title: string,
     excludeId: bigint | null,
   ) {
     const clash = await this.prisma.detailType.findFirst({
       where: {
-        businessStructureRef: HEAD_OFFICE_NODE_ID,
+        businessStructureRef: structureRef,
         OR: [{ code }, { title }],
         ...(excludeId ? { id: { not: excludeId } } : {}),
       },
@@ -189,6 +220,53 @@ export class DetailTypeService {
         messageKey: "common.error",
       });
     }
+  }
+
+  /**
+   * Task 122 — گرهٔ هدف ثبت: structureId اختیاری (از OrgScope فرانت)؛
+   * نامعتبر ⇒ ۴۲۲؛ نبودِ آن ⇒ دفتر مرکزی (قرارداد قبلی).
+   */
+  private async resolveTargetStructure(structureId?: number) {
+    if (structureId == null || !Number.isFinite(structureId) || structureId <= 0) {
+      return {
+        structureRef: HEAD_OFFICE_NODE_ID,
+        chain: await resolveDetailTypeChain(this.prisma, HEAD_OFFICE_NODE_ID),
+      };
+    }
+    const structureRef = BigInt(structureId);
+    const node = await this.prisma.businessStructure.findUnique({
+      where: { id: structureRef },
+      select: { id: true, isActive: true, title: true },
+    });
+    if (!node || !node.isActive) {
+      throw new BadRequestException({
+        statusCode: 422,
+        message: `ساختار سازمانی با شناسهٔ ${structureId} یافت نشد یا غیرفعال است.`,
+        messageKey: "common.error",
+      });
+    }
+    return {
+      structureRef,
+      chain: await resolveDetailTypeChain(this.prisma, structureRef),
+    };
+  }
+
+  /**
+   * Task 122 — قاعدهٔ ۲ مالک (فراخوان: BusinessStructureService):
+   * «اگر تیک استفاده از داده‌های مشترک دفتر مرکزی فعال نبود، اگر هر شاخه
+   * از نوع هلدینگ یا شرکت اضافه شد، این آیتم‌ها باید برای آن شاخه در فرم
+   * نوع تفصیلی اضافه گردد.» ⇒ بعد از ایجاد شاخهٔ هلدینگ/شرکت بدون تیک،
+   * ۲۱ آیتم مرجع برای همان شاخه ساخته می‌شود (گارد داخلی: اگر ردیفی
+   * داشته باشد هیچ).
+   */
+  async seedCanonicalForStructure(structureRef: bigint): Promise<number> {
+    const seeded = await seedCanonicalDetailTypes(this.prisma, this.idGen, structureRef, SYSTEM_ACTOR);
+    if (seeded > 0) {
+      this.logger.log(
+        `seeded ${seeded} canonical DetailType rows for structure ${structureRef} (Task 122 — قاعدهٔ شاخهٔ جدید)`,
+      );
+    }
+    return seeded;
   }
 
   /* --------------------------------- dto --------------------------------- */

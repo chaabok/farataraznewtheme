@@ -2,6 +2,10 @@ import { Injectable, OnModuleInit, Logger } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { IdGenerationService } from "../id-generation/id-generation.service";
 import { appBaseOnCreate, SYSTEM_ACTOR } from "../../../_shared/app-base-entity";
+import {
+  DETAIL_TYPES_HEAD_OFFICE_REF,
+  seedCanonicalDetailTypes,
+} from "../detail-type/canonical-detail-types";
 
 /**
  * Boot seed (idempotent) — mirrors the legacy pre-seed contract (spec §2/§6):
@@ -284,38 +288,52 @@ export class SeedService implements OnModuleInit {
       this.logger.log(`seeded ${seededCur} CurrencyType rows (ISO 4217, Task 114)`);
     }
 
-    /* 7) Task 120 — seed «نوع تفصیل جدید» (حسابداری ← اطلاعات پایه): چند
-       تفصیلِ رایجِ حسابداری ایرانی (idempotent by Code) تا فهرست فرم از
-       ابتدا زنده باشد — مشتریان/تامین‌کنندگان/بانک‌ها/صندوق‌ها/پروژه‌ها. */
-    const DETAIL_TYPES: Array<{ code: string; title: string; description?: string }> = [
-      { code: "CUST", title: "مشتریان", description: "تفصیل مشتریان و فروش" },
-      { code: "SUPP", title: "تامین‌کنندگان", description: "تفصیل تامین‌کنندگان و خرید" },
-      { code: "BANK", title: "بانک‌ها", description: "تفصیل حساب‌های بانکی" },
-      { code: "CASH", title: "صندوق‌ها", description: "تفصیل صندوق‌های نقدی" },
-      { code: "PRJ", title: "پروژه‌ها", description: "تفصیل پروژه‌ها و قراردادها" },
-      { code: "CC", title: "مراکز هزینه", description: "تفصیل مراکز هزینه و درآمد" },
-    ];
-    let seededDt = 0;
-    for (const d of DETAIL_TYPES) {
-      const exists = await this.prisma.detailType.findFirst({
-        where: { businessStructureRef: 1n, code: d.code },
-      });
-      if (exists) continue;
-      const newId = await this.idGen.generateNextId("DetailType");
-      await this.prisma.detailType.create({
-        data: {
-          id: BigInt(newId),
-          code: d.code,
-          title: d.title,
-          description: d.description ?? null,
-          isActive: true,
-          ...appBaseOnCreate(SYSTEM_ACTOR),
-        },
-      });
-      seededDt++;
+    /* 7) Task 122 — قاعدهٔ مالک برای «نوع تفصیل» (حسابداری ← اطلاعات پایه):
+       قاعدهٔ ۳ — «با نصب دیتابیس این آیتم‌ها باید در جدول نوع تفصیل ایجاد
+       گردد. البته باید کنترل گردد که در جدول نوع تفصیلی اطلاعات وجود
+       نداشته باشد» ⇒ در نصب تازه (جدول کاملاً خالی) ۲۱ آیتم مرجعِ عین
+       تصویر مالک برای دفتر مرکزی ساخته می‌شود؛ وگرنه هیچ. */
+    const dtTotal = await this.prisma.detailType.count();
+    if (dtTotal === 0) {
+      const seededHo = await seedCanonicalDetailTypes(
+        this.prisma,
+        this.idGen,
+        DETAIL_TYPES_HEAD_OFFICE_REF,
+        SYSTEM_ACTOR,
+      );
+      if (seededHo > 0) {
+        this.logger.log(
+          `seeded ${seededHo} canonical DetailType rows for head office (Task 122 — نصب تازهٔ دیتابیس)`,
+        );
+      }
     }
-    if (seededDt > 0) {
-      this.logger.log(`seeded ${seededDt} DetailType rows (Task 120 — حسابداری/اطلاعات پایه)`);
+
+    /* 8) Task 122 — قاعدهٔ ۲ مالک برای گره‌های از پیش موجود: هر هلدینگ(1)/
+       شرکت(2) فعال بدون تیک «داده‌های مشترک دفتر مرکزی» که هنوز هیچ ردیف
+       تفصیلی ندارد، همین ۲۱ آیتم مرجع را می‌گیرد (اجرای مکرر امن — گارد
+       درون seedCanonicalDetailTypes؛ بدون دوبل‌نویسی). */
+    const hoNodes = await this.prisma.businessStructure.findMany({
+      where: {
+        isActive: true,
+        businessStructureType: { in: [1, 2] },
+        isBasicInfoShared: false,
+      },
+      select: { id: true },
+      orderBy: { id: "asc" },
+    });
+    let seededBranches = 0;
+    for (const n of hoNodes) {
+      seededBranches += await seedCanonicalDetailTypes(
+        this.prisma,
+        this.idGen,
+        n.id,
+        SYSTEM_ACTOR,
+      );
+    }
+    if (seededBranches > 0) {
+      this.logger.log(
+        `seeded ${seededBranches} canonical DetailType rows for existing holding/company nodes (Task 122 — قاعدهٔ شاخه)`,
+      );
     }
   }
 }
