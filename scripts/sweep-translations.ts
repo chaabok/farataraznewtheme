@@ -91,10 +91,12 @@ async function sweep(entityType: string, items: Rec[]): Promise<void> {
     if (arr) arr.push(r);
     else bySig.set(sig, [r]);
   }
+  /* دستهٔ کوچک‌تر (۱۰ رکورد) — تجربهٔ زنده: دسته‌های ۲۵×۱۲ گاهی JSON ناقص
+     از LLM برمی‌گردانند (۵۰۲)؛ دستهٔ کوچک‌تر = خروجی کوتاه‌تر = تفسیرپذیر */
   const jobs: Array<{ records: Rec[]; langs: string[] }> = [];
   for (const [sig, group] of bySig) {
-    for (let i = 0; i < group.length; i += 25) {
-      jobs.push({ records: group.slice(i, i + 25), langs: sig.split(",") });
+    for (let i = 0; i < group.length; i += 10) {
+      jobs.push({ records: group.slice(i, i + 10), langs: sig.split(",") });
     }
   }
   console.log(`[2] jobs: ${jobs.length} (concurrency 2)`);
@@ -137,16 +139,6 @@ async function sweep(entityType: string, items: Rec[]): Promise<void> {
   console.log(`=== ${entityType} DONE — translated ${done}, failed ${failed} ===`);
 }
 
-const geo = (await get("geo-location")) as { items?: Array<Record<string, unknown>> };
-await sweep(
-  "GeoLocation",
-  (geo.items ?? []).map((n) => ({
-    id: Number(n.id),
-    title: String(n.title ?? ""),
-    latin: (n.titleLatin as string | null) ?? null,
-  })),
-);
-
 const bs = (await get("business-structure")) as { items?: Array<Record<string, unknown>> };
 await sweep(
   "BusinessStructure",
@@ -154,6 +146,16 @@ await sweep(
     id: Number(n.id),
     title: String(n.title ?? ""),
     latin: (n.titleEn as string | null) ?? null,
+  })),
+);
+
+const geo = (await get("geo-location")) as { items?: Array<Record<string, unknown>> };
+await sweep(
+  "GeoLocation",
+  (geo.items ?? []).map((n) => ({
+    id: Number(n.id),
+    title: String(n.title ?? ""),
+    latin: (n.titleLatin as string | null) ?? null,
   })),
 );
 
