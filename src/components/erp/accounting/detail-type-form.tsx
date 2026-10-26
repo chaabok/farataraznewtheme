@@ -6,6 +6,10 @@ import { toast } from "sonner";
 import { api } from "@/lib/api";
 import { useT, useSettings } from "@/stores/settings-store";
 import { useDesktop } from "@/stores/desktop-store";
+import {
+  useOrgScope,
+  useOrgContext,
+} from "@/stores/org-context-store";
 import { useTabDirty, useWindowChrome } from "@/components/desktop/app-window";
 import {
   SimpleFormTwoRowTabbed,
@@ -66,6 +70,16 @@ export function DetailTypeForm({ onBack }: { onBack?: () => void }) {
   const chrome = useWindowChrome();
   const headerMaximized = useDesktop(
     (s) => s.windows.find((w) => w.kind === "app" && w.appKey === "accounting")?.maximized ?? false,
+  );
+  /* Task 122 (درخواست مالک) — تفصیل‌ها در دامنهٔ گرهٔ فعالِ انتخاب‌گر سازمانی
+     هدر دیده/ثبت می‌شوند (قرارداد واحد اشتراک: baseDataScopeWhere؛ ردیف‌های
+     دفتر مرکزی هم وقتی تیک اشتراک فعال است دیده می‌شوند). */
+  const { scope, loaded: orgLoaded } = useOrgScope();
+  const orgTree = useOrgContext((s) => s.tree);
+  const activeNode = React.useMemo(
+    () =>
+      orgTree.find((n) => Number(n.id) === (scope.businessStructureRef ?? -1)) ?? null,
+    [orgTree, scope.businessStructureRef],
   );
 
   const [records, setRecords] = React.useState<DetailTypeDto[]>([]);
@@ -141,9 +155,18 @@ export function DetailTypeForm({ onBack }: { onBack?: () => void }) {
   }, []);
 
   const fetchRecords = React.useCallback(async (): Promise<DetailTypeDto[]> => {
-    const res = await api.get<{ items?: DetailTypeDto[] }>("detail-type");
+    /* Task 122 — دامنهٔ گرهٔ فعال؛ تا آماده‌شدن درخت سازمان چیزی نمی‌گیریم */
+    if (!orgLoaded) return [];
+    const qs = new URLSearchParams();
+    if (scope.businessStructureRef != null) {
+      qs.set("structureId", String(scope.businessStructureRef));
+      qs.set("headOfficeShares", scope.shared ? "true" : "false");
+    }
+    const res = await api.get<{ items?: DetailTypeDto[] }>(
+      `detail-type${qs.size ? `?${qs.toString()}` : ""}`,
+    );
     return res.items ?? [];
-  }, []);
+  }, [orgLoaded, scope.businessStructureRef, scope.shared]);
 
   const applyRecords = React.useCallback((rows: DetailTypeDto[]) => {
     setRecords(rows);
@@ -223,6 +246,8 @@ export function DetailTypeForm({ onBack }: { onBack?: () => void }) {
       title: values.title.trim(),
       description: values.description.trim(),
       isActive: values.active,
+      /* Task 122 — گرهٔ سازمانی فعال مالکِ رکورد است (نبودِ آن = دفتر مرکزی) */
+      structureId: scope.businessStructureRef ?? undefined,
     };
     try {
       const res = currentId == null
@@ -464,9 +489,17 @@ export function DetailTypeForm({ onBack }: { onBack?: () => void }) {
 
     {/* Task 118 — فهرست انواع تفصیل با MainDataGrid (عین طرح مالک) */}
     <section className="mt-4" aria-label={t("dt.listTitle")}>
-      <div className="mb-2 flex items-center gap-2">
+      <div className="mb-2 flex flex-wrap items-center gap-2">
         <Tags className="h-4 w-4 text-muted-foreground" aria-hidden />
         <h3 className="text-xs font-semibold text-muted-foreground">{t("dt.listTitle")}</h3>
+        {activeNode && (
+          <span
+            className="inline-flex items-center rounded-full bg-violet-500/10 px-2 py-0.5 text-[10px] font-medium text-violet-700 dark:text-violet-400"
+            title={activeNode.title}
+          >
+            {activeNode.title}
+          </span>
+        )}
       </div>
       <MainDataGrid
         columns={gridColumns}

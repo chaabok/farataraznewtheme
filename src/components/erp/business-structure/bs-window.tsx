@@ -425,6 +425,8 @@ export function BusinessStructureWindow({
         manager: form.manager.trim() || null,
         logoUrl: form.logoUrl,
         isActive: form.isActive,
+        /* Task 122 — تیک داده‌های مشترک؛ خواب ⇒ سرور ۲۱ آیتم مرجع تفصیل می‌سازد */
+        isBasicInfoShared: form.isBasicInfoShared,
       };
     }
     return {
@@ -434,6 +436,8 @@ export function BusinessStructureWindow({
       manager: form.manager.trim() || null,
       logoUrl: form.logoUrl,
       isActive: form.isActive,
+      /* Task 122 — فقط ذخیرهٔ فلگ؛ آیتم‌های مرجع فقط در «ایجاد» بذر می‌شوند */
+      isBasicInfoShared: form.isBasicInfoShared,
     };
   };
 
@@ -544,6 +548,20 @@ export function BusinessStructureWindow({
 
   const fields: SimpleFormField[] = (() => {
     if (mode === "create") {
+      /* Task 122 (درخواست مالک) — تیک «استفاده از داده‌های مشترک دفتر مرکزی»
+         فقط برای شاخه از نوع هلدینگ(1)/شرکت(2)؛ اگر فعال نباشد (پیش‌فرض)،
+         ۲۱ آیتم مرجع «نوع تفصیل» پس از ایجاد برای همین شاخه ساخته می‌شود. */
+      const sharedTick =
+        Number(form.type) === 1 || Number(form.type) === 2
+          ? [
+              {
+                id: "isBasicInfoShared",
+                label: t("bs.field.shareHeadquarterData"),
+                type: "checkbox" as const,
+                checked: form.isBasicInfoShared,
+              },
+            ]
+          : [];
       return [
         { id: "title", label: t("bs.field.title"), required: true, value: form.title },
         {
@@ -554,6 +572,7 @@ export function BusinessStructureWindow({
           value: form.type,
           options: typeSelectOptions,
         },
+        ...sharedTick,
         { id: "manager", label: t("bs.field.manager"), value: form.manager },
         {
           id: "isActive",
@@ -592,6 +611,20 @@ export function BusinessStructureWindow({
       ];
     }
     if (selectedNode) {
+      /* Task 122 — تیک مشترک دفتر مرکزی در ویرایش شاخهٔ هلدینگ/شرکت هم
+         نمایش داده می‌شود (فقط ذخیرهٔ فلگ؛ آیتم‌های مرجع فقط در «ایجاد»). */
+      const sharedTickEdit =
+        Number(selectedNode.businessStructureType) === 1 ||
+        Number(selectedNode.businessStructureType) === 2
+          ? [
+              {
+                id: "isBasicInfoShared",
+                label: t("bs.field.shareHeadquarterData"),
+                type: "checkbox" as const,
+                checked: form.isBasicInfoShared,
+              },
+            ]
+          : [];
       return [
         { id: "title", label: t("bs.field.title"), required: true, value: form.title },
         {
@@ -603,6 +636,7 @@ export function BusinessStructureWindow({
           options: typeSelectOptions,
           disabled: Boolean(selectedNode.isSystem),
         },
+        ...sharedTickEdit,
         { id: "manager", label: t("bs.field.manager"), value: form.manager },
         {
           id: "isActive",

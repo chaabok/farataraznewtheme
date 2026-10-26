@@ -49,6 +49,15 @@ export class CreateBsDto {
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;
+
+  /**
+   * Task 122 (درخواست مالک) — تیک «استفاده از داده‌های مشترک دفتر مرکزی»
+   * در فرم ایجاد شاخه (فقط هلدینگ/شرکت). اگر فعال نباشد (پیش‌فرض)،
+   * ۲۱ آیتم مرجع «نوع تفصیل» برای همین شاخه ساخته می‌شود.
+   */
+  @IsOptional()
+  @IsBoolean()
+  isBasicInfoShared?: boolean;
 }
 
 export class UpdateBsDto {

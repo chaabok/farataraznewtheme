@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Query } from "@nestjs/common";
 import { DetailTypeService } from "./detail-type.service";
 import { UpsertDetailTypeDto } from "./detail-type.dto";
 
@@ -17,8 +17,18 @@ export class DetailTypeController {
   constructor(private readonly detailType: DetailTypeService) {}
 
   @Get()
-  list() {
-    return this.detailType.list();
+  list(
+    @Query("structureId") structureId?: string,
+    @Query("headOfficeShares") headOfficeShares?: string,
+  ) {
+    /* Task 122 — قرارداد اشتراک دادهٔ واحد: بدون پارامتر = خواندن سراسری
+       (سازگاری قبلی)؛ با structureId = ردیف‌های همان گره (+ دفتر مرکزی در
+       صورت اشتراک — مالک کنترل می‌کند با تیک فرم ساختار کسب‌وکار). */
+    const sid = Number(structureId);
+    return this.detailType.list({
+      structureId: structureId && Number.isFinite(sid) && sid > 0 ? sid : undefined,
+      headOfficeShares: headOfficeShares === "true",
+    });
   }
 
   @Post()

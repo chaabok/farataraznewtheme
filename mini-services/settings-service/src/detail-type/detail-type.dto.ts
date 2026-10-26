@@ -1,4 +1,4 @@
-import { IsBoolean, IsOptional, IsString, MaxLength, MinLength } from "class-validator";
+import { IsBoolean, IsInt, IsOptional, IsString, MaxLength, MinLength, Min } from "class-validator";
 
 /**
  * DetailType DTOs — Task 120 (درخواست مالک): فرم «نوع تفصیل جدید» در
@@ -33,4 +33,14 @@ export class UpsertDetailTypeDto {
 
   @IsBoolean()
   isActive!: boolean;
+
+  /**
+   * Task 122 (درخواست مالک) — گرهٔ ساختار سازمانی هدف (از OrgScope فرانت).
+   * اختیاری: نبودِ آن = دفتر مرکزی (قرارداد قبلی). سرور وجود/فعال‌بودنِ
+   * گره را کنترل می‌کند (۴۲۲) و زنجیرهٔ ارث AppBase را از همان گره می‌سازد.
+   */
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  structureId?: number;
 }

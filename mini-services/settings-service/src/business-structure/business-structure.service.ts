@@ -2,6 +2,7 @@ import { Injectable, HttpException, Logger } from "@nestjs/common";
 import { Prisma } from "@prisma/client";
 import { PrismaService } from "../prisma/prisma.service";
 import { IdGenerationService } from "../id-generation/id-generation.service";
+import { DetailTypeService } from "../detail-type/detail-type.service";
 import { CreateBsDto, UpdateBsDto } from "./business-structure.dto";
 
 /**
@@ -65,6 +66,8 @@ export class BusinessStructureService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly idGen: IdGenerationService,
+    /** Task 122 — پس از ایجاد شاخهٔ هلدینگ/شرکت بدون تیک مشترک، ۲۱ آیتم مرجع «نوع تفصیل» برایش ساخته می‌شود. */
+    private readonly detailType: DetailTypeService,
   ) {}
 
   /* ------------------------------- mapping ------------------------------ */
@@ -182,6 +185,8 @@ export class BusinessStructureService {
             manager: dto.manager?.trim() || null,
             logoUrl: dto.logoUrl ?? null,
             isActive: dto.isActive ?? true,
+            /* Task 122 — تیک «استفاده از داده‌های مشترک دفتر مرکزی» (پیش‌فرض: خاموش) */
+            isBasicInfoShared: dto.isBasicInfoShared ?? false,
           },
         });
       } catch (e) {
@@ -191,6 +196,21 @@ export class BusinessStructureService {
         throw e;
       }
     });
+
+    /* Task 122 — قاعدهٔ مالک: شاخهٔ هلدینگ(1)/شرکت(2) بدون تیک «داده‌های
+       مشترک دفتر مرکزی» ⇒ ۲۱ آیتم مرجع «نوع تفصیل» برای همان شاخه ثبت
+       می‌شود (گارد درون سرویس: اگر ردیفی داشته باشد هیچ). */
+    if (
+      (created.businessStructureType === 1 || created.businessStructureType === 2) &&
+      !created.isBasicInfoShared
+    ) {
+      const seeded = await this.detailType.seedCanonicalForStructure(created.id);
+      if (seeded > 0) {
+        this.logger.log(
+          `BS create — seeded ${seeded} canonical DetailType rows for branch ${created.id} «${created.title}» (Task 122)`,
+        );
+      }
+    }
 
     return { item: this.toDto(created) };
   }
@@ -283,6 +303,9 @@ export class BusinessStructureService {
         manager: dto.manager !== undefined ? dto.manager?.trim() || null : undefined,
         logoUrl: dto.logoUrl !== undefined ? dto.logoUrl : undefined,
         isActive: dto.isActive,
+        /* Task 122 — تیک مشترک دفتر مرکزی روی شاخه (فقط ذخیرهٔ فلگ؛ بذرِ تفصیل‌ها فقط در «ایجاد») */
+        isBasicInfoShared:
+          dto.isBasicInfoShared !== undefined ? dto.isBasicInfoShared : undefined,
         // §2.5: Version is auto-bumped by the global PrismaService middleware
       },
     });
