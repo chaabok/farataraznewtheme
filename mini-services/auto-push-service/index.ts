@@ -305,3 +305,89 @@ function startScheduler(): void {
 log(`سرویس پوش خودکار راه‌اندازی شد — ریشهٔ پروژه: ${ROOT}`);
 startServer();
 startScheduler();
+
+/* ---------------------------- Task 112 — نگهبان سلامت سرویس‌ها ----------------------------
+ * تجربهٔ Task 111/112: dfb-service (فرمساز) می‌تواند «میانهٔ جلسه» بمیرد (جابه‌جایی
+ * inode دیتابیس، کرش، …) و تا بوت بعدی محیط هیچ ناظری آن را بالا نمی‌آورد —
+ * درختوارهٔ فرمساز و منوها 502 می‌دهند. instrumentation سرور Next همین گارد را
+ * دارد (Task 112: دوره‌ای شد)، اما برای پوششِ میانهٔ جلسه در همین سندباکس، این
+ * سرویسِ ماندگار هم نگهبان است: هر ۳۰ ثانیه /health سرویس‌های محافظت‌شده بررسی
+ * و سرویسِ مرده به‌عنوان فرزندِ همین پروسهٔ ماندگار بالا آورده می‌شود
+ * (health-check + cooldown ضدطوفان؛ در استقرار واقعی که process manager خودش
+ * هست، عملاً no-op می‌ماند).
+ */
+
+const GUARDED_SERVICES = [
+  {
+    name: "settings-service",
+    base: "http://127.0.0.1:3001",
+    dir: join(ROOT, "mini-services", "settings-service"),
+    log: join(ROOT, ".zscripts", "mini-service-settings-service.log"),
+  },
+  {
+    name: "dfb-service",
+    base: "http://127.0.0.1:3003",
+    dir: join(ROOT, "mini-services", "dfb-service"),
+    log: join(ROOT, ".zscripts", "mini-service-dfb-service.log"),
+  },
+] as const;
+
+const GUARD_INTERVAL_MS = 30_000;
+const GUARD_RESPAWN_COOLDOWN_MS = 60_000;
+
+async function serviceHealthy(base: string): Promise<boolean> {
+  try {
+    const res = await fetch(`${base}/health`, { signal: AbortSignal.timeout(1_500) });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+function startServiceGuard(): void {
+  const g = globalThis as typeof globalThis & {
+    __svcGuardTimer?: ReturnType<typeof setInterval>;
+    __svcGuardEpoch?: number;
+  };
+  // گارد bun --hot: اینترول نسخهٔ قبلی پاک شود تا پاس‌های موازی شکل نگیرد
+  if (g.__svcGuardTimer) clearInterval(g.__svcGuardTimer);
+  // نسخهٔ حلقهٔ نگهبان — بارگذاری مجدد (hot reload) حلقهٔ قبلی را بازنشسته می‌کند
+  g.__svcGuardEpoch = (g.__svcGuardEpoch ?? 0) + 1;
+  const myEpoch = g.__svcGuardEpoch;
+  const lastSpawnAt = new Map<string, number>(GUARDED_SERVICES.map((s) => [s.name, 0]));
+  const pass = async () => {
+    for (const svc of GUARDED_SERVICES) {
+      try {
+        if (await serviceHealthy(svc.base)) continue;
+        if (Date.now() - (lastSpawnAt.get(svc.name) ?? 0) < GUARD_RESPAWN_COOLDOWN_MS) continue;
+        log(`نگهبان: ${svc.name} پاسخ نمی‌دهد — اجرا…`);
+        const out = openSync(svc.log, "a");
+        const child = nodeSpawn("bun", ["run", "dev"], {
+          cwd: svc.dir,
+          stdio: ["ignore", out, out],
+          detached: false, // فرزند این سرویسِ ماندگار — با او زنده می‌ماند
+          env: { ...process.env, NODE_ENV: "development" },
+        });
+        child.on("error", (e) => log(`نگهبان: spawn ${svc.name} خطا: ${String(e)}`));
+        lastSpawnAt.set(svc.name, Date.now());
+        log(`نگهبان: ${svc.name} spawn شد (pid=${child.pid})`);
+      } catch (e) {
+        log(`نگهبان: گارد ${svc.name} خطا داد (بی‌خطر): ${String(e)}`);
+      }
+    }
+  };
+  /* پاس اول بی‌درنگ — نه با تایمر: در بارگذاریِ مجددِ bun --hot تایمرهای
+     تازهٔ ماژول ورودی آتش نمی‌گیرند (مشاهدهٔ Task 112)؛ پس اولین بررسی باید
+     همگام با خودِ بارگذاری اجرا شود. */
+  void pass();
+  /* دوره‌ای — برای بوتِ سردِ پروسه (در hot reload تایمرها معتبر نمی‌مانند) */
+  g.__svcGuardTimer = setInterval(() => {
+    if (g.__svcGuardEpoch !== myEpoch) return; // نسخهٔ قدیمی حلقه — بی‌اثر
+    void pass();
+  }, GUARD_INTERVAL_MS);
+  log(`نگهبان سلامت سرویس‌ها فعال شد (پاس اول فوری، سپس هر ${GUARD_INTERVAL_MS / 1000} ثانیه: ${GUARDED_SERVICES.map((s) => s.name).join("، ")})`);
+}
+
+startServiceGuard();
+
+// guard tick marker v2
