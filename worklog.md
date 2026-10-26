@@ -3870,3 +3870,25 @@ Work Log:
 Stage Summary:
 - قرارداد جدید PK («نام جدول + ID»، نوع bigint) به‌عنوان §2.7 وارد قانون اساسی مخزن شد و از این پس برای هر جدول تازه الزامی است؛ هم‌سوسازی رترواکتیو جدول‌های موجود نیازمند تصمیم و تأیید مالک است (پیشنهاد: تسک مهاجرت جداگانه).
 - مانع §0.9: push ناموفق (توکن گیت‌هاب داخل remote منقضی/باطل است؛ «could not read Password») — کامیت t123 محلی نگه داشته شد و در صف auto-push (ahead 7) منتظر توکن تازهٔ مالک است.
+
+---
+Task ID: 124
+Agent: Z.ai Code (main)
+Task: «جدول‌های قبلی که در بانک اطلاعاتی ایجاد شده‌اند را هم به bigint تغییر تایپ بدهید. نام فیلد ستون PK جدول‌های قدیمی را هم اصلاح کنید.» (اجرا — تأیید مالک برای هم‌سوسازی رترواکتیو §2.7)
+
+Work Log:
+- فهرست‌برداری کامل: ۲۶ مدل عملیاتی (۱۷ settings-service / ۹ dfb-service) با PK عمومی "ID"؛ هر ۲۶ از قبل BigInt بودند (Prisma→BIGINT) → تغییر تایپ نیاز نداشت؛ کار اصلی = تغییر نام ستون.
+- ویرایش اسکیماها: ۲۶ عدد `@id @map("ID")` → `@id @map("<نام‌جدول>ID")` (مثال: DetailType → DetailTypeID) با اسکریپت idempotent خودآزما.
+- TABLE_REGISTRY هر دو سرویس (۱۶+۹ مدخل) pkها به‌روز شد — چون IdGenerationService.maxDbId با raw SQL `SELECT MAX("${entry.pk}")` کار می‌کند.
+- ارجاعات raw باقی‌مانده اصلاح شد: dfb seed.service (MAX("ID")→registry-driven) + geo-seed script (MAX("ID")→MAX("GeoLocationID")).
+- QUERY_TABLES فرم‌ساز دست‌نخورده ماند: alias "ID" سطح API است و با keyMap به فیلد camelCase Prisma نگاشت می‌شود (runLocal/runRemote) — نه ستون فیزیکی؛ تغییرش ردیف‌های ذخیره‌شدهٔ DfbQuery را می‌شکست (نیاز تصمیم مالک جدا).
+- مهاجرت داده: kill سرویس‌های مالک DB → بکاپ §0.9 (backup db/*_0308.db) + db/*.bak-t124 → dry-run روی کپی در /tmp (تأیید بازنویسی خودکار FK: PartyPerson→Party(PartyID)، PartyAddress، PartyPhone، UserRoleScope) → `db push` روی کپی = «already in sync» → ALTER روی DB زنده (۲۶ جدول) → `prisma generate` هر دو سرویس → ری‌استارت تمیز → سلامت 3001/3003.
+- تأیید API با امضای §4.2: business-structure=7، detail-type=63، systems=28، fiscal-year=1، geo-location=881، dfb menus/tree=200، forms/schema/tree=200.
+- E2E (agent-browser): فرم تفصیل fa/RTL — ۲۱ سطر به ترتیب کد ✓؛ ایجاد «تست t124» (کد 99) → ۲۲ سطر ✓ (مسیر نوشتن با کلاینت جدید + IDGeneration)؛ حذف با دیالوگ تأیید → ۲۱ ✓؛ en/LTR — dir=ltr، Code/Title، همان ۲۱ سطر ✓؛ بازگشت fa/rtl ✓؛ صفر خطای کنسول.
+- اصلاح جانبی: ۲ خطای TS7053 pre-existing در dfb seed.service (ایندکس Dict با string) — با cast ساده اصلاح شد.
+- lint ریشه = ۰/۰؛ tsc هر دو سرویس = صفر؛ DB نهایی: DetailType 63 ردیف MAX(DetailTypeID)=70 (شناسهٔ ۷۱ برای ردیف آزمون سوزیده شد — gap پذیرفتهٔ §2.4).
+
+Stage Summary:
+- قرارداد §2.7 اکنون روی «همه» جدول‌های موجود برقرار است: ۲۶ ستون PK به الگوی «نام جدول+ID» تغییر نام یافتند با حفظ ۱۰۰٪ داده‌ها (خشک‌آزمون + foreign_key_check + integrity_check)؛ نوع همه bigint است.
+- دو استثنای اعلامی برای تصمیم مالک: Setting (pk=Key) و AppRegistry (pk=AppKey) — متادیتای کلید-مقدار با PK رشته‌ای (AppRegistry مطابق §4.5 قفل‌شده)؛ تبدیل به bigint نیازمند دستور صریح مالک.
+- بکاپ‌ها: db/custom.db.bak-t124 + db/dfb.db.bak-t124 + backup db/*_0308.db (وضعیت پیش از مهاجرت).
