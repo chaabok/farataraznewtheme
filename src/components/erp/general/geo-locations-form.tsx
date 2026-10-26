@@ -483,6 +483,10 @@ export function GeoLocationsForm({ onBack }: { onBack?: () => void }) {
         /* ریشهٔ فرم مجازی است (کشورها زیر ریشهٔ مجازی‌اند) — در ثبتِ شاخهٔ اول
            هیچ گرهی انتخاب نیست؛ پوسته با این opt-in فیلدها را نشان می‌دهد */
         forceDetail={mode === "create"}
+        /* Task 106 (درخواست مالک): با باز شدن فرم، تمام شاخه‌ها جمع باشند —
+           فقط کشورهای سطح ریشه دیده می‌شوند؛ انتخاب (کلیک/راست‌کلیک/پرش از
+           فهرست/ذخیرهٔ رکورد جدید) مسیر والدها را خودکار باز می‌کند (پوسته) */
+        defaultCollapsed
         fields={fields}
         onFieldChange={onFieldChange}
         detailExtra={

@@ -76,6 +76,14 @@ export interface SimpleTreeFormProps {
       empty-state behavior. */
   forceDetail?: boolean;
 
+  /** Task 106 — opt-in (§5.1 additive): start with every branch FOLDED —
+      only the top-level roots are visible when the form opens (async-loaded
+      subtrees stay folded too). Selection — click, controlled mirror,
+      context-menu or record-list jump — auto-expands the ancestor path of
+      the selected node so the target row is never hidden. Omitted = legacy
+      all-expanded Task-30 look. */
+  defaultCollapsed?: boolean;
+
   /* ----- Task 33 — OPTIONAL node context menu (right-click) -----
      Right-clicking a tree row opens the Windows-11 acrylic flyout with
      «افزودن شاخه» (create a child under the right-clicked node) and
@@ -252,6 +260,7 @@ export function SimpleTreeForm({
   detailExtra,
   treeEmptyText,
   forceDetail,
+  defaultCollapsed,
   onAddBranch,
   canAddBranch,
   onDeleteBranch,
@@ -294,8 +303,52 @@ export function SimpleTreeForm({
     setSelectedId(selectedIdProp ?? null);
   }
 
-  /* every branch starts expanded (legacy look: the full path is visible) */
-  const [collapsed, setCollapsed] = React.useState<Set<string>>(() => new Set());
+  /* Task 106 — branch folding state. Legacy (Task-30) look: every branch
+     starts expanded — the set holds FOLDED ids. With `defaultCollapsed`
+     (opt-in, «محل های جغرافیایی»): every branch starts folded — the same
+     set holds OPENED ids instead, so async-loaded subtrees (880-node geo
+     seed) start folded as well. One set, mode-dependent meaning; the
+     toggle just flips membership and is correct in BOTH modes. */
+  const [foldSet, setFoldSet] = React.useState<Set<string>>(() => new Set());
+  const startCollapsed = defaultCollapsed ?? false;
+
+  /* Task 106 — parent index over the CURRENT tree for ancestor
+     auto-expansion when a node is selected while the tree starts folded. */
+  const parentOf = React.useMemo(() => {
+    const m = new Map<string, string>();
+    const walk = (list: SimpleTreeFormNode[], parent: string | null) => {
+      for (const n of list) {
+        if (parent) m.set(n.id, parent);
+        if (n.children?.length) walk(n.children, n.id);
+      }
+    };
+    walk(nodes, null);
+    return m;
+  }, [nodes]);
+
+  /* Task 106 — derive-during-render (the same React "adjusting state on
+     prop change" pattern as the controlled mirror above): whenever the
+     selection lands on a node (controlled mirror / record-list jump /
+     context menu), open its whole ancestor path in folded-start mode so
+     the target row is visible. `renderedSel` starts undefined so a
+     `defaultSelectedId` on mount is processed too. */
+  const [renderedSel, setRenderedSel] = React.useState<string | null | undefined>(
+    undefined,
+  );
+  if (selectedId !== renderedSel) {
+    setRenderedSel(selectedId);
+    if (startCollapsed && selectedId) {
+      setFoldSet((prev) => {
+        const next = new Set(prev);
+        let p: string | undefined = parentOf.get(selectedId);
+        while (p) {
+          next.add(p);
+          p = parentOf.get(p);
+        }
+        return next;
+      });
+    }
+  }
 
   /* Task 33 — node context menu (right-click). Closes on OUTSIDE pointerdown
      / Escape / resize (FloatingMenu contract — closing on the item's own
@@ -356,7 +409,9 @@ export function SimpleTreeForm({
   );
 
   const toggleBranch = React.useCallback((id: string) => {
-    setCollapsed((prev) => {
+    /* membership flip is correct in BOTH modes: legacy set holds FOLDED ids
+       (flip = fold/unfold), defaultCollapsed set holds OPENED ids. */
+    setFoldSet((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
@@ -371,7 +426,7 @@ export function SimpleTreeForm({
   const renderNodes = (list: SimpleTreeFormNode[], depth: number) =>
     list.map((node) => {
       const hasKids = Boolean(node.children?.length);
-      const open = hasKids && !collapsed.has(node.id);
+      const open = hasKids && (startCollapsed ? foldSet.has(node.id) : !foldSet.has(node.id));
       const isSelected = node.id === selectedId;
       return (
         <div key={node.id}>
