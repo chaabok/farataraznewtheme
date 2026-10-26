@@ -22,6 +22,11 @@
  *  · فیلترها contains-match و AND بین ستون‌ها هستند و با هر بازشدن پاک
  *    می‌شوند (نمای تازه)؛
  *  · ارائه‌دهندگان بدون cells به دو ستون عنوان/توضیح برمی‌گردند (سازگاری).
+ *
+ * Task 104 (درخواست مالک) — جهتِ پنل و فیلدهای ورودی لیست از زبانِ انتخاب‌شدهٔ
+ * نرم‌افزار پیروی می‌کند (نه تشخیص خودکار محتوا): RTL = پنل راست‌به‌چپ باز
+ * می‌شود (لنگر به لبهٔ راستِ تریگر) و متنِ فیلترها از راست شروع می‌شود؛
+ * LTR = آینهٔ کامل. (dir="auto" قدیمی منطق RTL رادیکس را هم می‌شکست.)
  */
 
 import * as React from "react";
@@ -102,6 +107,8 @@ export function RecordListDropdown({
 }) {
   const t = useT();
   const locale = useSettings((s) => s.locale);
+  /* Task 104 — جهت پنل از زبان نرم‌افزار (نه dir="auto" محتوامحور) */
+  const dir = useSettings((s) => s.dir());
   const text = label ?? t("abar.list");
 
   const [open, setOpen] = React.useState(false);
@@ -258,7 +265,7 @@ export function RecordListDropdown({
       </TooltipProvider>
 
       <PopoverContent
-        dir="auto"
+        dir={dir}
         align="start"
         sideOffset={8}
         role="dialog"
@@ -314,7 +321,7 @@ export function RecordListDropdown({
                           onChange={(e) => setFilters((s) => ({ ...s, [c]: e.target.value }))}
                           placeholder={t("abar.listFilterPh")}
                           aria-label={`${t("abar.listFilterPh")} — ${c}`}
-                          className="h-7 w-full min-w-[88px] rounded-lg border border-border/70 bg-background/50 ps-7 pe-2 text-center text-[11px] text-foreground placeholder:text-muted-foreground/60 outline-none transition-all focus:border-primary/50 focus:bg-background focus:ring-2 focus:ring-primary/20"
+                          className="h-7 w-full min-w-[88px] rounded-lg border border-border/70 bg-background/50 ps-7 pe-2 text-start text-[11px] text-foreground placeholder:text-muted-foreground/60 outline-none transition-all focus:border-primary/50 focus:bg-background focus:ring-2 focus:ring-primary/20"
                         />
                       </div>
                     </th>

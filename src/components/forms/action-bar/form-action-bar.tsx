@@ -75,12 +75,16 @@ function Divider() {
 
 /**
  * FormActionBar (Task 20) — the composed legacy action bar. All ten action
- * icons (each a standalone component) in the owner's right-to-left order:
+ * icons (each a standalone component) in the owner's reading order:
  *
- *   1 ریست  |  2 ذخیره  3 ذخیره و جدید  4 ذخیره و بستن  |  5 کپی
- *   6 حذف  7 حذف و جدید  8 حذف و بستن  |  9 پرینت  10 لیست (dropdown)
+ *   10 لیست (dropdown)  |  1 ریست  |  2 ذخیره  3 ذخیره و جدید  4 ذخیره و بستن
+ *   |  5 کپی  6 حذف  7 حذف و جدید  8 حذف و بستن  |  9 پرینت
  *   (+ 12 ترجمه — Task 90، در همهٔ فرم‌ها)
- *   (+ optional 11 راهنما — Task 28, rendered right after «لیست»)
+ *   (+ optional 11 راهنما — Task 28, rendered at the end of the cluster)
+ *
+ * Task 104 (درخواست مالک) — «دکمهٔ لیست اطلاعات قبل از دکمهٔ ایجاد»: the
+ * records-list dropdown LEADS the bar — right-most tile in RTL / left-most
+ * in LTR — immediately before the blue «+» (create) tile.
  *
  * Legacy semantics are composed automatically when granular handlers are not
  * provided: «ذخیره و جدید» = save → reset fields; «ذخیره و بستن» = save →
@@ -121,7 +125,6 @@ export function FormActionBar({
   const hasReset = show("reset");
   const hasSaveGroup = show("save") || show("saveNew") || show("saveClose");
   const hasCopyDelete = show("copy") || show("delete") || show("deleteNew") || show("deleteClose");
-  const hasPrintList = show("print") || show("list");
 
   const saveNew = onSaveNew ?? sequence(onSave, onReset);
   const saveClose = onSaveClose ?? sequence(onSave, onClose);
@@ -135,6 +138,19 @@ export function FormActionBar({
       aria-label={t("abar.toolbar")}
       className={cn("flex w-full flex-wrap items-center gap-1.5", className)}
     >
+      {/* Task 104 — «لیست اطلاعات» پیش از دکمهٔ ایجاد: تریگر لیست اولین کاشی
+          نوار است (در RTL راست‌ترین و در LTR چپ‌ترین)، دقیقاً پیش از کاشی
+          آبی «+»؛ جداکننده فقط وقتی که ریست هم حاضر است. */}
+      {show("list") && (
+        <RecordListDropdown
+          items={listItems}
+          loading={listLoading}
+          onOpenListItem={onOpenListItem}
+          activeId={listActiveId}
+          onRefresh={onListRefresh}
+        />
+      )}
+      {show("list") && hasReset && <Divider />}
       {hasReset && <ResetFieldsButton onClick={onReset} />}
       {hasReset && hasSaveGroup && <Divider />}
       {show("save") && <SaveButton onClick={onSave} disabled={!canSave} />}
@@ -145,17 +161,10 @@ export function FormActionBar({
       {show("delete") && <DeleteRecordButton onClick={onDelete} disabled={!canDelete} />}
       {show("deleteNew") && <DeleteNewButton onClick={deleteNew} disabled={!canDelete || !deleteNew} />}
       {show("deleteClose") && <DeleteCloseButton onClick={deleteClose} disabled={!canDelete || !deleteClose} />}
-      {hasCopyDelete && hasPrintList && <Divider />}
+      {/* Task 104 — پرینت آخرین کاشیِ خودِ نوار است (لیست به ابتدای نوار رفت)؛
+          جداکنندهٔ پیش از آن فقط با حضور خودِ پرینت معنا دارد. */}
+      {hasCopyDelete && show("print") && <Divider />}
       {show("print") && <PrintFormButton onClick={print} disabled={!canPrint} />}
-      {show("list") && (
-        <RecordListDropdown
-          items={listItems}
-          loading={listLoading}
-          onOpenListItem={onOpenListItem}
-          activeId={listActiveId}
-          onRefresh={onListRefresh}
-        />
-      )}
       {/* Task 90 — «ترجمه» renders in EVERY form (system + non-system),
           deliberately OUTSIDE the stored-actions allowlist per the owner's
           blanket rule; its enablement (≥2 active languages) lives inside. */}
