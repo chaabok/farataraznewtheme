@@ -10,6 +10,7 @@ import { appApi } from "@/lib/api";
 import { getAppDescriptor } from "@/lib/app-catalog";
 import { AppTile } from "@/components/desktop/app-tile";
 import { FormActionBar, type ActionBarListItem } from "@/components/forms/action-bar";
+import { DfbAppFormsSection } from "@/components/erp/form-builder/dfb-app-forms";
 
 const delay = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
@@ -121,6 +122,13 @@ export function AppPlaceholderWindow({ appKey }: { appKey: string }) {
             </p>
           </div>
         </div>
+      </div>
+
+      {/* Task 111 (درخواست مالک) — فرم‌های فرم‌سازِ همین برنامه: هر فرمی که در
+          فرم‌ساز روی این آیکون اصلی (یا زیرمنوهایش) ساخته می‌شود اینجا دیده
+          می‌شود و باز می‌شود — بدون هیچ تنظیم اضافه (سیستمیک برای همهٔ برنامه‌ها) */}
+      <div className="w-full max-w-md">
+        <DfbAppFormsSection appKey={appKey} />
       </div>
 
       {/* secure-mesh status card */}

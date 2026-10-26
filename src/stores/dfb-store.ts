@@ -46,8 +46,12 @@ interface DfbState {
   loaded: boolean;
   loading: boolean;
   load: () => Promise<void>;
+  /** Task 111 — fetch only when the last finished load is older than maxAgeMs */
+  loadIfStale: (maxAgeMs?: number) => Promise<void>;
   /** user-created main icons for the desktop layer (alphabetically merged by callers) */
   userIcons: DfbMenuNode[];
+  /** Task 111 — timestamp of the last finished load (success or failure) */
+  lastLoadedAt: number;
 }
 
 function collectUserIcons(nodes: DfbMenuNode[], out: DfbMenuNode[]) {
@@ -56,23 +60,42 @@ function collectUserIcons(nodes: DfbMenuNode[], out: DfbMenuNode[]) {
   }
 }
 
+/* Task 111 — a reload requested while another load is in flight must never be
+   swallowed by the in-flight guard: it is queued and a fresh fetch (started
+   AFTER the request) runs when the current one completes — otherwise a form
+   created right behind a still-running fetch would never reach the tree. */
+let pendingReload = false;
+
 export const useDfb = create<DfbState>()((set, get) => ({
   tree: [],
   loaded: false,
   loading: false,
   userIcons: [],
+  lastLoadedAt: 0,
   load: async () => {
-    if (get().loading) return;
+    if (get().loading) {
+      pendingReload = true;
+      return;
+    }
     set({ loading: true });
     try {
       const res = await appApi("advancedTools").get<{ items: DfbMenuNode[] }>("menus/tree");
       const tree = res.items ?? [];
       const userIcons: DfbMenuNode[] = [];
       collectUserIcons(tree, userIcons);
-      set({ tree, userIcons, loaded: true, loading: false });
+      set({ tree, userIcons, loaded: true, loading: false, lastLoadedAt: Date.now() });
     } catch {
-      set({ loading: false, loaded: true });
+      set({ loading: false, loaded: true, lastLoadedAt: Date.now() });
+    } finally {
+      if (pendingReload) {
+        pendingReload = false;
+        void get().load();
+      }
     }
+  },
+  loadIfStale: async (maxAgeMs = 5000) => {
+    if (Date.now() - get().lastLoadedAt < maxAgeMs) return;
+    await get().load();
   },
 }));
 

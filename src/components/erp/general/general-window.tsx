@@ -21,6 +21,7 @@ import { useWindowChrome } from "@/components/desktop/app-window";
 import { FiscalYearForm } from "@/components/erp/general/fiscal-year-form";
 import { PartyForm } from "@/components/forms/common/Party";
 import { GeoLocationsForm } from "@/components/erp/general/geo-locations-form";
+import { DfbAppFormsSection } from "@/components/erp/form-builder/dfb-app-forms";
 
 /**
  * GeneralWindow — Task 75 (درخواست مالک): پنجرهٔ نرم‌افزار «عمومی» (appKey
@@ -198,6 +199,12 @@ export function GeneralWindow() {
       </div>
 
       <div className="mx-auto max-w-xl space-y-4 p-4" dir="auto">
+        {/* Task 111 — فرم‌های ساخته‌شده در فرم‌ساز روی آیکون «عمومی» و
+            زیرمنوهایش؛ عین قرارداد پنجرهٔ منوی dfb-menu، اما به‌صورت بخش
+            افزودنی داخل همین پنجره (درخواست مالک: «فرم های ایجاد شده در منو
+            وجود ندارد») */}
+        <DfbAppFormsSection appKey="general" />
+
         {/* زیرمنوی «اطلاعات پایه» — collapsible classic-ERP menu group */}
         <section className="overflow-hidden rounded-xl border border-border/70 bg-card/60">
           <button

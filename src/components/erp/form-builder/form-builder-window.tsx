@@ -47,11 +47,16 @@ export function FormBuilderWindow() {
 
   const tree = useDfb((s) => s.tree);
   const loaded = useDfb((s) => s.loaded);
-  const load = useDfb((s) => s.load);
+  const loadIfStale = useDfb((s) => s.loadIfStale);
+  const activeTabId = useDesktop((s) => s.activeTabId);
 
+  /* Task 111 — تور ایمنی تازگی درختواره: هر بار که برگهٔ فرم‌ساز فعال می‌شود
+     (از جمله اولین باز شدن)، اگر آخرین بارخوانی کهنه باشد دوباره گرفته می‌شود؛
+     پس فرم‌های ساخته‌شده در هر جای برنامه (یا جلسهٔ قبل) همیشه دیده می‌شوند. */
   React.useEffect(() => {
-    void load();
-  }, [load]);
+    if (!chrome?.windowId || activeTabId !== chrome.windowId) return;
+    void loadIfStale();
+  }, [activeTabId, chrome?.windowId, loadIfStale]);
 
   /* ---------------- dialogs ---------------- */
   const [menuDialog, setMenuDialog] = React.useState<{ open: boolean; parent: DfbMenuNode | null }>({ open: false, parent: null });
@@ -87,8 +92,8 @@ export function FormBuilderWindow() {
   }, [selectedId, tree]);
 
   const reload = React.useCallback(() => {
-    void load();
-  }, [load]);
+    void useDfb.getState().load();
+  }, []);
 
   /* ---------------- pending edits (no setState-in-effect: values are
      keyed by the selected id, so switching nodes needs no reset) -------- */

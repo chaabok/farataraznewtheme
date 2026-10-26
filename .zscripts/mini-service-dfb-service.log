@@ -41,3 +41,4 @@ $ DATABASE_URL="file:/home/z/my-project/db/dfb.db" NODE_PATH=./node_modules bun 
 [Nest] 6577  - 10/25/2026, 10:36:49 PM     LOG [PrismaService] Prisma connected (dfb.db) — §2.5 auto-rowversion active on: IDGeneration, DfbMenu, DfbForm, DfbFormTab, DfbFormField, DfbQuery, DfbQueryField, DfbFormData, DfbFormDataValue, DfbTranslation
 [Nest] 6577  - 10/25/2026, 10:36:49 PM     LOG [NestApplication] Nest application successfully started +183ms
 [Nest] 6577  - 10/25/2026, 10:36:49 PM     LOG [Bootstrap] dfb-service listening on http://127.0.0.1:3003
+[Nest] 6577  - 10/26/2026, 12:37:42 PM     LOG [FormsService] DfbForm created ID=17 under menu=28 component=simpleTwoRowTabbed
