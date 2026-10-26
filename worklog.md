@@ -3396,3 +3396,24 @@ Stage Summary:
 - مدیریت کاربران از «placeholder» به بخش فعال تبدیل شد: اولین فرم آن — «نقش کاربری جدید» — با تعریف نقش‌های سازمان و تعیین محدودهٔ دسترسی دولایه (نرم‌افزارها + ساختار سازمانی) کار می‌کند؛ نقش سیستمی «مدیر سیستم» seed و حفاظت‌شده است.
 - قرارداد محدوده: خالی = بدون محدودیت؛ برگزیدهٔ خالی در فرانت رد می‌شود؛ اعمالِ واقعی این محدوده‌ها (فیلتر پنجره‌ها/رکوردها بر اساس نقش کاربر جاری) فاز دوم پس از IAM است و ساختار داده آن را آماده دارد.
 - artifacts: mini-services/settings-service/prisma/schema.prisma (+UserRole/+UserRoleScope)؛ src/user-roles/{controller,service,dto,module}.ts؛ src/prisma/prisma.service.ts؛ src/id-generation/table-registry.ts؛ src/app.module.ts؛ src/seed/seed.service.ts؛ src/components/erp/settings/user-role-form.tsx؛ src/components/erp/settings-window.tsx؛ src/i18n/dictionaries.ts (۱۹ کلید ×۱۳).
+---
+Task ID: 101
+Agent: Z.ai Code
+Task: درخواست مالک — «آخرین تغییرات را پوش کنید» (اجرای §0.9 پس از بازیابی محیط از بک‌آپ)
+
+Work Log:
+- عارضهٔ زیرساختی: محیط فعلی از بک‌آپ ۲۰۲۶-۱۰-۲۳ بازگردانی شده که طبق BACKUP-INFO پوشهٔ .git (تاریخچهٔ ۵۳۰MB) را «عمداً» کنار گذاشته بود؛ نتیجه: هیچ مخزن گیت و هیچ اعتبارنامه‌ای (PAT) در محیط نبود و auto-push-service (تسک ۶۶) هر ۱۰ دقیقه با «not a git repository» شکست می‌خورد.
+- جست‌وجوی اعتبارنامه: ~/.git-credentials، ~/.netrc، متغیرهای محیطی، gh CLI، تاریخچهٔ شل و کل سیستم فایل — PAT تنها در .git/config مخزن قدیمی ذخیره شده بود (طبق تسک ۵۵) و با حذف .git از دست رفت؛ هیچ نسخه‌ای باقی نماند.
+- بازسازی مخزن: git init -b main + remote origin = https://github.com/chaabok/farataraznewtheme.git (مخزن برای خواندن عمومی است) + fetch سطح‌۱ (depth=1) → origin/main = c01eba7 «Auto-sync 2026-10-26 01:50 تهران»؛ سپس git reset --mixed origin/main (ایندکس = درخت ریموت، درخت کاری دست‌نخورده) تا کامیت جدید دقیقاً بر تاریخچهٔ ریموت سوار شود (بدون force-push و بدون گم‌شدن تاریخچه).
+- تحلیل اختلاف: ریموت فاقد مصنوعات تسک‌های ۹۸–۱۰۰ بود (user-roles بک‌اند، user-role-form.tsx، endpoint دسته‌ای data-translations، تغییرات Party/general-window/desktop/dictionaries و…)؛ تغییرات: ۹ افزودن، ۱۵ حذف (لاگ سرویس‌های حذف‌شدهٔ محیط)، ۲۱ ویرایش، ۲ تغییرنام.
+- restore-point/ (zip بازگردانی ۱۲MB، مصنوع مکانیزم بازیابی محیط نه سورس پروژه) به .gitignore اضافه شد تا auto-push آن را کامیت نکند.
+- بک‌آپ §0.9 (الزامی پیش از پوش): scripts/db-backup.sh → custom-2026-10-26_0421.db + dfb-2026-10-26_0421.db در «backup db/».
+- کامیت محلی 615b95e: «پوش دستی (بازیابی مخزن): 2026-10-26 04:21 تهران …» — ۴۷ فایل، ۲۳۶۳+ / ۳۴۳−.
+- تلاش پوش: git push origin main → «fatal: could not read Username for 'https://github.com'» (پوش گیت‌هاب همیشه نیازمند احراز هویت است؛ مخزن عمومی فقط خواندن را می‌دهد).
+- بازیابی سرویس auto-push: POST /run-now → چرخه سالم اجرا شد (تشخیص تغییر دیتابیس → بک‌آپ §0.9 → کامیت محلی become89b7 = نسخهٔ تازهٔ db) و فقط در گام پوش با همان مانع احراز هویت متوقف شد — سرویس اکنون کامیت‌های محلی را انباشته و پس از فراهم‌شدن توکن به‌طور خودکار پوش می‌کند.
+- وضعیت نهایی: دو کامیت محلی (615b95e + become89b7) روی c01eba7 ریموت انباشته‌اند؛ working tree تمیز.
+
+Stage Summary:
+- مخزن گیت بازسازی و به تاریخچهٔ origin/main پیوند خورد؛ کل تغییرات تسک‌های ۹۸/۹۹/۱۰۰ + بانک اطلاعاتی در دو کامیت محلی (615b95e، become89b7) با بک‌آپ §0.9 آمادهٔ پوش است.
+- مانع صریح (§0.9): پوش به دلیل نبود PAT ممکن نیست — توکن قبلی فقط در .git/config مخزن قدیمی بود و با بک‌آپ حذف شده است. مالک باید یک PAT جدید (با دسترسی Contents: Read and Write به مخزن chaabok/farataraznewtheme) ارسال کند؛ بلافاصله پس از آن remote با توکن تنظیم و هر دو کامیت پوش می‌شود و auto-push-service نیز خودکار از سر گرفته می‌شود.
+- artifacts: .git بازسازی‌شده + remote origin؛ .gitignore (+restore-point/)؛ «backup db/custom-2026-10-26_0421.db» و «dfb-2026-10-26_0421.db»؛ کامیت‌های 615b95e و become89b7.
