@@ -10,3 +10,4 @@ $ NODE_PATH=./node_modules bun --hot src/main.ts
 [Nest] 6579  - 10/25/2026, 10:36:48 PM     LOG [RouterExplorer] Mapped {/:appKey/integrations/status, GET} route +3ms
 [Nest] 6579  - 10/25/2026, 10:36:48 PM     LOG [NestApplication] Nest application successfully started +13ms
 [Nest] 6579  - 10/25/2026, 10:36:48 PM     LOG [Bootstrap] apps-service listening on http://127.0.0.1:3002
+error: script "dev" was terminated by signal SIGKILL (Forced quit)

@@ -3,7 +3,6 @@
 import * as React from "react";
 import { ChevronLeft, ChevronRight, FileText, Folder, Wrench } from "lucide-react";
 import { useT, useSettings } from "@/stores/settings-store";
-import { useDesktop } from "@/stores/desktop-store";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -12,6 +11,7 @@ import {
 } from "@/stores/dfb-store";
 import { useDfbTrMap } from "@/stores/dfb-translations";
 import { DfbGlyph } from "./dfb-dialogs";
+import { openDfbFormReal } from "./dfb-system-forms";
 
 /**
  * DfbMenuWindow (Task 45/46) — the desktop window of a main icon's forms:
@@ -30,7 +30,6 @@ export function DfbMenuWindow({ menuRef }: { menuRef: string }) {
   const tree = useDfb((s) => s.tree);
   const loaded = useDfb((s) => s.loaded);
   const load = useDfb((s) => s.load);
-  const openWindow = useDesktop((s) => s.openWindow);
 
   React.useEffect(() => {
     void load();
@@ -56,16 +55,12 @@ export function DfbMenuWindow({ menuRef }: { menuRef: string }) {
 
   const openForm = React.useCallback(
     (form: DfbFormSummary) => {
-      /* Task 46 — the «فرمساز» launcher (system form, ComponentKey
-         "dfb-builder") opens the form builder + tree; every other form
-         opens its runtime window. */
-      if (form.componentKey === "dfb-builder") {
-        openWindow("dfb-builder");
-        return;
-      }
-      openWindow("dfb-form", String(form.id));
+      /* Task 112 — فرم‌های سیستمیِ دارای فرم واقعی (ساختار کسب و کار،
+         سال مالی جدید/طرف حساب جدید/محل های جغرافیایی، لانچر فرمساز) همان
+         فرم واقعی را باز می‌کنند؛ بقیه ران‌تایم عمومی dfb-form. */
+      openDfbFormReal(form);
     },
-    [openWindow],
+    [],
   );
 
   if (!loaded) {

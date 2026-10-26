@@ -3,6 +3,8 @@ import { PrismaService } from "../prisma/prisma.service";
 import { IdGenerationService } from "../id-generation/id-generation.service";
 import { APP_CATALOG } from "../../../_shared/app-catalog";
 import { appBaseOnCreate, SYSTEM_ACTOR } from "../../../_shared/app-base-entity";
+import { LOCALES, type Locale } from "../../../../src/i18n/config";
+import { getDict } from "../../../../src/i18n/dictionaries";
 
 /**
  * SYSTEM_FORMS — registry of the ERP's built-in forms (in the owner's words:
@@ -15,11 +17,47 @@ import { appBaseOnCreate, SYSTEM_ACTOR } from "../../../_shared/app-base-entity"
 interface SystemFormSeed {
   systemKey: string;
   anchorAppKey: string; // catalog appKey of the icon node it lives under
+  /** اختیاری — کد زیرمنوی سیستمیِ SYSTEM_SUBMENUS که فرم باید زیر آن بنشیند
+      (Task 112: فرم‌های «اطلاعات پایه»ٔ عمومی زیر همان زیرمنو ثبت می‌شوند) */
+  anchorSubmenuCode?: string;
   code: string;
   titleFa: string;
   titleEn: string;
   componentKey: string; // "simpleTwoRowTabbed" | "treeForm" | "dfb-builder" (launcher)
+  /** کلید i18n عنوان فرم — ترجمهٔ ۱۲ زبانِ غیر-fa از همان دیکشنری برنامه
+      seed می‌شود تا عنوان درختواره با برچسب UI همهٔ زبان‌ها یکی باشد (Task 112) */
+  dictKey?: string;
 }
+
+/**
+ * SYSTEM_SUBMENUS (Task 112 — درخواست مالک) — زیرمنوهای سیستمیِ آیکون‌های
+ * کاتالوگ: «فرم هایی که در زیرمنوی اطلاعات پایه منوی عمومی ایجاد شده اند مثل
+ * طرف حساب در درختواره فرمساز و منوی عمومی دیده نمی شود». هر زیرمنو یک گره
+ * DfbMenu (NodeType=2، IsSystem=true، AppKey=null) زیر آیکون برنامهٔ خودش است
+ * و فرم‌های سیستمیِ SYSTEM_FORMS با anchorSubmenuCode زیر آن ثبت می‌شوند.
+ * AppKey باید null بماند — وگرنه dfbNodeTitle آن را به برچسب برنامه ترجمه می‌کند.
+ */
+interface SystemSubmenuSeed {
+  anchorAppKey: string;
+  code: string;
+  titleFa: string;
+  titleEn: string;
+  iconKey: string;
+  sortOrder: number;
+  dictKey: string; // کلید i18n عنوان (برای ترجمهٔ ۱۲ زبان)
+}
+
+const SYSTEM_SUBMENUS: SystemSubmenuSeed[] = [
+  {
+    anchorAppKey: "general",
+    code: "basicInfo",
+    titleFa: "اطلاعات پایه",
+    titleEn: "Basic Information",
+    iconKey: "folder",
+    sortOrder: 1,
+    dictKey: "fy.menuBasicInfo",
+  },
+];
 
 const SYSTEM_FORMS: SystemFormSeed[] = [
   {
@@ -43,6 +81,40 @@ const SYSTEM_FORMS: SystemFormSeed[] = [
     titleFa: "فرمساز",
     titleEn: "Form Builder",
     componentKey: "dfb-builder",
+  },
+  {
+    /* Task 112 — فرم‌های واقعی زیرمنوی «اطلاعات پایه»ٔ عمومی: تا امروز فقط
+       در پنجرهٔ عمومی (صفحه‌های React ثابت) بودند و در درختوارهٔ فرمساز و
+       منوی dfb دیده نمی‌شدند؛ اکنون در رجیستری ثبت‌اند و راه‌انداز واقعی‌شان
+       (dfb-system-forms فرانت) همان زیرصفحه‌های پنجرهٔ عمومی را باز می‌کند. */
+    systemKey: "gnr.fiscalYear",
+    anchorAppKey: "general",
+    anchorSubmenuCode: "basicInfo",
+    code: "FYS",
+    titleFa: "سال مالی جدید",
+    titleEn: "New Fiscal Year",
+    componentKey: "simpleTwoRowTabbed",
+    dictKey: "fy.formTitle",
+  },
+  {
+    systemKey: "gnr.party",
+    anchorAppKey: "general",
+    anchorSubmenuCode: "basicInfo",
+    code: "PRT",
+    titleFa: "طرف حساب جدید",
+    titleEn: "New Party Account",
+    componentKey: "simpleTwoRowTabbed",
+    dictKey: "party.formTitle",
+  },
+  {
+    systemKey: "gnr.geoLocations",
+    anchorAppKey: "general",
+    anchorSubmenuCode: "basicInfo",
+    code: "GEO",
+    titleFa: "محل های جغرافیایی",
+    titleEn: "Geographic Locations",
+    componentKey: "treeForm",
+    dictKey: "geo.formTitle",
   },
 ];
 
@@ -145,48 +217,8 @@ export class SeedService implements OnModuleInit {
       this.logger.log(`DfbMenu sync: ${created} created, ${updated} updated (${APP_CATALOG.length} catalog apps)`);
     }
 
-    /* 3) system forms under their anchor icon */
-    for (const sf of SYSTEM_FORMS) {
-      const anchor = await this.prisma.dfbMenu.findFirst({
-        where: { parentRef: 0n, isSystem: true, appKey: sf.anchorAppKey },
-      });
-      if (!anchor) continue;
-      const existing = await this.prisma.dfbForm.findFirst({
-        where: { systemKey: sf.systemKey },
-      });
-      if (!existing) {
-        const id = await this.idGen.generateNextId("DfbForm");
-        await this.prisma.dfbForm.create({
-          data: {
-            id: BigInt(id),
-            menuRef: anchor.id,
-            code: sf.code,
-            title: sf.titleFa,
-            titleEn: sf.titleEn,
-            componentKey: sf.componentKey,
-            status: 2,
-            systemKey: sf.systemKey,
-            isSystem: true,
-            ...appBaseOnCreate(SYSTEM_ACTOR),
-          },
-        });
-        this.logger.log(`seeded system form ${sf.systemKey} (ID=${id}) under "${sf.anchorAppKey}"`);
-      } else if (
-        existing.title !== sf.titleFa ||
-        existing.componentKey !== sf.componentKey ||
-        existing.menuRef !== anchor.id
-      ) {
-        await this.prisma.dfbForm.update({
-          where: { id: existing.id },
-          data: { title: sf.titleFa, componentKey: sf.componentKey, menuRef: anchor.id },
-        });
-      }
-    }
-
-    /* 4) Task 68 — ترجمه‌ها:
-       ۴الف) مهاجرت میراث: هر *_En موجود (Menu/Form/Field) → ردیف ترجمهٔ en
-       ۴ب) ترجمهٔ نمونهٔ مالک: عنوان‌های منو/فرم موجود به ۱۰ زبان غیر-fa
-       هر دو idempotent هستند (فقط وقتی ردیفی وجود ندارد ساخته می‌شود). */
+    /* 2.5) Task 112 — زیرمنوهای سیستمیِ آیکون‌های کاتالوگ (اطلاعات پایهٔ عمومی و…)
+       ساخت همگام و idempotent؛ AppKey=null تا برچسب گره = برچسب خود زیرمنو بماند. */
     const ensureTr = async (
       entityType: string,
       entityRef: bigint,
@@ -212,6 +244,125 @@ export class SeedService implements OnModuleInit {
       });
       return true;
     };
+    /* ترجمهٔ ۱۲ زبانِ غیر-fa یک موجودیت از دیکشنری برنامه — عین برچسب UI همهٔ زبان‌ها */
+    const ensureDictTranslations = async (
+      entityType: "Menu" | "Form",
+      entityRef: bigint,
+      dictKey: string,
+    ): Promise<number> => {
+      let n = 0;
+      const faValue = getDict("fa")[dictKey];
+      for (const lang of LOCALES) {
+        if (lang === "fa") continue; // fa = ستون پایهٔ خود Title
+        const value = (getDict(lang as Locale)[dictKey] ?? "").trim();
+        if (!value || value === faValue) continue;
+        if (await ensureTr(entityType, entityRef, "Title", lang, value)) n++;
+      }
+      return n;
+    };
+
+    let submenusSeeded = 0;
+    let trDict = 0;
+    for (const ss of SYSTEM_SUBMENUS) {
+      const icon = await this.prisma.dfbMenu.findFirst({
+        where: { parentRef: 0n, isSystem: true, appKey: ss.anchorAppKey },
+      });
+      if (!icon) continue;
+      let sm = await this.prisma.dfbMenu.findFirst({
+        where: { parentRef: icon.id, code: ss.code },
+      });
+      if (!sm) {
+        sm = await this.prisma.dfbMenu.create({
+          data: {
+            id: BigInt(await this.idGen.generateNextId("DfbMenu")),
+            parentRef: icon.id,
+            nodeType: 2,
+            code: ss.code,
+            title: ss.titleFa,
+            titleEn: ss.titleEn,
+            iconKey: ss.iconKey,
+            appKey: null, // هرگز appKey نگذار — وگرنه dfbNodeTitle برچسب برنامه را نشان می‌دهد
+            sortOrder: ss.sortOrder,
+            isSystem: true,
+            isActive: true,
+            ...appBaseOnCreate(SYSTEM_ACTOR),
+          },
+        });
+        submenusSeeded++;
+        this.logger.log(`seeded system submenu "${ss.titleFa}" (ID=${sm.id}) under "${ss.anchorAppKey}"`);
+      } else if (sm.title !== ss.titleFa || sm.iconKey !== ss.iconKey || sm.sortOrder !== ss.sortOrder) {
+        sm = await this.prisma.dfbMenu.update({
+          where: { id: sm.id },
+          data: { title: ss.titleFa, titleEn: ss.titleEn, iconKey: ss.iconKey, sortOrder: ss.sortOrder },
+        });
+      }
+      trDict += await ensureDictTranslations("Menu", sm.id, ss.dictKey);
+    }
+    if (submenusSeeded) this.logger.log(`DfbMenu system submenus: ${submenusSeeded} created`);
+
+    /* 3) system forms under their anchor icon (or their system submenu — Task 112) */
+    for (const sf of SYSTEM_FORMS) {
+      const icon = await this.prisma.dfbMenu.findFirst({
+        where: { parentRef: 0n, isSystem: true, appKey: sf.anchorAppKey },
+      });
+      if (!icon) continue;
+      let anchor = icon;
+      if (sf.anchorSubmenuCode) {
+        const sm = await this.prisma.dfbMenu.findFirst({
+          where: { parentRef: icon.id, code: sf.anchorSubmenuCode },
+        });
+        if (!sm) continue; // زیرمنوی سیستمی هنوز بذر نشده — فرم بی‌لنگر نمی‌ماند
+        anchor = sm;
+      }
+      const existing = await this.prisma.dfbForm.findFirst({
+        where: { systemKey: sf.systemKey },
+      });
+      if (!existing) {
+        const id = await this.idGen.generateNextId("DfbForm");
+        await this.prisma.dfbForm.create({
+          data: {
+            id: BigInt(id),
+            menuRef: anchor.id,
+            code: sf.code,
+            title: sf.titleFa,
+            titleEn: sf.titleEn,
+            componentKey: sf.componentKey,
+            status: 2,
+            systemKey: sf.systemKey,
+            isSystem: true,
+            ...appBaseOnCreate(SYSTEM_ACTOR),
+          },
+        });
+        this.logger.log(
+          `seeded system form ${sf.systemKey} (ID=${id}) under "${sf.anchorAppKey}"${sf.anchorSubmenuCode ? `/${sf.anchorSubmenuCode}` : ""}`,
+        );
+        if (sf.dictKey) trDict += await ensureDictTranslations("Form", BigInt(id), sf.dictKey);
+      } else if (
+        existing.title !== sf.titleFa ||
+        (existing.titleEn ?? "") !== sf.titleEn ||
+        existing.componentKey !== sf.componentKey ||
+        existing.menuRef !== anchor.id
+      ) {
+        await this.prisma.dfbForm.update({
+          where: { id: existing.id },
+          data: {
+            title: sf.titleFa,
+            titleEn: sf.titleEn,
+            componentKey: sf.componentKey,
+            menuRef: anchor.id,
+          },
+        });
+        if (sf.dictKey) trDict += await ensureDictTranslations("Form", existing.id, sf.dictKey);
+      }
+    }
+    if (trDict) this.logger.log(`seeded ${trDict} dict-driven translation rows (Task 112)`);
+
+    /* 4) Task 68 — ترجمه‌ها:
+       ۴الف) مهاجرت میراث: هر *_En موجود (Menu/Form/Field) → ردیف ترجمهٔ en
+       ۴ب) ترجمهٔ نمونهٔ مالک: عنوان‌های منو/فرم موجود به ۱۰ زبان غیر-fa
+       هر دو idempotent هستند (فقط وقتی ردیفی وجود ندارد ساخته می‌شود).
+       (ensureTr از Task 112 به بالای seed منتقل شد تا زیرمنو/فرم‌های سیستمی
+       هم از همان لحظهٔ ثبت، ترجمهٔ دیکشنری‌محور بگیرند.) */
 
     /* ۴ج — Task 69: backfill کلید پایدار ClientKey برای تب‌ها/باندهای قدیمی
        (هویت ترجمهٔ عنوان تب = Tab:<formRef>:<clientKey>)؛ idempotent */

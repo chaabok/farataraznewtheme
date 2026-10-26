@@ -7,10 +7,11 @@ import { useDesktop } from "@/stores/desktop-store";
 import { Badge } from "@/components/ui/badge";
 import {
   useDfb, findMenuNodeByAppKey, dfbNodeTitle, dfbFormTitle,
-  type DfbFormSummary,
+  type DfbFormSummary, type DfbMenuNode,
 } from "@/stores/dfb-store";
 import { useDfbTrMap } from "@/stores/dfb-translations";
 import { DfbGlyph } from "./dfb-dialogs";
+import { openDfbFormReal } from "./dfb-system-forms";
 
 /**
  * DfbAppFormsSection (Task 111 — درخواست مالک) — «فرم‌های فرم‌ساز» در پنجرهٔ
@@ -18,6 +19,12 @@ import { DfbGlyph } from "./dfb-dialogs";
  * (یا زیرمنوهایش) ساخته می‌شود، از همین بخش در پنجرهٔ همان برنامه دیده می‌شود
  * و با کلیک باز می‌شود — عین رفتار پنجرهٔ منوی dfb-menu (قرارداد Task 46) اما
  * به‌صورت یک بخش افزودنی داخل پنجرهٔ خود برنامه (عمومی/placeholder ها).
+ *
+ * Task 112 — فلت‌کردن یک سطح: فرم‌های مستقیمِ زیرمنوهای سیستمی هم بدون کلیک
+ * اضافه در همین بخش فهرست می‌شوند (سرگروه = عنوان خود زیرمنو) — «فرم هایی که
+ * در زیرمنوی اطلاعات پایه منوی عمومی ایجاد شده اند مثل طرف حساب در درختواره
+ * فرمساز و منوی عمومی دیده نمی شود». مدخل‌های سیستمیِ دارای فرم واقعی با کلیک
+ * همان فرم واقعی را باز می‌کنند (openDfbFormReal).
  *
  * systemic contract: فرم‌های جدید بدون هیچ تنظیم اضافه‌ای در منوی برنامه ظاهر
  * می‌شوند؛ زیرمنوها هم به‌صورت کاشی هستند و با کلیک، پنجرهٔ dfb-menu همان گره
@@ -41,22 +48,49 @@ export function DfbAppFormsSection({ appKey }: { appKey: string }) {
     [tree, appKey],
   );
 
-  const openForm = React.useCallback((f: DfbFormSummary) => {
-    /* the «فرمساز» launcher (Task 46) opens the real builder; every other
-       form opens its runtime window */
-    if (f.componentKey === "dfb-builder") {
-      openWindow("dfb-builder");
-      return;
-    }
-    openWindow("dfb-form", String(f.id));
-  }, [openWindow]);
+  const openForm = React.useCallback((f: DfbFormSummary) => openDfbFormReal(f), []);
 
   /* the tree is still loading (or the node is inactive): render nothing —
      the section must never flicker an empty state it cannot know yet */
   if (!loaded || !node) return null;
 
   const submenus = node.children ?? [];
-  const forms = node.forms ?? [];
+  const directForms = node.forms ?? [];
+  /* Task 112 — فرم‌های مستقیمِ زیرمنوها (یک سطح پایین‌تر) به‌صورت سرگروه‌دار */
+  const groups: Array<{ sm: DfbMenuNode; forms: DfbFormSummary[] }> = submenus
+    .map((sm) => ({ sm, forms: sm.forms ?? [] }))
+    .filter((g) => g.forms.length > 0);
+  const totalForms = directForms.length + groups.reduce((n, g) => n + g.forms.length, 0);
+
+  const renderRow = (f: DfbFormSummary) => {
+    const isBuilder = f.componentKey === "dfb-builder";
+    return (
+      <li key={f.id}>
+        <button
+          type="button"
+          onClick={() => openForm(f)}
+          className="flex w-full items-center gap-3 rounded-xl border border-border/60 px-3 py-2.5 text-start transition-all hover:border-foreground/25 hover:shadow-md"
+        >
+          <span
+            className={
+              isBuilder
+                ? "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-amber-500 to-amber-700 text-white shadow-sm"
+                : "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-teal-500 to-emerald-600 text-white shadow-sm"
+            }
+          >
+            {isBuilder ? <Wrench className="h-4 w-4" aria-hidden /> : <FileText className="h-4 w-4" aria-hidden />}
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-sm font-medium">{dfbFormTitle(f, locale, trMap)}</span>
+            <span className="block truncate text-[11px] text-muted-foreground" dir="ltr">
+              {f.code}
+            </span>
+          </span>
+          {f.isSystem && <Badge variant="secondary" className="shrink-0 text-[10px]">{t("dfb.systemForm")}</Badge>}
+        </button>
+      </li>
+    );
+  };
 
   return (
     <section
@@ -70,9 +104,9 @@ export function DfbAppFormsSection({ appKey }: { appKey: string }) {
         <h2 className="min-w-0 flex-1 truncate text-sm font-semibold">
           {t("dfb.appFormsSection")}
         </h2>
-        {forms.length > 0 && (
+        {totalForms > 0 && (
           <Badge variant="secondary" className="shrink-0 text-[10px]">
-            {forms.length} {t("dfb.formsCount")}
+            {totalForms} {t("dfb.formsCount")}
           </Badge>
         )}
       </div>
@@ -96,41 +130,19 @@ export function DfbAppFormsSection({ appKey }: { appKey: string }) {
           </div>
         )}
 
-        {forms.length > 0 && (
-          <ul className="grid gap-2">
-            {forms.map((f) => {
-              const isBuilder = f.componentKey === "dfb-builder";
-              return (
-                <li key={f.id}>
-                  <button
-                    type="button"
-                    onClick={() => openForm(f)}
-                    className="flex w-full items-center gap-3 rounded-xl border border-border/60 px-3 py-2.5 text-start transition-all hover:border-foreground/25 hover:shadow-md"
-                  >
-                    <span
-                      className={
-                        isBuilder
-                          ? "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-amber-500 to-amber-700 text-white shadow-sm"
-                          : "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-teal-500 to-emerald-600 text-white shadow-sm"
-                      }
-                    >
-                      {isBuilder ? <Wrench className="h-4 w-4" aria-hidden /> : <FileText className="h-4 w-4" aria-hidden />}
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-medium">{dfbFormTitle(f, locale, trMap)}</span>
-                      <span className="block truncate text-[11px] text-muted-foreground" dir="ltr">
-                        {f.code}
-                      </span>
-                    </span>
-                    {f.isSystem && <Badge variant="secondary" className="shrink-0 text-[10px]">{t("dfb.systemForm")}</Badge>}
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        )}
+        {directForms.length > 0 && <ul className="grid gap-2">{directForms.map(renderRow)}</ul>}
 
-        {submenus.length === 0 && forms.length === 0 && (
+        {groups.map(({ sm, forms }) => (
+          <div key={sm.id} className="grid gap-1.5">
+            <h3 className="flex items-center gap-1.5 px-1 text-[11px] font-semibold text-muted-foreground">
+              <DfbGlyph iconKey={sm.iconKey} className="h-3.5 w-3.5 rounded" iconClass="h-2 w-2" />
+              {dfbNodeTitle(sm, t, locale, trMap)}
+            </h3>
+            <ul className="grid gap-2">{forms.map(renderRow)}</ul>
+          </div>
+        ))}
+
+        {submenus.length === 0 && directForms.length === 0 && (
           <div className="flex flex-col items-center gap-1.5 rounded-xl border border-dashed border-border/80 px-3 py-4 text-center">
             <Folder className="h-6 w-6 text-muted-foreground/50" aria-hidden />
             <p className="text-xs leading-relaxed text-muted-foreground">

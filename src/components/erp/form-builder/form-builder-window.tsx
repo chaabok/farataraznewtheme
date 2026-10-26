@@ -24,6 +24,7 @@ import {
   DfbGlyph, DfbMenuDialog, DfbFormWizard, DfbQueryDialog, DfbFieldsOverview,
 } from "./dfb-dialogs";
 import { dfbApi } from "@/stores/dfb-store";
+import { dfbFormHasRealWindow, openDfbFormReal } from "./dfb-system-forms";
 
 /**
  * FormBuilderWindow (Task 45) — «ابزارهای پیشرفته» window: the professional
@@ -443,10 +444,13 @@ function FormDetailPanel({
             <Palette className="h-4 w-4" /> {t("dfb.studio.open")}
           </Button>
         )}
-        {!form.isSystem && (
+        {/* Task 112 — فرم‌های سیستمیِ دارای فرم واقعی هم دکمهٔ باز کردن دارند
+            (ساختار کسب و کار، سال مالی جدید/طرف حساب جدید/محل های جغرافیایی)
+            — کلیک = همان فرم واقعی؛ بقیهٔ فرم‌ها = ران‌تایم عمومی */}
+        {(!form.isSystem || dfbFormHasRealWindow(form.systemKey)) && (
           <Button
             type="button" size="sm" variant="outline"
-            onClick={() => useDesktop.getState().openWindow("dfb-form", String(form.id))}
+            onClick={() => openDfbFormReal(form)}
           >
             <ListTree className="h-4 w-4" /> {t("dfb.openForm")}
           </Button>
