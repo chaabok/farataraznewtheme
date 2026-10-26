@@ -27,6 +27,7 @@ import {
 import { useWindowChrome, useTabDirty } from "@/components/desktop/app-window";
 import {
   useRecordTranslation,
+  type SubtreeTranslationRecord,
 } from "@/components/forms/common/use-record-translation";
 import type { DataTranslationField } from "@/components/forms/common/data-translations-dialog";
 import { cn } from "@/lib/utils";
@@ -542,6 +543,35 @@ export function GeoLocationsForm({ onBack }: { onBack?: () => void }) {
       const v = form.title.trim();
       return v ? [{ key: "title", label: t("bs.field.title"), value: v }] : [];
     },
+    /* Task 108 (درخواست مالک) — ترجمهٔ زنجیرهٔ درخت: با «ترجمهٔ آنلاین»،
+       همهٔ زیرشاخه‌های سرشاخهٔ انتخابی هم ترجمه می‌شوند — کاربر نباید روی
+       تک‌تک زیرشاخه‌ها کلیک کند. پیمایش والد→فرزند روی دادهٔ درختِ حاضر
+       (۸۸۰ گره)؛ برگ = فهرست خالی = عین مسیر تک‌رکوردی قبلی. */
+    getSubtreeRecords: (rootId): SubtreeTranslationRecord[] => {
+      const kidsOf = new Map<number, number[]>();
+      for (const n of items) {
+        const p = n.parentRef ?? 0;
+        const list = kidsOf.get(p);
+        if (list) list.push(n.id);
+        else kidsOf.set(p, [n.id]);
+      }
+      const out: SubtreeTranslationRecord[] = [];
+      const stack = [...(kidsOf.get(rootId) ?? [])];
+      while (stack.length > 0) {
+        const id = stack.pop() as number;
+        const node = byId.get(String(id));
+        const v = node?.title?.trim();
+        if (node && v) {
+          out.push({
+            entityId: node.id,
+            fields: [{ key: "title", label: t("bs.field.title"), value: v }],
+          });
+        }
+        const kids = kidsOf.get(id);
+        if (kids) stack.push(...kids);
+      }
+      return out;
+    },
     onTranslated: () => setTrVersion((v) => v + 1),
     onOfflineClose: () => setTrVersion((v) => v + 1),
   });
@@ -601,7 +631,7 @@ export function GeoLocationsForm({ onBack }: { onBack?: () => void }) {
         listItems={listItems}
         listLoading={loading}
         onOpenListItem={(item) => handleSelect(item.id)}
-        /* Task 107 — کاشی «ترجمه» فعال: آنلاین (LLM) + دستی (دیالوگ عمومی) */
+        /* Task 107 — کاشی «ترجمه» فعال: آنلاین (LLM زنجیره‌ای زیرشاخه‌ها — Task 108) + دستی (دیالوگ عمومی) */
         onTranslateOnline={recordTr.translateOnline}
         onTranslateOffline={recordTr.openTranslateOffline}
         /* زیرصفحهٔ پنجرهٔ «عمومی» — میزبان، کپشن پنجره را دارد؛ دکمهٔ ✕ هدر

@@ -139,22 +139,36 @@ export async function POST(req: NextRequest) {
     const zai = await ZAI.create();
     let tr: Record<string, Record<string, Record<string, string>>> | null = null;
     for (let attempt = 0; attempt < 2 && !tr; attempt++) {
-      const completion = await zai.chat.completions.create({
-        messages: [
-          {
-            role: "assistant",
-            content:
-              "You are a professional translator for business/ERP records. Translate faithfully and naturally, keeping numbers, codes and proper nouns intact. Respond with STRICT JSON only — no markdown fences, no commentary.",
-          },
-          {
-            role: "user",
-            content: `Translate EVERY text field of EVERY item below into EACH target language.\nInput JSON:\n${JSON.stringify(
-              { source_language: "fa", target_languages: langs, items },
-            )}\n\nRespond with exactly this JSON shape (keep item ids and field keys unchanged):\n{"translations":{"<id>":{"<fieldKey>":{"<lang>":"<translation>"}}}}`,
-          },
-        ],
-        thinking: { type: "disabled" },
-      });
+      /* Task 108 (تجربهٔ زنده) — سرویس LLM زیر فشار دسته‌های موازی 429
+         «Too many requests» می‌دهد؛ پیش از اعلام شکست، با انتظار تدریجی
+         (۴s/۸s) دوباره تلاش می‌کنیم — مکمل صف تلاش‌مجدد سمت قلاب. */
+      const backoffs = [4000, 8000];
+      const completion = await (async () => {
+        for (let i = 0; ; i++) {
+          try {
+            return await zai.chat.completions.create({
+              messages: [
+                {
+                  role: "assistant",
+                  content:
+                    "You are a professional translator for business/ERP records. Translate faithfully and naturally, keeping numbers, codes and proper nouns intact. Respond with STRICT JSON only — no markdown fences, no commentary.",
+                },
+                {
+                  role: "user",
+                  content: `Translate EVERY text field of EVERY item below into EACH target language.\nInput JSON:\n${JSON.stringify(
+                    { source_language: "fa", target_languages: langs, items },
+                  )}\n\nRespond with exactly this JSON shape (keep item ids and field keys unchanged):\n{"translations":{"<id>":{"<fieldKey>":{"<lang>":"<translation>"}}}}`,
+                },
+              ],
+              thinking: { type: "disabled" },
+            });
+          } catch (e) {
+            const msg = e instanceof Error ? e.message : String(e);
+            if (i >= backoffs.length || !/429|too many requests/i.test(msg)) throw e;
+            await new Promise((r) => setTimeout(r, backoffs[i]));
+          }
+        }
+      })();
       const raw = completion.choices[0]?.message?.content ?? "";
       if (process.env.NODE_ENV !== "production") {
         console.error(

@@ -162,6 +162,7 @@ export function useRecordTranslation(
           .replace("{total}", String(records.length));
       let doneCount = 0;
       let failedChunks = 0;
+      let failedRecords = 0;
       toast.loading(progressMsg(), { id: progressToastId, duration: Infinity });
 
       const queue = [...chunks];
@@ -186,6 +187,7 @@ export function useRecordTranslation(
                اجرای دوباره همان سرشاخه فقط زیرشاخه‌های جامانده را ترجمه می‌کند
                (upsert سرور = امن برای تکرار) */
             failedChunks += 1;
+            failedRecords += chunk.length;
           }
           doneCount += chunk.length;
           toast.loading(progressMsg(), { id: progressToastId, duration: Infinity });
@@ -206,7 +208,7 @@ export function useRecordTranslation(
       } else {
         toast.warning(
           t("dfb.list.translateTreePartial")
-            .replace("{n}", String(records.length - Math.min(failedChunks * CHUNK_RECORDS, records.length)))
+            .replace("{n}", String(records.length - failedRecords))
             .replace("{m}", String(langs.length))
             .replace("{k}", String(failedChunks)),
           { id: progressToastId, duration: 8000 },
