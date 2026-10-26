@@ -69,6 +69,12 @@ export interface SimpleTreeFormProps {
   /** Task 32 — message rendered when the tree has no nodes
       (loading/empty); omitted = blank pane */
   treeEmptyText?: string;
+  /** Task 103 — opt-in (§5.1 additive): render the detail field grid even
+      when NO tree node is selected — for forms whose root is VIRTUAL
+      (e.g. «محل های جغرافیایی»: first-level countries live under a virtual
+      root, so root-level create has no node to select). Omitted = legacy
+      empty-state behavior. */
+  forceDetail?: boolean;
 
   /* ----- Task 33 — OPTIONAL node context menu (right-click) -----
      Right-clicking a tree row opens the Windows-11 acrylic flyout with
@@ -245,6 +251,7 @@ export function SimpleTreeForm({
   emptyText,
   detailExtra,
   treeEmptyText,
+  forceDetail,
   onAddBranch,
   canAddBranch,
   onDeleteBranch,
@@ -560,7 +567,7 @@ export function SimpleTreeForm({
 
         {/* 2c) scrollable detail body — aligned field grid (or empty state) */}
         <div className="min-h-0 flex-1 overflow-y-auto scrollbar-slim" style={bodyStyle}>
-          {selected ? (
+          {selected || forceDetail ? (
             <div className="px-4 pb-2 pt-2.5">
               {fieldsAlign && fieldsAlign !== "start" || fields.some((f) => f.widthPct != null) ? (
                 <FlowFieldGrid

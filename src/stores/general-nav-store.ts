@@ -20,7 +20,7 @@
 import { create } from "zustand";
 
 /** زیرصفحه‌های پنجرهٔ «عمومی» — هم‌نوع GeneralPage در general-window */
-export type GeneralSubPage = "home" | "fiscal-year" | "party";
+export type GeneralSubPage = "home" | "fiscal-year" | "party" | "geo-location";
 
 interface GeneralNavState {
   /** درخواست در انتظار (null = هیچ) */

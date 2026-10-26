@@ -9,6 +9,7 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  Earth,
   FolderOpen,
   UserRoundPlus,
 } from "lucide-react";
@@ -19,6 +20,7 @@ import { useGeneralNav, type GeneralSubPage } from "@/stores/general-nav-store";
 import { useWindowChrome } from "@/components/desktop/app-window";
 import { FiscalYearForm } from "@/components/erp/general/fiscal-year-form";
 import { PartyForm } from "@/components/forms/common/Party";
+import { GeoLocationsForm } from "@/components/erp/general/geo-locations-form";
 
 /**
  * GeneralWindow — Task 75 (درخواست مالک): پنجرهٔ نرم‌افزار «عمومی» (appKey
@@ -53,7 +55,13 @@ export function GeneralWindow() {
   React.useEffect(() => {
     if (!chrome?.windowId) return;
     const titleKey =
-      page === "fiscal-year" ? "fy.formTitle" : page === "party" ? "party.formTitle" : null;
+      page === "fiscal-year"
+        ? "fy.formTitle"
+        : page === "party"
+          ? "party.formTitle"
+          : page === "geo-location"
+            ? "geo.formTitle"
+            : null;
     setWindowTitle(
       chrome.windowId,
       titleKey ? `${t("app.general")} — ${t(titleKey as never)}` : undefined,
@@ -142,6 +150,38 @@ export function GeneralWindow() {
     );
   }
 
+  if (page === "geo-location") {
+    return (
+      <div className="flex h-full flex-col">
+        {/* slim sub-page bar: عمومی / اطلاعات پایه / محل های جغرافیایی */}
+        <div className="flex h-10 shrink-0 items-center gap-1.5 overflow-x-auto border-b border-border/60 px-2 scrollbar-slim">
+          <button
+            onClick={() => go("home")}
+            className="flex h-8 shrink-0 items-center gap-1.5 rounded-lg px-2.5 text-xs font-medium text-foreground/80 transition-colors hover:bg-foreground/10 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
+          >
+            <BackIcon className="h-3.5 w-3.5" aria-hidden />
+            {t("settings.back")}
+          </button>
+          <span className="shrink-0 text-xs text-muted-foreground/50" aria-hidden>
+            /
+          </span>
+          <span className="shrink-0 text-xs font-medium text-muted-foreground">
+            {t("fy.menuBasicInfo")}
+          </span>
+          <span className="shrink-0 text-xs text-muted-foreground/50" aria-hidden>
+            /
+          </span>
+          <span className="shrink-0 truncate text-xs font-semibold text-foreground/90">
+            {t("geo.formTitle")}
+          </span>
+        </div>
+        <div className="min-h-0 flex-1">
+          <GeoLocationsForm onBack={() => go("home")} />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="h-full overflow-y-auto scrollbar-slim">
       {/* window header */}
@@ -211,6 +251,21 @@ export function GeneralWindow() {
                 <span className="min-w-0 flex-1">
                   <span className="block text-sm font-medium">{t("party.formTitle")}</span>
                   <span className="block text-xs text-muted-foreground">{t("party.formDesc")}</span>
+                </span>
+                <ForwardIcon className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+              </button>
+
+              {/* فرم «محل های جغرافیایی» — Task 103 (درخواست مالک، SimpleTreeForm) */}
+              <button
+                onClick={() => go("geo-location")}
+                className="flex w-full items-center gap-3 rounded-lg p-3 pe-6 text-start transition-colors hover:bg-accent/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
+              >
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-teal-500 to-emerald-600 text-white shadow-sm">
+                  <Earth className="h-4 w-4" aria-hidden />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-medium">{t("geo.formTitle")}</span>
+                  <span className="block text-xs text-muted-foreground">{t("geo.formDesc")}</span>
                 </span>
                 <ForwardIcon className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
               </button>
