@@ -3777,3 +3777,21 @@ Stage Summary:
 - پاسخ مشاوره: MainDataGrid موجود بود (Task 64) و حالا **واقعاً به‌کار گرفته شد**: دو فرم سیستمی (نوع ارز/نرخ برابری) فهرست کاملشان را با همین کامپوننت رندر می‌کنند — الگوی آماده برای هر فرم بعدی: columns + rows(MainGridRow) + selectedId + onRowDoubleClick + actions(GridActionButton×۳).
 - MainDataGrid بدون تغییر ماند (کاملاً generic بود)؛ صرفاً مصرف‌کنندگان جدید اضافه شدند.
 - artifacts: src/components/erp/general/currency-type-form.tsx؛ src/components/erp/general/exchange-rate-form.tsx؛ src/i18n/dictionaries.ts (+۲۶ ردیف).
+---
+Task ID: 119
+Agent: Z.ai Code (main)
+Task: «یک زیرمنو در منو حسابداری ایجاد کنید بنام اطلاعات پایه» — زیرمنوی «اطلاعات پایه» در منوی حسابداری (پنجرهٔ واقعی + درختوارهٔ فرمساز).
+
+Work Log:
+- پنجرهٔ «حسابداری» از حالت placeholder خارج و بدنهٔ واقعی گرفت: src/components/erp/accounting/accounting-window.tsx + accounting-menu-home.tsx؛ سیم‌کشی در window-meta.tsx (عمومی و حسابداری پنجره‌های واقعی؛ بقیه placeholder §4.6).
+- بازآرایی سیستمی: موتور عمومی AppMenuHome در src/components/erp/shared/app-menu-home.tsx از بدنهٔ عمومی (Task 117) استخراج شد — همان ۴ حالت نمایش (کشویی/کنار‌هم/لیستی/کاشی)، همان سوییچر «کنار منو»، همان ماندگاری localStorage (با کلید مستقل هر برنامه: accounting.menuView / general.menuView) و hydration-safe (useSyncExternalStore + getServerSnapshot؛ بدون setState-in-effect). general-menu-view.tsx حالا فقط دادهٔ MENU_GROUPS را دارد و از همین موتور تغذیه می‌شود (رفتار عمومی بدون تغییر).
+- زیرمنوی «اطلاعات پایه»ٔ حسابداری در ACCOUNTING_MENU_GROUPS با آیکون Database و گرادیان بنفش (هماهنگ با کاشی کاتالوگ حسابداری)؛ فعلاً بدون فرم سیستمی — PendingNote «فرم‌های بعدی به‌مرور اعلان می‌شوند» در هر ۴ حالت؛ فرم‌های آینده فقط یک مدخل در همین آرایه + یک زیرصفحه در accounting-window می‌گیرند.
+- درختوارهٔ فرمساز (قرارداد Task 112): dfb seed SYSTEM_SUBMENUS += {anchorAppKey: "accounting", code: "accBasicInfo", dictKey: "acc.menuBasicInfo"}؛ بوت خودکار سرویس (bun --hot) ثبت کرد: گره ID=35 زیر آیکون حسابداری + ۱۲ ردیف ترجمهٔ دیکشنری‌محور؛ tree API: حسابداری(id=2) ← accBasicInfo(id=35) ✓.
+- i18n: ۲ کلید جدید acc.menuBasicInfo / acc.menuBasicInfoDesc در هر ۱۳ زبان (۲۶ ردیف) بعد از fy.menuPending در هر بلوک.
+- E2E (agent-browser): دبل‌کلیک حسابداری → پنجره با سربرگ «حسابداری» + سوییچر ۴حالته ✓؛ گروه «اطلاعات پایه» باز (aria-expanded true) و جمع/بازشدن با کلیک ✓؛ هر ۴ حالت رندر شد (اسکرین‌شات‌ها) ✓؛ ماندگاری: localStorage=columns، reload کامل + بازکردن دوباره = همان حالت ✓؛ کلیک کاشی/سطر فرم در عمومی (رفکتورشده) = زیرصفحهٔ واقعی نرخ برابری با عنوان برگهٔ زنده ✓؛ en/LTR: «Accounting / View / Basic Information / Accordion|Side by side|List|Tiles» و چیدمان آینه‌ای ✓؛ درخت فرمساز در EN: Accounting ← Basic Information (ترجمهٔ ۱۲زبانهٔ گره از انبار) ✓؛ برگشت fa/rtl سالم ✓.
+- lint = ۰/۰؛ tsc = همان ۱۳ baseline (صفر خطای جدید)؛ بکاپ §0.9: db/dfb.db.bak-t119 + db/custom.db.bak-t119.
+
+Stage Summary:
+- زیرمنوی «اطلاعات پایه» در هر دو لایهٔ منوی حسابداری نشست: پنجرهٔ نرم‌افزار (بدنهٔ واقعی با ۴ حالت نمایش) و درختوارهٔ فرمساز (گره سیستمی با ترجمهٔ ۱۳ زبانه).
+- موتور AppMenuHome حالا الگوی استاندارد «پنجرهٔ اعلامی» است: هر برنامهٔ بعدی فقط data می‌دهد (groups + appKey + storageKey) و ۴ چیدمان/سوییچر/ماندگاری/فرم‌های فرمساز را مجانی می‌گیرد — بدون دوبل‌نویسی.
+- artifacts: src/components/erp/shared/app-menu-home.tsx (جدید)؛ src/components/erp/accounting/accounting-window.tsx + accounting-menu-home.tsx (جدید)؛ src/components/erp/general/general-menu-view.tsx (لاغرشده)؛ src/components/desktop/window-meta.tsx؛ mini-services/dfb-service/src/seed/seed.service.ts؛ src/i18n/dictionaries.ts (+۲۶ ردیف)؛ db/dfb.db (گره ID=35).

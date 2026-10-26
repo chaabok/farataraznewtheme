@@ -28,6 +28,7 @@ import { BusinessStructureWindow } from "@/components/erp/business-structure/bs-
 import { SettingsWindow } from "@/components/erp/settings-window";
 import { AppPlaceholderWindow } from "@/components/erp/app-placeholder-window";
 import { GeneralWindow } from "@/components/erp/general/general-window";
+import { AccountingWindow } from "@/components/erp/accounting/accounting-window";
 import { FormDemoWindow } from "@/components/erp/form-demo-window";
 import { TreeDemoWindow } from "@/components/erp/tree-demo-window";
 import { FormBuilderWindow } from "@/components/erp/form-builder/form-builder-window";
@@ -107,10 +108,18 @@ export function resolveWindowMeta(
   if (win.kind === "app") {
     const appKey = win.appKey ?? "";
     /* Task 75 — the «عمومی» app is the FIRST catalog app with announced real
-       content (owner: menu عمومی ← submenu اطلاعات پایه ← form سال مالی جدید);
-       every other appKey keeps its §4.6 placeholder contract untouched. */
+       content (owner: menu عمومی ← submenu اطلاعات پایه ← form سال مالی جدید).
+       Task 119 — «حسابداری» is the SECOND one: منوی حسابداری با زیرمنوی
+       اطلاعات پایه (AccountingWindow)؛ بقیهٔ appKeyها قرارداد placeholder
+       §4.6 خود را دارند. */
     const content =
-      appKey === "general" ? <GeneralWindow /> : <AppPlaceholderWindow appKey={appKey} />;
+      appKey === "general" ? (
+        <GeneralWindow />
+      ) : appKey === "accounting" ? (
+        <AccountingWindow />
+      ) : (
+        <AppPlaceholderWindow appKey={appKey} />
+      );
     return {
       title: t(`app.${appKey}` as never),
       icon: <AppTile appKey={appKey} className="h-5 w-5 rounded-md" iconClass="h-3 w-3" />,

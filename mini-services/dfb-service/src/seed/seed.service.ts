@@ -69,6 +69,21 @@ const SYSTEM_SUBMENUS: SystemSubmenuSeed[] = [
     sortOrder: 2,
     dictKey: "rate.menuGroup",
   },
+  {
+    /* Task 119 (درخواست مالک) — «یک زیرمنو در منو حسابداری ایجاد کنید بنام
+       اطلاعات پایه»: نخستین زیرمنوی سیستمیِ آیکون حسابداری؛ هم‌زمان بدنهٔ
+       واقعی پنجرهٔ حسابداری (accounting-menu-home) هم از همین زیرمنو رندر
+       می‌شود. فرم‌های سیستمیِ آیندهٔ حسابداری با anchorSubmenuCode اینجا
+       زیر همین گره ثبت می‌شوند. عین قرارداد Task 112 — گره DfbMenu
+       NodeType=2 زیر آیکون حسابداری با AppKey=null. */
+    anchorAppKey: "accounting",
+    code: "accBasicInfo",
+    titleFa: "اطلاعات پایه",
+    titleEn: "Basic Information",
+    iconKey: "folder",
+    sortOrder: 1,
+    dictKey: "acc.menuBasicInfo",
+  },
 ];
 
 const SYSTEM_FORMS: SystemFormSeed[] = [
