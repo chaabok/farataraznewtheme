@@ -26,7 +26,9 @@ export type TableKey =
   | "PartyAddress" // Task 84 — نشانی‌های طرف حساب
   | "PartyPhone" // Task 84 — تلفن‌های طرف حساب
   | "City" // Task 84 — جدول شهرها (مرجع)
-  | "DataTranslation"; // Task 92 — انبار ترجمهٔ دادهٔ فرم‌های سیستمی
+  | "DataTranslation" // Task 92 — انبار ترجمهٔ دادهٔ فرم‌های سیستمی
+  | "UserRole" // Task 100 — نقش‌های کاربری (مدیریت کاربران)
+  | "UserRoleScope"; // Task 100 — محدودهٔ دسترسی نقش‌ها
 
 export const TABLE_REGISTRY: Record<TableKey, TableEntry> = {
   IDGeneration: {
@@ -77,6 +79,14 @@ export const TABLE_REGISTRY: Record<TableKey, TableEntry> = {
   },
   DataTranslation: {
     canonical: "DataTranslation", // Task 92 — ترجمهٔ دادهٔ فرم‌های سیستمی
+    pk: "ID",
+  },
+  UserRole: {
+    canonical: "UserRole", // Task 100 — نقش‌های کاربری
+    pk: "ID",
+  },
+  UserRoleScope: {
+    canonical: "UserRoleScope", // Task 100 — محدودهٔ دسترسی نقش‌ها
     pk: "ID",
   },
 };

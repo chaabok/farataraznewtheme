@@ -342,6 +342,68 @@ model DataTranslation {
   @@map("DataTranslation")
 }
 
+/// UserRole — Task 100 (درخواست مالک): فرم «نقش کاربری جدید» در پنجرهٔ تنظیمات
+/// ← مدیریت کاربران. کاربر نقش‌های سازمان خودش را تعریف می‌کند و برای هر نقش
+/// «محدودهٔ دسترسی» تعیین می‌کند. محدودهٔ دسترسی دو بُعد دارد:
+///   ۱. محدودهٔ نرم‌افزاری — کدام نرم‌افزارهای سیستم (Systems.Code = appKey کاتالوگ)
+///      در فهرست نداشتن ردیف "software" یعنی «همهٔ نرم‌افزارها» (بدون محدودیت).
+///   ۲. محدودهٔ ساختار سازمانی — کدام گره‌های BusinessStructure؛ معنای هر گره
+///      شامل زیرمجموعه‌هایش است (به هنگام اعمال). نداشتن ردیف "structure" یعنی
+///      «کل ساختار سازمانی» (بدون محدودیت).
+/// IsSystem: نقش سیستمیِ seedشده («مدیر سیستم») — حذف آن رد می‌شود.
+/// §16: ID دستی از IDGeneration ("UserRole"/"UserRoleScope")؛ بلوک کامل
+/// ارث‌بری AppBaseEntity ۸فیلدی (قرارداد اجباری مالک) — تا استقرار IAM =
+/// SYSTEM_ACTOR (دفتر مرکزی، ID=1).
+model UserRole {
+  id                   BigInt   @id @map("ID")
+  code                 String   @map("Code") // کد نقش — اجباری، یکتا در ساختار سازمانی
+  title                String   @map("Title") // عنوان نقش — اجباری، یکتا در ساختار سازمانی
+  description          String?  @map("Description") // توضیحات (اختیاری)
+  isActive             Boolean  @default(true) @map("IsActive")
+  isSystem             Boolean  @default(false) @map("IsSystem") // نقش سیستمی — حذف رد می‌شود
+  version              Int      @default(1) @map("Version") // §2.5 auto-rowversion
+  creator              String   @map("Creator") // IAM UserID
+  lastModifier         String?  @map("LastModifier")
+  businessStructureRef BigInt   @map("BusinessStructureRef")
+  companyRef           BigInt?  @map("CompanyRef")
+  branchRef            BigInt?  @map("BranchRef")
+  agencyRef            BigInt?  @map("AgencyRef")
+  shopRef              BigInt?  @map("ShopRef")
+  createdAt            DateTime @default(now()) @map("CreatedAt")
+  updatedAt            DateTime @updatedAt @map("UpdatedAt")
+
+  scopes UserRoleScope[]
+
+  @@unique([code, businessStructureRef])
+  @@unique([title, businessStructureRef])
+  @@map("UserRole")
+}
+
+/// UserRoleScope — ردیف‌های محدودهٔ دسترسی هر نقش (بُعد نرم‌افزاری/ساختار).
+/// ScopeType = "software" (RefKey = appKey از Systems) | "structure" (RefKey = شناسهٔ گرهٔ BusinessStructure).
+/// بازنویسی کامل با هر ثبت/ویرایش نقش (الگوی تب‌های طرف حساب) — idempotent روی unique سه‌گانه.
+model UserRoleScope {
+  id                   BigInt   @id @map("ID")
+  userRoleRef          BigInt   @map("UserRoleRef")
+  scopeType            String   @map("ScopeType") // "software" | "structure"
+  refKey               String   @map("RefKey") // appKey یا شناسهٔ گرهٔ ساختار (رشته — §2.3)
+  version              Int      @default(1) @map("Version")
+  creator              String   @map("Creator")
+  lastModifier         String?  @map("LastModifier")
+  businessStructureRef BigInt   @map("BusinessStructureRef")
+  companyRef           BigInt?  @map("CompanyRef")
+  branchRef            BigInt?  @map("BranchRef")
+  agencyRef            BigInt?  @map("AgencyRef")
+  shopRef              BigInt?  @map("ShopRef")
+  createdAt            DateTime @default(now()) @map("CreatedAt")
+  updatedAt            DateTime @updatedAt @map("UpdatedAt")
+  userRole             UserRole @relation(fields: [userRoleRef], references: [id], onDelete: Cascade)
+
+  @@unique([userRoleRef, scopeType, refKey])
+  @@index([userRoleRef])
+  @@map("UserRoleScope")
+}
+
 /// PartyPerson — تب «افراد مرتبط»: نام / نام خانوادگی (اجباری) / نسبت /
 /// کد ملی / شماره تلفن / توضیحات. با ثبت/ویرایشِ طرف حساب بازنویسی می‌شود.
 model PartyPerson {

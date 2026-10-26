@@ -47,6 +47,34 @@ export class DataTranslationsService {
   }
 
   /**
+   * Task 99 (بازخورد مالک) — خواندن «دسته‌ای» برای لیست‌ها/دراپ‌داون‌ها:
+   * چند رکورد از یک entityType (و فیلتر اختیاری fieldKeys — مثلاً فقط
+   * name,lastName برای ستون نامِ فهرست) در یک درخواست، تا سطرهای لیست هم
+   * با تعویض زبان نرم‌افزار به همان زبان نمایش داده شوند.
+   */
+  async listMany(entityType: string, entityIds: number[], fieldKeys: string[]) {
+    if (entityIds.length === 0) return { items: [] };
+    const rows = await this.prisma.dataTranslation.findMany({
+      where: {
+        entityType,
+        entityId: { in: entityIds.map((id) => BigInt(id)) },
+        ...(fieldKeys.length > 0 ? { fieldKey: { in: fieldKeys } } : {}),
+      },
+      orderBy: [{ entityId: "asc" }, { fieldKey: "asc" }, { locale: "asc" }],
+    });
+    return {
+      items: rows.map((r) => ({
+        id: r.id.toString(),
+        entityType: r.entityType,
+        entityId: Number(r.entityId),
+        fieldKey: r.fieldKey,
+        locale: r.locale,
+        value: r.value,
+      })),
+    };
+  }
+
+  /**
    * ذخیرهٔ دسته‌ای ترجمه‌های یک رکورد (upsert؛ value خالی/حذف‌شده = پاک‌کردن ردیف).
    * تعداد ردیف‌های ساخته‌شده/به‌روزشده/حذف‌شده برمی‌گردد.
    */

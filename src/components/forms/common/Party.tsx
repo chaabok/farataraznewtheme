@@ -228,6 +228,12 @@ export function PartyForm({ onBack }: { onBack?: () => void }) {
     currentIdRef.current = currentId;
   }, [currentId]);
 
+  /* Task 92 — دیالوگ ترجمهٔ داده فقط برای «ورود دستی» (دکمهٔ مخصوصش).
+     Task 98 (بازخورد مالک) — در ترجمهٔ آنلاین هیچ مودالی باز نمی‌شود:
+     ترجمه‌ها همان لحظه در انبار ذخیره شده‌اند و دکمهٔ «ذخیره»ٔ دیالوگ
+     به‌اشتباه «درخواست ذخیره از کاربر» برداشت می‌شد. */
+  const [offlineOpen, setOfflineOpen] = React.useState(false);
+
   /* Task 93 — نقشهٔ ترجمهٔ رکورد باز (همهٔ زبان‌ها) از انبار DataTranslation */
   const loadTr = React.useCallback(async (id: number): Promise<void> => {
     try {
@@ -245,6 +251,44 @@ export function PartyForm({ onBack }: { onBack?: () => void }) {
       /* واکشی ناموفق — نقشهٔ پیشین می‌ماند و مقادیر پایه دیده می‌شوند */
     }
   }, []);
+
+  /* Task 99 (بازخورد مالک) — ترجمهٔ «دادهٔ» فهرست رکوردها (دراپ‌داون لیستِ
+     نوار ابزار): همهٔ رکوردها یک‌جا با endpoint دسته‌ای (فقط name/lastName —
+     ستون‌های کد/ماهیت/فعال دادهٔ متنیِ نیازمند ترجمه نیستند) تا سطرهای لیست
+     هم با تعویض زبان نرم‌افزار به همان زبان دیده شوند؛ نبودِ ترجمه = مقدار
+     پایه. listTrVersion: پس از ترجمهٔ آنلاینِ رکورد باز، لیست هم تازه می‌شود. */
+  const [listTr, setListTr] = React.useState<
+    Record<string, Record<string, Record<string, string>>>
+  >({});
+  const [listTrVersion, setListTrVersion] = React.useState(0);
+  React.useEffect(() => {
+    const ids = records.map((r) => r.id);
+    if (ids.length === 0) return;
+    let alive = true;
+    api
+      .get<{
+        items?: Array<{ entityId: number; fieldKey: string; locale: string; value: string }>;
+      }>(
+        `data-translations?entityType=Party&entityIds=${ids.join(",")}&fieldKeys=name,lastName`,
+      )
+      .then((res) => {
+        if (!alive) return;
+        const next: Record<string, Record<string, Record<string, string>>> = {};
+        for (const it of res.items ?? []) {
+          if (!it?.entityId || !it?.fieldKey || !it?.locale || !it?.value) continue;
+          const rec = (next[String(it.entityId)] ??= {});
+          const fields = (rec[it.fieldKey] ??= {});
+          fields[it.locale] = it.value;
+        }
+        setListTr(next);
+      })
+      .catch(() => {
+        /* واکشی ناموفق — لیست با مقادیر پایه می‌ماند */
+      });
+    return () => {
+      alive = false;
+    };
+  }, [records, listTrVersion]);
 
   /* Task 93 — فوکوس روی فیلد = نمایان‌شدن مقدار پایه زیر overlay (عین Task 70) */
   const revealField = React.useCallback((key: string) => {
@@ -622,12 +666,21 @@ export function PartyForm({ onBack }: { onBack?: () => void }) {
         throw new Error(json?.message || t("common.error"));
       }
       /* Task 93/95 — نقشهٔ تازه + ریست reveal تا فیلدها همان لحظه ترجمه را
-         نشان دهند؛ فقط وقتی هنوز روی همان رکوردیم (گارد مسابقهٔ async) */
+         نشان دهند؛ فقط وقتی هنوز روی همان رکوردیم (گارد مسابقهٔ async).
+         Task 98 (بازخورد مالک) — «در حالت ترجمهٔ آنلاین نباید مودال باز
+         شود»: هیچ دیالوگی باز نمی‌شود؛ بازخورد = توست شمارش‌دار زیر + در
+         زبان‌های غیر-fa نشستن فوری overlay روی فیلدها/سلول‌ها. دیالوگ فقط
+         برای «ترجمهٔ دستی» باز می‌ماند. */
       if (currentIdRef.current === targetId) {
         setRevealed(new Set());
         await loadTr(targetId);
+        setListTrVersion((v) => v + 1); // Task 99 — سطرهای فهرست هم تازه شوند
       }
-      toast.success(t("dfb.list.translateDone"));
+      toast.success(
+        t("dfb.list.translateDoneCounts")
+          .replace("{n}", String(fields.length))
+          .replace("{m}", String(langs.length)),
+      );
     } catch (e) {
       toast.error(e instanceof Error ? e.message : t("common.error"));
     }
@@ -723,7 +776,6 @@ export function PartyForm({ onBack }: { onBack?: () => void }) {
     [revealField],
   );
 
-  const [offlineOpen, setOfflineOpen] = React.useState(false);
   const openTranslateOffline = React.useCallback(() => {
     if (currentId == null) {
       toast.info(t("dfb.noRecordSelected"));
@@ -731,6 +783,17 @@ export function PartyForm({ onBack }: { onBack?: () => void }) {
     }
     setOfflineOpen(true);
   }, [currentId, t]);
+
+  /* Task 99 — مقدار نمایشیِ سطرهای فهرست: در fa مقدار پایه؛ در زبان‌های دیگر
+     ترجمهٔ همان زبان از انبار DataTranslation (نبودِ ترجمه = همان مقدار پایه). */
+  const listNameOf = (r: PartyDto): string => {
+    const tr = locale === "fa" ? "" : (listTr[String(r.id)]?.name?.[locale] ?? "").trim();
+    return tr || r.name;
+  };
+  const listLastOf = (r: PartyDto): string => {
+    const tr = locale === "fa" ? "" : (listTr[String(r.id)]?.lastName?.[locale] ?? "").trim();
+    return tr || r.lastName;
+  };
 
   /* ------------------------------ rendering ------------------------------ */
 
@@ -990,7 +1053,9 @@ export function PartyForm({ onBack }: { onBack?: () => void }) {
       onClose={onBack}
       listItems={records.map((r) => ({
         id: String(r.id),
-        title: `${r.tafsiliCode} - ${r.name}${r.lastName ? " " + r.lastName : ""}`,
+        title: `${r.tafsiliCode} - ${listNameOf(r)}${
+          listLastOf(r) ? " " + listLastOf(r) : ""
+        }`,
         subtitle:
           [
             r.nature === "legal" ? t("party.natureLegal") : t("party.natureNatural"),
@@ -1001,7 +1066,9 @@ export function PartyForm({ onBack }: { onBack?: () => void }) {
         /* Task 86 — مینی‌گرید دراپ‌داون لیست: کد تفصیلی / نام / ماهیت / فعال */
         cells: [
           { label: t("party.tafsiliCode"), value: String(r.tafsiliCode ?? "") },
-          { label: t("party.name"), value: `${r.name}${r.lastName ? " " + r.lastName : ""}` },
+          { label: t("party.name"), value: `${listNameOf(r)}${
+            listLastOf(r) ? " " + listLastOf(r) : ""
+          }` },
           {
             label: t("party.nature"),
             value: r.nature === "legal" ? t("party.natureLegal") : t("party.natureNatural"),

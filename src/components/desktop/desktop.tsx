@@ -645,6 +645,13 @@ export function Desktop() {
     document.documentElement.lang = locale;
   }, [dir, locale]);
 
+  /* Task 99 (بازخورد مالک) — عنوان پنجرهٔ مرورگر هم باید با زبان نرم‌افزار
+     عوض شود؛ متادیتای layout فقط پیش‌فرض SSR (فارسی) است و در زبان‌های
+     دیگر ثابت می‌ماند — این افکت عنوان را با هر تغییر زبان تازه می‌کند. */
+  React.useEffect(() => {
+    document.title = t("app.docTitle");
+  }, [t]);
+
   /* Task 81 — tab-bar contract: «تب اول صفحه اصلی باشد و فرم از تب دوم باز شود»
      homeActive → the desktop (icons/sidebar) owns the workspace;
      every form lives in its own tab of the strip below the header. */

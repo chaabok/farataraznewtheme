@@ -38,6 +38,8 @@ const VERSIONED_MODELS: ReadonlySet<string> = new Set([
   "PartyAddress", // Task 84 — نشانی
   "PartyPhone", // Task 84 — تلفن
   "DataTranslation", // Task 92 — انبار ترجمهٔ دادهٔ فرم‌های سیستمی
+  "UserRole", // Task 100 — نقش‌های کاربری (مدیریت کاربران)
+  "UserRoleScope", // Task 100 — محدودهٔ دسترسی نقش‌ها
 ]);
 
 const VERSION_ACTIONS = new Set(["update", "updateMany", "upsert"]);

@@ -1,6 +1,7 @@
 import { Injectable, OnModuleInit, Logger } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { IdGenerationService } from "../id-generation/id-generation.service";
+import { appBaseOnCreate, SYSTEM_ACTOR } from "../../../_shared/app-base-entity";
 
 /**
  * Boot seed (idempotent) — mirrors the legacy pre-seed contract (spec §2/§6):
@@ -193,6 +194,29 @@ export class SeedService implements OnModuleInit {
           businessStructureRef: 1n,
         },
       });
+    }
+
+    /* 6) Task 100 — نقش سیستمی «مدیر سیستم» (idempotent by Code):
+       محدودهٔ دسترسی ندارد (بدون ردیف UserRoleScope) یعنی دسترسی کامل به
+       همهٔ نرم‌افزارها و کل ساختار سازمانی؛ IsSystem حذفش را رد می‌کند. */
+    const sysRole = await this.prisma.userRole.findUnique({
+      where: { code_businessStructureRef: { code: "ADMIN", businessStructureRef: 1n } },
+    });
+    if (!sysRole) {
+      const roleId = await this.idGen.generateNextId("UserRole");
+      await this.prisma.userRole.create({
+        data: {
+          id: BigInt(roleId),
+          code: "ADMIN",
+          title: "مدیر سیستم",
+          description:
+            "نقش سیستمی — دسترسی کامل به همهٔ نرم‌افزارها و کل ساختار سازمانی؛ محدودهٔ دسترسی ندارد.",
+          isActive: true,
+          isSystem: true,
+          ...appBaseOnCreate(SYSTEM_ACTOR),
+        },
+      });
+      this.logger.log(`seeded system UserRole ADMIN (مدیر سیستم) ID=${roleId}`);
     }
   }
 }

@@ -42,20 +42,23 @@ export function GeneralWindow() {
      («عمومی — سال مالی جدید») exactly like the tab strip shows it. */
   const chrome = useWindowChrome();
   const setWindowTitle = useDesktop((s) => s.setWindowTitle);
-  const go = React.useCallback(
-    (p: GeneralPage) => {
-      setPage(p);
-      if (chrome?.windowId) {
-        /* Task 82 — عنوان زندهٔ برگه = نام فرمی که کاربر می‌بیند */
-        const titleKey = p === "fiscal-year" ? "fy.formTitle" : p === "party" ? "party.formTitle" : null;
-        setWindowTitle(
-          chrome.windowId,
-          titleKey ? `${t("app.general")} — ${t(titleKey as never)}` : undefined,
-        );
-      }
-    },
-    [chrome, setWindowTitle, t],
-  );
+  const go = React.useCallback((p: GeneralPage) => setPage(p), []);
+
+  /* Task 82/98 — عنوان زندهٔ برگه = نام فرمی که کاربر می‌بیند، و باید همراه
+     تغییر زبان نرم‌افزار هم تازه شود (الگوی افکتِ زندهٔ records-list-window).
+     قبلاً عنوان فقط هنگام ناوبری set می‌شد و رشتهٔ زمانِ ناوبری (مثلاً فارسی)
+     به‌عنوان titleOverride منجمد می‌ماند — اسکرین‌شات مالک: همهٔ UI پرتغالی
+     ولی تب همچنان فارسی. useT با locale میمویز می‌شود ⇒ افکت فقط با تغییر
+     صفحه/زبان اجرا می‌شود، نه هر رندر. */
+  React.useEffect(() => {
+    if (!chrome?.windowId) return;
+    const titleKey =
+      page === "fiscal-year" ? "fy.formTitle" : page === "party" ? "party.formTitle" : null;
+    setWindowTitle(
+      chrome.windowId,
+      titleKey ? `${t("app.general")} — ${t(titleKey as never)}` : undefined,
+    );
+  }, [page, t, chrome?.windowId, setWindowTitle]);
 
   /* §1.4 — direction-aware navigation glyphs (no hardcoded physical sides) */
   const BackIcon = dir === "rtl" ? ArrowRight : ArrowLeft;

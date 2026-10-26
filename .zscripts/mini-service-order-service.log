@@ -1,4 +1,0 @@
-[order-service] Installing dependencies...
-bun install v1.3.14 (0d9b296a)
-error: Fail extracting tarball for "prisma"
-error: Fail extracting tarball from prisma

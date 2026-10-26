@@ -3273,22 +3273,126 @@ Stage Summary:
 
 ---
 Task ID: 95
-Agent: Z.ai Code (main)
-Task: دو درخواست مالک — (۱) «وقتی ترجمه انجام می‌گردد اطلاعات واردشدهٔ داخل تب‌ها هم باید بطور کامل ترجمه گردد» (اسکرین‌شات: تب Verknüpfte Personen با ردیف محمد/نادری/برادرزاده ترجمه نشده بود)؛ (۲) «اگر کاربر روی دکمه‌های ذخیره کلیک کرد ترجمهٔ آنلاین به‌صورت خودکار انجام گردد» + افزودن چک‌باکس «ترجمه آنلاین اطلاعات فیلدها همزمان با ذخیره‌سازی» در پیکربندی نرم‌افزار ← تب عمومی.
+Agent: Z.ai Code
+Task: بازیابی کامل سورس و دیتابیس از بکاپ ارسالی کاربر (farataraznewtheme-main.zip) پس از ریست سندباکس
 
 Work Log:
-- ریشه‌یابی (۱): Task 92 فیلدهای گرید را به انبار می‌فرستاد ولی «نمایش» نداشت (قرارداد Task 70 فقط فیلدهای اصلی بود — محدودیت اعلامی Task 93)؛ سلول‌های گرید با GridCellInput بدون reveal رندر می‌شدند. پوشش ترجمه هم ناقص بود: نسبت (relation) و یادداشت تلفن‌ها در translatableFields نبودند.
-- شِل گرید (simple-form-two-row-tabbed.tsx): دو پراپ اختیاری cellOverlay(tabId,rowIndex,colId) و onCellReveal به قرارداد Task 70/93 اضافه شد؛ renderGridTable برای ستون‌های type=text مقدار overlay را اعمال و فوکوس را reveal می‌کند (GridCellInput پراپ onFocus اختیاری گرفت — فقط شاخهٔ Input متنی وصل شد؛ لیست/تاریخ/عدد/چک‌باکس دست‌نخورده).
-- Party.tsx — نمایش سلولی: ثابت‌های GRID_TR_COLUMNS (people: firstName/lastName/relation/notes؛ address: fullAddress؛ phone: notes) و GRID_TR_PREFIX (persons/address/phones — هم‌مسیر کلیدهای Task 92)؛ cellOverlay هم‌قرارداد دقیق فیلدهای اصلی: زبان≠fa + رکورد ذخیره‌شده + سلول نه فوکوس (revealed) نه ویرایش‌شده (مقایسهٔ rows با baseRows جدید — عکس ردیف‌های رکورد باز که applyRecord/newRecord پر می‌کنند) + ترجمهٔ موجود؛ revealCell به revealField موجود.
-- Party.tsx — پوشش کامل ترجمه: push جدید persons.{i}.relation و phones.{i}.notes در translatableFields (کلیدهای جدید در دیالوگ ورود دستی هم خودکار ظاهر می‌شوند).
-- Party.tsx — ترجمهٔ خودکار: translateOnline یک پارامتر اختیاری explicitId گرفت (FormAction سازگار — دکمه بدون آرگومان همان مسیر)؛ در doSave پس از ذخیرهٔ موفق، پیکربندی «هر بار تازه» خوانده می‌شود (software-config/general ← کلید autoTranslateOnSave="1" ⇒ void translateOnline(res.id)) — تغییر چک‌باکس بدون بازکردن مجدد فرم اثر می‌کند؛ گارد مسابقهٔ async: currentIdRef (آینهٔ currentId در effect) — پاسخ کهنهٔ loadTr/reveal بعد از تعویض رکورد اعمال نمی‌شود.
-- پیکربندی نرم‌افزار: SOFTWARE_CONFIG_FIELDS.general فیلد checkbox «autoTranslateOnSave» (فرانت) + آینهٔ whitelist سرور در software-config.dto.ts (type checkbox، defaultValue «0») — طبق معماری Task 72 بدون مهاجرت دیتابیس؛ لیبل settings.swAutoTranslateOnSave ×۱۳ زبان (عین عبارت مالک در fa).
-- lint = ۰/۰؛ tsc = همان ۱۱ خطای baseline — صفر خطای جدید (تأیید شد که ۳ مورد src — start-menu ×2 و field-translations ×1 — جزء همان ۱۱ baseline هستند).
-- E2E مرورگر (agent-browser): چک‌باکس در تب عمومی رندر شد، فعال‌سازی + ذخیره ⇒ ردیف SoftwareConfig (id=7, value=1) ✓؛ فرم طرف حساب جدید (لیلا/شهبازی + ردیف گرید محمد/نادری/برادرزاده/229127609/09127076100/آذر خوب بود) → ذخیره ⇒ POST party 201 و بلافاصله «[auto-translate] fields: 6 langs: 12» در لاگ (خودکار، بدون کلیک ترجمه) + ۷۲ ردیف DataTranslation شامل persons.0.relation=Neffe (de) ✓؛ سوییچ UI به Deutsch ⇒ فیلد اصلی «Layla» و هر شش سلول گرید: Mohammed/Naderi/Neffe/229127609/09127076100/Aazar war gut (سلول‌های عددی دست‌نخورده) ✓؛ فوکوس سلول اول ⇒ نمایش پایهٔ «محمد»، سلول سوم overlay ماند «Neffe» ✓؛ بازکردن مجدد رکورد ⇒ overlay سلول‌ها برقرار ✓؛ چک‌باکس خاموش ⇒ ویرایش نام خانوادگی + ذخیره ⇒ فقط PUT party/9 در لاگ، صفر فراخوانی auto-translate ✓ (مسیر دستی دکمه حفظ شد)؛ دادهٔ پایه در DB حین نمایش overlay فارسی ماند (حفاظت دادهٔ Task 93) ✓؛ کنسول/page errors صفر؛ dev.log پاک.
-- نکتهٔ کشف‌شده: رکورد #8 «لیلا شهبازی» (۲۱:۰۸) ساختهٔ خود مالک در همین روز بود (دادهٔ اسکرین‌شات ایشان؛ ترجمه‌های fields:2/fields:5 = کلیک دستی با باندل قبل از این تسک — برای همین relation در آن ترجمه نشده بود) — با رکورد آزمون من (#9) اشتباه گرفته نشد؛ #8 دست‌نخورده ماند.
-- پاک‌سازی: رکورد آزمون #9 + ترجمه‌هایش حذف شد؛ ردیف پیکربندی به حالت اول (بدون ردیف) برگشت؛ زبان UI به فارسی برگشت؛ دادهٔ مالک (#5/#7/#8) دست‌نخورده.
+- کاربر گزارش «پیش نمایش با مشکل مواجه شده است» داد و سپس بکاپ کامل پروژه (upload/farataraznewtheme-main.zip، ۴۹۱ فایل) را برای بازیابی ارسال کرد.
+- تشخیص اولیه روی پروژهٔ فعلی نشان داد سندباکس در ۲۱:۵۶ به یک قالب ۱۳-سرویسی نامرتبط (سcaffold template) بازنشسته شده بود؛ .env پاک شده، node_modules سرویس‌ها ناقص و کل ساختار با پروژهٔ واقعی کاربر متفاوت بود.
+- محتوای بکاپ را استخراج و صحت‌سنجی کردم: worklog تا Task 94، نشانگرهای Task 94 در desktop.tsx/start-menu.tsx، Party.tsx و API data-translations/auto-translate همگی موجود بودند ⇒ بکاپ دقیقاً حالت پروژه پس از Task 94 است.
+- BACKUP-INFO: معماری واقعی پروژه = settings-service :3001، apps-service :3002، dfb-service :3003، auto-push-service؛ دیتابیس‌ها db/custom.db و db/dfb.db (+ بکاپ‌های t76/t84).
+- در حین جابه‌جایی، دایسک پر شد (upload/ یک mount جداست و mv به کپی تبدیل شد)؛ فضای دیسک را با حذف کپی‌های ناقص آزاد و از مسیر /tmp بازیابی را از نو و تمیز انجام دادم.
+- پروژه از بکاپ بازسازی شد: سورس کامل، db/ (custom.db 200KB + dfb.db + بکاپ‌ها)، .env با معماری قدیم (INTERNAL_API_KEY، SETTINGS :3001، APPS :3002)، .zscripts، worklog.md تا Task 94.
+- وابستگی‌ها: bun install ریشه (۴۱۹ بسته) + هر ۴ سرویس؛ prisma db push ⇒ «database is already in sync» و Prisma Client v6.19.3 ساخته شد.
+- بوت با .zscripts/dev.sh انجام شد (bun install → db:push → next dev :3000 → هر ۴ سرویس با NODE_PATH و DATABASE_URL مخصوص dfb).
+- عیب‌یابی مرگ‌های مکرر و بی‌صدای next dev: OOM رد شد (memory.failcnt=0، اوج RSS فقط ~۸۰۰MB از ۴GB)، inotify رد شد (کل واچ‌ها ۱۱۹/۸۱۹۲، next تقریباً صفر)، در نهایت مشخص شد الگوی اجرای «nohup + &» از سشن ابزار، توسط پاک‌سازی سشن کشته می‌شود؛ اجرای دقیقاً مشابه سرویس‌های سالم (subshell + reparent) مشکل را حل کرد — سرور ۳+ دقیقه و پس از آن پایدار ماند.
+- برای اطمینان، experimental.turbopackMemoryEviction: "full" به next.config.ts اضافه شد (سندباکس ۴GB؛ محافظت در برابر اوج کامپایل).
+- راستی‌آزمایی E2E با agent-browser: دسکتاپ تم کامل فارسی با ~۳۰ آیکون ماژول رندر شد، CSS کامپایل و تولید utilities سالم (۱۵۵KB)، کنسول/page errors صفر، پنجرهٔ تنظیمات APIهای واقعی را گرفت (app-registry/fiscal-year/business-structure همگی 200)، GET / پایدار 200 و پورت‌های 3001/3002/3003 زنده.
 
 Stage Summary:
-- «اطلاعات داخل تب‌ها» اکنون سرتاسری ترجمه می‌شود: ستون‌های متنی گرید (افراد مرتبط: نام/نام خانوادگی/نسبت/توضیحات؛ نشانی: آدرس کامل؛ تلفن: توضیحات) هم در ترجمهٔ آنلاین/دستی ذخیره و هم با همان قرارداد overlay (فوکوس=پایه، ویرایش=واقعی) در سلول‌ها نمایش داده می‌شوند؛ ستون‌های کد/عدد عمداً خارج‌اند.
-- ذخیرهٔ فرم با چک‌باکس فعال «ترجمه آنلاین اطلاعات فیلدها همزمان با ذخیره‌سازی» (پیکربندی نرم‌افزار ← عمومی) ترجمهٔ آنلاین را خودکار اجرا می‌کند؛ چک‌باکس خاموش = رفتار قبلی (فقط دکمهٔ ترجمه آنلاین). پیکربندی در هر ذخیره تازه خوانده می‌شود و گارد مسابقهٔ async از نشتی overlay بین رکوردها جلوگیری می‌کند.
-- artifacts: src/components/forms/common/Party.tsx؛ src/components/forms/simple-form-two-row-tabbed.tsx؛ src/components/forms/form-primitives.tsx؛ src/components/erp/settings/software-config-window.tsx؛ src/i18n/dictionaries.ts؛ mini-services/settings-service/src/software-config/software-config.dto.ts.
+- پروژهٔ FaraTaraz (تا Task 94) کامل از بکاپ کاربر بازیابی و راه‌اندازی شد: فرانت :3000 + settings :3001 + apps :3002 + dfb :3003 + auto-push. دیتابیس‌ها همان بکاپ کاربر (custom.db/dfb.db) هستند.
+- تنها تغییر فنی نسبت به بکاپ: افزودن turbopackMemoryEviction:"full" در next.config.ts (بی‌اثر بر UI، صرفاً پایداری dev در رم ۴GB).
+- نکته: auto-push-service بدون .git (بکاپ طبق طراحی، .git را مستثنا کرده) لذا لاگ «git status failed» آن طبیعی و بی‌خطر است.
+- Task قبلی (ترجمهٔ تب‌ها + چک‌باکس ترجمهٔ خودکار پس از ذخیره) هنوز شروع نشده و در نوبت است.
+---
+Task ID: 96
+Agent: Z.ai Code
+Task: مشاورهٔ مالک — «چرا بعضی مواقع سورس پروژه پاک می‌شود و نسخهٔ قدیمی (پیش‌نمایش گل آبی) جایگزین می‌شود؟ نسخهٔ قدیمی باید از حافظهٔ پروژه پاک و آخرین سورس ریستورشده جایگزین گردد»
+
+Work Log:
+- ریشه‌یابی: پدیدهٔ «بازگشت نسخهٔ قدیمی» کارِ هوش مصنوعی نیست؛ سندباکس ابری گاهی به یک snapshot قدیمی/قالب برمی‌گردد (مستند در Task 95: بازنشانی ۲۱:۵۶ به قالب ۱۳-سرویسی نامرتبط). پیش‌نمایش «گل آبی» نسخهٔ خیلی قدیمی پروژه (قبل از تم جدید) است که از snapshot قدیمی پلتفرم/کش پیش‌نمایش می‌آید.
+- راستی‌آزمایی workspace فعلی = آخرین سورس ریستورشده (بکاپ farataraznewtheme-main.zip تا Task 94): نشانگرهای Task 94 در desktop.tsx/start-menu.tsx ✓، مدل DataTranslation در اسکیما ✓، worklog تا Task 95 ✓، globals.css نسخهٔ اصلی (بدون دست‌کاری) ✓، پورت‌های 3000/3001/3002/3003 زنده ✓.
+- بازسازی حالت قدیمی در workspace وجود ندارد: سورس = تم جدید؛ هیچ فایل تصویر/کاغذدیواری قدیمی در src نیست؛ فقط残余های لاگ قالب قدیمی بود.
+- پاک‌سازی «حافظهٔ» نسخهٔ قدیمی از workspace: ۱۲ لاگ خالی سرویس‌های قالبِ ۱۳تایی (auth/accounting/costing/desktop/financial-statement/fixed-asset/inventory/order/payment/procurement/sales/setup) از .zscripts حذف شد + settings-service.log قدیمی ریشه + tsconfig.tsbuildinfo کهنه. فایل‌های مالک (download/، upload/، backup db/) دست‌نخورده ماندند.
+- رگرسیون واقعی کشف و رفع شد: بعد از ریستور، بستهٔ z-ai-web-dev-sdk در node_modules/bun.lock نبود → POST /api/data-translations/auto-translate با 500 (Module not found) می‌خورد. با bun add نصب شد (0.0.18)؛ endpoint حالا 400 اعتبارسنجی سالم می‌دهد (نه 500).
+- سپر ضدتکرار ساخته شد: restore-point/farataraznewtheme-main.zip (کپی امن بکاپ داخل پروژه، در برابر پاک‌شدن mount اینستنتی upload/) + اسکریپت .zscripts/restore-from-backup.sh — بازیابی یک‌فرمانی سورس (و اختیاری db با --with-db) با حفاظت node_modules/.next/restore-point/upload؛ هر سشن آینده با همین اسکریپت دقیقاً به «آخرین سورس تأییدشده» برمی‌گردد.
+- lint = ۰/۰.
+- E2E مرورگر: پیش‌نمایش = تمِ جدید (والپیپر گرادیانی + ~۲۹ آیکون ماژول رنگی) — هیچ ردّی از نسخهٔ گل‌آبی نیست ✓؛ کنسول/page errors صفر ✓؛ کلیک «تنظیمات» → پنجره با تم/ساختار کسب‌وکار/مدیریت کاربران/یکپارچه‌سازی باز شد و APIهای واقعی 200 (app-registry/fiscal-year/business-structure/advancedTools) ✓؛ dev.log فقط 200/201.
+
+Stage Summary:
+- پاسخ مشاوره: عامل، بازنشانی snapshot سندباکس/کش پیش‌نمایش پلتفرم است نه تعویض عمدی سورس؛ نسخهٔ قدیمی از workspace پاک شد و هیچ میراثی از قالب قدیمی نماند.
+- workspace اکنون دقیقاً «آخرین سورس ریستورشده» است (Task 94 + تم جدید) و برای اولین بار یک نقطهٔ بازیابی درون‌پروژه‌ای + اسکریپت یک‌فرمانی دارد تا در صورت بازنشانی مجدد سندباکس، بازیابی قطعی و فوری باشد.
+- artifacts: restore-point/farataraznewtheme-main.zip؛ restore-point/BACKUP-INFO.txt؛ .zscripts/restore-from-backup.sh؛ bun.lock/package.json (+z-ai-web-dev-sdk).
+---
+Task ID: 97
+Agent: Z.ai Code
+Task: گزارش مالک — «در فرم طرف حساب اطلاعات وارد کردم و روی دکمه ترجمه آنلاین کلیک کردم ولی اطلاعات داخل فیلدها و تب‌ها ترجمه نشده است؛ اطلاعات واردشدهٔ فیلدها باید به زبان‌های فعال ترجمه شوند» (اسکرین‌شات: رکورد #10 در fa با گرید افراد مرتبط)
+
+Work Log:
+- راستی‌آزمایی داده: ترجمهٔ آنلاین مالک واقعاً موفق بوده — Party#10 (محمد ریاحی) دارای ۶۶ ردیف در DataTranslation است (۶ فیلد: name/lastName + persons.0.{firstName,lastName,relation,notes} × ۱۱ زبان فعال آن لحظه؛ en: Mohammad/Riyahi/Mortaza/Namdari Nasab/cousin…/He was a good person)؛ dev.log هم POST auto-translate 200 در 8.9s را تأیید می‌کند ⇒ مشکل «ذخیره» نبود، «نمایش/بازخورد» بود.
+- E2E مرورگرِ مسیر نمایش (کد Task 95 موجود در بکاپ ریستورشده — بدون تغییر کار کرد): رکورد #10 باز، زبان نرم‌افزار → English ⇒ فیلدهای اصلی Mohammad/Riyahi و سلول‌های گرید «افراد مرتبط» Mortaza / Namdari Nasab / cousin (son of maternal uncle) / He was a good person شدند (کد ملی/تلفن عمداً پایه) ✓؛ فوکوس روی سلول = نمایان‌شدن پایهٔ «مرتضی» ✓؛ برگشت به fa = مقادیر پایهٔ محمد/ریاحی ✓ — یعنی گزارش مالک دقیقاً رفتار fa است: fa زبان مبدأ است و طبق قرارداد Task 70/93 overlay در fa نمایش داده نمی‌شود؛ نتیجه فقط با عوض‌کردن زبان نرم‌افزار دیده می‌شد و در fa هیچ بازخورد بصری جز توست عمومی نبود.
+- رفع شکاف بازخورد (Task 97): پس از موفقیت ترجمهٔ آنلاین، دیالوگ «ترجمهٔ دستی رکورد» (DataTranslationsDialog — عمومی از Task 92) اکنون به‌صورت خودکار باز می‌شود و ترجمهٔ ذخیره‌شدهٔ هر فیلد به‌ازای هر زبان فعال را بلافاصله نشان می‌دهد (انتخابگر زبان + نقطهٔ سبز تکمیل) — در fa هم نتیجه بدون هیچ گام اضافه دیده می‌شود؛ توست موفقیت هم شمارش می‌گیرد: «ترجمهٔ خودکار انجام شد — {n} فیلد به {m} زبان» (کلید جدید dfb.list.translateDoneCounts ×۱۳ زبان). state دیالوگ به بالای کامپوننت منتقل شد (setOfflineOpen در translateOnline قابل دسترس باشد؛ اعلان تکراری گذرا هنگام ویرایش فقط نویز ۵۰۰ِ چندثانیه‌ای HMR در dev.log بود — بعدش همه ۲۰۰).
+- lint = ۰/۰؛ tsc = ۹ خطا (۶ تا examples/websocket + ۳ خطای پیش‌موجود بکاپ در start-menu ×۲ و field-translations ×۱ — فایل‌های این تسک صفر خطا؛ در سدّ ۱۱تایی baseline).
+- E2E جریان جدید (رکورد آزمونی #11 «آزمون ترجمه ۹۷ / رکورد آزمایشی»): ذخیره ⇒ ترجمهٔ آنلاین ⇒ توست شمارش‌دار + دیالوگ خودکار باز شد: English 2/2 با «Translation Test 97 / Test Record» و ۲۴ ردیف (۲ فیلد × ۱۲ زبان فعال فعلی) در DB ✓؛ حذف رکورد آزمونی از UI (توست «اطلاعات حذف شد») + پاک‌سازی ۲۴ ردیف ترجمهٔ آن از انبار (save با value خالی = حذف؛ ۰ ردیف باقی) ✓؛ دادهٔ مالک دست‌نخورده (لیست [5,7,8,9,10]؛ #10 همچنان ۶۶ ردیف) ✓؛ زبان نرم‌افزار fa ماند؛ کنسول پس از reload صفر خطای تازه.
+
+Stage Summary:
+- پاسخ ریشه‌ای به مالک: ترجمهٔ آنلاین از همان اول کار کرده و ۶۶ ترجمهٔ رکورد شما (فیلدها + تب افراد مرتبط) در انبار ذخیره بوده؛ «دیده‌نشدن» دو علت داشت: (۱) در زبان fa طبق قرارداد، فیلد/سلول مقدار مبدأ را نشان می‌دهد و ترجمه با تعویض زبان نرم‌افزار ظاهر می‌شود — الان تست شد و سالم است؛ (۲) در fa هیچ بازخورد بصری از نتیجه نبود — از این پس بعد از ترجمهٔ آنلاین، دیالوگ نتیجه فوراً باز می‌شود (هر فیلد × هر زبان فعال، با انتخابگر زبان) و توست هم تعداد فیلد/زبان را می‌گوید.
+- قراردادهای قبلی دست‌نخورده: overlay غیر-fa، reveal-on-focus، حفاظت ویرایش، ذخیرهٔ پایه زیر overlay.
+- artifacts: src/components/forms/common/Party.tsx (جابه‌جایی state دیالوگ + بازشدن خودکار پس از ترجمهٔ آنلاین + توست شمارش‌دار)؛ src/i18n/dictionaries.ts (۱ کلید ×۱۳).
+- نکته: ۳ خطای tsc پیش‌موجود بکاپ (start-menu/field-translations) خارج از این تسک است؛ در صورت فرمان مالک به‌عنوان تسک جدا رفع می‌شود.
+---
+Task ID: 98
+Agent: Z.ai Code
+Task: بازخورد مالک پس از تسک ۹۷ — «۱) بعد از ترجمهٔ آنلاین یک مودال باز می‌شود و از کاربر ذخیره می‌خواهد؛ در حالت ترجمهٔ آنلاین نباید دیگر این مودال باز شود. ۲) عنوان تب بعد از ترجمه هنوز فارسی است؛ عنوان فرم در نوار تب‌ها فارسی است» (اسکرین‌شات: UI پرتغالی، تب «… — طرف حساب جدید» فارسی با فلش قرمز)
+
+Work Log:
+- عارضهٔ ۱: بازخورد مستقیم تغییر تسک ۹۷ بود — «باز شدن خودکار دیالوگ ترجمهٔ دستی پس از ترجمهٔ آنلاین». دیالوگ دکمهٔ «ذخیره» دارد (برای ویرایش دستی) و در حالت آنلاین که ترجمه‌ها همان لحظه در انبار ذخیره شده‌اند، به‌اشتباه «درخواست ذخیره از کاربر» برداشت می‌شد.
+- رفع ۱ (Party.tsx): حذف setOfflineOpen(true) از translateOnline — در ترجمهٔ آنلاین (دکمهٔ منو و مسیر خودکارِ پس از ذخیره) هیچ مودالی باز نمی‌شود؛ بازخورد = توست شمارش‌دار («{n} فیلد به {m} زبان») + در زبان‌های غیر-fa نشستن فوری overlay روی فیلدها/سلول‌ها. دیالوگ فقط برای «ترجمهٔ دستی» (دکمهٔ مخصوصش) باز می‌ماند.
+- عارضهٔ ۲: ریشه‌یابی عنوان تب — عنوان پنجرهٔ «عمومی» فقط هنگام ناوبری با setWindowTitle ست می‌شد (Task 82) و رشتهٔ زمانِ ناوبری به‌عنوان titleOverride در desktop-store منجمد می‌شد؛ تعویض زبان نرم‌افزار آن را تازه نمی‌کرد (برخلاف بقیهٔ UI که با t() زنده است). الگوی درست از قبل در records-list-window (Task 64) بود.
+- رفع ۲ (general-window.tsx): منطق عنوان به یک افکت زنده منتقل شد با وابستگی‌های [page, t, chrome?.windowId, setWindowTitle] — عنوان تب = «{app.general} — {fy.formTitle | party.formTitle}» و با تغییر زبان (pt⇄fa و هر زبان دیگر) بلافاصله تازه می‌شود؛ useT با locale میمویز می‌شود ⇒ افکت فقط با تغییر صفحه/زبان اجرا می‌شود نه هر رندر. go() ساده شد (فقط setPage).
+- E2E (رکورد آزمونی #12 «آزمون ترجمه ۹۸ / رکورد آزمایشی» + فرد مرتبط مرتضی/نمداری نسب/پسرخاله/توضیح):
+  · ذخیره ⇒ ترجمهٔ آنلاین ⇒ POST auto-translate 200 در ۵۴s، ۷۲ ردیف (۶ فیلد × ۱۲ زبان فعال) در انبار ✓
+  · پس از پایان ترجمه: هیچ دیالوگی باز نشد (snapshot: صفر dialog) و فیلدها/سلول‌های تب افراد مرتبط همان لحظه پرتغالی شدند (Teste de tradução 98 / Registro de Teste / Morteza / Namdar Nasab / primo… / Tarefa experimental 98) ✓
+  · عنوان تب در pt: «Geral — Nova conta de parceiro» = عین هدر فرم (اسکرین‌شات) ✓؛ برگشت به fa: «عمومی — طرف حساب جدید» (افکت دوطرفه) ✓
+  · رگرسیون: «ورود دستی (offline)» هنوز دیالوگ را باز می‌کند و ۶/۶ ترجمهٔ English را نشان داد ✓
+  · پاک‌سازی: حذف رکورد آزمونی از UI (تأیید «Confirmar exclusão») + حذف ۷۲ ردیف یتیم انبار با Prisma سرویس تنظیمات؛ دادهٔ مالک دست‌نخورده (لیست [5,7,8,9,10]؛ سطرها 5:24/7:22/8:55/9:72/10:66) ✓
+- lint = ۰/۰؛ tsc = فقط ۹ خطای پیش‌موجود baseline (examples/websocket ×۶ + start-menu ×۲ + field-translations ×۱) — صفر خطای جدید؛ کنسول مرورگر و dev.log پاک (همه 200/201).
+
+Stage Summary:
+- ترجمهٔ آنلاین اکنون کاملاً «بی‌صدا» است: بدون هیچ مودال و بدون درخواست ذخیره از کاربر — ترجمه‌ها خودکار در انبار ذخیره و فیلدها/تب‌ها در زبان‌های فعال فوراً نمایش داده می‌شوند؛ تنها بازخورد، توست شمارش‌دار است.
+- عنوان تبِ فرم‌های نرم‌افزار «عمومی» (طرف حساب جدید / سال مالی جدید) با تغییر زبان نرم‌افزار زنده تازه می‌شود و دیگر هیچ‌گاه در زبان قبلی منجمد نمی‌ماند.
+- artifacts: src/components/forms/common/Party.tsx (حذف باز شدن خودکار دیالوگ در مسیر آنلاین)؛ src/components/erp/general/general-window.tsx (افکت عنوان زندهٔ وابسته به page/t).
+---
+Task ID: 99
+Agent: Z.ai Code
+Task: بازخورد مالک (دو اسکرین‌شات) — «وقتی زبان نرم‌افزار تغییر کرد، در دراپ‌داون و لیست‌ها هم اطلاعات لیست باید بر اساس زبان انتخابی نمایش داده شود» + «عنوان نرم‌افزار (عنوان پنجرهٔ مرورگر) هم باید به همان زبان باشد؛ در تصویر دوم با اینکه زبان عوض شده عنوان فارسی مانده»
+
+Work Log:
+- عارضهٔ ۱ (دادهٔ لیست‌ها): دراپ‌داون «لیست اطلاعات ثبت‌شده» فرم طرف حساب ستون نام را با مقدار پایهٔ فارسی نشان می‌داد حتی در زبان‌های دیگر (برچسب ستون‌ها ترجمه بود ولی «داده» نه) — چون لیست مستقیم از PartyDto ساخته می‌شد و نقشهٔ ترجمه فقط برای رکورد بازِ فعلی واکشی می‌شد (Task 93).
+- بک‌اند: endpoint دسته‌ای جدید در settings-service — GET /data-translations?entityType=Party&entityIds=5,7,8&fieldKeys=name,lastName (controller: تجزیه/اعتبارسنجی entityIds تا ۵۰۰ و fieldKeys تا ۶۰ با الگوی کلید؛ service: listMany با findMany + in + مرتب‌سازی) — خروجی هم‌قرارداد list تک‌رکورد (Task 92)؛ مسیر تک‌رکورد قبلی دست‌نخورده. گیت‌وی BFF (catch-all) کوئری را عیناً پاس می‌دهد — بدون تغییر.
+- فرانت (Party.tsx): state listTr [recordId][fieldKey][locale] + واکشی دسته‌ای همهٔ رکوردهای لیست (فقط name/lastName — ستون‌های کد/ماهیت/فعال متنی نیستند) در افکت با گارد alive (الگوی هم‌سان افکت records موجود، رفع خطای lint set-state-in-effect)؛ helpers listNameOf/listLastOf: در fa مقدار پایه، در غیر-fa ترجمهٔ زبان فعلی با fallback به پایه؛ اعمال بر title و سلول نامِ listItems؛ listTrVersion++ پس از ترجمهٔ آنلاین تا سطرهای لیست هم فوراً تازه شوند (نه فقط رکورد باز).
+- عارضهٔ ۲ (عنوان مرورگر): layout.tsx متادیتای ثابت فارسی دارد و document.title هرگز با تعویض زبان عوض نمی‌شد. افکت جدید در Desktop: document.title = t("app.docTitle") با وابستگی [t] (میمویز با locale)؛ کلید جدید "app.docTitle" ×۱۳ زبان (fa همان «سامانهٔ جامع بازرگانی | Unified Commerce ERP» قبلی؛ en فقط "Unified Commerce ERP"؛ ۱۱ زبان دیگر «{ترجمهٔ نام} | Unified Commerce ERP»).
+- E2E مرورگر (سه زبان روی همان لیست ۵ رکورد مالک [5,7,8,9,10]):
+  · English: document.title = "Unified Commerce ERP" ✓؛ لیست: Mostafa Sharbati / Alireza Chabari Nasab / Leila Shahbazi / Layla Shahbazi / Mohammad Riyahi (عین دراپ‌داون اسکرین‌شات مالک، حالا انگلیسی) ✓؛ تب «General — New Party Account» ✓
+  · Português: document.title = "ERP Comercial Unificado | Unified Commerce ERP" ✓؛ لیست: MUSTAFA Sharbati / … / Maomé Riyahi ✓
+  · فارسی: document.title = «سامانهٔ جامع بازرگانی | Unified Commerce ERP» ✓؛ لیست با مقادیر پایه (مصطفی شربتی، علیرضا چاباری نسب، لیلا شهوازی، محمد ریاحی) ✓
+- curl مستقیم endpoint دسته‌ای: ۱۱۴ ردیف برای ۵ رکورد × ۱۲ زبان × ۲ فیلد؛ dev.log همه 200؛ لاگ settings-service پس از reload سالم؛ کنسول مرورگر صفر خطا.
+- lint = ۰/۰؛ tsc = فقط ۹ خطای پیش‌موجود baseline — صفر خطای جدید.
+
+Stage Summary:
+- «دادهٔ» لیست‌ها دیگر ثابت فارسی نیست: سطرهای دراپ‌داون/لیست فرم طرف حساب با تعویض زبان نرم‌افزار به همان زبان نمایش داده می‌شوند (انبار DataTranslation؛ نبودِ ترجمه = مقدار پایه)؛ پس از ترجمهٔ آنلاین هر رکورد، لیست هم بلافاصله تازه می‌شود. endpoint دسته‌ای برای فرم‌های سیستمی آینده هم قابل استفاده است.
+- عنوان پنجرهٔ مرورگر (document.title) اکنون با هر زبان نرم‌افزار ترجمه می‌شود (۱۳ زبان) و دیگر در زبان قبلی منجمد نمی‌ماند.
+- محدوده: لیستِ فرم‌های سیستمیِ دارای ترجمهٔ داده (الان Party) — فهرست کلّی فرم‌ساز از قبل ترجمه دارد (Task 70) و دراپ‌داون سال مالی دادهٔ بدون ترجمه است (در صورت فرمان مالک، با همین الگوی DataTranslation/FiscalYear اضافه می‌شود).
+- artifacts: mini-services/settings-service/src/data-translations/{controller,service}.ts؛ src/components/forms/common/Party.tsx؛ src/components/desktop/desktop.tsx (افکت document.title)؛ src/i18n/dictionaries.ts (کلید app.docTitle ×۱۳).
+---
+Task ID: 100
+Agent: Z.ai Code
+Task: درخواست مالک — «توی منوی تنظیمات و مدیریت کاربران یک فرم ایجاد کنید بنام نقش کاربری جدید و در این فرم کاربر باید بتواند نقش های کاربری سازمان خودش را تعریف نماید. امکان تعیین محدوده دسترسی برای هر نقش در این فرم وجود داشته باشد. مشاوره کامل بدهید»
+
+Work Log:
+- مشاوره (تأیید طرح قبل از پیاده‌سازی): مدل نقش/محدوده دو بُعدی — ① محدودهٔ نرم‌افزاری (کدام نرم‌افزارهای سیستم از Systems) و ② محدودهٔ ساختار سازمانی (کدام گره‌های BusinessStructure؛ معنای هر گره شامل زیرمجموعه‌ها)؛ نبودِ ردیف در هر بُعد = «بدون محدودیت» (همه). سطح عملیاتِ هر فرم (مشاهده/ثبت/ویرایش/حذف) و اعمالِ الزام‌آور دسترسی = فاز دوم پس از استقرار IAM و سند تحلیل §4.6.
+- اسکیما (settings-service): مدل UserRole (Code/Title یکتا با BusinessStructureRef، Description، IsActive، IsSystem) + UserRoleScope (ScopeType "software"|"structure" + RefKey؛ unique سه‌گانه؛ Cascade با نقش) — هر دو با بلوک کامل AppBaseEntity ۸فیلدی؛ db:push موفق.
+- ثبت‌ها: VERSIONED_MODELS += UserRole/UserRoleScope؛ TABLE_REGISTRY += "UserRole"/"UserRoleScope" (ID دستی §16)؛ UserRolesModule در app.module.
+- endpointها: GET/POST/PUT/DELETE /user-role (guard داشبورد BFF)؛ ثبت/ویرایش = بازنویسی تراکنشی ردیف‌های محدوده با رزرو بلاکی ID (الگوی تب‌های طرف حساب)؛ اعتبارسنجی دولایه: کد/عنوان اجباری، تکراری 409، appKey/گرهٔ ناموجود 422، حذف نقش سیستمی 403؛ پاسخ ثبت/ویرایش رکورد کامل با محدوده‌ها (readFull).
+- seed بوت: نقش سیستمی «مدیر سیستم» (code=ADMIN، IsSystem، بدون ردیف محدوده = دسترسی کامل) — idempotent by code؛ لاگ تأیید شد.
+- فرانت: فرم «نقش کاربری جدید» (user-role-form.tsx بر بستر SimpleFormTwoRowTabbed — هم‌خانوادهٔ سال مالی/طرف حساب): فیلدهای کد نقش/عنوان نقش/توضیحات/فعال + تب «محدوده دسترسی» با دو گروه رادیو (همه/برگزیده) و چک‌باکس‌های شرطی: ۲۸ نرم‌افزار از Systems (عنوان با TitleKey → زنده با تعویض زبان؛ قرارداد Task 99) و گره‌های ساختار با برچسب مسیر کامل (fa=Title، en=Title_En؛ DFS از ریشه)؛ جداکنندهٔ line بین دو بُعد؛ لیست رکوردها با سلول‌های کد/عنوان(+نقش سیستمی)/محدودهٔ نرم‌افزارها/محدودهٔ ساختار/فعال.
+- settings-window.tsx: زیرصفحهٔ «مدیریت کاربران» از placeholder کهربایی به هاب واقعی تبدیل شد — کارت لانچر «نقش کاربری جدید» + یادداشت «سایر فرم‌ها پس از سند تحلیل»؛ زیرصفحهٔ جدید "user-role" با نوار بازگشت دولایه (تنظیمات/مدیریت کاربران/نقش کاربری جدید) که UserRoleForm را embed می‌کند.
+- dictionaries.ts: ۱۹ کلید جدید um.* ×۱۳ زبان (roleFormTitle/roleCode/roleTitle/roleLauncherDesc/morePending/scopeTab/swScope/swAll/swSelected/stScope/stAll/stSelected/scopeHint/scopeNone/errSwEmpty/errStEmpty/systemRole/errCodeRequired/errTitleRequired).
+- E2E (agent-browser): لانچر → فرم؛ ثبت نقش آزمونی R100 «حسابدار آزمونی ۱۰۰» با برگزیدهٔ نرم‌افزارها (حسابداری+عمومی) و برگزیدهٔ ساختار (دفتر مرکزی/شرکت نمونه) → POST 201 و دراپ‌داون لیست: «حسابداری ، عمومی» و «دفتر مرکزی / شرکت نمونه» ✓؛ بازکردن دوباره R100 = هر دو حالت برگزیده با تیک‌های درست (ماندگاری) ✓؛ سوییچ به English: Role Code/Access Scope/Selected software + چک‌باکس‌ها Accounting/General + مسیرها Headquarters / Sample Company / Main Branch — همه زنده ✓ و برگشت به fa سالم ✓؛ ADMIN: عنوان با پسوند «نقش سیستمی» در لیست و دکمهٔ حذف غیرفعال ✓ (سرور هم 403 — curl قبلی)؛ حذف R100 با دیالوگ تأیید → DB فقط ADMIN ✓؛ ذخیرهٔ فرم خالی → توست «ثبت کد نقش الزامی است…» ✓.
+- اعتبار API با curl: تکراری 409، گرهٔ ناموجود 422، حذف سیستمی 403، PUT بازنویسی محدوده + Version++ — همه درست؛ سه رکورد آزمونی میانی (id 4,5,6,7) پاک شد؛ دادهٔ مالک دست‌نخورده.
+- lint = ۰/۰؛ tsc = فقط ۹ خطای پیش‌موجود baseline — صفر خطای جدید؛ کنسول مرورگر و dev.log پاک (همه 200/201). نکته: daemon مرورگر وسط E2E هنگ کرد (دستور screenshot) و با kill + پاک‌سازی sock ری‌استارت شد — به کد پروژه مربوط نیست.
+
+Stage Summary:
+- مدیریت کاربران از «placeholder» به بخش فعال تبدیل شد: اولین فرم آن — «نقش کاربری جدید» — با تعریف نقش‌های سازمان و تعیین محدودهٔ دسترسی دولایه (نرم‌افزارها + ساختار سازمانی) کار می‌کند؛ نقش سیستمی «مدیر سیستم» seed و حفاظت‌شده است.
+- قرارداد محدوده: خالی = بدون محدودیت؛ برگزیدهٔ خالی در فرانت رد می‌شود؛ اعمالِ واقعی این محدوده‌ها (فیلتر پنجره‌ها/رکوردها بر اساس نقش کاربر جاری) فاز دوم پس از IAM است و ساختار داده آن را آماده دارد.
+- artifacts: mini-services/settings-service/prisma/schema.prisma (+UserRole/+UserRoleScope)؛ src/user-roles/{controller,service,dto,module}.ts؛ src/prisma/prisma.service.ts؛ src/id-generation/table-registry.ts؛ src/app.module.ts؛ src/seed/seed.service.ts؛ src/components/erp/settings/user-role-form.tsx؛ src/components/erp/settings-window.tsx؛ src/i18n/dictionaries.ts (۱۹ کلید ×۱۳).
