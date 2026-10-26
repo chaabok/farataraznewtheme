@@ -17,3 +17,5 @@ async function bootstrap() {
 }
 
 void bootstrap();
+
+// Task 111 — live-reload marker (دفاع در برابر inode-shadows؛ بی‌اثر در منطق)
