@@ -20,7 +20,8 @@
  */
 
 import { join, resolve } from "node:path";
-import { readdirSync } from "node:fs";
+import { readdirSync, openSync } from "node:fs";
+import { spawn as nodeSpawn } from "node:child_process";
 
 const ROOT = resolve(import.meta.dir, "..", "..");
 const SERVICE_PORT = 3010;
