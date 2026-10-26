@@ -199,11 +199,11 @@ export function GeneralWindow() {
       </div>
 
       <div className="mx-auto max-w-xl space-y-4 p-4" dir="auto">
-        {/* Task 111 — فرم‌های ساخته‌شده در فرم‌ساز روی آیکون «عمومی» و
-            زیرمنوهایش؛ عین قرارداد پنجرهٔ منوی dfb-menu، اما به‌صورت بخش
-            افزودنی داخل همین پنجره (درخواست مالک: «فرم های ایجاد شده در منو
-            وجود ندارد») */}
-        <DfbAppFormsSection appKey="general" />
+        {/* Task 111/113 — فقط فرم‌های ساختهٔ کاربر در فرمساز؛ فرم‌های سیستمی
+            (اطلاعات پایه و…) بدنهٔ بومی خودشان را در همین پنجره دارند و
+            فهرست‌شدن دوباره‌شان = دوبل (درخواست مالک). تا وقتی فرمی از
+            ساخته‌های کاربر نباشد کل این بخش رندر نمی‌شود. */}
+        <DfbAppFormsSection appKey="general" hideSystem />
 
         {/* زیرمنوی «اطلاعات پایه» — collapsible classic-ERP menu group */}
         <section className="overflow-hidden rounded-xl border border-border/70 bg-card/60">

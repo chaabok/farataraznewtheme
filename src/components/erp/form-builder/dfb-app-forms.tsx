@@ -26,11 +26,27 @@ import { openDfbFormReal } from "./dfb-system-forms";
  * فرمساز و منوی عمومی دیده نمی شود». مدخل‌های سیستمیِ دارای فرم واقعی با کلیک
  * همان فرم واقعی را باز می‌کنند (openDfbFormReal).
  *
+ * Task 113 — پاک‌کردن دوبل‌ها (درخواست مالک: «توی منوی عمومی فرم ها دوبل
+ * شده اند... نباید مجددا آن فرم را در فرم ساز هم ایجاد کنید»): در پنجره‌های
+ * واقعی برنامه (مثل «عمومی») فرم‌های سیستمی حضور بومیِ خودشان را دارند (کارت
+ * «اطلاعات پایه» و…)؛ فهرست‌کردن دوبارهٔ همان‌ها در بخش «فرم‌های فرم‌ساز»ِ
+ * همان پنجره = دوبل. پس با prop «hideSystem» فقط فرم‌های ساختهٔ کاربر در
+ * فرمساز فهرست می‌شوند، کاشیِ زیرمنوها هم حذف می‌شود و اگر اصلاً فرمی از
+ * ساخته‌های کاربر نباشد کل بخش رندر نمی‌شود. فرم‌های سیستمی همچنان در
+ * درختوارهٔ فرمساز و پنجرهٔ منوی dfb (قرارداد Task 112) و پنجره‌های placeholder
+ * (فاقد بدنهٔ بومی) دیده می‌شوند — فقط دوبلِ درون پنجرهٔ بومی حذف می‌شود.
+ *
  * systemic contract: فرم‌های جدید بدون هیچ تنظیم اضافه‌ای در منوی برنامه ظاهر
  * می‌شوند؛ زیرمنوها هم به‌صورت کاشی هستند و با کلیک، پنجرهٔ dfb-menu همان گره
  * را باز می‌کنند (ناوبری کامل همان‌جا ادامه می‌یابد).
  */
-export function DfbAppFormsSection({ appKey }: { appKey: string }) {
+export function DfbAppFormsSection({
+  appKey,
+  hideSystem = false,
+}: {
+  appKey: string;
+  hideSystem?: boolean;
+}) {
   const t = useT();
   const locale = useSettings((s) => s.locale);
   const trMap = useDfbTrMap(); // Task 68 — عنوان‌های زبان فعلی
@@ -55,12 +71,18 @@ export function DfbAppFormsSection({ appKey }: { appKey: string }) {
   if (!loaded || !node) return null;
 
   const submenus = node.children ?? [];
-  const directForms = node.forms ?? [];
+  /* Task 113 — در حالت hideSystem فقط ساخته‌های کاربر (IsSystem=false) */
+  const directForms = (node.forms ?? []).filter((f) => !hideSystem || !f.isSystem);
   /* Task 112 — فرم‌های مستقیمِ زیرمنوها (یک سطح پایین‌تر) به‌صورت سرگروه‌دار */
   const groups: Array<{ sm: DfbMenuNode; forms: DfbFormSummary[] }> = submenus
-    .map((sm) => ({ sm, forms: sm.forms ?? [] }))
+    .map((sm) => ({ sm, forms: (sm.forms ?? []).filter((f) => !hideSystem || !f.isSystem) }))
     .filter((g) => g.forms.length > 0);
   const totalForms = directForms.length + groups.reduce((n, g) => n + g.forms.length, 0);
+
+  /* Task 113 — پنجرهٔ بومی که فرم‌های سیستمی‌اش را خودش نشان می‌دهد، تا وقتی
+     فرمی از ساخته‌های کاربر ندارد هیچ اثری از این بخش نباید ببیند (نه کاشیِ
+     تکراری زیرمنو، نه قاب خالی «فرم‌های فرم‌ساز» بالای کارت بومی خودش) */
+  if (hideSystem && directForms.length === 0 && groups.length === 0) return null;
 
   const renderRow = (f: DfbFormSummary) => {
     const isBuilder = f.componentKey === "dfb-builder";
@@ -112,7 +134,7 @@ export function DfbAppFormsSection({ appKey }: { appKey: string }) {
       </div>
 
       <div className="grid gap-3 p-3">
-        {submenus.length > 0 && (
+        {!hideSystem && submenus.length > 0 && (
           <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6">
             {submenus.map((sm) => (
               <button
