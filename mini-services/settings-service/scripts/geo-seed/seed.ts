@@ -54,7 +54,7 @@ function fail(msg: string): never {
 async function reserveIdBlock(count: number): Promise<number> {
   return prisma.$transaction(async (tx) => {
     const maxRows: Array<{ m: bigint | null }> =
-      await tx.$queryRawUnsafe(`SELECT MAX("ID") AS m FROM "GeoLocation"`);
+      await tx.$queryRawUnsafe(`SELECT MAX("GeoLocationID") AS m FROM "GeoLocation"`);
     const maxDbId = maxRows[0]?.m != null ? Number(maxRows[0].m) : 0;
 
     const row = await tx.iDGeneration.findFirst({ where: { tableName: TABLE } });

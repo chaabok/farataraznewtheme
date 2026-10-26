@@ -1,6 +1,7 @@
 import { Injectable, OnModuleInit, Logger } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { IdGenerationService } from "../id-generation/id-generation.service";
+import { TABLE_REGISTRY } from "../id-generation/table-registry";
 import { APP_CATALOG } from "../../../_shared/app-catalog";
 import { appBaseOnCreate, SYSTEM_ACTOR } from "../../../_shared/app-base-entity";
 import { LOCALES, type Locale } from "../../../../src/i18n/config";
@@ -228,7 +229,7 @@ export class SeedService implements OnModuleInit {
         );
         const counterId = Number(rows[0]?.m ?? 0n) + 1;
         const maxRows: Array<{ m: bigint | null }> = await this.prisma.$queryRawUnsafe(
-          `SELECT MAX("ID") AS m FROM "${table}"`,
+          `SELECT MAX("${TABLE_REGISTRY[table as keyof typeof TABLE_REGISTRY].pk}") AS m FROM "${table}"`,
         );
         const lastId = maxRows[0]?.m ?? 0n;
         await this.prisma.iDGeneration.create({
@@ -320,10 +321,10 @@ export class SeedService implements OnModuleInit {
       dictKey: string,
     ): Promise<number> => {
       let n = 0;
-      const faValue = getDict("fa")[dictKey];
+      const faValue = (getDict("fa") as Record<string, string>)[dictKey];
       for (const lang of LOCALES) {
         if (lang === "fa") continue; // fa = ستون پایهٔ خود Title
-        const value = (getDict(lang as Locale)[dictKey] ?? "").trim();
+        const value = ((getDict(lang as Locale) as Record<string, string>)[dictKey] ?? "").trim();
         if (!value || value === faValue) continue;
         if (await ensureTr(entityType, entityRef, "Title", lang, value)) n++;
       }
