@@ -40,7 +40,7 @@ model IDGeneration {
 /// می‌شوند (یک گره برای هر نرم‌افزار کاتالوگ؛ AppKey = appKey کاتالوگ) — فرم‌های سیستمی
 /// آینده هم به‌تفکیک همین آیکون‌ها ثبت می‌شوند (درخواست مالک، تأیید 1405/08/02).
 model DfbMenu {
-  id                   BigInt   @id @map("ID")
+  id                   BigInt   @id @map("DfbMenuID")
   parentRef            BigInt   @default(0) @map("ParentRef") // 0 = آیکون اصلی
   nodeType             Int      @default(1) @map("NodeType") // 1=MainIcon 2=SubMenu
   code                 String   @map("Code")
@@ -71,7 +71,7 @@ model DfbMenu {
 /// Header/Body/Footer = پیکربندی سطح بخش (رشتهٔ JSON — §2.3); فیلدها و تب‌ها
 /// رابطه‌ای‌اند (DfbFormField/DfbFormTab) تا «افزودن فیلد» روی فرم سیستمی ممکن باشد.
 model DfbForm {
-  id                   BigInt   @id @map("ID")
+  id                   BigInt   @id @map("DfbFormID")
   menuRef              BigInt   @map("MenuRef")
   code                 String   @map("Code")
   title                String   @map("Title")
@@ -110,7 +110,7 @@ model DfbForm {
 /// هویت پایدار ترجمهٔ عنوان تب (Tab:<formRef>:<clientKey>) در ذخیرهٔ مجدد
 /// (بازتولید ID) زنده بماند؛ ردیف‌های قدیمی در seed با tab_<ID> پر می‌شوند.
 model DfbFormTab {
-  id                   BigInt   @id @map("ID")
+  id                   BigInt   @id @map("DfbFormTabID")
   formRef              BigInt   @map("FormRef")
   parentRef            BigInt   @default(0) @map("ParentRef") // 0 = باند سطح بالا | >0 = تبِ داخل باند (ID ردیف باند والد)
   clientKey            String?  @map("ClientKey") // Task 69 — کلید پایدار سمت کلاینت (هویت ترجمهٔ عنوان)
@@ -140,7 +140,7 @@ model DfbFormTab {
 ///   · فیلدهای برگرفته از اسکریپت → { bindScript: <FieldKey فیلد اسکریپت>, bindField: <نام ستون واکشی‌شده> }
 ///   · شیپ‌های طراحی (line/box/circle/oval) → { tone? } — بدون مقدار EAV
 model DfbFormField {
-  id                   BigInt   @id @map("ID")
+  id                   BigInt   @id @map("DfbFormFieldID")
   formRef              BigInt   @map("FormRef")
   tabRef               BigInt?  @map("TabRef")
   section              String   @default("body") @map("Section") // header | body | footer
@@ -175,7 +175,7 @@ model DfbFormField {
 /// SourceTable فقط از QUERY_TABLES (whitelist) پذیرفته می‌شود؛ سرویس کوئری
 /// پارامتریِ فقط-خواندنی می‌سازد (بدون SQL آزاد کاربر).
 model DfbQuery {
-  id                   BigInt   @id @map("ID")
+  id                   BigInt   @id @map("DfbQueryID")
   code                 String   @map("Code")
   title                String   @map("Title")
   titleEn              String?  @map("Title_En")
@@ -199,7 +199,7 @@ model DfbQuery {
 
 /// DfbQueryField — ستون‌های منتخب کوئری.
 model DfbQueryField {
-  id                   BigInt   @id @map("ID")
+  id                   BigInt   @id @map("DfbQueryFieldID")
   queryRef             BigInt   @map("QueryRef")
   fieldName            String   @map("FieldName")
   alias                String?  @map("Alias")
@@ -227,7 +227,7 @@ model DfbQueryField {
 /// زبان پایه fa ترجمه نمی‌شود (متن اصلی Label/Title همان fa است)؛ ۱۲ زبان دیگر:
 /// en|tr|ar|hi|ps|ckb|pt|ko|fr|zh|de|ru. نمایش: ترجمهٔ زبان فعلی → fa → Label_En.
 model DfbTranslation {
-  id                   BigInt   @id @map("ID")
+  id                   BigInt   @id @map("DfbTranslationID")
   entityType           String   @map("EntityType") // Menu | Form | Field
   entityRef            BigInt   @map("EntityRef")
   fieldKey             String   @map("FieldKey") // "Title" | FieldKey فیلد
@@ -250,7 +250,7 @@ model DfbTranslation {
 
 /// DfbFormData — هر رکورد ذخیره‌شدهٔ یک فرم پویا (یا رکورد خارجیِ فرم سیستمی از طریق ExternalKey).
 model DfbFormData {
-  id                   BigInt   @id @map("ID")
+  id                   BigInt   @id @map("DfbFormDataID")
   formRef              BigInt   @map("FormRef")
   externalKey          String?  @map("ExternalKey") // فرم سیستمی: "bs:5" مثل شناسهٔ رکورد واقعی
   version              Int      @default(1) @map("Version")
@@ -270,7 +270,7 @@ model DfbFormData {
 
 /// DfbFormDataValue — مقدار هر فیلد (الگوی EAV — §2.3 بدون ستون JSON).
 model DfbFormDataValue {
-  id                   BigInt   @id @map("ID")
+  id                   BigInt   @id @map("DfbFormDataValueID")
   dataRef              BigInt   @map("DataRef")
   fieldRef             BigInt   @map("FieldRef")
   value                String?  @map("Value")

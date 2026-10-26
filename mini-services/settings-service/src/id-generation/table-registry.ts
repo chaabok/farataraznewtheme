@@ -41,73 +41,73 @@ export const TABLE_REGISTRY: Record<TableKey, TableEntry> = {
   },
   BusinessStructure: {
     canonical: "BusinessStructure",
-    pk: "ID",
+    pk: "BusinessStructureID",
     reservedIds: [1], // دفتر مرکزی — system-reserved root
     strictSelfHeal: true, // legacy import feeds manual IDs
   },
   BusinessStructureUser: {
     canonical: "BusinessStructureUser",
-    pk: "ID",
+    pk: "BusinessStructureUserID",
   },
   Systems: {
     canonical: "Systems",
-    pk: "ID",
+    pk: "SystemsID",
   },
   SoftwareConfig: {
     canonical: "SoftwareConfig", // Task 72 — پیکربندی نرم‌افزارها (هر فیلد یک ردیف)
-    pk: "ID",
+    pk: "SoftwareConfigID",
   },
   FiscalYear: {
     canonical: "FiscalYear", // Task 75 — سال مالی (اطلاعات پایهٔ عمومی)
-    pk: "ID",
+    pk: "FiscalYearID",
   },
   Party: {
     canonical: "Party", // Task 84 — طرف حساب
-    pk: "ID",
+    pk: "PartyID",
   },
   PartyPerson: {
     canonical: "PartyPerson", // Task 84 — افراد مرتبط
-    pk: "ID",
+    pk: "PartyPersonID",
   },
   PartyAddress: {
     canonical: "PartyAddress", // Task 84 — نشانی
-    pk: "ID",
+    pk: "PartyAddressID",
   },
   PartyPhone: {
     canonical: "PartyPhone", // Task 84 — تلفن
-    pk: "ID",
+    pk: "PartyPhoneID",
   },
   City: {
     canonical: "City", // Task 84 — جدول شهرها (مرجع؛ seed دستی)
-    pk: "ID",
+    pk: "CityID",
   },
   DataTranslation: {
     canonical: "DataTranslation", // Task 92 — ترجمهٔ دادهٔ فرم‌های سیستمی
-    pk: "ID",
+    pk: "DataTranslationID",
   },
   UserRole: {
     canonical: "UserRole", // Task 100 — نقش‌های کاربری
-    pk: "ID",
+    pk: "UserRoleID",
   },
   UserRoleScope: {
     canonical: "UserRoleScope", // Task 100 — محدودهٔ دسترسی نقش‌ها
-    pk: "ID",
+    pk: "UserRoleScopeID",
   },
   GeoLocation: {
     canonical: "GeoLocation", // Task 103 — محل‌های جغرافیایی (درخت اطلاعات پایه)
-    pk: "ID",
+    pk: "GeoLocationID",
   },
   CurrencyType: {
     canonical: "CurrencyType", // Task 114 — نوع ارز (اطلاعات پایهٔ عمومی)
-    pk: "ID",
+    pk: "CurrencyTypeID",
   },
   ExchangeRate: {
     canonical: "ExchangeRate", // Task 116 — نرخ برابری ارز (عملیات عمومی)
-    pk: "ID",
+    pk: "ExchangeRateID",
   },
   DetailType: {
     canonical: "DetailType", // Task 120 — نوع تفصیل جدید (اطلاعات پایهٔ حسابداری)
-    pk: "ID",
+    pk: "DetailTypeID",
   },
 };
 

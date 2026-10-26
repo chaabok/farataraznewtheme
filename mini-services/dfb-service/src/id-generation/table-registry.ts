@@ -23,15 +23,15 @@ export type TableKey =
 
 export const TABLE_REGISTRY: Record<TableKey, TableEntry> = {
   IDGeneration: { canonical: "IDGeneration", pk: "IDGenerationID" },
-  DfbMenu: { canonical: "DfbMenu", pk: "ID" },
-  DfbForm: { canonical: "DfbForm", pk: "ID" },
-  DfbFormTab: { canonical: "DfbFormTab", pk: "ID" },
-  DfbFormField: { canonical: "DfbFormField", pk: "ID" },
-  DfbQuery: { canonical: "DfbQuery", pk: "ID" },
-  DfbQueryField: { canonical: "DfbQueryField", pk: "ID" },
-  DfbFormData: { canonical: "DfbFormData", pk: "ID" },
-  DfbFormDataValue: { canonical: "DfbFormDataValue", pk: "ID" },
-  DfbTranslation: { canonical: "DfbTranslation", pk: "ID" }, // Task 68
+  DfbMenu: { canonical: "DfbMenu", pk: "DfbMenuID" },
+  DfbForm: { canonical: "DfbForm", pk: "DfbFormID" },
+  DfbFormTab: { canonical: "DfbFormTab", pk: "DfbFormTabID" },
+  DfbFormField: { canonical: "DfbFormField", pk: "DfbFormFieldID" },
+  DfbQuery: { canonical: "DfbQuery", pk: "DfbQueryID" },
+  DfbQueryField: { canonical: "DfbQueryField", pk: "DfbQueryFieldID" },
+  DfbFormData: { canonical: "DfbFormData", pk: "DfbFormDataID" },
+  DfbFormDataValue: { canonical: "DfbFormDataValue", pk: "DfbFormDataValueID" },
+  DfbTranslation: { canonical: "DfbTranslation", pk: "DfbTranslationID" }, // Task 68
 };
 
 export function resolveEntry(key: string): TableEntry {

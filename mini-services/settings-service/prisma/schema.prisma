@@ -63,7 +63,7 @@ model Setting {
 /// BusinessStructure — tree table (legacy "Gnr"."BusinessStructure").
 /// Root node is system-reserved at ID=1 (spec: counter must never reproduce it).
 model BusinessStructure {
-  id                    BigInt   @id @map("ID")
+  id                    BigInt   @id @map("BusinessStructureID")
   parentRef             BigInt             @map("ParentRef") // 0 = root
   code                  String             @map("Code")
   title                 String             @map("Title")
@@ -85,7 +85,7 @@ model BusinessStructure {
 
 /// IAM users authorized per business-structure node (Task 19 will wire auth-service).
 model BusinessStructureUser {
-  id                 BigInt   @id @map("ID")
+  id                 BigInt   @id @map("BusinessStructureUserID")
   businessStructureId BigInt            @map("BusinessStructureID")
   userId             String             @map("UserID")
   version            Int      @default(1)     @map("Version") // §2.5 auto-rowversion
@@ -125,7 +125,7 @@ model AppRegistry {
 /// drift (§2.5 — Version must reflect genuine change), IsActive never overwritten
 /// (§4.5 philosophy). i18n of titles via TitleKey → dictionaries.ts (11 locales).
 model Systems {
-  id        BigInt   @id @map("ID")
+  id        BigInt   @id @map("SystemsID")
   code      String   @unique @map("Code")
   titleFa   String   @map("TitleFa")
   titleKey  String?  @map("TitleKey") // i18n dictionary key; null for future non-catalog software
@@ -152,7 +152,7 @@ model Systems {
 /// Unique شامل BusinessStructureRef است تا پیکربندی تفکیکی هر شرکت/شعبه در
 /// آینده بدون تغییر اسکیما ممکن شود (پیش‌فرض تأییدشدهٔ مشاورهٔ Task 72).
 model SoftwareConfig {
-  id                   BigInt   @id @map("ID")
+  id                   BigInt   @id @map("SoftwareConfigID")
   appKey               String   @map("AppKey")
   configKey            String   @map("ConfigKey")
   configValue          String?  @map("ConfigValue") // "" = حذف (الگوی Task 68)
@@ -186,7 +186,7 @@ model SoftwareConfig {
 /// §16: ID دستی از IDGeneration ("FiscalYear")؛ بلوک کامل ارث‌بری AppBaseEntity
 /// ۸فیلدی (قرارداد اجباری مالک؛ نسخهٔ Task 76) — تا استقرار IAM = SYSTEM_ACTOR (دفتر مرکزی، ID=1).
 model FiscalYear {
-  id                   BigInt   @id @map("ID")
+  id                   BigInt   @id @map("FiscalYearID")
   code                 String   @map("Code")
   title                String   @map("Title") // فقط عدد، ۴ کاراکتر
   startDate            String?  @map("StartDate") // Gregorian 'YYYY-MM-DD' (Task 77)
@@ -215,7 +215,7 @@ model FiscalYear {
 /// کد یکتا در ساختار سازمانی؛ seed اولیه = ارزهای معتبر بین‌المللی ISO 4217
 /// (idempotent by Code) — ریال ایران + ارزهای major جهان و همسایگان.
 model CurrencyType {
-  id                BigInt   @id @map("ID")
+  id                BigInt   @id @map("CurrencyTypeID")
   code              String   @map("Code") // کد ارز (مثلاً IRR/USD — ISO 4217)
   title             String   @map("Title") // عنوان فارسی
   titleLatin        String   @map("TitleLatin") // عنوان لاتین (اجباری)
@@ -255,7 +255,7 @@ model CurrencyType {
 /// یکتایی: (تاریخ موثر + ارز مبنا + ارز مورد مبادله) در ساختار سازمانی —
 /// نرخ تکراری همان جفت‌ارز در همان روز رد می‌شود (409 با پیام روشن).
 model ExchangeRate {
-  id                BigInt   @id @map("ID")
+  id                BigInt   @id @map("ExchangeRateID")
   effectiveDate     String   @map("EffectiveDate") // میلادی 'YYYY-MM-DD' (Task 77)
   baseCurrencyRef   BigInt   @map("BaseCurrencyRef")
   quoteCurrencyRef  BigInt   @map("QuoteCurrencyRef")
@@ -281,7 +281,7 @@ model ExchangeRate {
 /// نام کشور). جدول مرجعِ اطلاعات پایه؛ seed اولیه با شهرهای major ایران
 /// (idempotent by Code) — توسعهٔ بعدی فهرست با همان جدول.
 model City {
-  id           BigInt   @id @map("ID")
+  id           BigInt   @id @map("CityID")
   code         String   @unique @map("Code")
   title        String   @map("Title")
   titleLatin   String?  @map("TitleLatin")
@@ -323,7 +323,7 @@ model City {
 /// سه‌تای اول/آخری فقط شخص حقیقی؛ تاریخ‌ها میلادی ISO (قرارداد Task 77).
 /// §16: ID دستی از IDGeneration؛ بلوک کامل AppBaseEntity ۸فیلدی (Task 76).
 model Party {
-  id                   BigInt   @id @map("ID")
+  id                   BigInt   @id @map("PartyID")
   nature               String   @map("Nature") // "natural" | "legal"
   subtype              String?  @map("Subtype") // فقط شخص حقوقی
   name                 String   @map("Name")
@@ -388,7 +388,7 @@ model Party {
 /// §16: ID دستی از IDGeneration ("DataTranslation")؛ بلوک کامل ارث‌بری
 /// AppBaseEntity ۸فیلدی (قرارداد اجباری مالک) — تا استقرار IAM = SYSTEM_ACTOR.
 model DataTranslation {
-  id                   BigInt   @id @map("ID")
+  id                   BigInt   @id @map("DataTranslationID")
   entityType           String   @map("EntityType") // سقف ۴۰ نویسه در DTO/service
   entityId             BigInt   @map("EntityID")
   fieldKey             String   @map("FieldKey") // سقف ۱۲۰ نویسه در DTO/service
@@ -423,7 +423,7 @@ model DataTranslation {
 /// ارث‌بری AppBaseEntity ۸فیلدی (قرارداد اجباری مالک) — تا استقرار IAM =
 /// SYSTEM_ACTOR (دفتر مرکزی، ID=1).
 model UserRole {
-  id                   BigInt   @id @map("ID")
+  id                   BigInt   @id @map("UserRoleID")
   code                 String   @map("Code") // کد نقش — اجباری، یکتا در ساختار سازمانی
   title                String   @map("Title") // عنوان نقش — اجباری، یکتا در ساختار سازمانی
   description          String?  @map("Description") // توضیحات (اختیاری)
@@ -451,7 +451,7 @@ model UserRole {
 /// ScopeType = "software" (RefKey = appKey از Systems) | "structure" (RefKey = شناسهٔ گرهٔ BusinessStructure).
 /// بازنویسی کامل با هر ثبت/ویرایش نقش (الگوی تب‌های طرف حساب) — idempotent روی unique سه‌گانه.
 model UserRoleScope {
-  id                   BigInt   @id @map("ID")
+  id                   BigInt   @id @map("UserRoleScopeID")
   userRoleRef          BigInt   @map("UserRoleRef")
   scopeType            String   @map("ScopeType") // "software" | "structure"
   refKey               String   @map("RefKey") // appKey یا شناسهٔ گرهٔ ساختار (رشته — §2.3)
@@ -485,7 +485,7 @@ model UserRoleScope {
 /// §16: ID دستی از IDGeneration ("GeoLocation")؛ بلوک کامل ارث‌بری
 /// AppBaseEntity ۸فیلدی — تا استقرار IAM = SYSTEM_ACTOR (دفتر مرکزی، ID=1).
 model GeoLocation {
-  id                   BigInt   @id @map("ID")
+  id                   BigInt   @id @map("GeoLocationID")
   parentRef            BigInt   @default(0) @map("ParentRef") // 0 = ریشهٔ مجازی فرم (کشور)
   levelType            Int      @map("LevelType") // 1=Country 2=Province 3=City 4=Village 5=Street 6=Alley
   code                 Int      @map("Code") // عددی، یکتا بین خواهرها
@@ -510,7 +510,7 @@ model GeoLocation {
 /// PartyPerson — تب «افراد مرتبط»: نام / نام خانوادگی (اجباری) / نسبت /
 /// کد ملی / شماره تلفن / توضیحات. با ثبت/ویرایشِ طرف حساب بازنویسی می‌شود.
 model PartyPerson {
-  id                   BigInt   @id @map("ID")
+  id                   BigInt   @id @map("PartyPersonID")
   partyRef             BigInt   @map("PartyRef")
   firstName            String   @map("FirstName")
   lastName             String   @map("LastName")
@@ -538,7 +538,7 @@ model PartyPerson {
 /// CityRef + عکسِ عنوان برای نمایش) / آدرس کامل (اجباری) / کد پستی /
 /// طول و عرض جغرافیایی.
 model PartyAddress {
-  id                   BigInt   @id @map("ID")
+  id                   BigInt   @id @map("PartyAddressID")
   partyRef             BigInt   @map("PartyRef")
   addrType             String   @map("AddrType") // official | workplace | invoice | goods | warehouse | home | postal | other
   cityRef              BigInt?  @map("CityRef")
@@ -566,7 +566,7 @@ model PartyAddress {
 
 /// PartyPhone — تب «تلفن»: نوع تلفن / شماره / داخلی / توضیحات.
 model PartyPhone {
-  id                   BigInt   @id @map("ID")
+  id                   BigInt   @id @map("PartyPhoneID")
   partyRef             BigInt   @map("PartyRef")
   phoneType            String   @map("PhoneType") // office | mobile | home | other | faxOffice | faxHome | faxOther
   number               String?  @map("Number")
@@ -597,7 +597,7 @@ model PartyPhone {
 ///   · توضیحات      — اختیاری (متن چندخطی).
 /// بدون فیلد شناسه در فرم — ID از IDGeneration (§16).
 model DetailType {
-  id                   BigInt   @id @map("ID")
+  id                   BigInt   @id @map("DetailTypeID")
   code                 String   @map("Code") // کد نوع تفصیل (یکتا در ساختار)
   title                String   @map("Title") // عنوان فارسی (یکتا در ساختار)
   description          String?  @map("Description") // توضیحات اختیاری
