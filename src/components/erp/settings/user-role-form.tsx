@@ -335,11 +335,14 @@ export function UserRoleForm({ onBack }: { onBack?: () => void }) {
         type: "radio",
         required: true,
         value: swMode,
+        widthPct: 100, // Task 102 — header row stands alone above its items
         options: [
           { value: "all", label: t("um.swAll") },
           { value: "selected", label: t("um.swSelected") },
         ],
       },
+      /* Task 102 — فاصلهٔ هدر تا آیتم‌ها (درخواست مالک) */
+      { id: "swGap", label: "", type: "spacer", widthPct: 100 },
     ];
     if (swMode === "selected") {
       for (const s of systems) {
@@ -348,6 +351,7 @@ export function UserRoleForm({ onBack }: { onBack?: () => void }) {
           label: s.titleKey ? t(s.titleKey as never) : s.titleFa,
           type: "checkbox",
           checked: swKeys.includes(s.code),
+          place: "start", // Task 102 — جهت خواندن (RTL راست‌به‌چپ / LTR چپ‌به‌راست)
         });
       }
     }
@@ -358,11 +362,14 @@ export function UserRoleForm({ onBack }: { onBack?: () => void }) {
       type: "radio",
       required: true,
       value: stMode,
+      widthPct: 100, // Task 102 — header row stands alone above its items
       options: [
         { value: "all", label: t("um.stAll") },
         { value: "selected", label: t("um.stSelected") },
       ],
     });
+    /* Task 102 — فاصلهٔ هدر تا آیتم‌ها (درخواست مالک) */
+    scopeFields.push({ id: "stGap", label: "", type: "spacer", widthPct: 100 });
     if (stMode === "selected") {
       for (const n of nodes) {
         scopeFields.push({
@@ -370,6 +377,7 @@ export function UserRoleForm({ onBack }: { onBack?: () => void }) {
           label: n.path,
           type: "checkbox",
           checked: stIds.includes(n.id),
+          place: "start", // Task 102 — جهت خواندن (RTL راست‌به‌چپ / LTR چپ‌به‌راست)
         });
       }
     }

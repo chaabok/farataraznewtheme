@@ -218,6 +218,12 @@ export function FieldCell({
       </div>
     );
   }
+  /* Task 102 — invisible vertical gap (owner: «بین هدر و آیتم‌ها فاصله
+     بگذارید»): a full-width empty row — renders as breathing room between a
+     section header (e.g. the scope radio) and its checkable items. */
+  if (type === "spacer") {
+    return <div aria-hidden className="h-3 w-full" />;
+  }
   if (type === "box") {
     return (
       <div aria-hidden className="my-1 h-12 w-full rounded-xl border-2 border-border/70 bg-muted/30 shadow-inner" />
@@ -311,13 +317,22 @@ export function FieldCell({
     );
   }
 
-  /* checkbox — inline toggle pushed to the row end (legacy «فعال» placement) */
+  /* checkbox — Task 102: two placements. "end" (default) = legacy «فعال»
+     toggle pushed to the row end; "start" = list-item layout anchored to the
+     READING start edge — flex-start resolves to the right edge in RTL and the
+     left edge in LTR, and the DOM order [Checkbox, label] puts the checkbox
+     first in the reading order of BOTH directions (owner: «اگر زبان RTL بود
+     آیتم‌ها راست‌به‌چپ و اگر LTR بود چپ‌به‌راست چیده شوند»). */
   if (type === "checkbox") {
     const cid = `${idPrefix}-chk-${field.id}`;
+    const toEnd = field.place !== "start";
     return (
       <label
         htmlFor={cid}
-        className="flex cursor-pointer items-center justify-end gap-2 text-xs text-foreground/90"
+        className={cn(
+          "flex cursor-pointer items-center gap-2 text-xs text-foreground/90",
+          toEnd && "justify-end",
+        )}
       >
         <Checkbox
           id={cid}

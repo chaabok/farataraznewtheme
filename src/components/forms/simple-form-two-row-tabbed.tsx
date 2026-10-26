@@ -43,6 +43,7 @@ export type SimpleFormFieldType =
   | "textarea" // Task 47 — rendered as a small multi-line box
   | "radio" // Task 58 (owner request) — radio group fed by defined/script items
   | "line" // Task 53 — static design shape (divider)
+  | "spacer" // Task 102 — invisible vertical gap between a header row and its items
   | "box" // Task 53 — static design shape (rectangle)
   | "circle" // Task 53 — static design shape
   | "oval" // Task 53 — static design shape
@@ -78,6 +79,11 @@ export interface SimpleFormField {
   /** Task 48 — width percent of the flow row (25..100, step 5); dfb-designed
       forms map DfbFormField.WidthSpan here. Omitted = legacy fixed grid. */
   widthPct?: number;
+  /** Task 102 — checkbox anchoring inside its cell: "end" (default) keeps the
+      legacy «فعال» row-end placement; "start" anchors the pair to the READING
+      start edge (right in RTL, left in LTR) with the checkbox first — the
+      natural layout for lists of checkable items (scope tabs). */
+  place?: "start" | "end";
 }
 
 export interface SimpleFormGridColumn {
