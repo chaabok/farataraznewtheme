@@ -4905,3 +4905,8 @@ error: Failed to start server. Is port 3001 in use?
 [Nest] 16039  - 10/27/2026, 6:23:28 PM     LOG [SystemsService] Systems synced from APP_CATALOG (total 28, created 0, updated 0)
 [Nest] 16039  - 10/27/2026, 6:23:28 PM     LOG [NestApplication] Nest application successfully started +81ms
 [Nest] 16039  - 10/27/2026, 6:23:28 PM     LOG [Bootstrap] settings-service listening on http://127.0.0.1:3001
+[Nest] 16039  - 10/27/2026, 6:30:13 PM     LOG [UsersService] User created — 4 row(s) [1,14,15,18] Username=t130.user Role=1 Accesses=163/row (Task 126)
+[Nest] 16039  - 10/27/2026, 6:30:48 PM     LOG [UsersService] User deleted — ID=25 Username=t130.user
+[Nest] 16039  - 10/27/2026, 6:31:20 PM     LOG [UsersService] User deleted — ID=26 Username=t130.user
+[Nest] 16039  - 10/27/2026, 6:31:20 PM     LOG [UsersService] User deleted — ID=27 Username=t130.user
+[Nest] 16039  - 10/27/2026, 6:31:20 PM     LOG [UsersService] User deleted — ID=28 Username=t130.user
