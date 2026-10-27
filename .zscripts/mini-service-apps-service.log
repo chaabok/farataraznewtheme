@@ -1,13 +1,36 @@
+[apps-service] Installing dependencies...
+[0.02ms] ".env"
+bun install v1.3.14 (0d9b296a)
+
+Checked 105 installs across 104 packages (no changes) [2.00ms]
+[apps-service] Running bun run dev...
 $ NODE_PATH=./node_modules bun --hot src/main.ts
-[Nest] 6579  - 10/25/2026, 10:36:48 PM     LOG [NestFactory] Starting Nest application...
-[Nest] 6579  - 10/25/2026, 10:36:48 PM     LOG [InstanceLoader] AppModule dependencies initialized +19ms
-[Nest] 6579  - 10/25/2026, 10:36:48 PM     LOG [InstanceLoader] AppsModule dependencies initialized +0ms
-[Nest] 6579  - 10/25/2026, 10:36:48 PM     LOG [RoutesResolver] AppsController {/}: +352ms
-[Nest] 6579  - 10/25/2026, 10:36:48 PM     LOG [RouterExplorer] Mapped {/health, GET} route +6ms
-[Nest] 6579  - 10/25/2026, 10:36:48 PM     LOG [RouterExplorer] Mapped {/apps, GET} route +1ms
-[Nest] 6579  - 10/25/2026, 10:36:48 PM     LOG [RouterExplorer] Mapped {/:appKey/meta, GET} route +0ms
-[Nest] 6579  - 10/25/2026, 10:36:48 PM     LOG [RouterExplorer] Mapped {/:appKey/health, GET} route +1ms
-[Nest] 6579  - 10/25/2026, 10:36:48 PM     LOG [RouterExplorer] Mapped {/:appKey/integrations/status, GET} route +3ms
-[Nest] 6579  - 10/25/2026, 10:36:48 PM     LOG [NestApplication] Nest application successfully started +13ms
-[Nest] 6579  - 10/25/2026, 10:36:48 PM     LOG [Bootstrap] apps-service listening on http://127.0.0.1:3002
-error: script "dev" was terminated by signal SIGKILL (Forced quit)
+[Nest] 3159  - 10/27/2026, 11:21:29 PM     LOG [NestFactory] Starting Nest application...
+[Nest] 3159  - 10/27/2026, 11:21:29 PM     LOG [InstanceLoader] AppModule dependencies initialized +28ms
+[Nest] 3159  - 10/27/2026, 11:21:29 PM     LOG [InstanceLoader] AppsModule dependencies initialized +0ms
+[Nest] 3159  - 10/27/2026, 11:21:29 PM     LOG [RoutesResolver] AppsController {/}: +215ms
+[Nest] 3159  - 10/27/2026, 11:21:29 PM     LOG [RouterExplorer] Mapped {/health, GET} route +5ms
+[Nest] 3159  - 10/27/2026, 11:21:29 PM     LOG [RouterExplorer] Mapped {/apps, GET} route +0ms
+[Nest] 3159  - 10/27/2026, 11:21:29 PM     LOG [RouterExplorer] Mapped {/:appKey/meta, GET} route +4ms
+[Nest] 3159  - 10/27/2026, 11:21:29 PM     LOG [RouterExplorer] Mapped {/:appKey/health, GET} route +1ms
+[Nest] 3159  - 10/27/2026, 11:21:29 PM     LOG [RouterExplorer] Mapped {/:appKey/integrations/status, GET} route +0ms
+[Nest] 3159  - 10/27/2026, 11:21:29 PM     LOG [NestApplication] Nest application successfully started +9ms
+[Nest] 3159  - 10/27/2026, 11:21:30 PM   ERROR [NestApplication] Error: Failed to start server. Is port 3002 in use? +56ms
+186 |             this.httpServer.once('error', errorHandler);
+187 |             const isCallbackInOriginalArgs = (0, shared_utils_1.isFunction)(args[args.length - 1]);
+188 |             const listenFnArgs = isCallbackInOriginalArgs
+189 |                 ? args.slice(0, args.length - 1)
+190 |                 : args;
+191 |             this.httpAdapter.listen(port, ...listenFnArgs, (...originalCallbackArgs) => {
+      ^
+error: Failed to start server. Is port 3002 in use?
+ syscall: "listen",
+   errno: 0,
+    code: "EADDRINUSE"
+
+      at serve (unknown:1:1)
+      at node:_http_server:281:39
+      at node:_http_server:258:33
+      at /home/z/my-project/mini-services/apps-service/node_modules/@nestjs/core/nest-application.js:191:30
+      at Promise (unknown:1:11)
+      at listen (/home/z/my-project/mini-services/apps-service/node_modules/@nestjs/core/nest-application.js:203:21)
