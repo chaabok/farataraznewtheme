@@ -30,7 +30,7 @@ import { appBaseOnCreate, type AppBaseActor } from "../../../_shared/app-base-en
 /** پهنای پیش‌فرض بازهٔ خودکار هر نوع تفصیل (عین تصویر مالک: ۱۰۰۰ شماره). */
 export const DETAIL_NUMBERING_WIDTH = 1000n;
 
-interface DetailTypeResidency {
+export interface DetailTypeResidency {
   id: bigint;
   businessStructureRef: bigint;
   companyRef: bigint | null;

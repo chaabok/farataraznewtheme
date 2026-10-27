@@ -8,17 +8,26 @@ import { useAccountingNav, type AccountingSubPage } from "@/stores/accounting-na
 import { useWindowChrome } from "@/components/desktop/app-window";
 import { AccountingMenuHome } from "./accounting-menu-home";
 import { DetailTypeForm } from "./detail-type-form";
+import { DetailTypeNumberingForm } from "./detail-type-numbering-form";
 
 /**
- * AccountingWindow — Task 119/120 (درخواست مالک): پنجرهٔ نرم‌افزار
+ * AccountingWindow — Task 119/120/131 (درخواست مالک): پنجرهٔ نرم‌افزار
  * «حسابداری» (appKey "accounting"). تا امروز placeholder بود؛ از Task 119
  * بدنهٔ واقعی با زیرمنوی «اطلاعات پایه» دارد.
  *
  * ساختار پنجره الگوی عمومی (Task 75/117) است: home = منوی اعلامی با ۴ حالت
  * نمایش؛ فرم‌های اعلامی به‌صورت زیرصفحهٔ نوار-باریک (بازگشت + breadcrumb)
  * در همین پنجره باز می‌شوند — هر فرم اعلامی یک زیرصفحه به این switch اضافه
- * می‌کند. اولین فرم (Task 120): «نوع تفصیل جدید».
+ * می‌کند. فرم‌ها: «نوع تفصیل جدید» (Task 120) و «شماره گذاری تفصیلی ها»
+ * (Task 131).
  */
+
+/** عنوان زندهٔ برگه به ازای هر زیرصفحهٔ فرم (Task 82 — الگوی عمومی) */
+const PAGE_TITLE_KEY: Partial<Record<AccountingSubPage, string>> = {
+  "detail-type": "dt.formTitle",
+  "detail-type-numbering": "dtn.formTitle",
+};
+
 export function AccountingWindow() {
   const t = useT();
   const dir = useSettings((s) => s.dir());
@@ -30,7 +39,7 @@ export function AccountingWindow() {
 
   React.useEffect(() => {
     if (!chrome?.windowId) return;
-    const titleKey = page === "detail-type" ? "dt.formTitle" : null;
+    const titleKey = PAGE_TITLE_KEY[page];
     setWindowTitle(
       chrome.windowId,
       titleKey ? `${t("app.accounting")} — ${t(titleKey as never)}` : undefined,
@@ -50,10 +59,12 @@ export function AccountingWindow() {
     }
   }, [navReq, go]);
 
-  if (page === "detail-type") {
+  const titleKey = PAGE_TITLE_KEY[page];
+
+  if (page !== "home" && titleKey) {
     return (
       <div className="flex h-full flex-col">
-        {/* نوار زیرصفحهٔ باریک: حسابداری / اطلاعات پایه / نوع تفصیل جدید */}
+        {/* نوار زیرصفحهٔ باریک: حسابداری / اطلاعات پایه / {فرم} */}
         <div className="flex h-10 shrink-0 items-center gap-1.5 overflow-x-auto border-b border-border/60 px-2 scrollbar-slim">
           <button
             type="button"
@@ -73,11 +84,12 @@ export function AccountingWindow() {
             /
           </span>
           <span className="shrink-0 truncate text-xs font-semibold text-foreground/90">
-            {t("dt.formTitle")}
+            {t(titleKey as never)}
           </span>
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto p-3 scrollbar-slim">
-          <DetailTypeForm onBack={() => go("home")} />
+          {page === "detail-type" && <DetailTypeForm onBack={() => go("home")} />}
+          {page === "detail-type-numbering" && <DetailTypeNumberingForm />}
         </div>
       </div>
     );

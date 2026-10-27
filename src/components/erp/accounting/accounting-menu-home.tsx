@@ -1,10 +1,10 @@
 "use client";
 
-import { Calculator, Database, Tags } from "lucide-react";
+import { Calculator, Database, ListOrdered, Tags } from "lucide-react";
 import { AppMenuHome, type AppMenuGroupDef } from "@/components/erp/shared/app-menu-home";
 
 /**
- * AccountingMenuHome — Task 119/120 (درخواست مالک): «یک زیرمنو در منو
+ * AccountingMenuHome — Task 119/120/131 (درخواست مالک): «یک زیرمنو در منو
  * حسابداری ایجاد کنید بنام اطلاعات پایه» + فرم‌های اعلامیِ زیر آن.
  *
  * پنجرهٔ نرم‌افزار «حسابداری» (appKey "accounting") از حالت placeholder خارج
@@ -16,6 +16,8 @@ import { AppMenuHome, type AppMenuGroupDef } from "@/components/erp/shared/app-m
  *   · Task 120: «نوع تفصیل جدید» (بدنهٔ واقعی detail-type-form؛ بدون عنوان
  *     لاتین به فرمان مالک). فرم‌های بعدی (حساب‌ها، دفاتر، اسناد و …) فقط یک
  *     مدخل در همین آرایه + یک زیرصفحه در accounting-window می‌گیرند.
+ *   · Task 131: «شماره گذاری تفصیلی ها» (بدنهٔ واقعی detail-type-numbering-form
+ *     با کامپوننت MainDataGrid — بازهٔ خودکار هر تفصیل).
  *   · همان زیرمنو در درختوارهٔ فرمساز هم ثبت است (SYSTEM_SUBMENUS — dfb seed،
  *     کد "accBasicInfo"؛ SYSTEM_FORMS با anchorSubmenuCode همان) تا قرارداد
  *     Task 112 در هر دو منو برقرار بماند.
@@ -38,11 +40,23 @@ const ACCOUNTING_MENU_GROUPS: AppMenuGroupDef[] = [
         icon: Tags,
         gradient: "from-teal-500 to-emerald-600",
       },
+      {
+        /* Task 131 — شماره گذاری تفصیلی ها (MainDataGrid) */
+        page: "detail-type-numbering",
+        titleKey: "dtn.formTitle",
+        descKey: "dtn.formDesc",
+        icon: ListOrdered,
+        gradient: "from-amber-500 to-orange-600",
+      },
     ],
   },
 ];
 
-export function AccountingMenuHome({ go }: { go: (page: "detail-type") => void }) {
+export function AccountingMenuHome({
+  go,
+}: {
+  go: (page: "detail-type" | "detail-type-numbering") => void;
+}) {
   return (
     <AppMenuHome
       appKey="accounting"
@@ -51,7 +65,7 @@ export function AccountingMenuHome({ go }: { go: (page: "detail-type") => void }
       headerGradient="from-violet-500 to-violet-700"
       storageKey="accounting.menuView"
       groups={ACCOUNTING_MENU_GROUPS}
-      go={(page) => go(page as "detail-type")}
+      go={(page) => go(page as "detail-type" | "detail-type-numbering")}
     />
   );
 }

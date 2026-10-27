@@ -186,6 +186,21 @@ const SYSTEM_FORMS: SystemFormSeed[] = [
     componentKey: "simpleTwoRowTabbed",
     dictKey: "dt.formTitle",
   },
+  {
+    /* Task 131 (درخواست مالک) — فرم «شماره گذاری تفصیلی ها»: دومین فرم
+       سیستمیِ زیرمنوی «اطلاعات پایه»ٔ حسابداری؛ بدنهٔ واقعی React
+       (detail-type-numbering-form) با کامپوننت MainDataGrid و ویرایش
+       درجریانِ بازهٔ خودکار هر تفصیل (کنترل تداخل ۴۰۹)؛ راه‌انداز واقعی =
+       زیرصفحهٔ detail-type-numbering پنجرهٔ حسابداری (قرارداد acc.*). */
+    systemKey: "acc.detailTypeNumbering",
+    anchorAppKey: "accounting",
+    anchorSubmenuCode: "accBasicInfo",
+    code: "DTN",
+    titleFa: "شماره گذاری تفصیلی ها",
+    titleEn: "Detail Type Numbering",
+    componentKey: "mainDataGrid",
+    dictKey: "dtn.formTitle",
+  },
 ];
 
 /**

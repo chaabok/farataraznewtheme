@@ -37,6 +37,7 @@ const SYSTEM_GENERAL_PAGES: Record<string, GeneralSubPage> = {
 /** SystemKey فرم‌های سیستمیِ زیرمنوی «اطلاعات پایه»ٔ حسابداری → زیرصفحهٔ پنجرهٔ حسابداری */
 const SYSTEM_ACCOUNTING_PAGES: Record<string, AccountingSubPage> = {
   "acc.detailType": "detail-type", // Task 120 — نوع تفصیل جدید
+  "acc.detailTypeNumbering": "detail-type-numbering", // Task 131 — شماره گذاری تفصیلی ها
 };
 
 /** آیا این فرم سیستمی «فرم واقعی» جداگانه‌ای دارد (برای نمایش دکمهٔ باز کردن)؟ */

@@ -254,6 +254,10 @@ export function DetailTypeForm({ onBack }: { onBack?: () => void }) {
         ? await api.post<DetailTypeDto>("detail-type", body)
         : await api.put<DetailTypeDto>(`detail-type/${currentId}`, body);
       toast.success(t("abar.savedToast"));
+      /* Task 131/§5.6 — فهرست شماره‌گذاری تفصیل‌ها زنده تازه شود (ردیف خودکار تازه) */
+      window.dispatchEvent(
+        new CustomEvent("erp:records-changed", { detail: { entity: "detail-type" } }),
+      );
       const rows = await fetchRecords().catch(() => [] as DetailTypeDto[]);
       applyRecords(rows);
       applyRecord(res);
@@ -273,6 +277,10 @@ export function DetailTypeForm({ onBack }: { onBack?: () => void }) {
     try {
       await api.del(`detail-type/${currentId}`);
       toast.success(t("abar.deletedToast"));
+      /* Task 131/§5.6 — فهرست شماره‌گذاری زنده تازه شود (ردیف وابسته حذف شد) */
+      window.dispatchEvent(
+        new CustomEvent("erp:records-changed", { detail: { entity: "detail-type" } }),
+      );
       const rows = await fetchRecords().catch(() => [] as DetailTypeDto[]);
       applyRecords(rows);
       newRecord();

@@ -21,6 +21,7 @@ import {
   seedCanonicalDetailTypes,
   sortDetailTypeRows,
 } from "./canonical-detail-types";
+import { allocateDetailTypeNumbering } from "../detail-type-numbering/allocate";
 
 /**
  * DetailTypeService — Task 120 (درخواست مالک): فرم «نوع تفصیل جدید» در
@@ -101,8 +102,12 @@ export class DetailTypeService {
         ...appBaseOnCreate({ userId: SYSTEM_ACTOR.userId, nodeId: target.structureRef, ...target.chain }),
       },
     });
+    /* Task 131 (قاعدهٔ خودکار مالک): هر نوع تفصیل تازه بلافاصله ردیف
+       شماره‌گذاری با بازهٔ بدون‌تداخل می‌گیرد (MAX(EndNumber)+۱، پهنای ۱۰۰۰) */
+    const numbering = await allocateDetailTypeNumbering(this.prisma, this.idGen, row, SYSTEM_ACTOR);
     this.logger.log(
-      `DetailType created — ID=${newId} Code=${norm.code} Title=${norm.title} Structure=${target.structureRef}`,
+      `DetailType created — ID=${newId} Code=${norm.code} Title=${norm.title} Structure=${target.structureRef}` +
+        (numbering ? ` — numbering auto-allocated (${numbering.startNumber}..${numbering.endNumber})` : ""),
     );
     return this.toDto(row);
   }
@@ -146,7 +151,12 @@ export class DetailTypeService {
       });
     }
     await this.prisma.detailType.delete({ where: { id: existing.id } });
-    return { deleted: true, id };
+    /* Task 131 — ردیف شماره‌گذاری وابستهٔ نوع تفصیل است؛ با حذف تفصیل پاک
+       می‌شود (شکاف بازه پذیرفتهٔ §2.4 — دوباره استفاده نمی‌شود) */
+    const removedNumbering = await this.prisma.detailTypeNumbering.deleteMany({
+      where: { detailTypeRef: existing.id },
+    });
+    return { deleted: true, id, numberingRowsRemoved: removedNumbering.count };
   }
 
   /* ------------------------------ validation ------------------------------ */

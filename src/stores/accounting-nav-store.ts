@@ -19,7 +19,8 @@ import { create } from "zustand";
 /** زیرصفحه‌های پنجرهٔ «حسابداری» — هم‌نوع AccountingPage در accounting-window */
 export type AccountingSubPage =
   | "home"
-  | "detail-type"; // Task 120 — نوع تفصیل جدید (اطلاعات پایهٔ حسابداری)
+  | "detail-type" // Task 120 — نوع تفصیل جدید (اطلاعات پایهٔ حسابداری)
+  | "detail-type-numbering"; // Task 131 — شماره گذاری تفصیلی ها (اطلاعات پایهٔ حسابداری)
 
 interface AccountingNavState {
   /** درخواست در انتظار (null = هیچ) */
