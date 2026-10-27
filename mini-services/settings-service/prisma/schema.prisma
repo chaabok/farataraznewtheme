@@ -619,6 +619,39 @@ model DetailType {
   @@map("DetailType")
 }
 
+/// DetailTypeNumbering — Task 131 (درخواست مالک): فرم «شماره گذاری تفصیلی ها»
+/// در نرم‌افزار «حسابداری» ← زیرمنوی «اطلاعات پایه» (کامپوننت MainDataGrid).
+/// به ازای هر نوع تفصیل (DetailType) یک ردیف در هر گرهٔ ساختار سازمانی:
+///   · StartNumber/EndNumber — بازهٔ شماره‌گذاری؛ تخصیص خودکار پیوسته
+///     (پهنای پیش‌فرض ۱۰۰۰ شماره: MAX(EndNumber)+۱ در همان گره؛ نخستین
+///     بازه از ۱ آغاز می‌شود) و ویرایش دستی هم ممکن است.
+///   · IsAutomatic — ستون «خودکار» (پیش‌فرض تیک‌خورده — عین تصویر مالک).
+///   · IsCompany   — ستون «شرکت» (پیش‌فرض خالی — عین تصویر مالک).
+///   · قاعدهٔ مالک: «شماره‌ها نباید با شماره‌های تفصیلی دیگر تداخل داشته
+///     باشند» ⇒ بازه‌ها در هر گره با هم تداخل ندارند (کنترل سرور ۴۰۹).
+/// اقامت ردیف عین خودِ نوع تفصیل است (آینهٔ ۸فیلد AppBase همان ردیف).
+model DetailTypeNumbering {
+  id                   BigInt   @id @map("DetailTypeNumberingID") // §2.7
+  detailTypeRef        BigInt   @map("DetailTypeRef") // ارجاع به DetailType
+  startNumber          BigInt   @map("StartNumber")
+  endNumber            BigInt   @map("EndNumber")
+  isAutomatic          Boolean  @default(true) @map("IsAutomatic") // خودکار
+  isCompany            Boolean  @default(false) @map("IsCompany") // شرکت
+  version              Int      @default(1) @map("Version") // §2.5 auto-rowversion
+  creator              String   @map("Creator")
+  lastModifier         String?  @map("LastModifier")
+  businessStructureRef BigInt   @map("BusinessStructureRef")
+  companyRef           BigInt?  @map("CompanyRef")
+  branchRef            BigInt?  @map("BranchRef")
+  agencyRef            BigInt?  @map("AgencyRef")
+  shopRef              BigInt?  @map("ShopRef")
+  createdAt            DateTime @default(now()) @map("CreatedAt")
+  updatedAt            DateTime @updatedAt @map("UpdatedAt")
+
+  @@unique([detailTypeRef, businessStructureRef])
+  @@map("DetailTypeNumbering")
+}
+
 /// User — Task 126 (درخواست مالک): فرم «کاربر جدید» در تنظیمات ← مدیریت
 /// کاربران با کامپوننت SimpleTreeForm. هر کاربر به یک ردیف طرف حساب (لیست
 /// «نام / نام خانوادگی») متصل است و یک نقش کاربری (UserRole) دارد.

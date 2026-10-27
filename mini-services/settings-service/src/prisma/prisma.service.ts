@@ -44,6 +44,7 @@ const VERSIONED_MODELS: ReadonlySet<string> = new Set([
   "CurrencyType", // Task 114 — نوع ارز
   "ExchangeRate", // Task 116 — نرخ برابری ارز
   "DetailType", // Task 120 — نوع تفصیل جدید (حسابداری)
+  "DetailTypeNumbering", // Task 131 — شماره گذاری تفصیلی ها (حسابداری)
   "User", // Task 126 — کاربران (مدیریت کاربران)
   "UserAccess", // Task 126 — درختوارهٔ دسترسی کاربران
 ]);
