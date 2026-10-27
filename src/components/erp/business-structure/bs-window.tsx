@@ -597,6 +597,11 @@ export function BusinessStructureWindow({
             id: `activeType${v}`,
             label: t(`bs.type.${v}` as never),
             type: "checkbox" as const,
+            /* Task 125 — تیک‌های «نوع کسب و کار» با place:"start" به لبهٔ
+               شروعِ خواندن لنگر می‌شوند (راست در RTL، چپ در LTR) و ترتیب
+               DOM [چک‌باکس، برچسب] در هر دو جهت خوانش درست است — چیدمان
+               آیتم‌ها همیشه هم‌جهت زبان داشبورد است (§1.4، Task 102). */
+            place: "start",
             /* Task 79 — Holding is the system default: ticked and locked */
             checked: v === 1 ? true : form.activeStructureTypes.includes(v),
             disabled: v === 1,
