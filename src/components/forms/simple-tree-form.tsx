@@ -133,6 +133,13 @@ export interface SimpleTreeFormProps {
       Omitted/true = legacy Task-33 select-then-open behavior. */
   selectOnContextMenu?: boolean;
 
+  /** Task 130 (owner request, opt-in §5.1 additive): pinned footer at the
+      END of the form pane — the «توضیحات» block of the user form lives here
+      instead of floating under the field grid. Rendered below the scrollable
+      body (always visible, never scrolls away). Omitted = legacy layout,
+      zero visual change for other forms. */
+  footerExtra?: React.ReactNode;
+
   /** small pill after the detail header title (e.g. «نمونه») */
   badge?: string;
   /** glyph inside the gradient header tile */
@@ -289,6 +296,7 @@ export function SimpleTreeForm({
   detailExtra,
   treeEmptyText,
   treeHeaderExtra,
+  footerExtra,
   forceDetail,
   defaultCollapsed,
   onAddBranch,
@@ -709,6 +717,16 @@ export function SimpleTreeForm({
             </div>
           )}
         </div>
+
+        {/* Task 130 (owner request, opt-in §5.1 additive): pinned footer at
+            the END of the form pane — the «توضیحات» block of the user form
+            lives here instead of floating under the field grid; shrink-0 so
+            it never scrolls away and always sits at the form's very bottom. */}
+        {footerExtra && (
+          <div className="shrink-0 border-t border-border/60 bg-muted/30">
+            {footerExtra}
+          </div>
+        )}
       </div>
 
       {/* Task 33 — node context flyout (right-click): Win-11 acrylic menu

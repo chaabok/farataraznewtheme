@@ -64,6 +64,16 @@ import { cn } from "@/lib/utils";
  *  ۳. «کنار فیلد نقش کاربری یک گزینه قرار دهید بنام فعال و بصورت پیش فرض
  *     تیک داشته باشد» — چک‌باکس «فعال» (IsActive کاربر، پیش‌فرض تیک‌خورده)
  *     در سلول مجاورِ فیلد نقش کاربری (ردیف سومِ گرید ۵۰٪/۵۰٪).
+ *
+ * Task 130 (درخواست مالک):
+ *  ۱. «هر نام و نام خانوادگی در یک ساختار کسب و کار فقط یکبار می تواند به
+ *     عنوان کاربر تعریف گردد و اگر یکبار تعریف شد مجددا در دراپ دان نباید
+ *     نمایش داده شود» — طرف حساب‌هایی که در محدودهٔ جاری (قرارداد Task 122)
+ *     ردیف کاربر دارند از «کامپوننت لیست» حذف می‌شوند؛ هنگام ویرایش، طرف
+ *     حسابِ خودِ رکورد جاری در فهرست می‌ماند. قرینهٔ سرور: ۴۰۹ (users.service).
+ *  ۲. «توضیحات زیر فرم تعریف کاربر را در انتهای فرم قرار دهید» — بلوک
+ *     توضیحات از زیر فیلدها (detailExtra) به فوترِ لنگرشدهٔ انتهای پنل فرم
+ *     (footerExtra تازهٔ SimpleTreeForm) منتقل شد؛ همیشه در پایین فرم دیدار است.
  */
 
 interface UserDto {
@@ -592,17 +602,37 @@ export function UserNewForm({ onBack }: { onBack?: () => void }) {
     [roles],
   );
 
+  /* Task 130 (مالک): «هر نام و نام خانوادگی در یک ساختار کسب و کار فقط یکبار
+     می تواند به عنوان کاربر تعریف گردد و اگر یکبار تعریف شد مجددا در دراپ دان
+     نباید نمایش داده شود» — مجموعهٔ طرف حساب‌های دارای ردیف کاربر در محدودهٔ
+     جاری (فهرست رکوردها با قرارداد Task 122)؛ هنگام ویرایش، طرف حسابِ خودِ
+     رکورد جاری حذف نمی‌شود تا مقدار فعلی در فهرست بماند. */
+  const editingOwnPartyRef =
+    currentId != null
+      ? records.find((r) => r.id === currentId)?.partyRef ?? null
+      : null;
+  const usedPartyRefs = React.useMemo(() => {
+    const s = new Set<number>();
+    for (const r of records) {
+      if (r.partyRef != null && r.partyRef !== editingOwnPartyRef) s.add(r.partyRef);
+    }
+    return s;
+  }, [records, editingOwnPartyRef]);
+
   const partyListItems = React.useMemo(
     () =>
-      parties.map((p) => ({
-        id: String(p.id),
-        title: `${p.name} ${p.lastName}`.trim(),
-        cells: [
-          { label: t("un.colName"), value: p.name },
-          { label: t("un.colLastName"), value: p.lastName },
-        ],
-      })),
-    [parties, t],
+      parties
+        /* Task 130 (مالک): طرف حساب‌های کاربرشده در این ساختار از لیست حذف می‌شوند */
+        .filter((p) => !usedPartyRefs.has(p.id))
+        .map((p) => ({
+          id: String(p.id),
+          title: `${p.name} ${p.lastName}`.trim(),
+          cells: [
+            { label: t("un.colName"), value: p.name },
+            { label: t("un.colLastName"), value: p.lastName },
+          ],
+        })),
+    [parties, usedPartyRefs, t],
   );
 
   const roleListItems = React.useMemo(
@@ -779,11 +809,21 @@ export function UserNewForm({ onBack }: { onBack?: () => void }) {
       selectOnContextMenu={false}
       fields={fields}
       onFieldChange={onFieldChange}
-      detailExtra={
-        <div className="mt-1.5 space-y-1 text-[11px] leading-relaxed text-muted-foreground">
-          <p>{t("un.rootHint" as never)}</p>
-          <p>{t("un.treeHint")}</p>
-          <p>{t("un.ctxHint")}</p>
+      footerExtra={
+        /* Task 130 (مالک): «توضیحات زیر فرم تعریف کاربر را در انتهای فرم
+           قرار دهید» — بلوک توضیحات از زیر فیلدها (detailExtra) به فوترِ
+           لنگرشدهٔ انتهای پنل فرم منتقل شد (پراپ تازهٔ SimpleTreeForm)؛
+           shrink-0 است و همیشه در پایینِ فرم دیده می‌شود. */
+        <div className="px-4 py-2">
+          <p className="mb-1 text-[11px] font-bold text-foreground/80">
+            {t("un.notesTitle" as never)}
+          </p>
+          <div className="space-y-1 text-[11px] leading-relaxed text-muted-foreground">
+            <p>{t("un.partyUniqueHint" as never)}</p>
+            <p>{t("un.rootHint" as never)}</p>
+            <p>{t("un.treeHint")}</p>
+            <p>{t("un.ctxHint")}</p>
+          </div>
         </div>
       }
       onReset={() => {

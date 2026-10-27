@@ -44,6 +44,10 @@ import { UpsertUserDto } from "./users.dto";
  *   ۴. partyRef/userRoleRef ناموجود رد می‌شود (422).
  *   ۵. شاخه‌های دسترسی نرمال و شناخته‌شده‌اند (nodeType ∈ software/menu/submenu/form/action —
  *      Task 128: ریشهٔ «نرم افزارها» با NodeType "software" ذخیره می‌شود).
+ *   ۶. Task 130 (مالک): «هر نام و نام خانوادگی در یک ساختار کسب و کار فقط
+ *      یکبار می تواند به عنوان کاربر تعریف گردد» — تکرار طرف حساب رد می‌شود
+ *      (409): در ثبت، هر یک از گره‌های هدف (ثبت همیشه همهٔ گره‌ها را یکجا
+ *      می‌سازد) و در ویرایش، همان گرهٔ ردیف (به‌جز خود ردیف).
  *
  * رعایت کامل بلوک ارث‌بری AppBaseEntity ۸فیلدی، ID دستی از IDGeneration
  * (§2.4)، Version با §2.5 auto-rowversion — تا استقرار IAM = SYSTEM_ACTOR.
@@ -148,6 +152,24 @@ export class UsersService {
       });
     }
 
+    /* Task 130 (مالک): «هر نام و نام خانوادگی در یک ساختار کسب و کار فقط
+       یکبار می تواند به عنوان کاربر تعریف گردد» — تکرار طرف حساب در هر یک
+       از گره‌های هدف رد می‌شود (ثبت، همیشه همهٔ گره‌های هدف را یکجا می‌سازد؛
+       فرانت هم همین طرف حساب‌ها را از «کامپوننت لیست» حذف می‌کند). */
+    if (norm.partyRef != null) {
+      const partyClash = await this.prisma.user.findFirst({
+        where: { partyRef: norm.partyRef, businessStructureRef: { in: targets } },
+        select: { id: true, username: true, businessStructureRef: true },
+      });
+      if (partyClash) {
+        throw new ConflictException({
+          statusCode: 409,
+          message: `این نام و نام خانوادگی قبلاً با نام کاربری «${partyClash.username}» در ساختار سازمانی #${partyClash.businessStructureRef} به عنوان کاربر تعریف شده است و هر نام فقط یکبار می‌تواند کاربر شود.`,
+          messageKey: "common.error",
+        });
+      }
+    }
+
     /* رزرو بلاکی شناسه‌ها (§2.4) — کاربرها و ردیف‌های دسترسی */
     const startUserId = await this.idGen.generateNextIdBlock("User", targets.length);
     const accessTotal = targets.length * norm.accesses.length;
@@ -226,6 +248,27 @@ export class UsersService {
         message: `نام کاربری «${norm.username}» قبلاً برای این ساختار سازمانی ثبت شده است.`,
         messageKey: "common.error",
       });
+    }
+
+    /* Task 130 (مالک): تکرار طرف حساب در همین گره (به‌جز خود ردیف) رد می‌شود —
+       ویرایش فقط یک ردیف است (قرارداد Task 126) و تغییر طرف حساب به کسی که
+       در همین ساختار کاربر شده مجاز نیست. */
+    if (norm.partyRef != null && norm.partyRef !== existing.partyRef) {
+      const partyClash = await this.prisma.user.findFirst({
+        where: {
+          partyRef: norm.partyRef,
+          businessStructureRef: existing.businessStructureRef,
+          id: { not: existing.id },
+        },
+        select: { id: true },
+      });
+      if (partyClash) {
+        throw new ConflictException({
+          statusCode: 409,
+          message: "این نام و نام خانوادگی قبلاً برای این ساختار سازمانی به عنوان کاربر تعریف شده است و هر نام فقط یکبار می‌تواند کاربر شود.",
+          messageKey: "common.error",
+        });
+      }
     }
 
     const accessRows = await this.reserveAccessIds(norm.accesses);
