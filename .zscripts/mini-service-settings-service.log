@@ -4910,3 +4910,4 @@ error: Failed to start server. Is port 3001 in use?
 [Nest] 16039  - 10/27/2026, 6:31:20 PM     LOG [UsersService] User deleted — ID=26 Username=t130.user
 [Nest] 16039  - 10/27/2026, 6:31:20 PM     LOG [UsersService] User deleted — ID=27 Username=t130.user
 [Nest] 16039  - 10/27/2026, 6:31:20 PM     LOG [UsersService] User deleted — ID=28 Username=t130.user
+[Nest] 16039  - 10/27/2026, 6:51:50 PM     LOG [UsersService] User deleted — ID=10 Username=chaabok
