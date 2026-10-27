@@ -244,6 +244,41 @@ function buildAccessTree(
   return walk(menus);
 }
 
+/**
+ * Task 128 — گرهٔ ریشهٔ «نرم افزارها» (درخواست مالک): اولین شاخهٔ درخت
+ * دسترسی که همهٔ منوها/فرم‌ها/آیکون‌ها زیر آن قرار می‌گیرند؛ چون چرخشِ هر
+ * گره کل زیرمجموعه‌اش را هم می‌چرخاند، فعال/غیرفعال‌کردن همین شاخه کل
+ * نرم‌افزارها و امکاناتشان را یکجا فعال/غیرفعال می‌کند. تیکِ «فعال»ِ ریشه
+ * با NodeType "software" (refKey "root") ذخیره می‌شود.
+ */
+function buildSoftwareRootNode(
+  inner: SimpleTreeFormNode[],
+  label: string,
+  tickLabel: string,
+  granted: (id: string) => boolean,
+  toggle: (node: SimpleTreeFormNode) => void,
+): SimpleTreeFormNode {
+  const rootNode: SimpleTreeFormNode = {
+    id: SOFTWARE_ROOT_ID,
+    label,
+    icon: (
+      <AppWindow
+        className="h-3.5 w-3.5 shrink-0 text-teal-600 dark:text-teal-400"
+        aria-hidden
+      />
+    ),
+    children: inner,
+  };
+  rootNode.endAdornment = (
+    <ActiveTick
+      granted={granted(SOFTWARE_ROOT_ID)}
+      label={tickLabel}
+      onToggle={() => toggle(rootNode)}
+    />
+  );
+  return rootNode;
+}
+
 /** Set دسترسی → ردیف‌های API (NodeType/RefKey قرارداد UserAccess). */
 function accessToRows(set: Set<string>): Array<{ nodeType: string; refKey: string }> {
   const rows: Array<{ nodeType: string; refKey: string }> = [];
@@ -450,25 +485,15 @@ export function UserNewForm({ onBack }: { onBack?: () => void }) {
       toggleAccess,
       t("un.activeTick" as never),
     );
-    const rootNode: SimpleTreeFormNode = {
-      id: SOFTWARE_ROOT_ID,
-      label: t("un.softwareRoot" as never),
-      icon: (
-        <AppWindow
-          className="h-3.5 w-3.5 shrink-0 text-teal-600 dark:text-teal-400"
-          aria-hidden
-        />
+    return [
+      buildSoftwareRootNode(
+        inner,
+        t("un.softwareRoot" as never),
+        t("un.activeTick" as never),
+        granted,
+        toggleAccess,
       ),
-      children: inner,
-    };
-    rootNode.endAdornment = (
-      <ActiveTick
-        granted={granted(SOFTWARE_ROOT_ID)}
-        label={t("un.activeTick" as never)}
-        onToggle={() => toggleAccess(rootNode)}
-      />
-    );
-    return [rootNode];
+    ];
   }, [dfbTree, locale, t, accessSet, toggleAccess]);
 
   /* شناسه‌های دسترسی، مستقیم از درخت dfb — مستقل از زبان/وضعیت تیک‌ها
@@ -756,6 +781,7 @@ export function UserNewForm({ onBack }: { onBack?: () => void }) {
       onFieldChange={onFieldChange}
       detailExtra={
         <div className="mt-1.5 space-y-1 text-[11px] leading-relaxed text-muted-foreground">
+          <p>{t("un.rootHint" as never)}</p>
           <p>{t("un.treeHint")}</p>
           <p>{t("un.ctxHint")}</p>
         </div>
