@@ -32,7 +32,9 @@ export type TableKey =
   | "GeoLocation" // Task 103 — محل‌های جغرافیایی (درخت اطلاعات پایه)
   | "CurrencyType" // Task 114 — نوع ارز (اطلاعات پایهٔ عمومی)
   | "ExchangeRate" // Task 116 — نرخ برابری ارز (عملیات عمومی)
-  | "DetailType"; // Task 120 — نوع تفصیل جدید (اطلاعات پایهٔ حسابداری)
+  | "DetailType" // Task 120 — نوع تفصیل جدید (اطلاعات پایهٔ حسابداری)
+  | "User" // Task 126 — کاربران (مدیریت کاربران)
+  | "UserAccess"; // Task 126 — درختوارهٔ دسترسی کاربران
 
 export const TABLE_REGISTRY: Record<TableKey, TableEntry> = {
   IDGeneration: {
@@ -108,6 +110,14 @@ export const TABLE_REGISTRY: Record<TableKey, TableEntry> = {
   DetailType: {
     canonical: "DetailType", // Task 120 — نوع تفصیل جدید (اطلاعات پایهٔ حسابداری)
     pk: "DetailTypeID",
+  },
+  User: {
+    canonical: "User", // Task 126 — کاربران (مدیریت کاربران)
+    pk: "UserID",
+  },
+  UserAccess: {
+    canonical: "UserAccess", // Task 126 — درختوارهٔ دسترسی کاربران
+    pk: "UserAccessID",
   },
 };
 

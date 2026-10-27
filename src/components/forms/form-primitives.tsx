@@ -1,10 +1,21 @@
 "use client";
 
 import * as React from "react";
-import { Braces, CalendarDays, Plus } from "lucide-react";
+import {
+  AlignJustify,
+  Braces,
+  CalendarDays,
+  Eye,
+  EyeOff,
+  Filter,
+  Loader2,
+  Plus,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useT } from "@/stores/settings-store";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -12,6 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import type { ActionBarListItem } from "@/components/forms/action-bar";
 import type { SimpleFormField, SimpleFormGridColumn } from "@/components/forms/simple-form-two-row-tabbed";
 
 /* ------------------------------------------------------------------ */
@@ -207,6 +219,9 @@ export function FieldCell({
      only used by the date branch below */
   const dateRef = React.useRef<HTMLInputElement | null>(null);
   const lastMasked = React.useRef("");
+  /* Task 126 — password reveal state (declared unconditionally — rules-of-hooks);
+     each password FieldCell owns its own toggle («مشاهدهٔ کلمه عبور») */
+  const [pwVisible, setPwVisible] = React.useState(false);
 
   /* Task 53 — static DESIGN shapes (line/box/circle/oval): decorative only —
      no label unit, no input, no EAV value. Rendered identically in the
@@ -440,6 +455,68 @@ export function FieldCell({
     );
   }
 
+  /* Task 126 (owner request) — password: masked input with an inline reveal
+     toggle («کلمه عبور که یک دکمه داشته باشد کاربر بتواند کلمه عبور وارد
+     شده را مشاهده کند»). The toggle only reveals the value typed in THIS
+     session — the stored hash is never sent to the browser. */
+  if (type === "password") {
+    return (
+      <div data-form-cell className="flex min-w-0 items-center gap-2">
+        <span
+          data-form-label
+          className="flex shrink-0 items-center gap-0.5 whitespace-nowrap text-xs text-muted-foreground"
+        >
+          <span className="w-[var(--label-w,auto)] shrink-0 text-end">
+            <span data-form-label-text className="inline-block whitespace-nowrap">
+              {field.label}
+            </span>
+          </span>
+          <span className="opacity-70" aria-hidden>
+            :
+          </span>
+          <span aria-hidden className={cn("text-rose-500", !field.required && "invisible")}>
+            *
+          </span>
+        </span>
+        <div className="relative min-w-0 flex-1">
+          <Input
+            type={pwVisible ? "text" : "password"}
+            value={field.value ?? ""}
+            placeholder={field.placeholder}
+            readOnly={field.readOnly}
+            disabled={field.disabled}
+            aria-label={field.label}
+            autoComplete="new-password"
+            onChange={(e) => onChange?.(field.id, e.target.value)}
+            className={cn(inputBase, "pe-7 text-start")}
+          />
+          <button
+            type="button"
+            aria-label={field.label}
+            aria-pressed={pwVisible}
+            title={pwVisible ? t("un.hidePassword") : t("un.showPassword")}
+            onClick={() => setPwVisible((v) => !v)}
+            className="absolute end-1 top-1/2 flex h-4 w-4 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
+          >
+            {pwVisible ? (
+              <EyeOff className="h-3 w-3" aria-hidden />
+            ) : (
+              <Eye className="h-3 w-3" aria-hidden />
+            )}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  /* Task 126 (owner request) — «کامپوننت لیست»: a read-only value box + the
+     teal list tile; the panel mirrors the action-bar list mini-grid
+     (column headers + per-column «فیلتر...» row + pick-a-row) so the user
+     sees e.g. the نام/نام خانوادگی columns of the party form and picks one. */
+  if (type === "list") {
+    return <ListPickerCell field={field} onChange={onChange} idPrefix={idPrefix} />;
+  }
+
   return (
     <div data-form-cell className="flex min-w-0 items-center gap-2">
       {/* label unit: [text-box (var width)][colon][asterisk slot] — the tail is
@@ -527,6 +604,192 @@ export function FieldCell({
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Task 126 (owner request) — «کامپوننت لیست» field cell: a read-only   */
+/* value box + the teal list tile; the popover panel mirrors the        */
+/* action-bar list mini-grid (Task 86): column headers from the rows'   */
+/* cells, a per-column «فیلتر...» row (contains-match, AND), pickable   */
+/* rows and a record counter. RTL/LTR follow the document direction     */
+/* (logical classes only — §1.4).                                       */
+/* ------------------------------------------------------------------ */
+
+function ListPickerCell({
+  field,
+}: {
+  field: SimpleFormField;
+  onChange?: (id: string, value: string | boolean) => void;
+  idPrefix?: string;
+}) {
+  const t = useT();
+  const [open, setOpen] = React.useState(false);
+  const [filters, setFilters] = React.useState<Record<string, string>>({});
+  /* Task 27 — same compact metrics as FieldCell */
+  const inputBase = "h-5.5 min-w-0 text-xs";
+
+  /* providers without per-field cells keep working: title/subtitle columns */
+  const normalized = React.useMemo(
+    () =>
+      (field.listItems ?? []).map((it) => ({
+        ...it,
+        cells: it.cells ?? [
+          { label: t("abar.listColTitle"), value: it.title },
+          ...(it.subtitle ? [{ label: t("abar.listColSub"), value: it.subtitle }] : []),
+        ],
+      })),
+    [field.listItems, t],
+  );
+
+  /* column order = first-seen across rows (providers build cells from the
+     same field list, so every row agrees on the order) */
+  const columns = React.useMemo(() => {
+    const out: string[] = [];
+    for (const it of normalized)
+      for (const c of it.cells) if (!out.includes(c.label)) out.push(c.label);
+    return out;
+  }, [normalized]);
+
+  /* per-column «فیلتر...» — contains-match, AND across columns */
+  const rows = React.useMemo(() => {
+    const needles = Object.entries(filters)
+      .filter(([, v]) => v.trim().length > 0)
+      .map(([col, v]) => [col, v.trim().toLowerCase()] as const);
+    if (needles.length === 0) return normalized;
+    return normalized.filter((it) =>
+      needles.every(([col, needle]) =>
+        (it.cells.find((c) => c.label === col)?.value ?? "").toLowerCase().includes(needle),
+      ),
+    );
+  }, [normalized, filters]);
+
+  const pick = (item: ActionBarListItem) => {
+    field.onOpenListItem?.(item);
+    setOpen(false);
+  };
+
+  return (
+    <div data-form-cell className="flex min-w-0 items-center gap-2">
+      <span
+        data-form-label
+        className="flex shrink-0 items-center gap-0.5 whitespace-nowrap text-xs text-muted-foreground"
+      >
+        <span className="w-[var(--label-w,auto)] shrink-0 text-end">
+          <span data-form-label-text className="inline-block whitespace-nowrap">
+            {field.label}
+          </span>
+        </span>
+        <span className="opacity-70" aria-hidden>
+          :
+        </span>
+        <span aria-hidden className={cn("text-rose-500", !field.required && "invisible")}>
+          *
+        </span>
+      </span>
+      <div className="flex min-w-0 flex-1 items-center gap-1.5">
+        <Input
+          value={field.value ?? ""}
+          placeholder={field.placeholder}
+          readOnly
+          disabled={field.disabled}
+          aria-label={field.label}
+          onClick={() => !field.disabled && setOpen(true)}
+          className={cn(inputBase, "cursor-pointer")}
+        />
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>
+            <button
+              type="button"
+              aria-label={`${field.label} — ${t("abar.list")}`}
+              title={t("abar.list")}
+              disabled={field.disabled}
+              className="flex h-5.5 w-5.5 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-teal-500 to-emerald-600 text-white shadow-md transition-all hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
+            >
+              <AlignJustify className="h-3 w-3" aria-hidden />
+            </button>
+          </PopoverTrigger>
+          <PopoverContent align="start" side="bottom" className="w-80 overflow-hidden rounded-xl border bg-popover p-0 shadow-lg win-shadow">
+            <div className="max-h-64 overflow-y-auto scrollbar-slim">
+              {/* header + filter row */}
+              <table className="w-full border-collapse text-xs" aria-label={field.label}>
+                <thead className="sticky top-0 z-10 bg-muted/95 backdrop-blur">
+                  <tr>
+                    {columns.map((col) => (
+                      <th
+                        key={col}
+                        scope="col"
+                        className="border-b border-border/70 px-2 py-1.5 text-start font-semibold text-foreground/80"
+                      >
+                        {col}
+                      </th>
+                    ))}
+                  </tr>
+                  <tr>
+                    {columns.map((col) => (
+                      <th key={`f-${col}`} scope="col" className="border-b border-border/60 px-1.5 pb-1.5 pt-0.5">
+                        <div className="relative">
+                          <Filter
+                            aria-hidden
+                            className="pointer-events-none absolute end-1.5 top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground/70"
+                          />
+                          <input
+                            value={filters[col] ?? ""}
+                            onChange={(e) => setFilters((prev) => ({ ...prev, [col]: e.target.value }))}
+                            placeholder={t("abar.listFilterPh")}
+                            aria-label={`${col} — ${t("abar.listFilterPh")}`}
+                            className="h-5 w-full rounded-md border border-input bg-background/60 ps-1.5 pe-6 text-[11px] outline-none transition-colors placeholder:text-muted-foreground/70 focus-visible:border-ring"
+                          />
+                        </div>
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {field.listLoading ? (
+                    <tr>
+                      <td colSpan={Math.max(1, columns.length)} className="px-3 py-6 text-center text-muted-foreground">
+                        <Loader2 className="mx-auto h-4 w-4 animate-spin" aria-hidden />
+                      </td>
+                    </tr>
+                  ) : rows.length === 0 ? (
+                    <tr>
+                      <td colSpan={Math.max(1, columns.length)} className="px-3 py-6 text-center text-xs text-muted-foreground">
+                        {t("abar.listEmpty")}
+                      </td>
+                    </tr>
+                  ) : (
+                    rows.map((it) => (
+                      <tr
+                        key={it.id}
+                        onClick={() => pick(it)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            pick(it);
+                          }
+                        }}
+                        tabIndex={0}
+                        className="cursor-pointer transition-colors hover:bg-accent/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      >
+                        {columns.map((col) => (
+                          <td key={col} className="max-w-36 truncate px-2 py-1.5 text-foreground/90">
+                            {it.cells.find((c) => c.label === col)?.value ?? ""}
+                          </td>
+                        ))}
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+            <div className="flex items-center justify-between border-t border-border/60 bg-muted/40 px-2.5 py-1 text-[10px] text-muted-foreground">
+              <span>{t("abar.listCount").replace("{n}", rows.length.toLocaleString())}</span>
+            </div>
+          </PopoverContent>
+        </Popover>
+      </div>
     </div>
   );
 }

@@ -15,6 +15,7 @@ import { GeoLocationModule } from "./geo-location/geo-location.module";
 import { CurrencyTypeModule } from "./currency-type/currency-type.module";
 import { ExchangeRateModule } from "./exchange-rate/exchange-rate.module";
 import { DetailTypeModule } from "./detail-type/detail-type.module";
+import { UsersModule } from "./users/users.module";
 import { HealthController } from "./health/health.controller";
 import { SeedModule } from "./seed/seed.module";
 
@@ -34,6 +35,7 @@ import { SeedModule } from "./seed/seed.module";
     CurrencyTypeModule, // Task 114 — نوع ارز (اطلاعات پایه)
     ExchangeRateModule, // Task 116 — نرخ برابری ارز (عملیات)
     DetailTypeModule, // Task 120 — نوع تفصیل جدید (اطلاعات پایهٔ حسابداری)
+    UsersModule, // Task 126 — کاربران (مدیریت کاربران — فرم کاربر جدید)
     SeedModule,
   ],
   controllers: [HealthController],

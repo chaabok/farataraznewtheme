@@ -42,6 +42,8 @@ export type SimpleFormFieldType =
   | "date" // Task 47 — rendered as an LTR YYYY/MM/DD input with a calendar chip
   | "textarea" // Task 47 — rendered as a small multi-line box
   | "radio" // Task 58 (owner request) — radio group fed by defined/script items
+  | "password" // Task 126 (owner request) — masked input with a reveal toggle
+  | "list" // Task 126 (owner request) — «کامپوننت لیست» picker (mini-grid columns)
   | "line" // Task 53 — static design shape (divider)
   | "spacer" // Task 102 — invisible vertical gap between a header row and its items
   | "box" // Task 53 — static design shape (rectangle)
@@ -71,6 +73,14 @@ export interface SimpleFormField {
   onLookup?: () => void;
   /** Task 32 — renders the input LTR (latin titles/codes inside the RTL shell) */
   ltr?: boolean;
+  /** Task 126 (owner request, type:"list") — records of the «کامپوننت لیست»
+      picker; each row's `cells` become the mini-grid columns (e.g. the
+      نام / نام خانوادگی columns of the party form). */
+  listItems?: ActionBarListItem[];
+  /** Task 126 — loading flag of the list picker */
+  listLoading?: boolean;
+  /** Task 126 — fires when the user picks a row in the list picker */
+  onOpenListItem?: (item: ActionBarListItem) => void;
   /** Task 70 — called when the user focuses the field: the runtime uses it
       to reveal the BASE value under a translation overlay before editing */
   onRevealFocus?: () => void;

@@ -441,6 +441,7 @@ model UserRole {
   updatedAt            DateTime @updatedAt @map("UpdatedAt")
 
   scopes UserRoleScope[]
+  users  User[] // Task 126 — کاربرانِ دارای این نقش
 
   @@unique([code, businessStructureRef])
   @@unique([title, businessStructureRef])
@@ -616,4 +617,73 @@ model DetailType {
   @@unique([code, businessStructureRef])
   @@unique([title, businessStructureRef])
   @@map("DetailType")
+}
+
+/// User — Task 126 (درخواست مالک): فرم «کاربر جدید» در تنظیمات ← مدیریت
+/// کاربران با کامپوننت SimpleTreeForm. هر کاربر به یک ردیف طرف حساب (لیست
+/// «نام / نام خانوادگی») متصل است و یک نقش کاربری (UserRole) دارد.
+///   · Username   — اجباری، بیشتر از ۵ نویسه؛ یکتا در هر گرهٔ ساختار.
+///   · PasswordHash — scrypt نمک‌دار («salt:hash»)؛ متنِ عبور هرگز ذخیره
+///                  نمی‌شود (دکمهٔ «مشاهده» فقط مقدار تایپ‌شدهٔ همین جلسه را
+///                  در فرم نشان می‌دهد).
+///   · گسترهٔ سازمانی (قاعدهٔ مالک Task 126): فرم به ازای «هر شرکت و هلدینگ»
+///     است — ثبت یک کاربر ⇒ یک ردیف برای دفتر مرکزی + یک ردیف برای هر
+///     شاخهٔ فعال هلدینگ(1)/شرکت(2) که تیک «استفاده از داده‌های مشترک دفتر
+///     مرکزی» (IsBasicInfoShared) ندارد؛ شاخهٔ دارای تیک = کاربران مشترک
+///     (فقط ردیف دفتر مرکزی — خواندن با baseDataScopeWhere).
+/// §16/§2.4: ID دستی از IDGeneration؛ §2.7: PK = «نام جدول + ID» با نوع
+/// BigInt؛ بلوک کامل ارث‌بری AppBaseEntity ۸فیلدی — تا استقرار IAM =
+/// SYSTEM_ACTOR (دفتر مرکزی، ID=1).
+model User {
+  id                   BigInt   @id @map("UserID")
+  partyRef             BigInt?  @map("PartyRef") // طرف حساب منتخب (اسنپ‌شات نام در FullName)
+  fullName             String   @map("FullName") // «نام + نام خانوادگی» از فرم طرف حساب
+  username             String   @map("Username") // اجباری؛ >۵ نویسه؛ یکتا در گرهٔ ساختار
+  passwordHash         String   @map("PasswordHash") // scrypt «salt:hash»
+  userRoleRef          BigInt   @map("UserRoleRef") // نقش کاربری منتخب
+  isActive             Boolean  @default(true) @map("IsActive")
+  version              Int      @default(1) @map("Version") // §2.5 auto-rowversion
+  creator              String   @map("Creator")
+  lastModifier         String?  @map("LastModifier")
+  businessStructureRef BigInt   @map("BusinessStructureRef")
+  companyRef           BigInt?  @map("CompanyRef")
+  branchRef            BigInt?  @map("BranchRef")
+  agencyRef            BigInt?  @map("AgencyRef")
+  shopRef              BigInt?  @map("ShopRef")
+  createdAt            DateTime @default(now()) @map("CreatedAt")
+  updatedAt            DateTime @updatedAt @map("UpdatedAt")
+
+  role     UserRole     @relation(fields: [userRoleRef], references: [id])
+  accesses UserAccess[]
+
+  @@unique([username, businessStructureRef])
+  @@index([partyRef])
+  @@map("User")
+}
+
+/// UserAccess — ردیف‌های درختوارهٔ دسترسی هر کاربر (Task 126): هر شاخهٔ
+/// تأییدشده یک ردیف است. NodeType ∈ "menu" (آیکون اصلی) | "submenu"
+/// (زیرمنو) | "form" (فرم) | "action" (آیکون اکشن بار؛ RefKey =
+/// "<FormID>:<ActionKey>"). با هر ثبت/ویرایش تراکنشی بازنویسی می‌شود
+/// (الگوی محدودهٔ نقش‌ها — Task 100).
+model UserAccess {
+  id                   BigInt   @id @map("UserAccessID")
+  userRef              BigInt   @map("UserRef")
+  nodeType             String   @map("NodeType") // "menu" | "submenu" | "form" | "action"
+  refKey               String   @map("RefKey") // شناسهٔ گره/فرم یا "<FormID>:<ActionKey>"
+  version              Int      @default(1) @map("Version")
+  creator              String   @map("Creator")
+  lastModifier         String?  @map("LastModifier")
+  businessStructureRef BigInt   @map("BusinessStructureRef")
+  companyRef           BigInt?  @map("CompanyRef")
+  branchRef            BigInt?  @map("BranchRef")
+  agencyRef            BigInt?  @map("AgencyRef")
+  shopRef              BigInt?  @map("ShopRef")
+  createdAt            DateTime @default(now()) @map("CreatedAt")
+  updatedAt            DateTime @updatedAt @map("UpdatedAt")
+  user                 User     @relation(fields: [userRef], references: [id], onDelete: Cascade)
+
+  @@unique([userRef, nodeType, refKey])
+  @@index([userRef])
+  @@map("UserAccess")
 }

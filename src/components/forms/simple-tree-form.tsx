@@ -69,6 +69,10 @@ export interface SimpleTreeFormProps {
   /** Task 32 — message rendered when the tree has no nodes
       (loading/empty); omitted = blank pane */
   treeEmptyText?: string;
+  /** Task 126 (owner request, opt-in §5.1 additive): extra content at the
+      END of the tree-pane header row (e.g. the «دسترسی به همه» button of
+      the user form). Omitted = legacy header (title only). */
+  treeHeaderExtra?: React.ReactNode;
   /** Task 103 — opt-in (§5.1 additive): render the detail field grid even
       when NO tree node is selected — for forms whose root is VIRTUAL
       (e.g. «محل های جغرافیایی»: first-level countries live under a virtual
@@ -259,6 +263,7 @@ export function SimpleTreeForm({
   emptyText,
   detailExtra,
   treeEmptyText,
+  treeHeaderExtra,
   forceDetail,
   defaultCollapsed,
   onAddBranch,
@@ -518,6 +523,7 @@ export function SimpleTreeForm({
       <div className="flex h-44 min-h-0 shrink-0 flex-col border-b border-border/60 bg-background/40 sm:h-auto sm:w-72 sm:border-b-0 sm:border-e lg:w-80">
         <div className="flex h-11 shrink-0 select-none items-center gap-2 border-b border-border/60 bg-muted/40 px-3">
           <span className="truncate text-sm font-bold tracking-tight">{treeTitle}</span>
+          {treeHeaderExtra && <span className="ms-auto shrink-0">{treeHeaderExtra}</span>}
         </div>
         <div
           role="tree"
