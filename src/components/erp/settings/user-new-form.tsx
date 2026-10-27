@@ -506,12 +506,8 @@ export function UserNewForm({ onBack }: { onBack?: () => void }) {
     }
   };
 
-  /* ناوبری رکوردها «|< < > >|» */
-  const currentIndex = records.findIndex((r) => r.id === currentId);
-  const nav = (i: number) => {
-    const r = records[i];
-    if (r) applyRecord(r);
-  };
+  /* ناوبری رکوردها از فهرست «لیست» نوار عملیات — SimpleTreeForm ناوبری
+     «|< < > >|» ندارد (قرارداد TwoRowTabbed)؛ بازکردن با onOpenListItem */
 
   const fields = React.useMemo<SimpleFormField[]>(
     () => [
@@ -592,10 +588,6 @@ export function UserNewForm({ onBack }: { onBack?: () => void }) {
       detailExtra={
         <p className="mt-1.5 text-[11px] leading-relaxed text-muted-foreground">{t("un.treeHint")}</p>
       }
-      onFirst={() => nav(0)}
-      onPrev={() => nav(Math.max(0, currentIndex - 1))}
-      onNext={() => nav(Math.min(records.length - 1, currentIndex + 1))}
-      onLast={() => nav(records.length - 1)}
       onReset={() => {
         /* آیکون + = شروع ثبتِ کاربر جدید: فرم خالی می‌شود */
         newRecord();

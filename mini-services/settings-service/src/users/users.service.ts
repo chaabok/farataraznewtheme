@@ -123,6 +123,15 @@ export class UsersService {
    */
   async create(dto: UpsertUserDto) {
     const norm = await this.normalizeInput(dto, { requirePassword: true });
+    if (norm.passwordHash == null) {
+      /* دفاعی — مسیر ثبت هرگز نباید بدون کلمه عبور برسد */
+      throw new BadRequestException({
+        statusCode: 422,
+        message: "ثبت کلمه عبور الزامی است؛ کلمه عبور نمی‌تواند خالی باشد.",
+        messageKey: "common.error",
+      });
+    }
+    const passwordHash = norm.passwordHash; // narrowed — داخل تراکنش هم رشته است
     const targets = await this.resolveCreateTargets();
 
     /* یکتایی نام کاربری در گره‌های هدف (409 با پیام فارسی) */
@@ -163,7 +172,7 @@ export class UsersService {
             partyRef: norm.partyRef,
             fullName: norm.fullName,
             username: norm.username,
-            passwordHash: norm.passwordHash,
+            passwordHash,
             userRoleRef: norm.userRoleRef,
             isActive: norm.isActive,
             ...appBaseOnCreate({ userId: SYSTEM_ACTOR.userId, nodeId: target, ...chain }),
@@ -316,14 +325,7 @@ export class UsersService {
         messageKey: "common.error",
       });
     }
-    if (passwordHash == null) {
-      /* دفاعی — مسیر ثبت هرگز نباید بدون کلمه عبور برسد */
-      throw new BadRequestException({
-        statusCode: 422,
-        message: "ثبت کلمه عبور الزامی است؛ کلمه عبور نمی‌تواند خالی باشد.",
-        messageKey: "common.error",
-      });
-    }
+    /* مسیر ویرایش با null = بدون تغییر کلمه عبور (قرارداد readFull/update) */
 
     const userRoleRef = BigInt(dto.userRoleRef);
     const role = await this.prisma.userRole.findUnique({
