@@ -3,6 +3,7 @@
 import * as React from "react";
 import { createPortal } from "react-dom";
 import {
+  CheckSquare,
   ChevronDown,
   Circle,
   Flag,
@@ -42,6 +43,12 @@ export interface SimpleTreeFormNode {
   /** legacy glyph kind OR a fully custom element (e.g. Task-32 BsTypeIcon) */
   icon?: SimpleTreeIcon | React.ReactNode;
   children?: SimpleTreeFormNode[];
+  /** Task 127 (owner request, opt-in §5.1 additive): interactive row-end
+      adornment (e.g. the «فعال» access tick of the user form). Rendered
+      AFTER the label at the row END (before the expander chevron); its own
+      clicks are the ADORNMENT's duty — the wrapper only stops row-level
+      selection/toggle propagation. Omitted = legacy row layout. */
+  endAdornment?: React.ReactNode;
 }
 
 export interface SimpleTreeFormProps {
@@ -107,6 +114,24 @@ export interface SimpleTreeFormProps {
   /** optional label overrides (defaults: bs.addNode / bs.deleteBranch) */
   addBranchLabel?: string;
   deleteBranchLabel?: string;
+
+  /* ----- Task 127 — OPTIONAL bulk access items of the node flyout (right-click) -----
+     Owner request on the user-form access tree: right-clicking ANY branch
+     offers «همه موارد فعال» (activate the whole right-clicked subtree) and
+     «همه موارد غیرفعال» (deactivate it). Omitting a handler hides its item —
+     with NO access handlers wired the Task-33 menu is untouched (§5.1). */
+  /** fires when the user picks «همه موارد فعال» on a row (scope = that row + all descendants) */
+  onActivateAll?: (node: SimpleTreeFormNode) => void;
+  /** fires when the user picks «همه موارد غیرفعال» on a row (scope = that row + all descendants) */
+  onDeactivateAll?: (node: SimpleTreeFormNode) => void;
+  /** optional label overrides (defaults provided by the caller via un.* keys) */
+  activateAllLabel?: string;
+  deactivateAllLabel?: string;
+  /** Task 127 — when false, right-click opens the flyout WITHOUT selecting
+      the row first (left-click selection owners keep their semantics — e.g.
+      the user form toggles access on select, which must NOT fire on right-click).
+      Omitted/true = legacy Task-33 select-then-open behavior. */
+  selectOnContextMenu?: boolean;
 
   /** small pill after the detail header title (e.g. «نمونه») */
   badge?: string;
@@ -272,6 +297,11 @@ export function SimpleTreeForm({
   canDeleteBranch,
   addBranchLabel,
   deleteBranchLabel,
+  onActivateAll,
+  onDeactivateAll,
+  activateAllLabel,
+  deactivateAllLabel,
+  selectOnContextMenu,
   headerClassName,
   titleClassName,
   bodyStyle,
@@ -404,6 +434,9 @@ export function SimpleTreeForm({
     menu !== null && onAddBranch !== undefined && (canAddBranch?.(menu.node) ?? true);
   const menuDeletable =
     menu !== null && onDeleteBranch !== undefined && (canDeleteBranch?.(menu.node) ?? true);
+  /* Task 127 — bulk access items (always offered for the right-clicked row) */
+  const menuActivatable = menu !== null && onActivateAll !== undefined;
+  const menuDeactivatable = menu !== null && onDeactivateAll !== undefined;
 
   const select = React.useCallback(
     (node: SimpleTreeFormNode) => {
@@ -448,14 +481,19 @@ export function SimpleTreeForm({
                  wired the Task-30 native behavior is left untouched; with
                  handlers but no applicable item the native menu is suppressed
                  without an empty bubble. Right-click selects the row first
-                 (Windows-Explorer/legacy TreeForm behavior). */
-              if (!onAddBranch && !onDeleteBranch) return;
+                 (Windows-Explorer/legacy TreeForm behavior) — unless the
+                 caller opts out via selectOnContextMenu={false} (Task 127:
+                 the user form toggles access on select, which must not fire
+                 on right-click). */
+              if (!onAddBranch && !onDeleteBranch && !onActivateAll && !onDeactivateAll) return;
               e.preventDefault();
               const offers =
                 (onAddBranch && (canAddBranch?.(node) ?? true)) ||
-                (onDeleteBranch && (canDeleteBranch?.(node) ?? true));
+                (onDeleteBranch && (canDeleteBranch?.(node) ?? true)) ||
+                onActivateAll !== undefined ||
+                onDeactivateAll !== undefined;
               if (!offers) return;
-              select(node);
+              if (selectOnContextMenu !== false) select(node);
               setMenu({ x: e.clientX, y: e.clientY, node });
             }}
             onKeyDown={(e) => {
@@ -478,6 +516,17 @@ export function SimpleTreeForm({
               <NodeGlyph kind={node.icon as SimpleTreeIcon | undefined} />
             )}
             <span className="min-w-0 truncate">{node.label}</span>
+            {node.endAdornment && (
+              /* Task 127 — row-end adornment (e.g. «فعال» tick); the wrapper
+                 swallows row-level clicks so ONLY the adornment's own handler
+                 fires (no double toggle via the row's select-on-click). */
+              <span
+                className="ms-auto flex shrink-0 items-center"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {node.endAdornment}
+              </span>
+            )}
             {hasKids && (
               <button
                 type="button"
@@ -488,7 +537,10 @@ export function SimpleTreeForm({
                   e.stopPropagation();
                   toggleBranch(node.id);
                 }}
-                className="ms-auto flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
+                className={cn(
+                  "flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer",
+                  !node.endAdornment && "ms-auto",
+                )}
               >
                 <ChevronDown
                   className={cn(
@@ -662,8 +714,9 @@ export function SimpleTreeForm({
       {/* Task 33 — node context flyout (right-click): Win-11 acrylic menu
           family, portaled to body so no window/pane overflow-hidden (or any
           future containing block) can clip it; z above taskbar/start menu,
-          same layer as the legacy TreeForm menu. */}
-      {menu && (menuAddable || menuDeletable) &&
+          same layer as the legacy TreeForm menu. Task 127 adds the bulk
+          access items «همه موارد فعال / همه موارد غیرفعال» on top. */}
+      {menu && (menuAddable || menuDeletable || menuActivatable || menuDeactivatable) &&
         createPortal(
           <div
             ref={menuRef}
@@ -673,6 +726,37 @@ export function SimpleTreeForm({
             style={{ left: menuPos.x, top: menuPos.y }}
             onContextMenu={(e) => e.preventDefault()}
           >
+            {menuActivatable && (
+              <button
+                type="button"
+                role="menuitem"
+                className="flex w-full cursor-pointer items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs font-medium text-emerald-700 hover:bg-emerald-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:text-emerald-300"
+                onClick={() => {
+                  onActivateAll?.(menu.node);
+                  closeMenu();
+                }}
+              >
+                <CheckSquare className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                {activateAllLabel ?? t("un.activateAllCtx" as never)}
+              </button>
+            )}
+            {menuDeactivatable && (
+              <button
+                type="button"
+                role="menuitem"
+                className="flex w-full cursor-pointer items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                onClick={() => {
+                  onDeactivateAll?.(menu.node);
+                  closeMenu();
+                }}
+              >
+                <Square className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                {deactivateAllLabel ?? t("un.deactivateAllCtx" as never)}
+              </button>
+            )}
+            {(menuActivatable || menuDeactivatable) && (menuAddable || menuDeletable) && (
+              <div className="my-1 h-px bg-border" aria-hidden />
+            )}
             {menuAddable && (
               <button
                 type="button"

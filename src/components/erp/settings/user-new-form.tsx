@@ -29,6 +29,7 @@ import { useTabDirty, useWindowChrome } from "@/components/desktop/app-window";
 import { SimpleTreeForm, type SimpleTreeFormNode } from "@/components/forms/simple-tree-form";
 import type { SimpleFormField } from "@/components/forms/simple-form-two-row-tabbed";
 import type { BsNode, BsListResponse } from "@/types/business-structure";
+import { cn } from "@/lib/utils";
 
 /**
  * UserNewForm — Task 126 (درخواست مالک): فرم «کاربر جدید» در تنظیمات ←
@@ -115,15 +116,47 @@ const ACTION_ITEMS: Array<{ key: string; labelKey: string; Icon: LucideIcon }> =
   { key: "help", labelKey: "sft.help", Icon: CircleHelp },
 ];
 
-/** نشانگر وضعیت دسترسی روی هر گرهٔ درخت (سبز = فعال، خاکستری = غیرفعال). */
-function AccessIcon({ granted }: { granted: boolean }) {
-  return granted ? (
-    <CheckSquare
-      className="h-3.5 w-3.5 shrink-0 text-emerald-600 dark:text-emerald-400"
-      aria-label="granted"
-    />
-  ) : (
-    <Square className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50" aria-label="denied" />
+/**
+ * Task 127 — تیک «فعال» روی هر گرهٔ درخت دسترسی (درخواست مالک):
+ * چک‌باکس واقعی با برچسب «فعال» در انتهای سطر؛ پیش‌فرضِ فرم = همه فعال.
+ * کلیک روی خودِ تیک فقط همین تیک را می‌چرخاند (توقف انتشار — بدون چرخشِ
+ * دوباره از سطر والد)؛ کلیک روی سطر همچنان کل زیرمجموعه را می‌چرخاند.
+ */
+function ActiveTick({
+  granted,
+  label,
+  onToggle,
+}: {
+  granted: boolean;
+  label: string;
+  onToggle: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      role="checkbox"
+      aria-checked={granted}
+      title={label}
+      data-access-tick={granted ? "on" : "off"}
+      onClick={(e) => {
+        e.stopPropagation();
+        onToggle();
+      }}
+      onKeyDown={(e) => e.stopPropagation()}
+      className={cn(
+        "flex h-5 shrink-0 cursor-pointer items-center gap-1 rounded-md border px-1.5 text-[10px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        granted
+          ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+          : "border-border bg-muted/40 text-muted-foreground/80",
+      )}
+    >
+      {granted ? (
+        <CheckSquare className="h-3 w-3" aria-hidden />
+      ) : (
+        <Square className="h-3 w-3" aria-hidden />
+      )}
+      <span>{label}</span>
+    </button>
   );
 }
 
@@ -134,12 +167,18 @@ function collectIds(node: SimpleTreeFormNode): string[] {
   return out;
 }
 
-/** تبدیل درخت dfb (منو ← زیرمنو ← فرم) به گره‌های درخت دسترسی با نشانگر. */
+/**
+ * تبدیل درخت dfb (منو ← زیرمنو ← فرم) به گره‌های درخت دسترسی — Task 127:
+ * هر گره یک تیک «فعال» در انتهای سطر دارد (نشانگرِ شروع فقط شکلِ خنثی است)؛
+ * کلیک روی سطر یا تیک، دسترسی همان شاخه و کل زیرمجموعه‌اش را می‌چرخاند.
+ */
 function buildAccessTree(
   menus: DfbMenuNode[],
   locale: string,
   t: (k: never) => string,
   granted: (id: string) => boolean,
+  toggle: (node: SimpleTreeFormNode) => void,
+  tickLabel: string,
 ): SimpleTreeFormNode[] {
   const labelOf = (title: string, titleEn: string | null) =>
     locale === "fa" || !titleEn ? title : titleEn;
@@ -149,26 +188,40 @@ function buildAccessTree(
       const id = `${prefix}${m.id}`;
       const formNodes: SimpleTreeFormNode[] = (m.forms ?? []).map((f) => {
         const fid = `f:${f.id}`;
-        return {
+        const formNode: SimpleTreeFormNode = {
           id: fid,
           label: labelOf(f.title, f.titleEn),
-          icon: <AccessIcon granted={granted(fid)} />,
           children: ACTION_ITEMS.map((a) => {
             const aid = `a:${f.id}:${a.key}`;
-            return {
+            const actionNode: SimpleTreeFormNode = {
               id: aid,
               label: t(a.labelKey as never),
-              icon: <AccessIcon granted={granted(aid)} />,
             };
+            actionNode.endAdornment = (
+              <ActiveTick
+                granted={granted(aid)}
+                label={tickLabel}
+                onToggle={() => toggle(actionNode)}
+              />
+            );
+            return actionNode;
           }),
         };
+        formNode.endAdornment = (
+          <ActiveTick granted={granted(fid)} label={tickLabel} onToggle={() => toggle(formNode)} />
+        );
+        return formNode;
       });
-      return {
+      const menuNode: SimpleTreeFormNode = {
         id,
         label: labelOf(m.title, m.titleEn),
-        icon: <AccessIcon granted={granted(id)} />,
+        icon: "folder",
         children: [...walk(m.children ?? []), ...formNodes],
       };
+      menuNode.endAdornment = (
+        <ActiveTick granted={granted(id)} label={tickLabel} onToggle={() => toggle(menuNode)} />
+      );
+      return menuNode;
     });
   return walk(menus);
 }
@@ -323,26 +376,8 @@ export function UserNewForm({ onBack }: { onBack?: () => void }) {
     };
   }, []);
 
-  /* درخت دسترسی — با تغییر زبان/وضعیت دسترسی بازمشق می‌شود */
-  const treeNodes = React.useMemo<SimpleTreeFormNode[]>(
-    () =>
-      buildAccessTree(dfbTree, locale, t as unknown as (k: never) => string, (id) =>
-        accessSet.has(id),
-      ),
-    [dfbTree, locale, t, accessSet],
-  );
-
-  const allAccessIds = React.useMemo(() => {
-    const out: string[] = [];
-    const walk = (list: SimpleTreeFormNode[]) => {
-      for (const n of list) {
-        out.push(n.id);
-        if (n.children?.length) walk(n.children);
-      }
-    };
-    walk(treeNodes);
-    return out;
-  }, [treeNodes]);
+  /* Task 127 — پیش‌فرضِ مالک: «بصورت پیش فرض تیک فعال باشد» — اعمالِ پیش‌فرض
+     بعد از تعریف allAccessIds (پایین‌تر) انجام می‌شود. */
 
   const toggleAccess = React.useCallback((node: SimpleTreeFormNode) => {
     setDirty(true); // هر تغییر دسترسی = اطلاعات ذخیره‌نشده
@@ -357,6 +392,71 @@ export function UserNewForm({ onBack }: { onBack?: () => void }) {
       return next;
     });
   }, []);
+
+  /* Task 127 — آیتم‌های کلیک راست: «همه موارد فعال / همه موارد غیرفعال»
+     روی شاخهٔ راست‌کلیک‌شده + کل زیرمجموعه‌اش (تفسیر اعلامی §0.6؛ دکمهٔ
+     «دسترسی به همه» سرستون همچنان کل درخت را پوشش می‌دهد). */
+  const activateAllFrom = React.useCallback((node: SimpleTreeFormNode) => {
+    setDirty(true);
+    setAccessSet((prev) => {
+      const next = new Set(prev);
+      for (const id of collectIds(node)) next.add(id);
+      return next;
+    });
+  }, []);
+
+  const deactivateAllFrom = React.useCallback((node: SimpleTreeFormNode) => {
+    setDirty(true);
+    setAccessSet((prev) => {
+      const next = new Set(prev);
+      for (const id of collectIds(node)) next.delete(id);
+      return next;
+    });
+  }, []);
+
+  /* درخت دسترسی — با تغییر زبان/وضعیت دسترسی بازمشق می‌شود */
+  const treeNodes = React.useMemo<SimpleTreeFormNode[]>(
+    () =>
+      buildAccessTree(
+        dfbTree,
+        locale,
+        t as unknown as (k: never) => string,
+        (id) => accessSet.has(id),
+        toggleAccess,
+        t("un.activeTick" as never),
+      ),
+    [dfbTree, locale, t, accessSet, toggleAccess],
+  );
+
+  /* شناسه‌های دسترسی، مستقیم از درخت dfb — مستقل از زبان/وضعیت تیک‌ها
+     (بازمشقِ تیک‌ها نباید این فهرست را عوض کند وگرنه پیش‌فرضِ فعال
+     روی هر کلیک دوباره اعمال می‌شد). */
+  const allAccessIds = React.useMemo(() => {
+    const out: string[] = [];
+    const walk = (list: DfbMenuNode[]) => {
+      for (const m of list) {
+        out.push(`${m.nodeType === 1 ? "m:" : "s:"}${m.id}`);
+        walk(m.children ?? []);
+        for (const f of m.forms ?? []) {
+          out.push(`f:${f.id}`);
+          for (const a of ACTION_ITEMS) out.push(`a:${f.id}:${a.key}`);
+        }
+      }
+    };
+    walk(dfbTree);
+    return out;
+  }, [dfbTree]);
+
+  /* Task 127 — پیش‌فرضِ مالک: «بصورت پیش فرض تیک فعال باشد» ⇒ با اولین
+     رسیدن درخت (و بعد از هر «فرم خالی»)، همهٔ گره‌ها فعال‌اند. یک‌بار
+     اعمال می‌شود تا چرخش‌های دستی کاربر بی‌جهت بازنویسی نشود؛ بازکردن
+     رکورد ذخیره‌شده (currentId) هم از این پیش‌فرض مستثناست. */
+  const defaultAppliedRef = React.useRef(false);
+  React.useLayoutEffect(() => {
+    if (defaultAppliedRef.current || currentId != null || allAccessIds.length === 0) return;
+    defaultAppliedRef.current = true;
+    setAccessSet(new Set(allAccessIds));
+  }, [allAccessIds, currentId]);
 
   const grantAll = React.useCallback(() => {
     setDirty(true);
@@ -383,8 +483,9 @@ export function UserNewForm({ onBack }: { onBack?: () => void }) {
     setCurrentId(null);
     setDirty(false); // فرم خالی، هیچ ویرایش ذخیره‌نشده‌ای نیست
     setValues(BLANK);
-    setAccessSet(new Set());
-  }, []);
+    /* Task 127 — پیش‌فرض مالک: فرم تازه = همهٔ تیک‌های فعال */
+    setAccessSet(new Set(allAccessIds));
+  }, [allAccessIds]);
 
   const onFieldChange = React.useCallback((id: string, value: string | boolean) => {
     setDirty(true); // هر ویرایش = اطلاعات ذخیره‌نشده
@@ -583,10 +684,18 @@ export function UserNewForm({ onBack }: { onBack?: () => void }) {
       onSelect={(node) => {
         if (node) toggleAccess(node);
       }}
+      onActivateAll={activateAllFrom}
+      onDeactivateAll={deactivateAllFrom}
+      activateAllLabel={t("un.activateAllCtx" as never)}
+      deactivateAllLabel={t("un.deactivateAllCtx" as never)}
+      selectOnContextMenu={false}
       fields={fields}
       onFieldChange={onFieldChange}
       detailExtra={
-        <p className="mt-1.5 text-[11px] leading-relaxed text-muted-foreground">{t("un.treeHint")}</p>
+        <div className="mt-1.5 space-y-1 text-[11px] leading-relaxed text-muted-foreground">
+          <p>{t("un.treeHint")}</p>
+          <p>{t("un.ctxHint")}</p>
+        </div>
       }
       onReset={() => {
         /* آیکون + = شروع ثبتِ کاربر جدید: فرم خالی می‌شود */
