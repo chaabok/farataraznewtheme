@@ -139,12 +139,12 @@ export class UsersService {
     }
 
     /* رزرو بلاکی شناسه‌ها (§2.4) — کاربرها و ردیف‌های دسترسی */
-    const userIds = await this.idGen.generateNextIdBlock("User", targets.length);
+    const startUserId = await this.idGen.generateNextIdBlock("User", targets.length);
     const accessTotal = targets.length * norm.accesses.length;
-    const accessIds =
+    const startAccessId =
       accessTotal > 0
         ? await this.idGen.generateNextIdBlock("UserAccess", accessTotal)
-        : [];
+        : null;
 
     /* زنجیرهٔ ارث هر گره پیش از تراکنش (کلاینت tx نوع PrismaService ندارد) */
     const targetChains = new Map<bigint, Awaited<ReturnType<typeof resolveDetailTypeChain>>>();
@@ -159,7 +159,7 @@ export class UsersService {
         const chain = targetChains.get(target)!;
         await tx.user.create({
           data: {
-            id: BigInt(userIds[i]),
+            id: BigInt(startUserId + i),
             partyRef: norm.partyRef,
             fullName: norm.fullName,
             username: norm.username,
@@ -169,11 +169,11 @@ export class UsersService {
             ...appBaseOnCreate({ userId: SYSTEM_ACTOR.userId, nodeId: target, ...chain }),
           },
         });
-        if (norm.accesses.length > 0) {
+        if (norm.accesses.length > 0 && startAccessId != null) {
           await tx.userAccess.createMany({
             data: norm.accesses.map((a) => ({
-              id: BigInt(accessIds[accessCursor++]),
-              userRef: BigInt(userIds[i]),
+              id: BigInt(startAccessId + accessCursor++),
+              userRef: BigInt(startUserId + i),
               nodeType: a.nodeType,
               refKey: a.refKey,
               ...appBaseOnCreate({ userId: SYSTEM_ACTOR.userId, nodeId: target, ...chain }),
@@ -186,7 +186,7 @@ export class UsersService {
       `User created — ${targets.length} row(s) [${targets.join(",")}] Username=${norm.username} Role=${norm.userRoleRef} Accesses=${norm.accesses.length}/row (Task 126)`,
     );
     /* ردیف اصلی = دفتر مرکزی (اولین هدف) — پاسخ ثبت هم همین قرارداد است */
-    return this.readFull(BigInt(userIds[0]));
+    return this.readFull(BigInt(startUserId));
   }
 
   /** ویرایش «یک» ردیف کاربر — درختوارهٔ دسترسی تراکنشی بازنویسی می‌شود. */
@@ -310,6 +310,14 @@ export class UsersService {
     if (passwordRaw !== "") {
       passwordHash = hashPassword(passwordRaw);
     } else if (opts.requirePassword) {
+      throw new BadRequestException({
+        statusCode: 422,
+        message: "ثبت کلمه عبور الزامی است؛ کلمه عبور نمی‌تواند خالی باشد.",
+        messageKey: "common.error",
+      });
+    }
+    if (passwordHash == null) {
+      /* دفاعی — مسیر ثبت هرگز نباید بدون کلمه عبور برسد */
       throw new BadRequestException({
         statusCode: 422,
         message: "ثبت کلمه عبور الزامی است؛ کلمه عبور نمی‌تواند خالی باشد.",

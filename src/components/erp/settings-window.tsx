@@ -13,6 +13,7 @@ import {
   Network,
   SlidersHorizontal,
   ShieldPlus,
+  UserPlus,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useSettings, useT } from "@/stores/settings-store";
@@ -22,6 +23,7 @@ import { Separator } from "@/components/ui/separator";
 import { BusinessStructureWindow } from "@/components/erp/business-structure/bs-window";
 import { SoftwareConfigBody } from "@/components/erp/settings/software-config-window";
 import { UserRoleForm } from "@/components/erp/settings/user-role-form";
+import { UserNewForm } from "@/components/erp/settings/user-new-form";
 import { AppTile } from "@/components/desktop/app-tile";
 
 /* Task 35 — the Settings window hosts the BusinessStructure form as a
@@ -42,7 +44,13 @@ import { AppTile } from "@/components/desktop/app-tile";
    Task 73 — the language + active-languages sections moved OUT of «home»
    into the hub's «عمومی» tab (owner request) — see language-settings.tsx. */
 
-type SettingsPage = "home" | "business-structure" | "user-management" | "user-role" | "software-config";
+type SettingsPage =
+  | "home"
+  | "business-structure"
+  | "user-management"
+  | "user-role"
+  | "user-new"
+  | "software-config";
 
 export function SettingsWindow() {
   const t = useT();
@@ -136,6 +144,38 @@ export function SettingsWindow() {
     );
   }
 
+  if (page === "user-new") {
+    return (
+      <div className="flex h-full flex-col">
+        {/* slim sub-page bar: back to the user-management hub (Win-11 pattern) */}
+        <div className="flex h-10 shrink-0 items-center gap-1.5 border-b border-border/60 px-2">
+          <button
+            onClick={() => setPage("user-management")}
+            className="flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-xs font-medium text-foreground/80 transition-colors hover:bg-foreground/10 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
+          >
+            <BackIcon className="h-3.5 w-3.5" aria-hidden />
+            {t("settings.back")}
+          </button>
+          <span className="text-xs text-muted-foreground/50" aria-hidden>
+            /
+          </span>
+          <span className="truncate text-xs font-semibold text-foreground/90">
+            {t("app.userManagement")}
+          </span>
+          <span className="text-xs text-muted-foreground/50" aria-hidden>
+            /
+          </span>
+          <span className="truncate text-xs font-semibold text-foreground/90">
+            {t("un.formTitle")}
+          </span>
+        </div>
+        <div className="min-h-0 flex-1">
+          <UserNewForm onBack={() => setPage("user-management")} />
+        </div>
+      </div>
+    );
+  }
+
   if (page === "user-management") {
     return (
       <div className="flex h-full flex-col">
@@ -168,6 +208,19 @@ export function SettingsWindow() {
             <h2 className="text-lg font-bold tracking-tight">{t("app.userManagement")}</h2>
             <p className="mt-1 text-xs text-muted-foreground">{t("settings.umDesc")}</p>
           </div>
+          <button
+            onClick={() => setPage("user-new")}
+            className="flex w-full max-w-md items-center gap-3 rounded-xl border border-border/70 bg-card/60 p-4 text-start transition-colors hover:bg-accent/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
+          >
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-teal-500 to-emerald-700 text-white shadow-md">
+              <UserPlus className="h-5 w-5" aria-hidden />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-semibold">{t("un.formTitle")}</span>
+              <span className="block text-xs text-muted-foreground">{t("un.launcherDesc")}</span>
+            </span>
+            <ForwardIcon className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+          </button>
           <button
             onClick={() => setPage("user-role")}
             className="flex w-full max-w-md items-center gap-3 rounded-xl border border-border/70 bg-card/60 p-4 text-start transition-colors hover:bg-accent/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"

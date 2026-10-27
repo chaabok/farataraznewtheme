@@ -214,6 +214,8 @@ export function FieldCell({
      the tabs section and the form footer gain room. Horizontal metrics
      (label alignment, --label-w, gaps) are untouched. */
   const inputBase = "h-5.5 min-w-0 text-xs";
+  /* Task 126 — i18n of the password reveal toggle (hooks-safe: unconditional) */
+  const t = useT();
 
   /* Task 49 — date-mask state (declared unconditionally — rules-of-hooks);
      only used by the date branch below */
