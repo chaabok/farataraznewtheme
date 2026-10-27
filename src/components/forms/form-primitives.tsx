@@ -12,10 +12,15 @@ import {
   Plus,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useT } from "@/stores/settings-store";
+import { useT, useSettings } from "@/stores/settings-store";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverAnchor,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -631,6 +636,8 @@ function ListPickerCell({
   const [filters, setFilters] = React.useState<Record<string, string>>({});
   /* Task 27 — same compact metrics as FieldCell */
   const inputBase = "h-5.5 min-w-0 text-xs";
+  /* Task 129 — جهتِ ترازِ پاپ‌آور از زبان نرم‌افزار (§1.4) */
+  const dir = useSettings((s) => s.dir());
 
   /* providers without per-field cells keep working: title/subtitle columns */
   const normalized = React.useMemo(
@@ -691,16 +698,23 @@ function ListPickerCell({
         </span>
       </span>
       <div className="flex min-w-0 flex-1 items-center gap-1.5">
-        <Input
-          value={field.value ?? ""}
-          placeholder={field.placeholder}
-          readOnly
-          disabled={field.disabled}
-          aria-label={field.label}
-          onClick={() => !field.disabled && setOpen(true)}
-          className={cn(inputBase, "cursor-pointer")}
-        />
+        {/* Task 129 (درخواست مالک) — پاپ‌آورِ لیست باید «از ابتدای فیلد
+            ورودی» باز شود: لنگرِ جای‌گذاری = خودِ Input (PopoverAnchor)،
+            نه کاشی ☰؛ با dir زبان، align=start یعنی لبهٔ inline-startِ
+            ورودی (RTL = لبهٔ راست، LTR = لبهٔ چپ) — عین قرارداد Task 104
+            در لیست اکشن بار. کاشی ☰ همچنان تریگرِ باز/بسته می‌ماند. */}
         <Popover open={open} onOpenChange={setOpen}>
+          <PopoverAnchor asChild>
+            <Input
+              value={field.value ?? ""}
+              placeholder={field.placeholder}
+              readOnly
+              disabled={field.disabled}
+              aria-label={field.label}
+              onClick={() => !field.disabled && setOpen(true)}
+              className={cn(inputBase, "cursor-pointer")}
+            />
+          </PopoverAnchor>
           <PopoverTrigger asChild>
             <button
               type="button"
@@ -712,7 +726,12 @@ function ListPickerCell({
               <AlignJustify className="h-3 w-3" aria-hidden />
             </button>
           </PopoverTrigger>
-          <PopoverContent align="start" side="bottom" className="w-80 overflow-hidden rounded-xl border bg-popover p-0 shadow-lg win-shadow">
+          <PopoverContent
+            dir={dir}
+            align="start"
+            side="bottom"
+            className="w-80 overflow-hidden rounded-xl border bg-popover p-0 shadow-lg win-shadow"
+          >
             <div className="max-h-64 overflow-y-auto scrollbar-slim">
               {/* header + filter row */}
               <table className="w-full border-collapse text-xs" aria-label={field.label}>
