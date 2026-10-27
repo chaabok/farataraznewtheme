@@ -699,21 +699,26 @@ function ListPickerCell({
       </span>
       <div className="flex min-w-0 flex-1 items-center gap-1.5">
         {/* Task 129 (درخواست مالک) — پاپ‌آورِ لیست باید «از ابتدای فیلد
-            ورودی» باز شود: لنگرِ جای‌گذاری = خودِ Input (PopoverAnchor)،
-            نه کاشی ☰؛ با dir زبان، align=start یعنی لبهٔ inline-startِ
-            ورودی (RTL = لبهٔ راست، LTR = لبهٔ چپ) — عین قرارداد Task 104
-            در لیست اکشن بار. کاشی ☰ همچنان تریگرِ باز/بسته می‌ماند. */}
+            ورودی» باز شود: لنگرِ جای‌گذاری = قابِ هم‌قوارهٔ فیلد ورودی
+            (PopoverAnchor)، نه کاشی ☰؛ با dir زبان، align=start یعنی لبهٔ
+            inline-startِ ورودی (RTL = لبهٔ راست، LTR = لبهٔ چپ) — عین
+            قرارداد Task 104 در لیست اکشن بار. کاشی ☰ همچنان تریگر است. */}
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverAnchor asChild>
-            <Input
-              value={field.value ?? ""}
-              placeholder={field.placeholder}
-              readOnly
-              disabled={field.disabled}
-              aria-label={field.label}
-              onClick={() => !field.disabled && setOpen(true)}
-              className={cn(inputBase, "cursor-pointer")}
-            />
+            {/* Task 129 — لنگر = قابی هم‌قوارهٔ خودِ فیلد ورودی (div بومی —
+                ref بدون واسطه می‌نشیند)؛ ورودی w-full آن را پر می‌کند پس
+                مستطیل لنگر ≡ مستطیل ورودی و «ابتدای فیلد» نقطهٔ بازشدن است */}
+            <div className="flex min-w-0 flex-1">
+              <Input
+                value={field.value ?? ""}
+                placeholder={field.placeholder}
+                readOnly
+                disabled={field.disabled}
+                aria-label={field.label}
+                onClick={() => !field.disabled && setOpen(true)}
+                className={cn(inputBase, "cursor-pointer")}
+              />
+            </div>
           </PopoverAnchor>
           <PopoverTrigger asChild>
             <button
