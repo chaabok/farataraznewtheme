@@ -17,9 +17,9 @@ import {
  * اینجا فقط شکل و سقف طول اعتبارسنجی می‌شود.
  */
 
-/** یک شاخهٔ درختوارهٔ دسترسی (menu | submenu | form | action). */
+/** یک شاخهٔ درختوارهٔ دسترسی (software | menu | submenu | form | action). */
 export class AccessItemDto {
-  @IsIn(["menu", "submenu", "form", "action"])
+  @IsIn(["software", "menu", "submenu", "form", "action"])
   nodeType: string;
 
   @IsString()

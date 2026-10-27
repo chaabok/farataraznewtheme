@@ -669,8 +669,8 @@ model User {
 model UserAccess {
   id                   BigInt   @id @map("UserAccessID")
   userRef              BigInt   @map("UserRef")
-  nodeType             String   @map("NodeType") // "menu" | "submenu" | "form" | "action"
-  refKey               String   @map("RefKey") // شناسهٔ گره/فرم یا "<FormID>:<ActionKey>"
+  nodeType             String   @map("NodeType") // "software" | "menu" | "submenu" | "form" | "action" — Task 128: ریشهٔ «نرم افزارها»
+  refKey               String   @map("RefKey") // شناسهٔ گره/فرم یا "<FormID>:<ActionKey>" (ریشه: "root")
   version              Int      @default(1) @map("Version")
   creator              String   @map("Creator")
   lastModifier         String?  @map("LastModifier")

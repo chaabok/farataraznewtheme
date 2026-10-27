@@ -42,7 +42,8 @@ import { UpsertUserDto } from "./users.dto";
  *   ۲. کلمه عبور در ثبت اجباری است؛ در ویرایش خالی = بدون تغییر.
  *   ۳. تکرار نام کاربری در همان گرهٔ ساختار رد می‌شود (409).
  *   ۴. partyRef/userRoleRef ناموجود رد می‌شود (422).
- *   ۵. شاخه‌های دسترسی نرمال و شناخته‌شده‌اند (nodeType ∈ menu/submenu/form/action).
+ *   ۵. شاخه‌های دسترسی نرمال و شناخته‌شده‌اند (nodeType ∈ software/menu/submenu/form/action —
+ *      Task 128: ریشهٔ «نرم افزارها» با NodeType "software" ذخیره می‌شود).
  *
  * رعایت کامل بلوک ارث‌بری AppBaseEntity ۸فیلدی، ID دستی از IDGeneration
  * (§2.4)، Version با §2.5 auto-rowversion — تا استقرار IAM = SYSTEM_ACTOR.
@@ -53,7 +54,7 @@ interface AccessRow {
   refKey: string;
 }
 
-const ACCESS_NODE_TYPES = new Set(["menu", "submenu", "form", "action"]);
+const ACCESS_NODE_TYPES = new Set(["software", "menu", "submenu", "form", "action"]);
 
 /** نرمال‌سازی آرایهٔ رشته‌ای: trim + حذف خالی + یکتاسازی با حفظ ترتیب. */
 function dedupeAccess(input: Array<{ nodeType?: string; refKey?: string }> | undefined): AccessRow[] {

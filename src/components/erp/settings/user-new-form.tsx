@@ -3,6 +3,7 @@
 import * as React from "react";
 import {
   AlignJustify,
+  AppWindow,
   CheckSquare,
   CircleHelp,
   Copy,
@@ -52,6 +53,17 @@ import { cn } from "@/lib/utils";
  * «استفاده از داده‌های مشترک دفتر مرکزی»؛ شاخهٔ دارای تیک = کاربران مشترک
  * (ردیف مجزا نمی‌گیرد — قرارداد baseDataScopeWhere). منطق در سرور است؛
  * پاسخ ثبت = ردیف اصلی (دفتر مرکزی).
+ *
+ * Task 128 (درخواست مالک):
+ *  ۱. «اولین شاخه درختواره نرم افزارها و بقیه شاخه ها در زیر این شاخه قرار
+ *     بگیرد» — گرهٔ ریشهٔ مصنوعیِ «نرم افزارها» (sw:root) همهٔ منوهای dfb را
+ *     زیر خود می‌گیرد؛
+ *  ۲. «کاربر اگر درختواره نرم افزارها را فعال کرد یا غیرفعال کرد کل نرم افزار
+ *     و امکانات نرم افزارها فعال یا غیرفعال شوند» — کلیک/راست‌کلیکِ ریشه
+ *     (سازوکار چرخش زیرمجموعهٔ Task 126/127) کل درخت را یکجا می‌چرخاند؛
+ *  ۳. «کنار فیلد نقش کاربری یک گزینه قرار دهید بنام فعال و بصورت پیش فرض
+ *     تیک داشته باشد» — چک‌باکس «فعال» (IsActive کاربر، پیش‌فرض تیک‌خورده)
+ *     در سلول مجاورِ فیلد نقش کاربری (ردیف سومِ گرید ۵۰٪/۵۰٪).
  */
 
 interface UserDto {
@@ -88,6 +100,8 @@ interface FormValues {
   password2: string;
   roleRef: number | null;
   roleTitle: string;
+  /** Task 128 — گزینهٔ «فعال» کنار نقش کاربری؛ پیش‌فرض تیک‌خورده (مالک) */
+  isActive: boolean;
 }
 
 const BLANK: FormValues = {
@@ -98,7 +112,11 @@ const BLANK: FormValues = {
   password2: "",
   roleRef: null,
   roleTitle: "",
+  isActive: true,
 };
+
+/** شناسهٔ گرهٔ ریشهٔ «نرم افزارها» —NodeType سمت سرور: "software" (Task 128) */
+const SOFTWARE_ROOT_ID = "sw:root";
 
 /** آیکون‌های اکشن بار هر فرم — عین ACTION_BAR_KEYS + ترجمه/راهنما (Task 28). */
 const ACTION_ITEMS: Array<{ key: string; labelKey: string; Icon: LucideIcon }> = [
@@ -234,6 +252,8 @@ function accessToRows(set: Set<string>): Array<{ nodeType: string; refKey: strin
     else if (id.startsWith("s:")) rows.push({ nodeType: "submenu", refKey: id.slice(2) });
     else if (id.startsWith("f:")) rows.push({ nodeType: "form", refKey: id.slice(2) });
     else if (id.startsWith("a:")) rows.push({ nodeType: "action", refKey: id.slice(2) });
+    /* Task 128 — ریشهٔ «نرم افزارها» با NodeType "software" ذخیره می‌شود */
+    else if (id.startsWith("sw:")) rows.push({ nodeType: "software", refKey: id.slice(3) });
   }
   return rows;
 }
@@ -246,6 +266,7 @@ function rowsToAccess(rows: UserDto["accesses"]): Set<string> {
     else if (r.nodeType === "submenu") set.add(`s:${r.refKey}`);
     else if (r.nodeType === "form") set.add(`f:${r.refKey}`);
     else if (r.nodeType === "action") set.add(`a:${r.refKey}`);
+    else if (r.nodeType === "software") set.add(`sw:${r.refKey}`);
   }
   return set;
 }
@@ -414,25 +435,49 @@ export function UserNewForm({ onBack }: { onBack?: () => void }) {
     });
   }, []);
 
-  /* درخت دسترسی — با تغییر زبان/وضعیت دسترسی بازمشق می‌شود */
-  const treeNodes = React.useMemo<SimpleTreeFormNode[]>(
-    () =>
-      buildAccessTree(
-        dfbTree,
-        locale,
-        t as unknown as (k: never) => string,
-        (id) => accessSet.has(id),
-        toggleAccess,
-        t("un.activeTick" as never),
+  /* درخت دسترسی — با تغییر زبان/وضعیت دسترسی بازمشق می‌شود.
+     Task 128 — گرهٔ ریشهٔ «نرم افزارها» (اولین شاخه؛ همهٔ منوها زیر آن):
+     کلیک/راست‌کلیک روی همین شاخه با سازوکار چرخش زیرمجموعه، کل نرم‌افزارها
+     و امکاناتشان را یکجا فعال/غیرفعال می‌کند (درخواست دوم مالک). */
+  const treeNodes = React.useMemo<SimpleTreeFormNode[]>(() => {
+    if (dfbTree.length === 0) return [];
+    const granted = (id: string) => accessSet.has(id);
+    const inner = buildAccessTree(
+      dfbTree,
+      locale,
+      t as unknown as (k: never) => string,
+      granted,
+      toggleAccess,
+      t("un.activeTick" as never),
+    );
+    const rootNode: SimpleTreeFormNode = {
+      id: SOFTWARE_ROOT_ID,
+      label: t("un.softwareRoot" as never),
+      icon: (
+        <AppWindow
+          className="h-3.5 w-3.5 shrink-0 text-teal-600 dark:text-teal-400"
+          aria-hidden
+        />
       ),
-    [dfbTree, locale, t, accessSet, toggleAccess],
-  );
+      children: inner,
+    };
+    rootNode.endAdornment = (
+      <ActiveTick
+        granted={granted(SOFTWARE_ROOT_ID)}
+        label={t("un.activeTick" as never)}
+        onToggle={() => toggleAccess(rootNode)}
+      />
+    );
+    return [rootNode];
+  }, [dfbTree, locale, t, accessSet, toggleAccess]);
 
   /* شناسه‌های دسترسی، مستقیم از درخت dfb — مستقل از زبان/وضعیت تیک‌ها
      (بازمشقِ تیک‌ها نباید این فهرست را عوض کند وگرنه پیش‌فرضِ فعال
-     روی هر کلیک دوباره اعمال می‌شد). */
+     روی هر کلیک دوباره اعمال می‌شد). Task 128 — ریشهٔ «نرم افزارها»
+     نیز عضو پیش‌فرضِ همه‌فعال است (اولین عضو). */
   const allAccessIds = React.useMemo(() => {
-    const out: string[] = [];
+    if (dfbTree.length === 0) return [];
+    const out: string[] = [SOFTWARE_ROOT_ID];
     const walk = (list: DfbMenuNode[]) => {
       for (const m of list) {
         out.push(`${m.nodeType === 1 ? "m:" : "s:"}${m.id}`);
@@ -475,6 +520,7 @@ export function UserNewForm({ onBack }: { onBack?: () => void }) {
       password2: "",
       roleRef: r.userRoleRef,
       roleTitle: r.roleTitle || r.roleCode,
+      isActive: r.isActive !== false, // Task 128 — گزینهٔ «فعال» نقش کاربری
     });
     setAccessSet(rowsToAccess(r.accesses));
   }, []);
@@ -482,13 +528,18 @@ export function UserNewForm({ onBack }: { onBack?: () => void }) {
   const newRecord = React.useCallback(() => {
     setCurrentId(null);
     setDirty(false); // فرم خالی، هیچ ویرایش ذخیره‌نشده‌ای نیست
-    setValues(BLANK);
+    setValues(BLANK); // Task 128 — «فعال» نقش کاربری دوباره تیک‌خورده
     /* Task 127 — پیش‌فرض مالک: فرم تازه = همهٔ تیک‌های فعال */
     setAccessSet(new Set(allAccessIds));
   }, [allAccessIds]);
 
   const onFieldChange = React.useCallback((id: string, value: string | boolean) => {
     setDirty(true); // هر ویرایش = اطلاعات ذخیره‌نشده
+    /* Task 128 — چک‌باکس «فعال» کنار نقش کاربری: مقدار بولی می‌ماند */
+    if (id === "isActive") {
+      setValues((v) => ({ ...v, isActive: value === true }));
+      return;
+    }
     setValues((v) => ({ ...v, [id]: String(value ?? "") }));
   }, []);
 
@@ -567,6 +618,7 @@ export function UserNewForm({ onBack }: { onBack?: () => void }) {
       /* ویرایش با کلمهٔ عبور خالی = بدون تغییر (سرور هم همین قرارداد را دارد) */
       ...(values.password !== "" ? { password: values.password } : {}),
       userRoleRef: values.roleRef,
+      isActive: values.isActive !== false, // Task 128 — گزینهٔ «فعال» نقش کاربری
       accesses: accessToRows(accessSet),
     };
     try {
@@ -656,6 +708,17 @@ export function UserNewForm({ onBack }: { onBack?: () => void }) {
         listItems: roleListItems,
         listLoading: rolesLoading,
         onOpenListItem: pickRole,
+      },
+      /* Task 128 (مالک): «کنار فیلد نقش کاربری یک گزینه قرار دهید بنام
+         فعال و بصورت پیش فرض تیک داشته باشد» — سلول مجاورِ نقش (گرید
+         ۵۰٪/۵۰٪، ردیف سوم)؛ place:"start" = لنگر به لبهٔ آغازِ خواندن،
+         درست چسبیده به فیلد نقش در هر دو جهت (عین قرارداد Task 102/125). */
+      {
+        id: "isActive",
+        label: t("un.accountActive" as never),
+        type: "checkbox",
+        checked: values.isActive !== false,
+        place: "start",
       },
     ],
     [t, values, currentId, partyListItems, roleListItems, partiesLoading, rolesLoading, pickParty, pickRole],
