@@ -17,7 +17,6 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Popover,
-  PopoverAnchor,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
@@ -638,6 +637,13 @@ function ListPickerCell({
   const inputBase = "h-5.5 min-w-0 text-xs";
   /* Task 129 — جهتِ ترازِ پاپ‌آور از زبان نرم‌افزار (§1.4) */
   const dir = useSettings((s) => s.dir());
+  /* کل خانهٔ ارزش تریگر است؛ در حالت disabled هیچ مسیری نباید پاپ‌آور را باز کند */
+  const handleOpenChange = React.useCallback(
+    (next: boolean) => {
+      if (!field.disabled) setOpen(next);
+    },
+    [field.disabled],
+  );
 
   /* providers without per-field cells keep working: title/subtitle columns */
   const normalized = React.useMemo(
@@ -697,125 +703,124 @@ function ListPickerCell({
           *
         </span>
       </span>
-      <div className="flex min-w-0 flex-1 items-center gap-1.5">
-        {/* Task 129 (درخواست مالک) — پاپ‌آورِ لیست باید «از ابتدای فیلد
-            ورودی» باز شود: لنگرِ جای‌گذاری = قابِ هم‌قوارهٔ فیلد ورودی
-            (PopoverAnchor)، نه کاشی ☰؛ با dir زبان، align=start یعنی لبهٔ
-            inline-startِ ورودی (RTL = لبهٔ راست، LTR = لبهٔ چپ) — عین
-            قرارداد Task 104 در لیست اکشن بار. کاشی ☰ همچنان تریگر است. */}
-        <Popover open={open} onOpenChange={setOpen}>
-          <PopoverAnchor asChild>
-            {/* Task 129 — لنگر = قابی هم‌قوارهٔ خودِ فیلد ورودی (div بومی —
-                ref بدون واسطه می‌نشیند)؛ ورودی w-full آن را پر می‌کند پس
-                مستطیل لنگر ≡ مستطیل ورودی و «ابتدای فیلد» نقطهٔ بازشدن است */}
-            <div className="flex min-w-0 flex-1">
-              <Input
-                value={field.value ?? ""}
-                placeholder={field.placeholder}
-                readOnly
-                disabled={field.disabled}
-                aria-label={field.label}
-                onClick={() => !field.disabled && setOpen(true)}
-                className={cn(inputBase, "cursor-pointer")}
-              />
-            </div>
-          </PopoverAnchor>
-          <PopoverTrigger asChild>
-            <button
-              type="button"
-              aria-label={`${field.label} — ${t("abar.list")}`}
-              title={t("abar.list")}
-              disabled={field.disabled}
-              className="flex h-5.5 w-5.5 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-teal-500 to-emerald-600 text-white shadow-md transition-all hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
-            >
-              <AlignJustify className="h-3 w-3" aria-hidden />
-            </button>
-          </PopoverTrigger>
-          <PopoverContent
-            dir={dir}
-            align="start"
-            side="bottom"
-            className="w-80 overflow-hidden rounded-xl border bg-popover p-0 shadow-lg win-shadow"
+      {/* Task 129 (درخواست مالک) — پاپ‌آورِ لیست باید «از ابتدای فیلد ورودی»
+          باز شود: تریگر = کل خانهٔ ارزش (فیلد ورودی + کاشی ☰) تا لنگرِ
+          جای‌گذاری radix لبهٔ inline-startِ «فیلد ورودی» باشد (RTL = لبهٔ
+          راست، LTR = لبهٔ چپ — عین قرارداد Task 104)؛ با dir زبان روی
+          PopoverContent این تراز در هر دو جهت برقرار است. کاشی ☰ نمایشی است
+          و خودِ ورودی هم با کلیک/Enter پاپ‌آور را باز می‌کند.
+          نکتهٔ فنی: PopoverAnchorِ مستقیم در این محیط (React 19 + radix 1.3.1)
+          رفرنسِ صفر-مستطیل می‌دهد و پاپ‌آور را در مبدأ (0,0) می‌نشیند؛ مسیر
+          trigger/implicit-anchor — اثبات‌شده در لیست اکشن بار — به کار رفت. */}
+      <Popover open={open} onOpenChange={handleOpenChange}>
+        <PopoverTrigger asChild>
+          <div
+            aria-disabled={field.disabled || undefined}
+            className={cn(
+              "group flex min-w-0 flex-1 cursor-pointer items-center gap-1.5",
+              field.disabled && "cursor-not-allowed opacity-50",
+            )}
           >
-            <div className="max-h-64 overflow-y-auto scrollbar-slim">
-              {/* header + filter row */}
-              <table className="w-full border-collapse text-xs" aria-label={field.label}>
-                <thead className="sticky top-0 z-10 bg-muted/95 backdrop-blur">
+            <Input
+              value={field.value ?? ""}
+              placeholder={field.placeholder}
+              readOnly
+              disabled={field.disabled}
+              aria-label={field.label}
+              className={cn(inputBase, "cursor-pointer")}
+            />
+            <span
+              aria-hidden
+              className="flex h-5.5 w-5.5 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-teal-500 to-emerald-600 text-white shadow-md transition-all group-hover:brightness-110"
+            >
+              <AlignJustify className="h-3 w-3" />
+            </span>
+          </div>
+        </PopoverTrigger>
+        <PopoverContent
+          dir={dir}
+          align="start"
+          side="bottom"
+          className="w-80 overflow-hidden rounded-xl border bg-popover p-0 shadow-lg win-shadow"
+        >
+          <div className="max-h-64 overflow-y-auto scrollbar-slim">
+            {/* header + filter row */}
+            <table className="w-full border-collapse text-xs" aria-label={field.label}>
+              <thead className="sticky top-0 z-10 bg-muted/95 backdrop-blur">
+                <tr>
+                  {columns.map((col) => (
+                    <th
+                      key={col}
+                      scope="col"
+                      className="border-b border-border/70 px-2 py-1.5 text-start font-semibold text-foreground/80"
+                    >
+                      {col}
+                    </th>
+                  ))}
+                </tr>
+                <tr>
+                  {columns.map((col) => (
+                    <th key={`f-${col}`} scope="col" className="border-b border-border/60 px-1.5 pb-1.5 pt-0.5">
+                      <div className="relative">
+                        <Filter
+                          aria-hidden
+                          className="pointer-events-none absolute end-1.5 top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground/70"
+                        />
+                        <input
+                          value={filters[col] ?? ""}
+                          onChange={(e) => setFilters((prev) => ({ ...prev, [col]: e.target.value }))}
+                          placeholder={t("abar.listFilterPh")}
+                          aria-label={`${col} — ${t("abar.listFilterPh")}`}
+                          className="h-5 w-full rounded-md border border-input bg-background/60 ps-1.5 pe-6 text-[11px] outline-none transition-colors placeholder:text-muted-foreground/70 focus-visible:border-ring"
+                        />
+                      </div>
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {field.listLoading ? (
                   <tr>
-                    {columns.map((col) => (
-                      <th
-                        key={col}
-                        scope="col"
-                        className="border-b border-border/70 px-2 py-1.5 text-start font-semibold text-foreground/80"
-                      >
-                        {col}
-                      </th>
-                    ))}
+                    <td colSpan={Math.max(1, columns.length)} className="px-3 py-6 text-center text-muted-foreground">
+                      <Loader2 className="mx-auto h-4 w-4 animate-spin" aria-hidden />
+                    </td>
                   </tr>
+                ) : rows.length === 0 ? (
                   <tr>
-                    {columns.map((col) => (
-                      <th key={`f-${col}`} scope="col" className="border-b border-border/60 px-1.5 pb-1.5 pt-0.5">
-                        <div className="relative">
-                          <Filter
-                            aria-hidden
-                            className="pointer-events-none absolute end-1.5 top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground/70"
-                          />
-                          <input
-                            value={filters[col] ?? ""}
-                            onChange={(e) => setFilters((prev) => ({ ...prev, [col]: e.target.value }))}
-                            placeholder={t("abar.listFilterPh")}
-                            aria-label={`${col} — ${t("abar.listFilterPh")}`}
-                            className="h-5 w-full rounded-md border border-input bg-background/60 ps-1.5 pe-6 text-[11px] outline-none transition-colors placeholder:text-muted-foreground/70 focus-visible:border-ring"
-                          />
-                        </div>
-                      </th>
-                    ))}
+                    <td colSpan={Math.max(1, columns.length)} className="px-3 py-6 text-center text-xs text-muted-foreground">
+                      {t("abar.listEmpty")}
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {field.listLoading ? (
-                    <tr>
-                      <td colSpan={Math.max(1, columns.length)} className="px-3 py-6 text-center text-muted-foreground">
-                        <Loader2 className="mx-auto h-4 w-4 animate-spin" aria-hidden />
-                      </td>
+                ) : (
+                  rows.map((it) => (
+                    <tr
+                      key={it.id}
+                      onClick={() => pick(it)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          pick(it);
+                        }
+                      }}
+                      tabIndex={0}
+                      className="cursor-pointer transition-colors hover:bg-accent/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                      {columns.map((col) => (
+                        <td key={col} className="max-w-36 truncate px-2 py-1.5 text-foreground/90">
+                          {it.cells.find((c) => c.label === col)?.value ?? ""}
+                        </td>
+                      ))}
                     </tr>
-                  ) : rows.length === 0 ? (
-                    <tr>
-                      <td colSpan={Math.max(1, columns.length)} className="px-3 py-6 text-center text-xs text-muted-foreground">
-                        {t("abar.listEmpty")}
-                      </td>
-                    </tr>
-                  ) : (
-                    rows.map((it) => (
-                      <tr
-                        key={it.id}
-                        onClick={() => pick(it)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === " ") {
-                            e.preventDefault();
-                            pick(it);
-                          }
-                        }}
-                        tabIndex={0}
-                        className="cursor-pointer transition-colors hover:bg-accent/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                      >
-                        {columns.map((col) => (
-                          <td key={col} className="max-w-36 truncate px-2 py-1.5 text-foreground/90">
-                            {it.cells.find((c) => c.label === col)?.value ?? ""}
-                          </td>
-                        ))}
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-            <div className="flex items-center justify-between border-t border-border/60 bg-muted/40 px-2.5 py-1 text-[10px] text-muted-foreground">
-              <span>{t("abar.listCount").replace("{n}", rows.length.toLocaleString())}</span>
-            </div>
-          </PopoverContent>
-        </Popover>
-      </div>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+          <div className="flex items-center justify-between border-t border-border/60 bg-muted/40 px-2.5 py-1 text-[10px] text-muted-foreground">
+            <span>{t("abar.listCount").replace("{n}", rows.length.toLocaleString())}</span>
+          </div>
+        </PopoverContent>
+      </Popover>
     </div>
   );
 }
