@@ -321,6 +321,86 @@ export function AccountTreeForm({ onBack }: { onBack?: () => void }) {
     };
   }, [cfg.ledgerAccessControl, users.length]);
 
+  /* Task 141 — ترجمهٔ دادهٔ رکوردها (الگوی geo Task 107/99): نقشهٔ دسته‌ای
+     عنوان‌ها برای نمایش درخت/فهرست به زبان جاری؛ واکشی ناموفق = عناوین پایه */
+  React.useEffect(() => {
+    const ids = items.map((n) => n.id);
+    if (ids.length === 0) return;
+    let alive = true;
+    const chunks: number[][] = [];
+    for (let i = 0; i < ids.length; i += 500) chunks.push(ids.slice(i, i + 500));
+    void Promise.all(
+      chunks.map((chunk) =>
+        api.get<{
+          items?: Array<{ entityId: number; fieldKey: string; locale: string; value: string }>;
+        }>(
+          `data-translations?entityType=AccountNode&entityIds=${chunk.join(",")}&fieldKeys=title`,
+        ),
+      ),
+    )
+      .then((results) => {
+        if (!alive) return;
+        const next: Record<string, Record<string, string>> = {};
+        for (const res of results) {
+          for (const it of res.items ?? []) {
+            if (!it?.entityId || it.fieldKey !== "title" || !it?.locale || !it?.value) continue;
+            (next[String(it.entityId)] ??= {})[it.locale] = it.value;
+          }
+        }
+        setTrMap(next);
+      })
+      .catch(() => {
+        /* واکشی ناموفق — درخت/فهرست با عناوین پایه می‌مانند */
+      });
+    return () => {
+      alive = false;
+    };
+  }, [items, trVersion]);
+
+  /* Task 141 — کاشی «ترجمه» فعال: آنلاین (زنجیرهٔ زیرشاخه‌ها) + دستی (دیالوگ عمومی) */
+  const recordTr = useRecordTranslation({
+    entityType: "AccountNode",
+    entityId: mode === "view" && selectedNode ? selectedNode.id : null,
+    getFields: (): DataTranslationField[] => {
+      const v = selectedNode?.title?.trim() ?? "";
+      return v ? [{ key: "title", label: t("atr.field.title.1"), value: v }] : [];
+    },
+    /* عین geo — با ترجمهٔ آنلاین، تمامی زیرشاخه‌های سرشاخهٔ انتخابی هم ترجمه می‌شوند */
+    getSubtreeRecords: (rootId): SubtreeTranslationRecord[] => {
+      const kidsOf = new Map<number, number[]>();
+      for (const n of items) {
+        const p = n.parentRef ?? 0;
+        const list = kidsOf.get(p);
+        if (list) list.push(n.id);
+        else kidsOf.set(p, [n.id]);
+      }
+      const out: SubtreeTranslationRecord[] = [];
+      const stack = [...(kidsOf.get(rootId) ?? [])];
+      while (stack.length > 0) {
+        const id = stack.pop() as number;
+        const node = byId.get(String(id));
+        const v = node?.title?.trim();
+        if (node && v) {
+          out.push({
+            entityId: node.id,
+            fields: [{ key: "title", label: t("atr.field.title.1"), value: v }],
+          });
+        }
+        const kids = kidsOf.get(id);
+        if (kids) stack.push(...kids);
+      }
+      return out;
+    },
+    onTranslated: () => setTrVersion((v) => v + 1),
+    onOfflineClose: () => setTrVersion((v) => v + 1),
+  });
+
+  /** Task 141 — عنوان نمایشی رکورد در زبان جاری (درخت/فهرست) */
+  const displayTitle = React.useCallback(
+    (n: AccountNodeDto): string => nodeTitleIn(n, locale, trMap[String(n.id)]),
+    [locale, trMap],
+  );
+
   /* --------------------------- form state management --------------------------- */
 
   const freshDetail = React.useCallback(
@@ -468,7 +548,8 @@ export function AccountTreeForm({ onBack }: { onBack?: () => void }) {
         .filter((n) => (n.parentRef ?? null) === parentId)
         .map((n) => ({
           id: String(n.id),
-          label: `${n.code} - ${n.title}`,
+          /* Task 141 — عنوان نمایشی به زبان جاری (نبودِ ترجمه = پایه) */
+          label: `${n.code} - ${displayTitle(n)}`,
           icon: levelIcon(n.level),
           children: build(n.id),
         }));
@@ -481,7 +562,7 @@ export function AccountTreeForm({ onBack }: { onBack?: () => void }) {
     return [
       { id: ROOT, label: t("atr.treeRoot"), icon: <ListTree className="h-4 w-4 shrink-0 text-teal-600" aria-hidden />, children: kids },
     ];
-  }, [items, byId, matches, search, t]);
+  }, [items, byId, matches, search, t, displayTitle]);
 
   /* ------------------------------ navigation ------------------------------ */
 
@@ -652,22 +733,20 @@ export function AccountTreeForm({ onBack }: { onBack?: () => void }) {
     }
   };
 
-  /* Task 141 — خانوادهٔ حذف اکشن‌بار (تأیید داخل خودِ کاشی‌هاست) */
-  const actionDeleteNew = React.useCallback(async () => {
-    if (!selectedNode) return;
-    await handleDelete(String(selectedNode.id), "new");
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedNode]);
-  const actionDeleteClose = React.useCallback(async () => {
-    if (!selectedNode) return;
-    await handleDelete(String(selectedNode.id), "close");
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedNode]);
-
   /** «بستن» / «ذخیره و بستن» = بازگشت به منوی حسابداری (زیرصفحهٔ پنجرهٔ حسابداری) */
   const closeForm = React.useCallback(() => {
     onBack?.();
   }, [onBack]);
+
+  /* Task 141 — خانوادهٔ حذف اکشن‌بار (تأیید داخل خودِ کاشی‌هاست؛ عین geo) */
+  const actionDeleteNew = async () => {
+    if (!selectedNode) return;
+    await handleDelete(String(selectedNode.id), "new");
+  };
+  const actionDeleteClose = async () => {
+    if (!selectedNode) return;
+    await handleDelete(String(selectedNode.id), "close");
+  };
 
   /* ------------------------------ export outputs ------------------------------ */
 
@@ -699,11 +778,6 @@ export function AccountTreeForm({ onBack }: { onBack?: () => void }) {
   }, [items, exportChecks, levelLabel]);
 
   /* Task 141 — «لیست اطلاعات ثبت‌شده» (اقدام ۱۰ اکشن‌بار) — مینی‌گرید عین geo */
-  const displayTitle = React.useCallback(
-    (n: AccountNodeDto): string => nodeTitleIn(n, locale, trMap[String(n.id)]),
-    [locale, trMap],
-  );
-
   const listItems = React.useMemo<ActionBarListItem[]>(
     () =>
       items.map((n) => ({
@@ -861,8 +935,14 @@ export function AccountTreeForm({ onBack }: { onBack?: () => void }) {
       ];
     }
     const lvl = activeLevel;
+    /* Task 141 — placeholder کد نشان می‌دهد کد سطح = پیشوند والد + ادامه؛
+       در ثبت تازه خودِ فیلد هم از قبل با کد سرشاخه پر شده است */
+    const codePh =
+      mode === "create" && createParent
+        ? createParent.code + "0".repeat(Math.max(0, codeLen(lvl) - createParent.code.length))
+        : "0".repeat(codeLen(lvl));
     const base: SimpleFormField[] = [
-      { id: "code", label: levelFieldLabel("code"), required: true, value: form.code, ltr: true, placeholder: "0".repeat(codeLen(lvl)) },
+      { id: "code", label: levelFieldLabel("code"), required: true, value: form.code, ltr: true, placeholder: codePh },
       { id: "title", label: levelFieldLabel("title"), required: true, value: form.title },
       { id: "latinTitle", label: t("atr.field.latinTitle"), value: form.latinTitle, ltr: true },
       { id: "isActive", label: t("atr.field.isActive"), type: "checkbox", checked: form.isActive },
@@ -1458,7 +1538,7 @@ export function AccountTreeForm({ onBack }: { onBack?: () => void }) {
   const detailTitleOverride =
     mode === "create"
       ? `${t("bs.action.new")} — ${t("bs.field.parent")}: ${
-          createParent ? `${createParent.code} - ${createParent.title}` : t("atr.treeRoot")
+          createParent ? `${createParent.code} - ${displayTitle(createParent)}` : t("atr.treeRoot")
         }`
       : null;
 
@@ -1515,9 +1595,15 @@ export function AccountTreeForm({ onBack }: { onBack?: () => void }) {
           </div>
         }
         fields={fields}
-        onFieldChange={setField}
+        onFieldChange={handleFieldChange}
         detailExtra={
           <>
+            {/* Task 141 — راهنمای کدینگ سلسله‌مراتبی در ثبت تازه */}
+            {mode === "create" && createParent && (
+              <p className="mt-2 text-[11px] text-muted-foreground">
+                {t("atr.hint.codePrefix").replace("{code}", createParent.code)}
+              </p>
+            )}
             {featuresBox}
             {tabsBar}
             {tabBody}
@@ -1553,11 +1639,28 @@ export function AccountTreeForm({ onBack }: { onBack?: () => void }) {
           if (selectedNode) setDeleteTarget(String(selectedNode.id));
         }}
         onClose={closeForm}
+        /* Task 141 — «همه آیکون‌های اکشن بار»: بدون allowlist = ده آیکون کامل
+           ACTION_BAR_KEYS + کاشی ترجمه؛ هر ده با رفتار واقعی سیم‌کشی شده‌اند */
         canSave={!isRootView}
-        canCopy={false}
+        canCopy={Boolean(selectedNode)}
         canDelete={Boolean(selectedNode)}
-        canPrint={false}
-        actions={["reset", "save", "saveNew", "saveClose", "delete"]}
+        canPrint={!loading}
+        onCopy={handleCopy}
+        onDeleteNew={actionDeleteNew}
+        onDeleteClose={actionDeleteClose}
+        /* پرینت اکشن‌بار = همان مودال انتخاب سطوح خوشهٔ خروجی (یک رفتار واحد) */
+        onPrint={() => setExportKind("print")}
+        onHelp={() => {
+          toast.info(t("atr.help"));
+        }}
+        listItems={listItems}
+        listLoading={loading}
+        onOpenListItem={(item) => handleSelect(item.id)}
+        listActiveId={mode === "view" ? selectedId : null}
+        onListRefresh={() => load()}
+        /* Task 141 — کاشی ترجمه فعال (آنلاین زنجیره‌ای + دستی) */
+        onTranslateOnline={recordTr.translateOnline}
+        onTranslateOffline={recordTr.openTranslateOffline}
         actionBarExtra={exportCluster}
       />
 
@@ -1666,6 +1769,9 @@ export function AccountTreeForm({ onBack }: { onBack?: () => void }) {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Task 141 — دیالوگ «ورود دستی ترجمه» کاشی ترجمه */}
+      {recordTr.dialog}
     </>
   );
 }

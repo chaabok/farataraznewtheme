@@ -234,6 +234,8 @@ export class AccountTreeService {
 
     let level = 1;
     let structureRef = HEAD_OFFICE_NODE_ID;
+    /* Task 141 — کدینگ سلسله‌مراتبی: کد زیرشاخه باید با کد سرشاخه آغاز شود */
+    let parentCode: string | null = null;
     if (parentRef != null) {
       const parent = await this.prisma.accountNode.findUnique({ where: { id: parentRef } });
       if (!parent) {
@@ -251,6 +253,7 @@ export class AccountTreeService {
           messageKey: "common.error",
         });
       }
+      parentCode = parent.code;
       structureRef = parent.businessStructureRef;
     }
 
@@ -258,6 +261,15 @@ export class AccountTreeService {
     const title = dto.title.trim();
     this.assertLevelFields(level, dto, cfg);
     this.assertCode(code, level, cfg);
+    /* Task 141 (درخواست مالک) — «هر زیرشاخه در فیلد کد باید کد سرشاخه را
+       داشته باشد»: خط دوم دفاعی سمت سرور؛ فرانت پیشوند را در UI قفل می‌کند */
+    if (parentCode && !code.startsWith(parentCode)) {
+      throw new BadRequestException({
+        statusCode: 422,
+        message: `کد این سطح باید با کد سرشاخه «${parentCode}» شروع شود.`,
+        messageKey: "common.error",
+      });
+    }
 
     /* یکتایی کد در ساختار + عنوان در بین خواهربرادرها */
     const codeClash = await this.prisma.accountNode.findFirst({
