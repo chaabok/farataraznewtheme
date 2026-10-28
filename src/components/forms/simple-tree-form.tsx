@@ -111,9 +111,17 @@ export interface SimpleTreeFormProps {
   onDeleteBranch?: (node: SimpleTreeFormNode) => void;
   /** optional per-node gating — false hides the delete item for that node */
   canDeleteBranch?: (node: SimpleTreeFormNode) => boolean;
-  /** optional label overrides (defaults: bs.addNode / bs.deleteBranch) */
-  addBranchLabel?: string;
+  /** optional label overrides (defaults: bs.addNode / bs.deleteBranch).
+      Task 140 — addBranchLabel may be a FUNCTION of the right-clicked node
+      (per-level labels like «افزودن گروه حساب» / «افزودن حساب کل»); string
+      keeps the legacy static behavior. */
+  addBranchLabel?: string | ((node: SimpleTreeFormNode) => string);
   deleteBranchLabel?: string;
+
+  /** Task 140 (owner request, opt-in §5.1 additive): extra cluster rendered
+      AFTER the FormActionBar inside the action strip (e.g. the excel/word/
+      pdf/print export cluster of the account tree). Omitted = legacy strip. */
+  actionBarExtra?: React.ReactNode;
 
   /* ----- Task 127 — OPTIONAL bulk access items of the node flyout (right-click) -----
      Owner request on the user-form access tree: right-clicking ANY branch
@@ -305,6 +313,7 @@ export function SimpleTreeForm({
   canDeleteBranch,
   addBranchLabel,
   deleteBranchLabel,
+  actionBarExtra,
   onActivateAll,
   onDeactivateAll,
   activateAllLabel,
@@ -684,6 +693,9 @@ export function SimpleTreeForm({
             canPrint={canPrint}
             actions={actions}
           />
+          {actionBarExtra && (
+            <div className="flex shrink-0 items-center gap-1.5 ps-1.5">{actionBarExtra}</div>
+          )}
         </div>
 
         {/* 2c) scrollable detail body — aligned field grid (or empty state) */}
@@ -786,7 +798,9 @@ export function SimpleTreeForm({
                 }}
               >
                 <Plus className="h-3.5 w-3.5 shrink-0 text-primary" aria-hidden />
-                {addBranchLabel ?? t("bs.addNode")}
+                {typeof addBranchLabel === "function"
+                  ? addBranchLabel(menu.node)
+                  : (addBranchLabel ?? t("bs.addNode"))}
               </button>
             )}
             {menuDeletable && (
