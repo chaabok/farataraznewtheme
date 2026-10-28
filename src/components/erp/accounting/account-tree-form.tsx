@@ -269,7 +269,12 @@ export function AccountTreeForm({ onBack }: { onBack?: () => void }) {
   /** سطح فرم فعال — در حالت create از والد، در view از خود گره */
   const activeLevel = mode === "create" ? (createParent ? createParent.level + 1 : 1) : (selectedNode?.level ?? 0);
   const isRootView = mode === "view" && selectedId === ROOT;
-  const showTabs = mode === "view" && selectedNode != null && selectedNode.level >= 3;
+  /* Task 143 — تب‌ها با «افزودن شاخه معین» (و شاخهٔ تفصیلی) هم نمایش داده می‌شوند ولی
+     تا ثبت کد و عنوان قفل‌اند؛ پس از ثبت (بازگشت به حالت view) فعال می‌شوند. */
+  const tabsLocked = mode === "create";
+  const showTabs = tabsLocked
+    ? activeLevel >= 3
+    : selectedNode != null && selectedNode.level >= 3;
 
   const codeLen = (level: number) =>
     level === 1 ? cfg.groupLen : level === 2 ? cfg.groupLen + cfg.ledgerLen : cfg.groupLen + cfg.ledgerLen + cfg.subsidiaryLen;
@@ -1142,25 +1147,35 @@ export function AccountTreeForm({ onBack }: { onBack?: () => void }) {
               key={tab.key}
               type="button"
               role="tab"
-              aria-selected={activeTab === tab.key}
-              onClick={() => setActiveTab(tab.key)}
+              aria-selected={!tabsLocked && activeTab === tab.key}
+              disabled={tabsLocked}
+              onClick={() => {
+                if (!tabsLocked) setActiveTab(tab.key);
+              }}
               className={cn(
-                "rounded-t-lg px-3 py-1.5 text-xs transition-colors cursor-pointer",
-                activeTab === tab.key
-                  ? "border border-b-0 border-border/60 bg-background font-semibold text-primary"
-                  : "text-muted-foreground hover:bg-foreground/5 hover:text-foreground",
+                "rounded-t-lg px-3 py-1.5 text-xs transition-colors",
+                tabsLocked ? "cursor-not-allowed" : "cursor-pointer",
+                tabsLocked
+                  ? "text-muted-foreground/50"
+                  : activeTab === tab.key
+                    ? "border border-b-0 border-border/60 bg-background font-semibold text-primary"
+                    : "text-muted-foreground hover:bg-foreground/5 hover:text-foreground",
               )}
             >
               {tab.label}
             </button>
           ))}
         </div>
+        {tabsLocked && (
+          <p className="pt-1.5 text-[11px] text-muted-foreground">{t("atr.tabsLockedHint")}</p>
+        )}
       </div>
     );
   })();
 
   const tabBody = (() => {
-    if (!showTabs || !detail || !selectedNode) return null;
+    /* Task 143 — در ثبت تازه بدنهٔ تب‌ها رندر نمی‌شود (تب‌ها تا ثبت قفل‌اند) */
+    if (!showTabs || tabsLocked || !detail || !selectedNode) return null;
     if (activeTab === "levels") {
       const selectedLevel = detail.detailLevels.find((l) => l.levelIndex === selectedLevelIndex);
       return (
