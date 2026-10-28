@@ -1,5 +1,6 @@
 /** Form action bar (Task 20 + Task 28 help) — legacy FaraTaraz-style action infrastructure. */
 export { FormActionBar, type FormActionBarProps } from "./form-action-bar";
+export type { FormMode } from "./types";
 
 /**
  * Task 48 — canonical action keys of the legacy bar, in the owner's

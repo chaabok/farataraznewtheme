@@ -3,6 +3,11 @@
 /** Any action handler: sync or async. The caller owns persistence + toasts. */
 export type FormAction = () => void | Promise<void>;
 
+/** حالت رکورد فرم — Task 145: از مونولیت حذف‌شدهٔ action-bar.tsx به اینجا
+ *  منتقل شد تا مصرف‌کنندگان «./action-bar» (form-window، forms/index) همچنان
+ *  به‌صورت type-only resolve شوند؛ مونولیت مسیر پوشهٔ مرجع را shadow می‌کرد. */
+export type FormMode = "view" | "new" | "edit";
+
 /** Task 86 — one column cell of the mini-grid list dropdown: the field label
     (column header) and the record's display value for that field. */
 export interface ActionBarListCell {
