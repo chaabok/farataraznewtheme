@@ -47,6 +47,12 @@ const VERSIONED_MODELS: ReadonlySet<string> = new Set([
   "DetailTypeNumbering", // Task 131 — شماره گذاری تفصیلی ها (حسابداری)
   "User", // Task 126 — کاربران (مدیریت کاربران)
   "UserAccess", // Task 126 — درختوارهٔ دسترسی کاربران
+  "AccountNode", // Task 140 — درختواره حسابها (اطلاعات پایهٔ حسابداری)
+  "AccountDetailLevel", // Task 140 — سطوح تفصیلی گره‌های معین
+  "AccountDetailLevelType", // Task 140 — انتساب نوع تفصیلی به سطح
+  "AccountNatureAdjust", // Task 140 — معین تعدیل ماهیت
+  "AccountRecurringDesc", // Task 140 — شرح های پرتکرار
+  "AccountAllowedUser", // Task 140 — کاربران مجاز
 ]);
 
 const VERSION_ACTIONS = new Set(["update", "updateMany", "upsert"]);

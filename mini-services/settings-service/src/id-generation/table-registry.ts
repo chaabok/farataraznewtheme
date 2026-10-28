@@ -35,7 +35,13 @@ export type TableKey =
   | "DetailType" // Task 120 — نوع تفصیل جدید (اطلاعات پایهٔ حسابداری)
   | "DetailTypeNumbering" // Task 131 — شماره گذاری تفصیلی ها (اطلاعات پایهٔ حسابداری)
   | "User" // Task 126 — کاربران (مدیریت کاربران)
-  | "UserAccess"; // Task 126 — درختوارهٔ دسترسی کاربران
+  | "UserAccess" // Task 126 — درختوارهٔ دسترسی کاربران
+  | "AccountNode" // Task 140 — درختواره حسابها (اطلاعات پایهٔ حسابداری)
+  | "AccountDetailLevel" // Task 140 — سطوح تفصیلی گره‌های معین
+  | "AccountDetailLevelType" // Task 140 — انتساب نوع تفصیلی به سطح
+  | "AccountNatureAdjust" // Task 140 — معین تعدیل ماهیت
+  | "AccountRecurringDesc" // Task 140 — شرح های پرتکرار
+  | "AccountAllowedUser"; // Task 140 — کاربران مجاز
 
 export const TABLE_REGISTRY: Record<TableKey, TableEntry> = {
   IDGeneration: {
@@ -123,6 +129,30 @@ export const TABLE_REGISTRY: Record<TableKey, TableEntry> = {
   UserAccess: {
     canonical: "UserAccess", // Task 126 — درختوارهٔ دسترسی کاربران
     pk: "UserAccessID",
+  },
+  AccountNode: {
+    canonical: "AccountNode", // Task 140 — درختواره حسابها
+    pk: "AccountNodeID",
+  },
+  AccountDetailLevel: {
+    canonical: "AccountDetailLevel", // Task 140 — سطوح تفصیلی
+    pk: "AccountDetailLevelID",
+  },
+  AccountDetailLevelType: {
+    canonical: "AccountDetailLevelType", // Task 140 — انتساب نوع تفصیلی
+    pk: "AccountDetailLevelTypeID",
+  },
+  AccountNatureAdjust: {
+    canonical: "AccountNatureAdjust", // Task 140 — معین تعدیل ماهیت
+    pk: "AccountNatureAdjustID",
+  },
+  AccountRecurringDesc: {
+    canonical: "AccountRecurringDesc", // Task 140 — شرح های پرتکرار
+    pk: "AccountRecurringDescID",
+  },
+  AccountAllowedUser: {
+    canonical: "AccountAllowedUser", // Task 140 — کاربران مجاز
+    pk: "AccountAllowedUserID",
   },
 };
 

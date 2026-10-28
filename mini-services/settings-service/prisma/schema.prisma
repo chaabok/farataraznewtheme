@@ -720,3 +720,190 @@ model UserAccess {
   @@index([userRef])
   @@map("UserAccess")
 }
+
+/// AccountNode — Task 140 (درخواست مالک): فرم «درختواره حسابها» در نرم‌افزار
+/// «حسابداری» ← زیرمنوی «اطلاعات پایه» (کامپوننت SimpleTreeForm).
+/// درخت ۴ سطحی با ریشهٔ «ساختار کدینگ حساب‌ها»:
+///   سطح ۱ = گروه حساب ← سطح ۲ = حساب کل ← سطح ۳ = حساب معین ← سطح ۴ = شاخه تفصیلی
+///   · Level — ۱..۴؛ ریشه درختواره مجازی است (ردیف ندارد)؛ parentRef تهی = گروه حساب.
+///   · Code — عددی؛ طول مجاز از SoftwareConfig حسابداری خوانده می‌شود
+///     (Task 135/137/139): گروه = accGroupCodeLen (پیش‌فرض ۲)،
+///     کل = گروه + accLedgerCodeLen (۴)، معین/شاخه = گروه + کل +
+///     accSubsidiaryCodeLen (۶). یکتا در ساختار سازمانی.
+///   · AccountType — فقط سطح ۱: ۱=ترازنامه‌ای، ۲=سود و زیانی، ۳=انتظامی.
+///   · Nature — گروه/کل: ۱=بدهکار، ۲=بستانکار، ۷=مهم نیست؛ معین:
+///     ۳=بدهکار طی دوره، ۴=بستانکار طی دوره، ۵=بدهکار پایان دوره،
+///     ۶=بستانکار پایان دوره، ۷=مهم نیست؛ شاخه = ۰ (بدون ماهیت).
+///   · NatureControl — فقط معین با ماهیت طی دوره (۳/۴): ۱=بدون کنترل،
+///     ۲=هشدار و ادامه عملیات، ۳=هشدار و توقف عملیات.
+///   · پنج «ویژگی حساب» معین — toggle چندحالته (تفسیر اعلامی §0.6: سه حالت
+///     ۰=خاموش / ۱=فعال / ۲=فعال-اجباری با رنگ اختصاصی هر ویژگی در فرم).
+/// §16/§2.4/§2.7/§2.5: ID دستی از IDGeneration، بلوک کامل AppBaseEntity.
+model AccountNode {
+  id                    BigInt   @id @map("AccountNodeID")
+  parentRef             BigInt?  @map("ParentRef") // تهی = گروه حساب (زیر ریشهٔ مجازی)
+  level                 Int      @map("Level") // ۱..۴
+  code                  String   @map("Code")
+  title                 String   @map("Title")
+  latinTitle            String?  @map("LatinTitle")
+  isActive              Boolean  @default(true) @map("IsActive")
+  accountType           Int?     @map("AccountType") // فقط سطح ۱
+  nature                Int      @default(0) @map("Nature") // ۰ = شاخه تفصیلی
+  natureControl         Int?     @map("NatureControl") // فقط معین با ماهیت ۳/۴
+  featureQuantitative   Int      @default(0) @map("FeatureQuantitative")
+  featureTrackingNumber Int      @default(0) @map("FeatureTrackingNumber")
+  featureTrackingDate   Int      @default(0) @map("FeatureTrackingDate")
+  featureCurrency       Int      @default(0) @map("FeatureCurrency")
+  featureRevaluable     Int      @default(0) @map("FeatureRevaluable")
+  version              Int      @default(1) @map("Version") // §2.5 auto-rowversion
+  creator              String   @map("Creator")
+  lastModifier         String?  @map("LastModifier")
+  businessStructureRef BigInt   @map("BusinessStructureRef")
+  companyRef           BigInt?  @map("CompanyRef")
+  branchRef            BigInt?  @map("BranchRef")
+  agencyRef            BigInt?  @map("AgencyRef")
+  shopRef              BigInt?  @map("ShopRef")
+  createdAt            DateTime @default(now()) @map("CreatedAt")
+  updatedAt            DateTime @updatedAt @map("UpdatedAt")
+
+  parent         AccountNode?  @relation("AccountNodeParent", fields: [parentRef], references: [id])
+  children       AccountNode[] @relation("AccountNodeParent")
+  detailLevels   AccountDetailLevel[]
+  adjustments    AccountNatureAdjust[]   @relation("AdjustSource")
+  recurringDescs AccountRecurringDesc[]  @relation("RecurringSource")
+  allowedUsers   AccountAllowedUser[]    @relation("AllowedUserSource")
+
+  @@unique([code, businessStructureRef])
+  @@index([parentRef])
+  @@map("AccountNode")
+}
+
+/// AccountDetailLevel — تب «سطوح تفصیلی» هر گرهٔ سطح ≥ ۳: سطر «سطح اول» تا
+/// «سطح N» بر اساس تنظیم accDetailLevels (پیش‌فرض ۱۰، حداکثر ۲۰ — Task 139).
+/// عنوانِ هر سطح قابل ویرایش است؛ «فعال» فقط‌نمایشی (پیش‌فرض فعال).
+model AccountDetailLevel {
+  id             BigInt  @id @map("AccountDetailLevelID")
+  accountNodeRef BigInt  @map("AccountNodeRef")
+  levelIndex     Int     @map("LevelIndex") // ۱..۲۰
+  title          String  @default("") @map("Title")
+  isActive       Boolean @default(true) @map("IsActive")
+  version              Int      @default(1) @map("Version")
+  creator              String   @map("Creator")
+  lastModifier         String?  @map("LastModifier")
+  businessStructureRef BigInt   @map("BusinessStructureRef")
+  companyRef           BigInt?  @map("CompanyRef")
+  branchRef            BigInt?  @map("BranchRef")
+  agencyRef            BigInt?  @map("AgencyRef")
+  shopRef              BigInt?  @map("ShopRef")
+  createdAt            DateTime @default(now()) @map("CreatedAt")
+  updatedAt            DateTime @updatedAt @map("UpdatedAt")
+
+  node  AccountNode              @relation(fields: [accountNodeRef], references: [id], onDelete: Cascade)
+  types AccountDetailLevelType[]
+
+  @@unique([accountNodeRef, levelIndex])
+  @@map("AccountDetailLevel")
+}
+
+/// AccountDetailLevelType — انتساب «نوع تفصیلی» (DetailType — Task 120) به یک
+/// سطح تفصیلی؛ انواع تکراری/استفاده‌شده در همان گره فیلتر و رد می‌شوند (۴۰۹).
+model AccountDetailLevelType {
+  id             BigInt @id @map("AccountDetailLevelTypeID")
+  detailLevelRef BigInt @map("DetailLevelRef")
+  detailTypeRef  BigInt @map("DetailTypeRef") // ارجاع منطقی به DetailType
+  version              Int      @default(1) @map("Version")
+  creator              String   @map("Creator")
+  lastModifier         String?  @map("LastModifier")
+  businessStructureRef BigInt   @map("BusinessStructureRef")
+  companyRef           BigInt?  @map("CompanyRef")
+  branchRef            BigInt?  @map("BranchRef")
+  agencyRef            BigInt?  @map("AgencyRef")
+  shopRef              BigInt?  @map("ShopRef")
+  createdAt            DateTime @default(now()) @map("CreatedAt")
+  updatedAt            DateTime @updatedAt @map("UpdatedAt")
+
+  level AccountDetailLevel @relation(fields: [detailLevelRef], references: [id], onDelete: Cascade)
+
+  @@unique([detailLevelRef, detailTypeRef])
+  @@index([detailTypeRef])
+  @@map("AccountDetailLevelType")
+}
+
+/// AccountNatureAdjust — تب «معین تعدیل ماهیت»: حساب معینِ مقابل با ماهیتِ
+/// قابل تعدیلِ مخالف (۳↔۴ طی دوره / ۵↔۶ پایان دوره)؛ خودِ حساب جاری مستثنا.
+model AccountNatureAdjust {
+  id               BigInt  @id @map("AccountNatureAdjustID")
+  accountNodeRef   BigInt  @map("AccountNodeRef") // حساب جاری
+  adjustAccountRef BigInt  @map("AdjustAccountRef") // حساب معین مقابل (ارجاع منطقی)
+  description      String? @map("Description")
+  description2     String? @map("Description2")
+  version              Int      @default(1) @map("Version")
+  creator              String   @map("Creator")
+  lastModifier         String?  @map("LastModifier")
+  businessStructureRef BigInt   @map("BusinessStructureRef")
+  companyRef           BigInt?  @map("CompanyRef")
+  branchRef            BigInt?  @map("BranchRef")
+  agencyRef            BigInt?  @map("AgencyRef")
+  shopRef              BigInt?  @map("ShopRef")
+  createdAt            DateTime @default(now()) @map("CreatedAt")
+  updatedAt            DateTime @updatedAt @map("UpdatedAt")
+
+  node AccountNode @relation("AdjustSource", fields: [accountNodeRef], references: [id], onDelete: Cascade)
+
+  @@unique([accountNodeRef, adjustAccountRef])
+  @@index([adjustAccountRef])
+  @@map("AccountNatureAdjust")
+}
+
+/// AccountRecurringDesc — تب «شرح های پرتکرار» (شرح و شرح ۲).
+model AccountRecurringDesc {
+  id             BigInt  @id @map("AccountRecurringDescID")
+  accountNodeRef BigInt  @map("AccountNodeRef")
+  description    String  @map("Description")
+  description2   String? @map("Description2")
+  version              Int      @default(1) @map("Version")
+  creator              String   @map("Creator")
+  lastModifier         String?  @map("LastModifier")
+  businessStructureRef BigInt   @map("BusinessStructureRef")
+  companyRef           BigInt?  @map("CompanyRef")
+  branchRef            BigInt?  @map("BranchRef")
+  agencyRef            BigInt?  @map("AgencyRef")
+  shopRef              BigInt?  @map("ShopRef")
+  createdAt            DateTime @default(now()) @map("CreatedAt")
+  updatedAt            DateTime @updatedAt @map("UpdatedAt")
+
+  node AccountNode @relation("RecurringSource", fields: [accountNodeRef], references: [id], onDelete: Cascade)
+
+  @@index([accountNodeRef])
+  @@map("AccountRecurringDesc")
+}
+
+/// AccountAllowedUser — تب «کاربران مجاز» (فقط وقتی تنظیم
+/// enableLedgerAccessControl=true باشد): کاربران با ۶ مجوز سند.
+model AccountAllowedUser {
+  id             BigInt  @id @map("AccountAllowedUserID")
+  accountNodeRef BigInt  @map("AccountNodeRef")
+  userRef        BigInt  @map("UserRef") // ارجاع منطقی به User
+  permCreate     Boolean @default(false) @map("PermCreate") // ایجاد سند
+  permView       Boolean @default(false) @map("PermView") // مشاهده سند
+  permEdit       Boolean @default(false) @map("PermEdit") // ویرایش سند
+  permDelete     Boolean @default(false) @map("PermDelete") // حذف سند
+  permReport     Boolean @default(false) @map("PermReport") // گزارش
+  permSend       Boolean @default(false) @map("PermSend") // ارسال اطلاعات
+  version              Int      @default(1) @map("Version")
+  creator              String   @map("Creator")
+  lastModifier         String?  @map("LastModifier")
+  businessStructureRef BigInt   @map("BusinessStructureRef")
+  companyRef           BigInt?  @map("CompanyRef")
+  branchRef            BigInt?  @map("BranchRef")
+  agencyRef            BigInt?  @map("AgencyRef")
+  shopRef              BigInt?  @map("ShopRef")
+  createdAt            DateTime @default(now()) @map("CreatedAt")
+  updatedAt            DateTime @updatedAt @map("UpdatedAt")
+
+  node AccountNode @relation("AllowedUserSource", fields: [accountNodeRef], references: [id], onDelete: Cascade)
+
+  @@unique([accountNodeRef, userRef])
+  @@index([userRef])
+  @@map("AccountAllowedUser")
+}
