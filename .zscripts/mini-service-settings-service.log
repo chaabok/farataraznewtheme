@@ -2420,3 +2420,10 @@ BadRequestException: مقدار فیلد «accSubsidiaryCodeLen» باید بر�
 [Nest] 8789  - 10/28/2026, 9:24:24 AM     LOG [NestApplication] Nest application successfully started +68ms
 [Nest] 8789  - 10/28/2026, 9:24:24 AM     LOG [NestApplication] Nest application successfully started +67ms
 [Nest] 8789  - 10/28/2026, 9:46:48 AM     LOG [AccountTreeService] AccountNode created — ID=1 L1 Code=01 Title=دارایی‌ها Parent=root
+[Nest] 8789  - 10/28/2026, 9:47:15 AM     LOG [AccountTreeService] AccountNode created — ID=2 L1 Code=11 Title=دارایی های جاری Parent=root
+[Nest] 8789  - 10/28/2026, 9:47:33 AM     LOG [AccountTreeService] AccountNode created — ID=3 L2 Code=0101 Title=دارایی‌های جاری Parent=1
+[Nest] 8789  - 10/28/2026, 9:50:18 AM     LOG [AccountTreeService] AccountNode deleted — ID=2 Code=11 Title=دارایی های جاری
+[Nest] 8789  - 10/28/2026, 9:51:30 AM     LOG [AccountTreeService] AccountNode created — ID=4 L2 Code=0102 Title=دارایی‌های ثابت Parent=1
+[Nest] 8789  - 10/28/2026, 9:52:37 AM     LOG [AccountTreeService] AccountNode created — ID=5 L3 Code=010101 Title=صندوق Parent=3
+[Nest] 8789  - 10/28/2026, 9:55:10 AM     LOG [AccountTreeService] AccountNode updated — ID=5 L3 Code=010101 Title=صندوق
+[Nest] 8789  - 10/28/2026, 9:55:49 AM     LOG [AccountTreeService] AccountNode created — ID=6 L3 Code=010102 Title=بانک Parent=3
