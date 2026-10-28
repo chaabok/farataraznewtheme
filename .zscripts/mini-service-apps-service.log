@@ -34,3 +34,4 @@ error: Failed to start server. Is port 3002 in use?
       at /home/z/my-project/mini-services/apps-service/node_modules/@nestjs/core/nest-application.js:191:30
       at Promise (unknown:1:11)
       at listen (/home/z/my-project/mini-services/apps-service/node_modules/@nestjs/core/nest-application.js:203:21)
+error: script "dev" was terminated by signal SIGKILL (Forced quit)
