@@ -12,6 +12,8 @@
  * نشود (فقط با اولین کلیکِ خروجی دانلود می‌شود).
  */
 
+import type { WorkBook } from "xlsx";
+
 export interface ExcelExportInput {
   /** متن سرستون‌ها (سطر ۱) — به ترتیبِ فعلیِ گرید */
   headers: string[];
@@ -39,7 +41,7 @@ function sheetNameOf(fileName: string): string {
 /** ساخت بایت‌های xlsx — تابع خالص تا خارج از مرورگر هم بازپخش‌پذیر باشد */
 export async function buildExcelWorkbook(
   input: ExcelExportInput,
-): Promise<Uint8Array> {
+): Promise<Uint8Array<ArrayBuffer>> {
   const XLSX = await import("xlsx");
 
   const aoa: (string | number)[][] = [
@@ -57,10 +59,17 @@ export async function buildExcelWorkbook(
   });
   ws["!cols"] = widths;
 
-  /* Task 134 — جهتِ شیت = جهتِ داشبورد */
-  ws["!views"] = [{ RTL: input.rtl }];
-
+  /* Task 134 — جهتِ شیت = جهتِ داشبورد.
+     نکته: SheetJS 0.18.5 پرچم rightToLeft را از نمای سطحِ «ورک‌بوک» می‌خواند
+     (wb.Workbook.Views[0].RTL) و در sheetView هر شیت می‌نویسد؛ ws["!views"]
+     در این نگارش فقط خواندنی است. LTR = بدون پرچم (پیش‌فرض اکسل). */
   const wb = XLSX.utils.book_new();
+  if (input.rtl) {
+    (wb as WorkBook & { Workbook?: { Views?: { RTL?: boolean }[] } }).Workbook = {
+      ...(wb.Workbook ?? {}),
+      Views: [{ RTL: true }],
+    };
+  }
   XLSX.utils.book_append_sheet(wb, ws, sheetNameOf(input.fileName));
 
   const out = XLSX.write(wb, {
@@ -68,7 +77,7 @@ export async function buildExcelWorkbook(
     type: "array",
     compression: true,
   }) as ArrayBuffer;
-  return out instanceof Uint8Array ? out : new Uint8Array(out);
+  return new Uint8Array(out);
 }
 
 /** ساخت فایل و دانلود در مرورگر (xlsx) */
