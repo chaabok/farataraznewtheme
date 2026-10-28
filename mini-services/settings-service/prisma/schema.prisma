@@ -652,6 +652,43 @@ model DetailTypeNumbering {
   @@map("DetailTypeNumbering")
 }
 
+/// DetailItem — Task 144 (درخواست مالک): فرم «ایجاد تفصیلی ها» در
+/// نرم‌افزار «حسابداری» ← زیرمنوی «اطلاعات پایه». رکورد تفصیلی (مقدارِ
+/// عملیاتیِ یک نوع تفصیل) که کاربر در فرم ایجاد می‌کند:
+///   · detailTypeRef — نوع تفصیل مالکِ این تفصیلی (DetailType).
+///   · کد تفصیلی — از بازهٔ شماره‌گذاری همان نوع (Task 131) تخصیص می‌شود:
+///     IsAutomatic ⇒ کد خودکار (نخستین عدد بلااستفادهٔ بازه)؛ وگرنه دستی
+///     با همان قوانین (عددی، درون بازه، بدون تکرار). قاعدهٔ مالک Task 131
+///     «شماره‌ها نباید با شماره‌های تفصیلی دیگر تداخل داشته باشند» ⇒ کد در
+///     سطح گرهٔ ساختار یکتاست (فضای شماره‌گذاری مشترک همهٔ انواع).
+///   · عنوان — اجباری، یکتا در همان نوع و همان گرهٔ ساختار.
+///   · توضیحات اختیاری؛ فعال/غیرفعال.
+/// اقامت ردیف = گرهٔ ساختار فعالِ فرم (structureId از OrgScope) با بلوک
+/// کامل ارث‌بری AppBaseEntity ۸فیلدی — هم‌قرارداد DetailType.
+model DetailItem {
+  id                   BigInt   @id @map("DetailItemID") // §2.7
+  detailTypeRef        BigInt   @map("DetailTypeRef") // ارجاع به DetailType
+  code                 String   @map("Code") // کد تفصیلی (یکتا در گرهٔ ساختار)
+  title                String   @map("Title") // عنوان تفصیلی (یکتا در نوع+گره)
+  description          String?  @map("Description") // توضیحات اختیاری
+  isActive             Boolean  @default(true) @map("IsActive") // فعال است
+  version              Int      @default(1) @map("Version") // §2.5 auto-rowversion
+  creator              String   @map("Creator")
+  lastModifier         String?  @map("LastModifier")
+  businessStructureRef BigInt   @map("BusinessStructureRef")
+  companyRef           BigInt?  @map("CompanyRef")
+  branchRef            BigInt?  @map("BranchRef")
+  agencyRef            BigInt?  @map("AgencyRef")
+  shopRef              BigInt?  @map("ShopRef")
+  createdAt            DateTime @default(now()) @map("CreatedAt")
+  updatedAt            DateTime @updatedAt @map("UpdatedAt")
+
+  @@unique([code, businessStructureRef])
+  @@unique([detailTypeRef, title, businessStructureRef])
+  @@index([detailTypeRef])
+  @@map("DetailItem")
+}
+
 /// User — Task 126 (درخواست مالک): فرم «کاربر جدید» در تنظیمات ← مدیریت
 /// کاربران با کامپوننت SimpleTreeForm. هر کاربر به یک ردیف طرف حساب (لیست
 /// «نام / نام خانوادگی») متصل است و یک نقش کاربری (UserRole) دارد.

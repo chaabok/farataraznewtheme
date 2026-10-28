@@ -1,0 +1,64 @@
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Query } from "@nestjs/common";
+import { DetailItemService } from "./detail-item.service";
+import { UpsertDetailItemDto } from "./detail-item.dto";
+
+/**
+ * DetailItem — Task 144 (درخواست مالک): فرم «ایجاد تفصیلی ها»
+ * (نرم‌افزار «حسابداری» ← زیرمنوی «اطلاعات پایه»).
+ * GET    /detail-items            — فهرست تفصیلی‌ها (+ join نوع تفصیل)
+ * GET    /detail-items/next-code  — پیشنهاد کد خودکار از بازهٔ شماره‌گذاری نوع
+ * POST   /detail-items            — ثبت جدید با زنجیرهٔ اعتبارسنجی
+ * PUT    /detail-items/:id        — ویرایش (همان قوانین، خود رکورد مستثنا)
+ * DELETE /detail-items/:id        — حذف
+ * Guarded by the global InternalAuthGuard — only the signed BFF reaches this
+ * (browser path: /api/settings/detail-items/**).
+ */
+@Controller("detail-items")
+export class DetailItemController {
+  constructor(private readonly detailItems: DetailItemService) {}
+
+  @Get()
+  list(
+    @Query("structureId") structureId?: string,
+    @Query("headOfficeShares") headOfficeShares?: string,
+    @Query("detailTypeRef") detailTypeRef?: string,
+  ) {
+    const sid = Number(structureId);
+    const tref = Number(detailTypeRef);
+    return this.detailItems.list({
+      structureId: structureId && Number.isFinite(sid) && sid > 0 ? sid : undefined,
+      headOfficeShares: headOfficeShares === "true",
+      detailTypeRef: detailTypeRef && Number.isFinite(tref) && tref > 0 ? tref : undefined,
+    });
+  }
+
+  @Get("next-code")
+  nextCode(
+    @Query("detailTypeRef") detailTypeRef?: string,
+    @Query("structureId") structureId?: string,
+    @Query("headOfficeShares") headOfficeShares?: string,
+  ) {
+    const tref = Number(detailTypeRef);
+    const sid = Number(structureId);
+    return this.detailItems.nextCode({
+      detailTypeRef: detailTypeRef && Number.isFinite(tref) && tref > 0 ? tref : 0,
+      structureId: structureId && Number.isFinite(sid) && sid > 0 ? sid : undefined,
+      headOfficeShares: headOfficeShares === "true",
+    });
+  }
+
+  @Post()
+  create(@Body() dto: UpsertDetailItemDto) {
+    return this.detailItems.create(dto);
+  }
+
+  @Put(":id")
+  update(@Param("id", ParseIntPipe) id: number, @Body() dto: UpsertDetailItemDto) {
+    return this.detailItems.update(id, dto);
+  }
+
+  @Delete(":id")
+  remove(@Param("id", ParseIntPipe) id: number) {
+    return this.detailItems.remove(id);
+  }
+}

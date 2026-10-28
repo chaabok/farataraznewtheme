@@ -16,6 +16,7 @@ import { CurrencyTypeModule } from "./currency-type/currency-type.module";
 import { ExchangeRateModule } from "./exchange-rate/exchange-rate.module";
 import { DetailTypeModule } from "./detail-type/detail-type.module";
 import { DetailTypeNumberingModule } from "./detail-type-numbering/detail-type-numbering.module";
+import { DetailItemModule } from "./detail-item/detail-item.module";
 import { UsersModule } from "./users/users.module";
 import { AccountTreeModule } from "./account-tree/account-tree.module";
 import { HealthController } from "./health/health.controller";
@@ -38,6 +39,7 @@ import { SeedModule } from "./seed/seed.module";
     ExchangeRateModule, // Task 116 — نرخ برابری ارز (عملیات)
     DetailTypeModule, // Task 120 — نوع تفصیل جدید (اطلاعات پایهٔ حسابداری)
     DetailTypeNumberingModule, // Task 131 — شماره گذاری تفصیلی ها (اطلاعات پایهٔ حسابداری)
+    DetailItemModule, // Task 144 — ایجاد تفصیلی ها (اطلاعات پایهٔ حسابداری)
     UsersModule, // Task 126 — کاربران (مدیریت کاربران — فرم کاربر جدید)
     AccountTreeModule, // Task 140 — درختواره حسابها (اطلاعات پایهٔ حسابداری)
     SeedModule,
