@@ -1,6 +1,6 @@
 "use client";
 
-import { Calculator, Database, ListOrdered, ListTree, Tags } from "lucide-react";
+import { Calculator, Database, FolderPlus, ListOrdered, ListTree, Tags } from "lucide-react";
 import { AppMenuHome, type AppMenuGroupDef } from "@/components/erp/shared/app-menu-home";
 
 /**
@@ -49,6 +49,14 @@ const ACCOUNTING_MENU_GROUPS: AppMenuGroupDef[] = [
         gradient: "from-amber-500 to-orange-600",
       },
       {
+        /* Task 144 — ایجاد تفصیلی ها (رکورد تفصیلی با کد خودکار از شماره‌گذاری) */
+        page: "detail-items",
+        titleKey: "di.formTitle",
+        descKey: "di.formDesc",
+        icon: FolderPlus,
+        gradient: "from-rose-500 to-pink-600",
+      },
+      {
         /* Task 140 — درختواره حسابها (SimpleTreeForm) */
         page: "account-tree",
         titleKey: "atr.formTitle",
@@ -63,7 +71,7 @@ const ACCOUNTING_MENU_GROUPS: AppMenuGroupDef[] = [
 export function AccountingMenuHome({
   go,
 }: {
-  go: (page: "detail-type" | "detail-type-numbering" | "account-tree") => void;
+  go: (page: "detail-type" | "detail-type-numbering" | "detail-items" | "account-tree") => void;
 }) {
   return (
     <AppMenuHome
@@ -73,7 +81,7 @@ export function AccountingMenuHome({
       headerGradient="from-violet-500 to-violet-700"
       storageKey="accounting.menuView"
       groups={ACCOUNTING_MENU_GROUPS}
-      go={(page) => go(page as "detail-type" | "detail-type-numbering" | "account-tree")}
+      go={(page) => go(page as "detail-type" | "detail-type-numbering" | "detail-items" | "account-tree")}
     />
   );
 }

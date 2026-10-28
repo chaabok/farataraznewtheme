@@ -9,6 +9,7 @@ import { useWindowChrome } from "@/components/desktop/app-window";
 import { AccountingMenuHome } from "./accounting-menu-home";
 import { DetailTypeForm } from "./detail-type-form";
 import { DetailTypeNumberingForm } from "./detail-type-numbering-form";
+import { DetailItemsForm } from "./detail-items-form";
 import { AccountTreeForm } from "./account-tree-form";
 
 /**
@@ -27,6 +28,7 @@ import { AccountTreeForm } from "./account-tree-form";
 const PAGE_TITLE_KEY: Partial<Record<AccountingSubPage, string>> = {
   "detail-type": "dt.formTitle",
   "detail-type-numbering": "dtn.formTitle",
+  "detail-items": "di.formTitle",
   "account-tree": "atr.formTitle",
 };
 
@@ -92,6 +94,7 @@ export function AccountingWindow() {
         <div className="min-h-0 flex-1 overflow-y-auto p-3 scrollbar-slim">
           {page === "detail-type" && <DetailTypeForm onBack={() => go("home")} />}
           {page === "detail-type-numbering" && <DetailTypeNumberingForm />}
+          {page === "detail-items" && <DetailItemsForm onBack={() => go("home")} />}
           {page === "account-tree" && <AccountTreeForm onBack={() => go("home")} />}
         </div>
       </div>

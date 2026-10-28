@@ -34,6 +34,7 @@ export type TableKey =
   | "ExchangeRate" // Task 116 — نرخ برابری ارز (عملیات عمومی)
   | "DetailType" // Task 120 — نوع تفصیل جدید (اطلاعات پایهٔ حسابداری)
   | "DetailTypeNumbering" // Task 131 — شماره گذاری تفصیلی ها (اطلاعات پایهٔ حسابداری)
+  | "DetailItem" // Task 144 — ایجاد تفصیلی ها (اطلاعات پایهٔ حسابداری)
   | "User" // Task 126 — کاربران (مدیریت کاربران)
   | "UserAccess" // Task 126 — درختوارهٔ دسترسی کاربران
   | "AccountNode" // Task 140 — درختواره حسابها (اطلاعات پایهٔ حسابداری)
@@ -121,6 +122,10 @@ export const TABLE_REGISTRY: Record<TableKey, TableEntry> = {
   DetailTypeNumbering: {
     canonical: "DetailTypeNumbering", // Task 131 — شماره گذاری تفصیلی ها
     pk: "DetailTypeNumberingID", // §2.7
+  },
+  DetailItem: {
+    canonical: "DetailItem", // Task 144 — ایجاد تفصیلی ها
+    pk: "DetailItemID", // §2.7
   },
   User: {
     canonical: "User", // Task 126 — کاربران (مدیریت کاربران)
