@@ -3,6 +3,18 @@
 /* Task 140 (درخواست مالک) — فرم «درختواره حسابها» در نرم‌افزار «حسابداری» ←
    زیرمنوی «اطلاعات پایه» با کامپوننت SimpleTreeForm.
 
+   Task 141 (درخواست مالک):
+   ① «توی اکشن بار فرم درختواره حسابها، همه آیکون‌های اکشن بار را اضافه کنید»
+      — فهرست کامل ACTION_BAR_KEYS (Task 48) بدون allowlist: لیست (دراپ‌داون
+      مینی‌گرید با پرش به رکورد)، ریست، ذخیره، ذخیره و جدید، ذخیره و بستن،
+      کپی (ثبت تازهٔ پیش‌پرشدهٔ خواهرِ همان والد)، حذف، حذف و جدید،
+      حذف و بستن، پرینت (مودال انتخاب سطوح عین خوشهٔ خروجی) + ترجمه
+      (useRecordTranslation با زنجیرهٔ زیرشاخه‌ها — الگوی geo) + راهنما.
+   ② «هر زیرشاخه که ایجاد می‌شود در فیلد کد باید کد سرشاخه را داشته باشد»
+      — کدینگ سلسله‌مراتبی: در ثبت تازه، کد با کد والد پیش‌پر می‌شود و
+      پیشوندش قفل است (کاربر فقط ادامهٔ کد را می‌نویسد)؛ همین قانون در
+      validate() و به‌عنوان خط دوم دفاعی در سرور (POST) کنترل می‌شود.
+
    【چیدمان】 دو پنل: راست = درخت با ریشهٔ مجازی «ساختار کدینگ حساب‌ها» و
    حداکثر ۴ سطح (گروه حساب ← حساب کل ← حساب معین ← شاخه تفصیلی) + جستجو؛
    چپ = پنل «جزئیات» با نوار ابزار (اکشن‌بار فرم‌ها + خوشهٔ خروجی
@@ -36,7 +48,15 @@ import {
   type SimpleTreeFormNode,
 } from "@/components/forms/simple-tree-form";
 import type { SimpleFormField } from "@/components/forms/simple-form-two-row-tabbed";
-import { ConfirmDeleteDialog } from "@/components/forms/action-bar";
+import {
+  ConfirmDeleteDialog,
+  type ActionBarListItem,
+} from "@/components/forms/action-bar";
+import {
+  useRecordTranslation,
+  type SubtreeTranslationRecord,
+} from "@/components/forms/common/use-record-translation";
+import type { DataTranslationField } from "@/components/forms/common/data-translations-dialog";
 import {
   Dialog,
   DialogContent,
@@ -172,6 +192,12 @@ function toLatinDigits(s: string): string {
     .replace(/[٠-٩]/g, (d) => String("٠١٢٣٤٥٦٧٨٩".indexOf(d)));
 }
 
+/** عنوان نمایشی به زبان جاری — نبودِ ترجمه = عنوان پایه (قرارداد Task 99) */
+function nodeTitleIn(n: AccountNodeDto, locale: string, tr?: Record<string, string>): string {
+  if (locale === "fa") return n.title ?? "";
+  return tr?.[locale] || n.title || "";
+}
+
 export function AccountTreeForm({ onBack }: { onBack?: () => void }) {
   const t = useT();
   const locale = useSettings((s) => s.locale);
@@ -205,6 +231,13 @@ export function AccountTreeForm({ onBack }: { onBack?: () => void }) {
   const [users, setUsers] = React.useState<UserRow[]>([]);
   const [userSearch, setUserSearch] = React.useState("");
   const [userComboOpen, setUserComboOpen] = React.useState(false);
+  /* Task 141 — کپی رکورد: منبع پیش‌پرکردن ثبت تازه + شمارندهٔ بازنشانی فرم ثبت
+     (در formKey است تا کپی/جدیدِ متوالی روی همان گره هم فرم را تازه کند) */
+  const [pendingCopy, setPendingCopy] = React.useState<AccountNodeDto | null>(null);
+  const [createSeq, setCreateSeq] = React.useState(0);
+  /* Task 141 — ترجمهٔ داده (الگوی geo): نقشهٔ id→زبان→عنوان برای نمایش درخت/فهرست */
+  const [trMap, setTrMap] = React.useState<Record<string, Record<string, string>>>({});
+  const [trVersion, setTrVersion] = React.useState(0);
 
   const byId = React.useMemo(() => {
     const m = new Map<string, AccountNodeDto>();
@@ -307,7 +340,7 @@ export function AccountTreeForm({ onBack }: { onBack?: () => void }) {
   );
 
   /* derive-and-reset during render (الگوی bs-window) — انتخاب/حالت تازه = فرم تازه */
-  const formKey = `${mode}:${selectedId}:${createParentId}:${selectedNode?.version ?? "-"}:${locale}`;
+  const formKey = `${mode}:${selectedId}:${createParentId}:${selectedNode?.version ?? "-"}:${locale}:${createSeq}:${pendingCopy?.id ?? ""}`;
   const [renderedKey, setRenderedKey] = React.useState(formKey);
   if (renderedKey !== formKey) {
     setRenderedKey(formKey);
@@ -315,7 +348,30 @@ export function AccountTreeForm({ onBack }: { onBack?: () => void }) {
     setActiveTab("levels");
     setSelectedLevelIndex(1);
     if (mode === "create") {
-      setForm({ ...FORM_EMPTY });
+      /* Task 141 — کد هر زیرشاخه با کد سرشاخه آغاز می‌شود (پیشوند قفل)؛
+         کپی = همان مقادیر رکورد باز به‌عنوان خواهر تازهٔ همان والد */
+      setForm(
+        pendingCopy
+          ? {
+              code: createParent ? createParent.code : "",
+              title: pendingCopy.title,
+              latinTitle: pendingCopy.latinTitle ?? "",
+              isActive: pendingCopy.isActive,
+              accountType:
+                pendingCopy.accountType != null ? String(pendingCopy.accountType) : "",
+              nature: pendingCopy.nature ? String(pendingCopy.nature) : "",
+              natureControl:
+                pendingCopy.natureControl != null ? String(pendingCopy.natureControl) : "1",
+              features: [
+                pendingCopy.featureQuantitative,
+                pendingCopy.featureTrackingNumber,
+                pendingCopy.featureTrackingDate,
+                pendingCopy.featureCurrency,
+                pendingCopy.featureRevaluable,
+              ],
+            }
+          : { ...FORM_EMPTY, code: createParent ? createParent.code : "" },
+      );
       setDetail(activeLevel >= 3 ? freshDetail() : null);
     } else if (selectedNode) {
       setForm({
@@ -347,17 +403,32 @@ export function AccountTreeForm({ onBack }: { onBack?: () => void }) {
 
   const setField = (id: string, value: string | boolean) => {
     setDirty(true);
-    if (id === "code") {
-      const digits = String(value).replace(/[^0-9]/g, "").slice(0, codeLen(activeLevel));
-      setForm((f) => ({ ...f, code: digits }));
-      return;
-    }
     if (id === "nature") {
       /* تغییر ماهیت معین به غیر-طی دوره ⇒ کنترل ماهیت بی‌معنا */
       setForm((f) => ({ ...f, nature: String(value), natureControl: "1" }));
       return;
     }
     setForm((f) => ({ ...f, [id]: value }));
+  };
+
+  /** Task 141 — ست‌کنندهٔ کد با قفل پیشوند سرشاخه (فقط در ثبت تازه):
+      کاربر هرچه بنویسد/پاک کند، خروجی همیشه = کد والد + ادامهٔ عددی */
+  const setCodeField = (raw: string) => {
+    setDirty(true);
+    const maxLen = codeLen(activeLevel);
+    const prefix = mode === "create" ? (createParent?.code ?? "") : "";
+    const digits = raw.replace(/[^0-9]/g, "");
+    const rest = prefix && digits.startsWith(prefix) ? digits.slice(prefix.length) : digits;
+    setForm((f) => ({ ...f, code: (prefix + rest).slice(0, maxLen) }));
+  };
+
+  /** مسیر یکپارچهٔ onChange فیلدها — کد از مسیر قفل‌پیشوند می‌رود */
+  const handleFieldChange = (id: string, value: string | boolean) => {
+    if (id === "code") {
+      setCodeField(String(value));
+      return;
+    }
+    setField(id, value);
   };
 
   const setFeature = (idx: number) => {
@@ -415,10 +486,24 @@ export function AccountTreeForm({ onBack }: { onBack?: () => void }) {
   /* ------------------------------ navigation ------------------------------ */
 
   const startCreate = React.useCallback((parentKey: string) => {
+    setPendingCopy(null);
     setCreateParentId(parentKey);
     setSelectedId(parentKey);
     setMode("create");
+    setCreateSeq((s) => s + 1);
   }, []);
+
+  /** Task 141 — «کپی اطلاعات فرم»: رکورد باز = پیش‌پرکردن ثبت تازهٔ خواهرِ همان والد */
+  const handleCopy = React.useCallback(() => {
+    if (!selectedNode) return;
+    const parentKey = selectedNode.parentRef ? String(selectedNode.parentRef) : ROOT;
+    setPendingCopy(selectedNode);
+    setCreateParentId(parentKey);
+    setSelectedId(parentKey);
+    setMode("create");
+    setCreateSeq((s) => s + 1);
+    toast.success(t("abar.copyToast"));
+  }, [selectedNode, t]);
 
   const handleSelect = React.useCallback((id: string) => {
     setMode("view");
@@ -442,6 +527,9 @@ export function AccountTreeForm({ onBack }: { onBack?: () => void }) {
     else if (!/^[0-9]+$/.test(form.code.trim())) errs.push(t("atr.val.codeNumeric"));
     else if (form.code.trim().length !== codeLen(lvl))
       errs.push(t("atr.val.codeLen").replace("{len}", String(codeLen(lvl))));
+    /* Task 141 — خط دوم دفاعی فرانت: کد زیرشاخه باید با کد سرشاخه آغاز شود */
+    const prefix = mode === "create" ? (createParent?.code ?? "") : "";
+    if (prefix && !form.code.trim().startsWith(prefix)) errs.push(t("atr.val.codePrefix"));
     if (!form.title.trim()) errs.push(t("atr.val.titleRequired"));
     if (lvl === 1 && !form.accountType) errs.push(t("atr.val.typeRequired"));
     if (lvl >= 1 && lvl <= 3 && !form.nature) errs.push(t("atr.val.natureRequired"));
@@ -512,6 +600,7 @@ export function AccountTreeForm({ onBack }: { onBack?: () => void }) {
       if (mode === "create") {
         const res = await api.post<{ id: number }>("account-tree", buildPayload());
         toast.success(t("atr.msg.saved"));
+        setPendingCopy(null);
         await load();
         if (after === "new") {
           startCreate(createParentId);
@@ -537,7 +626,10 @@ export function AccountTreeForm({ onBack }: { onBack?: () => void }) {
     }
   };
 
-  const handleDelete = async (id: string): Promise<boolean> => {
+  /** after — «حذف و جدید» = startCreate زیر همان والد، «حذف و بستن» = بازگشت به منو */
+  const handleDelete = async (id: string, after: "view" | "new" | "close" = "view"): Promise<boolean> => {
+    /* والدِ گرهٔ حذف‌شده را پیش از بازخوانی نگه می‌داریم (حذف فقط برای برگ) */
+    const gone = byId.get(id);
     try {
       await api.del(`account-tree/${id}`);
       toast.success(t("atr.msg.deleted"));
@@ -546,6 +638,11 @@ export function AccountTreeForm({ onBack }: { onBack?: () => void }) {
       }
       setDirty(false);
       await load();
+      if (after === "new") {
+        startCreate(gone?.parentRef ? String(gone.parentRef) : ROOT);
+      } else if (after === "close") {
+        closeForm();
+      }
       return true;
     } catch (e) {
       toast.error(t("atr.msg.deleteError"), {
@@ -555,6 +652,18 @@ export function AccountTreeForm({ onBack }: { onBack?: () => void }) {
     }
   };
 
+  /* Task 141 — خانوادهٔ حذف اکشن‌بار (تأیید داخل خودِ کاشی‌هاست) */
+  const actionDeleteNew = React.useCallback(async () => {
+    if (!selectedNode) return;
+    await handleDelete(String(selectedNode.id), "new");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedNode]);
+  const actionDeleteClose = React.useCallback(async () => {
+    if (!selectedNode) return;
+    await handleDelete(String(selectedNode.id), "close");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedNode]);
+
   /** «بستن» / «ذخیره و بستن» = بازگشت به منوی حسابداری (زیرصفحهٔ پنجرهٔ حسابداری) */
   const closeForm = React.useCallback(() => {
     onBack?.();
@@ -562,9 +671,20 @@ export function AccountTreeForm({ onBack }: { onBack?: () => void }) {
 
   /* ------------------------------ export outputs ------------------------------ */
 
+  /** Task 141 — برچسب سطح (مشترک بین خروجی‌ها و دراپ‌داون لیست) */
+  const levelLabel = React.useCallback(
+    (l: number) =>
+      l === 1
+        ? t("atr.export.levelGroup")
+        : l === 2
+          ? t("atr.export.levelLedger")
+          : l === 3
+            ? t("atr.export.levelSubsidiary")
+            : t("atr.export.levelDetail"),
+    [t],
+  );
+
   const exportRows = React.useCallback(() => {
-    const levelLabel = (l: number) =>
-      l === 1 ? t("atr.export.levelGroup") : l === 2 ? t("atr.export.levelLedger") : l === 3 ? t("atr.export.levelSubsidiary") : t("atr.export.levelDetail");
     const rows: (string | number)[][] = [];
     const walk = (parentId: number | null) => {
       for (const n of items.filter((x) => (x.parentRef ?? null) === parentId)) {
@@ -576,7 +696,29 @@ export function AccountTreeForm({ onBack }: { onBack?: () => void }) {
     };
     walk(null);
     return rows;
-  }, [items, exportChecks, t]);
+  }, [items, exportChecks, levelLabel]);
+
+  /* Task 141 — «لیست اطلاعات ثبت‌شده» (اقدام ۱۰ اکشن‌بار) — مینی‌گرید عین geo */
+  const displayTitle = React.useCallback(
+    (n: AccountNodeDto): string => nodeTitleIn(n, locale, trMap[String(n.id)]),
+    [locale, trMap],
+  );
+
+  const listItems = React.useMemo<ActionBarListItem[]>(
+    () =>
+      items.map((n) => ({
+        id: String(n.id),
+        title: displayTitle(n),
+        subtitle: n.code,
+        cells: [
+          { label: t("abar.listColCode"), value: n.code },
+          { label: t("abar.listColTitle"), value: displayTitle(n) },
+          { label: t("atr.export.colLevel"), value: levelLabel(n.level) },
+          { label: t("fy.active"), value: n.isActive ? t("abar.listYes") : t("abar.listNo") },
+        ],
+      })),
+    [items, t, displayTitle, levelLabel],
+  );
 
   const buildHtmlTable = React.useCallback(() => {
     const rows = exportRows();
