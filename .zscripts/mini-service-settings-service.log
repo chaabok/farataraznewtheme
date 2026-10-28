@@ -1231,3 +1231,20 @@ $ NODE_PATH=./node_modules bun --hot src/main.ts
 [Nest] 8789  - 10/28/2026, 7:42:28 AM     LOG [SystemsService] Systems synced from APP_CATALOG (total 28, created 0, updated 0)
 [Nest] 8789  - 10/28/2026, 7:42:28 AM     LOG [NestApplication] Nest application successfully started +49ms
 [Nest] 8789  - 10/28/2026, 7:42:28 AM     LOG [Bootstrap] settings-service listening on http://127.0.0.1:3001
+128 |             if (
+129 |               !Number.isFinite(fromN) ||
+130 |               !Number.isFinite(minusN) ||
+131 |               num !== fromN - minusN
+132 |             ) {
+133 |               throw new BadRequestException({
+                          ^
+BadRequestException: مقدار فیلد «accSubsidiaryCodeLen» باید برابر مقدار «accLedgerCodeLen» منهای «accGroupCodeLen» باشد
+ response: {
+  statusCode: 422,
+  message: "مقدار فیلد «accSubsidiaryCodeLen» باید برابر مقدار «accLedgerCodeLen» منهای «accGroupCodeLen» باشد",
+  messageKey: "common.error",
+},
+   status: 400,
+  options: {},
+
+      at upsert (/home/z/my-project/mini-services/settings-service/src/software-config/software-config.service.ts:133:21)
