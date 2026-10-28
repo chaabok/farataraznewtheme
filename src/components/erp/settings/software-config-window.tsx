@@ -53,10 +53,6 @@ export interface SwConfigFieldDef {
    *  مشترک و شبکهٔ ۲ستونی (RTL: اولین فیلد = راست‌ترین — عین تصویر مالک) رندر
    *  می‌شوند؛ فیلدهای بی‌گروه مثل قبل ساده می‌آیند. */
   groupLabelKey?: DictKey;
-  /** Task 135 — فیلد مشتق‌شده (فقط‌خواندنی): مقدار = value(from) − value(minus)
-   *  به‌صورت زنده از مقادیر فعلی فرم (با بازگشت به defaultValue)؛ در payload
-   *  همان مقدار محاسبه‌شده ارسال می‌شود و سرور هم برابری را کنترل می‌کند. */
-  derived?: { from: string; minus: string };
 }
 
 /** ۷ نرم‌افزارِ اعلام‌شدهٔ مالک — عنوان‌ها از واژه‌نامهٔ کاتالوگ (×۱۳ زبان موجود)؛
@@ -99,12 +95,12 @@ const SOFTWARE_CONFIG_FIELDS: Record<string, SwConfigFieldDef[]> = {
       integer: true,
       defaultValue: "12",
     },
-    /* Task 135 (درخواست مالک) — گروپ فیلد «طول کد حسابها» عین تصویر:
+    /* Task 135 + Task 136 (درخواست مالک) — گروپ فیلد «طول کد حسابها» عین تصویر:
        سطر ۱ = راست «طول حساب کل» (۶) و چپ «طول گروه حساب» (۲)؛
-       سطر ۲ = راست «طول حساب معین» (مشتق‌شدهٔ فقط‌خواندنی = کل − گروه؛
-       عبارت مالک: «طول حساب معین از تفریغ طول کدحسابها و جمع طول گروه
-       حساب و طول حساب کل بدست می آید» — با مقادیر تصویر: 6−2=4) و
-       چپ «طول حساب تفصیلی» (۰). آینهٔ سرور: software-config.dto.ts. */
+       سطر ۲ = راست «طول حساب معین» (۴) و چپ «طول حساب تفصیلی» (۰).
+       Task 136 — مالک: «فیلدهایی که … با فلش قرمز مشخص کردم … باید قابل
+       تغییر باشند» ⇒ هر سه فیلد کل/گروه/معین ورودیِ مستقل و آزادند؛ قانون
+       خودکارِ معین (Task 135) حذف شد (آینهٔ سرور: software-config.dto.ts). */
     {
       key: "accLedgerCodeLen",
       labelKey: "settings.swAccLedgerLen",
@@ -137,7 +133,6 @@ const SOFTWARE_CONFIG_FIELDS: Record<string, SwConfigFieldDef[]> = {
       integer: true,
       defaultValue: "4",
       groupLabelKey: "settings.swAccCodeLenGroup",
-      derived: { from: "accLedgerCodeLen", minus: "accGroupCodeLen" },
     },
     {
       key: "accDetailCodeLen",
@@ -210,24 +205,6 @@ export function SoftwareConfigBody() {
     setValues((prev) => ({ ...prev, [activeTab]: { ...(prev[activeTab] ?? {}), [key]: v } }));
   };
 
-  /* Task 135 — مقدار مشتق‌شدهٔ زندهٔ یک فیلد (derived): value(from) − value(minus)
-     از مقادیر فعلی فرم؛ برای هر مرجع، مقدار ویرایش‌شده وگرنه defaultValue
-     (هم‌راستا با چیزی که پس از ذخیره/بازخوانی نمایش داده می‌شود)؛ اگر هر طرف
-     عدد معتبری نباشد رشتهٔ خالی برمی‌گردد (ذخیره با خطای اختصاصی رد می‌شود). */
-  const derivedValue = (f: SwConfigFieldDef): string => {
-    if (!f.derived) return "";
-    const defs = SOFTWARE_CONFIG_FIELDS[activeTab] ?? [];
-    const eff = (key: string): string => {
-      const v = values[activeTab]?.[key];
-      if (v !== undefined && v !== "") return v;
-      return defs.find((d) => d.key === key)?.defaultValue ?? "";
-    };
-    const from = Number(eff(f.derived.from));
-    const minus = Number(eff(f.derived.minus));
-    if (!Number.isFinite(from) || !Number.isFinite(minus)) return "";
-    return String(from - minus);
-  };
-
   const save = async () => {
     if (fields.length === 0) return;
     if (values[activeTab] === undefined) return; // دادهٔ تب هنوز لود نشده
@@ -236,16 +213,8 @@ export function SoftwareConfigBody() {
     for (const f of fields) {
       if (f.type !== "number") continue;
       const label = t(f.labelKey);
-      /* Task 135 — مقدار فیلد مشتق‌شده = محاسبهٔ زندهٔ فرم (نه مقدار state) */
-      const v = f.derived ? derivedValue(f) : (values[activeTab]?.[f.key] ?? f.defaultValue ?? "");
-      if (v === "") {
-        if (f.derived) {
-          /* مراجع عدد معتبر ندارند — مثلاً ورودی خالی شده */
-          toast.error(t("settings.swDeriveError").replace("{field}", label));
-          return;
-        }
-        continue;
-      }
+      const v = values[activeTab]?.[f.key] ?? f.defaultValue ?? "";
+      if (v === "") continue;
       const num = Number(v);
       if (!Number.isFinite(num)) {
         toast.error(t("settings.swRangeError").replace("{field}", label).replace("{min}", String(f.min ?? 0)).replace("{max}", String(f.max ?? 0)));
@@ -256,11 +225,6 @@ export function SoftwareConfigBody() {
         return;
       }
       if ((f.min !== undefined && num < f.min) || (f.max !== undefined && num > f.max)) {
-        /* منفی‌شدن معین (کل < گروه یا ورودی خالی→۰) پیام اختصاصی دارد */
-        if (f.derived && f.min !== undefined && num < f.min) {
-          toast.error(t("settings.swDeriveError").replace("{field}", label));
-          return;
-        }
         toast.error(t("settings.swRangeError").replace("{field}", label).replace("{min}", String(f.min ?? 0)).replace("{max}", String(f.max ?? 0)));
         return;
       }
@@ -272,10 +236,7 @@ export function SoftwareConfigBody() {
         body: JSON.stringify({
           items: fields.map((f) => ({
             configKey: f.key,
-            /* Task 135 — فیلد مشتق‌شده همان مقدار محاسبه‌شدهٔ زنده را می‌فرستد */
-            configValue: f.derived
-              ? derivedValue(f)
-              : (values[activeTab]?.[f.key] ?? f.defaultValue ?? ""),
+            configValue: values[activeTab]?.[f.key] ?? f.defaultValue ?? "",
           })),
         }),
       });
@@ -308,11 +269,8 @@ export function SoftwareConfigBody() {
   }
 
   const renderField = (f: SwConfigFieldDef) => {
-    /* Task 73 — مقدار پیش‌فرض وقتی ردیف ذخیره‌شده‌ای نیست؛ Task 135 — فیلد
-       مشتق‌شده مقدار زندهٔ محاسبه‌شده را نشان می‌دهد (فقط‌خواندنی) */
-    const val = f.derived
-      ? derivedValue(f)
-      : (values[activeTab]?.[f.key] ?? f.defaultValue ?? "");
+    /* Task 73 — مقدار پیش‌فرض وقتی ردیف ذخیره‌شده‌ای نیست */
+    const val = values[activeTab]?.[f.key] ?? f.defaultValue ?? "";
     if (f.type === "checkbox") {
       return (
         <label
@@ -369,15 +327,7 @@ export function SoftwareConfigBody() {
             step={f.type === "number" ? 1 : undefined}
             value={val}
             onChange={(e) => setVal(f.key, e.target.value)}
-            /* Task 135 — فیلد مشتق‌شده فقط‌خواندنی است؛ مقدارش از دو فیلد
-               دیگر به‌دست می‌آید و با تغییر آن‌ها زنده به‌روز می‌شود */
-            readOnly={!!f.derived}
-            aria-readonly={f.derived ? "true" : undefined}
-            title={f.derived ? t("settings.swAccDeriveHint") : undefined}
-            className={cn(
-              "h-9 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring",
-              f.derived && "cursor-default bg-muted/50 text-muted-foreground",
-            )}
+            className="h-9 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
           />
         )}
       </div>
@@ -473,11 +423,6 @@ export function SoftwareConfigBody() {
                       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         {seg.fields.map((f) => renderField(f))}
                       </div>
-                      {seg.fields.some((f) => f.derived) && (
-                        <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">
-                          {t("settings.swAccDeriveHint")}
-                        </p>
-                      )}
                     </div>
                   ),
                 )}
