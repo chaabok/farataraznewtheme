@@ -43,6 +43,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { downloadExcel } from "@/lib/excel-export";
 import { useT, useSettings } from "@/stores/settings-store";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
@@ -158,27 +159,22 @@ export function RecordListDropdown({
   }, []);
 
   /* Task 86-b — the image's document tools, made real: the green
-     spreadsheet doc exports the FILTERED view as CSV (Excel-friendly BOM),
-     the blue document copies it as TSV (paste straight into Excel). */
-  const exportCsv = React.useCallback(() => {
-    const esc = (s: string) => `"${s.replaceAll('"', '""')}"`;
-    const lines = [
-      columns.map(esc).join(","),
-      ...rows.map((it) =>
-        columns.map((c) => esc(it.cells.find((x) => x.label === c)?.value ?? "")).join(","),
+     spreadsheet doc exports the FILTERED view. Task 134 — the export is now
+     a real xlsx: one list column per Excel column and the sheet direction
+     (rightToLeft) synced with the dashboard language; the blue document
+     copies it as TSV (paste straight into Excel). */
+  const exportExcel = React.useCallback(() => {
+    downloadExcel({
+      headers: columns,
+      rows: rows.map((it) =>
+        columns.map((c) => it.cells.find((x) => x.label === c)?.value ?? ""),
       ),
-    ];
-    const blob = new Blob(["\uFEFF" + lines.join("\r\n")], {
-      type: "text/csv;charset=utf-8",
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "list.csv";
-    a.click();
-    URL.revokeObjectURL(url);
-    toast.success(t("abar.listExportedToast"));
-  }, [columns, rows, t]);
+      fileName: "list",
+      rtl: dir === "rtl",
+    })
+      .then(() => toast.success(t("abar.listExportedToast")))
+      .catch(() => toast.error(t("abar.exportFailedToast")));
+  }, [columns, rows, t, dir]);
 
   const copyList = React.useCallback(async () => {
     const tsv = [
@@ -420,7 +416,7 @@ export function RecordListDropdown({
               title={t("abar.listExport")}
               tone="text-emerald-500"
               disabled={empty || rows.length === 0}
-              onClick={exportCsv}
+              onClick={exportExcel}
             >
               <FileSpreadsheet className="h-3.5 w-3.5" aria-hidden />
             </ListTool>

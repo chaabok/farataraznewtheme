@@ -4,7 +4,9 @@ import * as React from "react";
 import {
   Check, ChevronDown, ChevronUp, Columns3, FileDown, Filter, Inbox, Loader2, Minus,
 } from "lucide-react";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { downloadExcel } from "@/lib/excel-export";
 import { useSettings, useT } from "@/stores/settings-store";
 import {
   DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuItem,
@@ -18,8 +20,10 @@ import {
  * نابرابر با / خالی باشد / خالی نباشد) opened from a funnel menu, header-click
  * sorting, a column chooser, row selection + double-click and a polished
  * bottom action bar (actions slot + count chip + filter toggle / columns /
- * CSV export of the FILTERED rows). Purely presentational — data flows in via
- * props, so the grid stays reusable for any record source.
+ * Excel export of the FILTERED rows — Task 134: real xlsx, one grid column
+ * per Excel column, sheet direction synced with the dashboard language).
+ * Purely presentational — data flows in via props, so the grid stays
+ * reusable for any record source.
  *
  * Task 133 (درخواست مالک) — جابجایی و تغییر عرض ستون‌ها:
  *   • تغییر عرض: دستگیرهٔ کشیدنی روی «لبهٔ انتهایی» هر سرستون (در RTL لبهٔ
@@ -345,19 +349,18 @@ export function MainDataGrid({
     setWidths((prev) => ({ ...prev, [c.key]: Math.max(MIN_COL_W, effWidth(c) + d) }));
   };
 
-  /* CSV export — the FILTERED rows, Excel-friendly (BOM + quoted cells) */
-  const exportCsv = () => {
-    const head = visibleColumns.map((c) => c.label);
-    const lines = [head, ...filtered.map((row) => visibleColumns.map((c) => String(cellOf(c, row) ?? "")))]
-      .map((cells) => cells.map((v) => `"${v.replace(/"/g, '""')}"`).join(","))
-      .join("\r\n");
-    const blob = new Blob(["\uFEFF" + lines], { type: "text/csv;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${csvFileName ?? "export"}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+  /* Task 134 — خروجی اکسل واقعی (xlsx): هر ستونِ گرید در یک ستونِ مجزای اکسل
+     می‌نشیند و جهتِ شیت هم‌گام با زبان داشبورد است (RTL ⇒ rightToLeft).
+     همان نمای فیلترشده با ترتیب/انتخابِ ستون‌های فعلی صادر می‌شود. */
+  const exportExcel = () => {
+    downloadExcel({
+      headers: visibleColumns.map((c) => c.label),
+      rows: filtered.map((row) => visibleColumns.map((c) => cellOf(c, row) ?? "")),
+      fileName: csvFileName ?? "export",
+      rtl: dir === "rtl",
+    })
+      .then(() => toast.success(t("abar.listExportedToast")))
+      .catch(() => toast.error(t("abar.exportFailedToast")));
   };
 
   /* count chip: live FILTERED count (the classic فهرست shows what you see);
@@ -649,9 +652,9 @@ export function MainDataGrid({
           <span className="mx-0.5 h-5 w-px bg-border" aria-hidden />
           <button
             type="button"
-            title={t("dfb.list.exportCsv")}
-            aria-label={t("dfb.list.exportCsv")}
-            onClick={exportCsv}
+            title={t("abar.listExport")}
+            aria-label={t("abar.listExport")}
+            onClick={exportExcel}
             className="flex h-8 w-8 items-center justify-center rounded-lg text-violet-600 transition-all hover:-translate-y-px hover:bg-foreground/5 hover:shadow dark:text-violet-400"
           >
             <FileDown className="h-4 w-4" aria-hidden />
