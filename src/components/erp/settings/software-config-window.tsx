@@ -53,6 +53,10 @@ export interface SwConfigFieldDef {
    *  مشترک و شبکهٔ ۲ستونی (RTL: اولین فیلد = راست‌ترین — عین تصویر مالک) رندر
    *  می‌شوند؛ فیلدهای بی‌گروه مثل قبل ساده می‌آیند. */
   groupLabelKey?: DictKey;
+  /** Task 137 — فیلد مشتق‌شده (فقط‌خواندنی): مقدار = value(from) − Σvalue(minus)
+   *  به‌صورت زنده از مقادیر فعلی فرم (با بازگشت به defaultValue)؛ در payload
+   *  همان مقدار محاسبه‌شده ارسال می‌شود و سرور هم برابری را کنترل می‌کند. */
+  derived?: { from: string; minus: string[] };
 }
 
 /** ۷ نرم‌افزارِ اعلام‌شدهٔ مالک — عنوان‌ها از واژه‌نامهٔ کاتالوگ (×۱۳ زبان موجود)؛
@@ -95,15 +99,18 @@ const SOFTWARE_CONFIG_FIELDS: Record<string, SwConfigFieldDef[]> = {
       integer: true,
       defaultValue: "12",
     },
-    /* Task 135 + Task 136 (درخواست مالک) — گروپ فیلد «طول کد حسابها» عین تصویر:
-       سطر ۱ = راست «طول حساب کل» (۶) و چپ «طول گروه حساب» (۲)؛
-       سطر ۲ = راست «طول حساب معین» (۴) و چپ «طول حساب تفصیلی» (۰).
-       Task 136 — مالک: «فیلدهایی که … با فلش قرمز مشخص کردم … باید قابل
-       تغییر باشند» ⇒ هر سه فیلد کل/گروه/معین ورودیِ مستقل و آزادند؛ قانون
-       خودکارِ معین (Task 135) حذف شد (آینهٔ سرور: software-config.dto.ts). */
+    /* Task 135 + 136 + 137 (درخواست مالک) — گروپ فیلد «طول کدینگ حسابها»:
+       سطر ۱ = راست «طول کد حسابها» (۶ — Task 137 تازه) و چپ «طول گروه حساب» (۲)؛
+       سطر ۲ = راست «طول حساب کل» (۲ — پیش‌فرض Task 137) و چپ «طول حساب معین»
+       (مشتق‌شدهٔ فقط‌خواندنی = طول کد حسابها − طول گروه حساب − طول حساب کل؛
+       عبارت مالک Task 137: «از تفریغ طول کدحسابها و طول گروه حساب و طول
+       حساب کل محاسبه می شود و فیلد فقط خواندنی می باشد» — پیش‌فرض‌ها: 6−2−2=2)؛
+       سطر ۳ = «طول حساب تفصیلی» (۰ — از Task 135 حفظ شده). آینهٔ سرور:
+       software-config.dto.ts. */
     {
-      key: "accLedgerCodeLen",
-      labelKey: "settings.swAccLedgerLen",
+      /* Task 137 — طول کد حسابها (کل طول کدینگ) — اولین فیلد گروه */
+      key: "accCodeLen",
+      labelKey: "settings.swAccCodeLen",
       type: "number",
       required: true,
       min: 1,
@@ -124,6 +131,17 @@ const SOFTWARE_CONFIG_FIELDS: Record<string, SwConfigFieldDef[]> = {
       groupLabelKey: "settings.swAccCodeLenGroup",
     },
     {
+      key: "accLedgerCodeLen",
+      labelKey: "settings.swAccLedgerLen",
+      type: "number",
+      required: true,
+      min: 1,
+      max: 15,
+      integer: true,
+      defaultValue: "2",
+      groupLabelKey: "settings.swAccCodeLenGroup",
+    },
+    {
       key: "accSubsidiaryCodeLen",
       labelKey: "settings.swAccSubsidiaryLen",
       type: "number",
@@ -131,8 +149,9 @@ const SOFTWARE_CONFIG_FIELDS: Record<string, SwConfigFieldDef[]> = {
       min: 0,
       max: 15,
       integer: true,
-      defaultValue: "4",
+      defaultValue: "2",
       groupLabelKey: "settings.swAccCodeLenGroup",
+      derived: { from: "accCodeLen", minus: ["accGroupCodeLen", "accLedgerCodeLen"] },
     },
     {
       key: "accDetailCodeLen",
@@ -206,15 +225,22 @@ export function SoftwareConfigBody() {
   };
 
   const save = async () => {
-    if (fields.length === 0) return;
     if (values[activeTab] === undefined) return; // دادهٔ تب هنوز لود نشده
     /* Task 73 — اعتبارسنجی بازهٔ فیلدهای عددی پیش از ارسال (خط اول؛
        خط دوم همان قانون روی سرور است) */
     for (const f of fields) {
       if (f.type !== "number") continue;
       const label = t(f.labelKey);
-      const v = values[activeTab]?.[f.key] ?? f.defaultValue ?? "";
-      if (v === "") continue;
+      /* Task 137 — مقدار فیلد مشتق‌شده = محاسبهٔ زندهٔ فرم (نه مقدار state) */
+      const v = f.derived ? derivedValue(f) : (values[activeTab]?.[f.key] ?? f.defaultValue ?? "");
+      if (v === "") {
+        if (f.derived) {
+          /* مراجع عدد معتبر ندارند — مثلاً ورودی خالی شده */
+          toast.error(t("settings.swDeriveError").replace("{field}", label));
+          return;
+        }
+        continue;
+      }
       const num = Number(v);
       if (!Number.isFinite(num)) {
         toast.error(t("settings.swRangeError").replace("{field}", label).replace("{min}", String(f.min ?? 0)).replace("{max}", String(f.max ?? 0)));
@@ -225,6 +251,11 @@ export function SoftwareConfigBody() {
         return;
       }
       if ((f.min !== undefined && num < f.min) || (f.max !== undefined && num > f.max)) {
+        /* منفی‌شدن معین (کد حسابها < گروه + کل) پیام اختصاصی دارد */
+        if (f.derived && f.min !== undefined && num < f.min) {
+          toast.error(t("settings.swDeriveError").replace("{field}", label));
+          return;
+        }
         toast.error(t("settings.swRangeError").replace("{field}", label).replace("{min}", String(f.min ?? 0)).replace("{max}", String(f.max ?? 0)));
         return;
       }
@@ -236,7 +267,10 @@ export function SoftwareConfigBody() {
         body: JSON.stringify({
           items: fields.map((f) => ({
             configKey: f.key,
-            configValue: values[activeTab]?.[f.key] ?? f.defaultValue ?? "",
+            /* Task 137 — فیلد مشتق‌شده همان مقدار محاسبه‌شدهٔ زنده را می‌فرستد */
+            configValue: f.derived
+              ? derivedValue(f)
+              : (values[activeTab]?.[f.key] ?? f.defaultValue ?? ""),
           })),
         }),
       });
