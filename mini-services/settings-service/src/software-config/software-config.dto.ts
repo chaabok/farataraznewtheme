@@ -80,6 +80,12 @@ export const SOFTWARE_CONFIG_FIELDS: Record<
     /* Task 138 — مالک: «فیلد طول کدتفصیلی را بصورت پیش فرض با عدد 6
        تکمیل نمایید» ⇒ پیش‌فرض تفصیلی از ۰ به ۶. */
     accDetailCodeLen: { type: "number", min: 0, max: 15, integer: true, defaultValue: "6" },
+
+    /* Task 139 (درخواست مالک) — فیلد مستقل «تعداد سطوح تفصیلی» (تب حسابداری):
+       عددی، پیش‌فرض ۱۰، حداکثر ۲۰؛ حداقل ۱ (تفسیر اعلامی §0.6 — شمارِ سطوح
+       نمی‌تواند صفر یا منفی باشد). آینهٔ فرانت:
+       SOFTWARE_CONFIG_FIELDS در software-config-window.tsx. */
+    accDetailLevels: { type: "number", min: 1, max: 20, integer: true, defaultValue: "10" },
   },
   receiptsPayment: {},
   inventory: {},

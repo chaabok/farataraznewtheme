@@ -168,6 +168,21 @@ const SOFTWARE_CONFIG_FIELDS: Record<string, SwConfigFieldDef[]> = {
       defaultValue: "6",
       groupLabelKey: "settings.swAccCodeLenGroup",
     },
+    {
+      /* Task 139 (درخواست مالک) — فیلد مستقل «تعداد سطوح تفصیلی» (تب
+         حسابداری): عددی، پیش‌فرض ۱۰، حداکثر ۲۰؛ حداقل ۱ (تفسیر اعلامی §0.6 —
+         شمارِ سطوح نمی‌تواند صفر یا منفی باشد)؛ بیرون از گروپ «طول کدینگ
+         حسابها» چون مالک آن را فیلدی جداگانه اعلام کرد. آینهٔ سرور:
+         software-config.dto.ts. */
+      key: "accDetailLevels",
+      labelKey: "settings.swAccDetailLevels",
+      type: "number",
+      required: true,
+      min: 1,
+      max: 20,
+      integer: true,
+      defaultValue: "10",
+    },
   ],
   receiptsPayment: [],
   inventory: [],
