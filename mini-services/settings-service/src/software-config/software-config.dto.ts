@@ -38,6 +38,11 @@ export interface SoftwareConfigFieldSpec {
   integer?: boolean;
   /** مقدار پیش‌فرض — مالکیت نمایش با فرانت است؛ سرور همان بازه را اعتبارسنجی می‌کند */
   defaultValue?: string;
+  /** Task 135 — فیلد مشتق‌شده (فقط‌خواندنی در فرانت): مقدار مجاز =
+   *  value(from) − value(minus). اگر هر دو کلید مرجع در «همین payload»
+   *  حاضر باشند، سرور برابری را کنترل می‌کند (خط دوم دفاعی)؛ وگرنه فقط
+   *  همان بازهٔ min/max اعمال می‌شود. */
+  derived?: { from: string; minus: string };
 }
 
 export const SOFTWARE_CONFIG_FIELDS: Record<
@@ -52,6 +57,24 @@ export const SOFTWARE_CONFIG_FIELDS: Record<
   },
   accounting: {
     fiscalMonthsCount: { type: "number", min: 1, max: 16, integer: true, defaultValue: "12" },
+
+    /* Task 135 (درخواست مالک) — گروپ فیلد «طول کد حسابها» (تب حسابداری):
+       طول گروه حساب / طول حساب کل / طول حساب تفصیلی ورودیِ آزاد و
+       «طول حساب معین» مشتق‌شده = طول حساب کل − طول گروه حساب
+       (عبارت مالک: «طول حساب معین از تفریغ طول کدحسابها و جمع طول گروه
+       حساب و طول حساب کل بدست می آید» — با مقادیر تصویر: 6−2=4).
+       آینهٔ فرانت: SOFTWARE_CONFIG_FIELDS در software-config-window.tsx. */
+    accLedgerCodeLen: { type: "number", min: 1, max: 15, integer: true, defaultValue: "6" },
+    accGroupCodeLen: { type: "number", min: 1, max: 15, integer: true, defaultValue: "2" },
+    accSubsidiaryCodeLen: {
+      type: "number",
+      min: 0,
+      max: 15,
+      integer: true,
+      defaultValue: "4",
+      derived: { from: "accLedgerCodeLen", minus: "accGroupCodeLen" },
+    },
+    accDetailCodeLen: { type: "number", min: 0, max: 15, integer: true, defaultValue: "0" },
   },
   receiptsPayment: {},
   inventory: {},

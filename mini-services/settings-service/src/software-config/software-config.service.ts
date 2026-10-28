@@ -62,6 +62,14 @@ export class SoftwareConfigService {
     let saved = 0;
     let deleted = 0;
 
+    /* Task 135 — نقشهٔ payload برای قانون فیلدهای مشتق‌شده (خط دوم دفاعی):
+       اگر هر دو کلید مرجع در همین payload حاضر باشند، مقدار فیلد مشتق‌شده
+       باید برابر from − minus باشد؛ وگرنه فقط بازهٔ min/max اعمال می‌شود. */
+    const incoming = new Map<string, string>();
+    for (const it of dto.items) {
+      incoming.set(String(it.configKey ?? "").trim(), String(it.configValue ?? "").trim());
+    }
+
     for (const it of dto.items) {
       const key = String(it.configKey ?? "").trim();
       const spec = registry[key];
@@ -107,6 +115,28 @@ export class SoftwareConfigService {
             message: `مقدار فیلد «${key}» نمی‌تواند بیشتر از ${spec.max} باشد`,
             messageKey: "common.error",
           });
+        }
+        /* Task 135 — قانون مشتق‌شده: معین = طول حساب کل − طول گروه حساب
+           (فقط وقتی هر دو مرجع در همین payload حاضرند؛ مقادیر خالی =
+           حذف ردیف و مشمول این قانون نیستند). */
+        if (spec.derived) {
+          const fromRaw = incoming.get(spec.derived.from) ?? "";
+          const minusRaw = incoming.get(spec.derived.minus) ?? "";
+          if (fromRaw !== "" && minusRaw !== "") {
+            const fromN = Number(fromRaw);
+            const minusN = Number(minusRaw);
+            if (
+              !Number.isFinite(fromN) ||
+              !Number.isFinite(minusN) ||
+              num !== fromN - minusN
+            ) {
+              throw new BadRequestException({
+                statusCode: 422,
+                message: `مقدار فیلد «${key}» باید برابر مقدار «${spec.derived.from}» منهای «${spec.derived.minus}» باشد`,
+                messageKey: "common.error",
+              });
+            }
+          }
         }
       }
 

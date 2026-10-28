@@ -49,6 +49,14 @@ export interface SwConfigFieldDef {
   defaultValue?: string;
   /** فقط برای type="select" */
   options?: { value: string; labelKey: DictKey }[];
+  /** Task 135 — گروپ فیلد: فیلدهای هم‌گروه پشت‌سرهم داخل یک فیلدست با عنوان
+   *  مشترک و شبکهٔ ۲ستونی (RTL: اولین فیلد = راست‌ترین — عین تصویر مالک) رندر
+   *  می‌شوند؛ فیلدهای بی‌گروه مثل قبل ساده می‌آیند. */
+  groupLabelKey?: DictKey;
+  /** Task 135 — فیلد مشتق‌شده (فقط‌خواندنی): مقدار = value(from) − value(minus)
+   *  به‌صورت زنده از مقادیر فعلی فرم (با بازگشت به defaultValue)؛ در payload
+   *  همان مقدار محاسبه‌شده ارسال می‌شود و سرور هم برابری را کنترل می‌کند. */
+  derived?: { from: string; minus: string };
 }
 
 /** ۷ نرم‌افزارِ اعلام‌شدهٔ مالک — عنوان‌ها از واژه‌نامهٔ کاتالوگ (×۱۳ زبان موجود)؛
@@ -90,6 +98,57 @@ const SOFTWARE_CONFIG_FIELDS: Record<string, SwConfigFieldDef[]> = {
       max: 16,
       integer: true,
       defaultValue: "12",
+    },
+    /* Task 135 (درخواست مالک) — گروپ فیلد «طول کد حسابها» عین تصویر:
+       سطر ۱ = راست «طول حساب کل» (۶) و چپ «طول گروه حساب» (۲)؛
+       سطر ۲ = راست «طول حساب معین» (مشتق‌شدهٔ فقط‌خواندنی = کل − گروه؛
+       عبارت مالک: «طول حساب معین از تفریغ طول کدحسابها و جمع طول گروه
+       حساب و طول حساب کل بدست می آید» — با مقادیر تصویر: 6−2=4) و
+       چپ «طول حساب تفصیلی» (۰). آینهٔ سرور: software-config.dto.ts. */
+    {
+      key: "accLedgerCodeLen",
+      labelKey: "settings.swAccLedgerLen",
+      type: "number",
+      required: true,
+      min: 1,
+      max: 15,
+      integer: true,
+      defaultValue: "6",
+      groupLabelKey: "settings.swAccCodeLenGroup",
+    },
+    {
+      key: "accGroupCodeLen",
+      labelKey: "settings.swAccGroupLen",
+      type: "number",
+      required: true,
+      min: 1,
+      max: 15,
+      integer: true,
+      defaultValue: "2",
+      groupLabelKey: "settings.swAccCodeLenGroup",
+    },
+    {
+      key: "accSubsidiaryCodeLen",
+      labelKey: "settings.swAccSubsidiaryLen",
+      type: "number",
+      required: true,
+      min: 0,
+      max: 15,
+      integer: true,
+      defaultValue: "4",
+      groupLabelKey: "settings.swAccCodeLenGroup",
+      derived: { from: "accLedgerCodeLen", minus: "accGroupCodeLen" },
+    },
+    {
+      key: "accDetailCodeLen",
+      labelKey: "settings.swAccDetailLen",
+      type: "number",
+      required: true,
+      min: 0,
+      max: 15,
+      integer: true,
+      defaultValue: "0",
+      groupLabelKey: "settings.swAccCodeLenGroup",
     },
   ],
   receiptsPayment: [],
@@ -151,6 +210,24 @@ export function SoftwareConfigBody() {
     setValues((prev) => ({ ...prev, [activeTab]: { ...(prev[activeTab] ?? {}), [key]: v } }));
   };
 
+  /* Task 135 — مقدار مشتق‌شدهٔ زندهٔ یک فیلد (derived): value(from) − value(minus)
+     از مقادیر فعلی فرم؛ برای هر مرجع، مقدار ویرایش‌شده وگرنه defaultValue
+     (هم‌راستا با چیزی که پس از ذخیره/بازخوانی نمایش داده می‌شود)؛ اگر هر طرف
+     عدد معتبری نباشد رشتهٔ خالی برمی‌گردد (ذخیره با خطای اختصاصی رد می‌شود). */
+  const derivedValue = (f: SwConfigFieldDef): string => {
+    if (!f.derived) return "";
+    const defs = SOFTWARE_CONFIG_FIELDS[activeTab] ?? [];
+    const eff = (key: string): string => {
+      const v = values[activeTab]?.[key];
+      if (v !== undefined && v !== "") return v;
+      return defs.find((d) => d.key === key)?.defaultValue ?? "";
+    };
+    const from = Number(eff(f.derived.from));
+    const minus = Number(eff(f.derived.minus));
+    if (!Number.isFinite(from) || !Number.isFinite(minus)) return "";
+    return String(from - minus);
+  };
+
   const save = async () => {
     if (fields.length === 0) return;
     if (values[activeTab] === undefined) return; // دادهٔ تب هنوز لود نشده
@@ -158,10 +235,18 @@ export function SoftwareConfigBody() {
        خط دوم همان قانون روی سرور است) */
     for (const f of fields) {
       if (f.type !== "number") continue;
-      const v = values[activeTab]?.[f.key] ?? f.defaultValue ?? "";
-      if (v === "") continue;
-      const num = Number(v);
       const label = t(f.labelKey);
+      /* Task 135 — مقدار فیلد مشتق‌شده = محاسبهٔ زندهٔ فرم (نه مقدار state) */
+      const v = f.derived ? derivedValue(f) : (values[activeTab]?.[f.key] ?? f.defaultValue ?? "");
+      if (v === "") {
+        if (f.derived) {
+          /* مراجع عدد معتبر ندارند — مثلاً ورودی خالی شده */
+          toast.error(t("settings.swDeriveError").replace("{field}", label));
+          return;
+        }
+        continue;
+      }
+      const num = Number(v);
       if (!Number.isFinite(num)) {
         toast.error(t("settings.swRangeError").replace("{field}", label).replace("{min}", String(f.min ?? 0)).replace("{max}", String(f.max ?? 0)));
         return;
@@ -171,6 +256,11 @@ export function SoftwareConfigBody() {
         return;
       }
       if ((f.min !== undefined && num < f.min) || (f.max !== undefined && num > f.max)) {
+        /* منفی‌شدن معین (کل < گروه یا ورودی خالی→۰) پیام اختصاصی دارد */
+        if (f.derived && f.min !== undefined && num < f.min) {
+          toast.error(t("settings.swDeriveError").replace("{field}", label));
+          return;
+        }
         toast.error(t("settings.swRangeError").replace("{field}", label).replace("{min}", String(f.min ?? 0)).replace("{max}", String(f.max ?? 0)));
         return;
       }
@@ -182,7 +272,10 @@ export function SoftwareConfigBody() {
         body: JSON.stringify({
           items: fields.map((f) => ({
             configKey: f.key,
-            configValue: values[activeTab]?.[f.key] ?? f.defaultValue ?? "",
+            /* Task 135 — فیلد مشتق‌شده همان مقدار محاسبه‌شدهٔ زنده را می‌فرستد */
+            configValue: f.derived
+              ? derivedValue(f)
+              : (values[activeTab]?.[f.key] ?? f.defaultValue ?? ""),
           })),
         }),
       });
@@ -201,6 +294,94 @@ export function SoftwareConfigBody() {
     } catch {
       toast.error(t("common.error"));
     }
+  };
+
+  /* Task 135 — قطعه‌بندی فیلدها: فیلدهای هم‌گروهِ پشت‌سرهم در یک فیلدست با
+     عنوان مشترک و شبکهٔ ۲ستونی می‌نشینند (RTL: اولین فیلد = راست‌ترین —
+     عین چینش تصویر مالک)؛ فیلدهای بی‌گروه مثل قبل ساده می‌آیند. */
+  const segments: { group: DictKey | null; fields: SwConfigFieldDef[] }[] = [];
+  for (const f of fields) {
+    const g = f.groupLabelKey ?? null;
+    const last = segments[segments.length - 1];
+    if (last && last.group === g) last.fields.push(f);
+    else segments.push({ group: g, fields: [f] });
+  }
+
+  const renderField = (f: SwConfigFieldDef) => {
+    /* Task 73 — مقدار پیش‌فرض وقتی ردیف ذخیره‌شده‌ای نیست؛ Task 135 — فیلد
+       مشتق‌شده مقدار زندهٔ محاسبه‌شده را نشان می‌دهد (فقط‌خواندنی) */
+    const val = f.derived
+      ? derivedValue(f)
+      : (values[activeTab]?.[f.key] ?? f.defaultValue ?? "");
+    if (f.type === "checkbox") {
+      return (
+        <label
+          key={f.key}
+          className="flex cursor-pointer items-center justify-between gap-3 text-sm"
+        >
+          <span className="font-medium">{t(f.labelKey)}</span>
+          <input
+            type="checkbox"
+            checked={val === "1"}
+            onChange={(e) => setVal(f.key, e.target.checked ? "1" : "0")}
+            className="h-4 w-4 accent-[hsl(var(--primary))]"
+          />
+        </label>
+      );
+    }
+    return (
+      <div key={f.key} className="space-y-1.5">
+        <label htmlFor={`swc-${f.key}`} className="text-sm font-medium">
+          {t(f.labelKey)}
+          {f.required ? <span className="text-rose-500"> *</span> : null}
+        </label>
+        {f.type === "textarea" ? (
+          <textarea
+            id={`swc-${f.key}`}
+            dir="auto"
+            rows={3}
+            value={val}
+            onChange={(e) => setVal(f.key, e.target.value)}
+            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+          />
+        ) : f.type === "select" ? (
+          <select
+            id={`swc-${f.key}`}
+            dir="auto"
+            value={val}
+            onChange={(e) => setVal(f.key, e.target.value)}
+            className="h-9 w-full rounded-lg border border-border bg-background px-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+          >
+            <option value="">—</option>
+            {(f.options ?? []).map((o) => (
+              <option key={o.value} value={o.value}>
+                {t(o.labelKey)}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <input
+            id={`swc-${f.key}`}
+            type={f.type === "number" ? "number" : f.type === "date" ? "date" : "text"}
+            dir={f.type === "number" || f.type === "date" ? "ltr" : "auto"}
+            min={f.type === "number" ? f.min : undefined}
+            max={f.type === "number" ? f.max : undefined}
+            step={f.type === "number" ? 1 : undefined}
+            value={val}
+            onChange={(e) => setVal(f.key, e.target.value)}
+            /* Task 135 — فیلد مشتق‌شده فقط‌خواندنی است؛ مقدارش از دو فیلد
+               دیگر به‌دست می‌آید و با تغییر آن‌ها زنده به‌روز می‌شود */
+            readOnly={!!f.derived}
+            aria-readonly={f.derived ? "true" : undefined}
+            title={f.derived ? t("settings.swAccDeriveHint") : undefined}
+            className={cn(
+              "h-9 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring",
+              f.derived && "cursor-default bg-muted/50 text-muted-foreground",
+            )}
+          />
+        )}
+      </div>
+    );
   };
 
   return (
@@ -270,74 +451,36 @@ export function SoftwareConfigBody() {
             </div>
           )}
           {fields.length > 0 && (
-            /* فرم فیلدهای اعلام‌شده — هر اعلام جدید فقط از رجیستری می‌آید */
+            /* فرم فیلدهای اعلام‌شده — هر اعلام جدید فقط از رجیستری می‌آید؛
+               Task 135: فیلدهای هم‌گروه داخل فیلدست با شبکهٔ ۲ستونی */
             <section className="rounded-xl border border-border/70 bg-card/60 p-4">
               <div className="space-y-4">
-                {fields.map((f) => {
-                  /* Task 73 — مقدار پیش‌فرض وقتی ردیف ذخیره‌شده‌ای نیست */
-                  const val = values[activeTab]?.[f.key] ?? f.defaultValue ?? "";
-                  if (f.type === "checkbox") {
-                    return (
-                      <label
-                        key={f.key}
-                        className="flex cursor-pointer items-center justify-between gap-3 text-sm"
-                      >
-                        <span className="font-medium">{t(f.labelKey)}</span>
-                        <input
-                          type="checkbox"
-                          checked={val === "1"}
-                          onChange={(e) => setVal(f.key, e.target.checked ? "1" : "0")}
-                          className="h-4 w-4 accent-[hsl(var(--primary))]"
-                        />
-                      </label>
-                    );
-                  }
-                  return (
-                    <div key={f.key} className="space-y-1.5">
-                      <label htmlFor={`swc-${f.key}`} className="text-sm font-medium">
-                        {t(f.labelKey)}
-                        {f.required ? <span className="text-rose-500"> *</span> : null}
-                      </label>
-                      {f.type === "textarea" ? (
-                        <textarea
-                          id={`swc-${f.key}`}
-                          dir="auto"
-                          rows={3}
-                          value={val}
-                          onChange={(e) => setVal(f.key, e.target.value)}
-                          className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
-                        />
-                      ) : f.type === "select" ? (
-                        <select
-                          id={`swc-${f.key}`}
-                          dir="auto"
-                          value={val}
-                          onChange={(e) => setVal(f.key, e.target.value)}
-                          className="h-9 w-full rounded-lg border border-border bg-background px-2 text-sm outline-none focus:ring-2 focus:ring-ring"
-                        >
-                          <option value="">—</option>
-                          {(f.options ?? []).map((o) => (
-                            <option key={o.value} value={o.value}>
-                              {t(o.labelKey)}
-                            </option>
-                          ))}
-                        </select>
-                      ) : (
-                        <input
-                          id={`swc-${f.key}`}
-                          type={f.type === "number" ? "number" : f.type === "date" ? "date" : "text"}
-                          dir={f.type === "number" || f.type === "date" ? "ltr" : "auto"}
-                          min={f.type === "number" ? f.min : undefined}
-                          max={f.type === "number" ? f.max : undefined}
-                          step={f.type === "number" ? 1 : undefined}
-                          value={val}
-                          onChange={(e) => setVal(f.key, e.target.value)}
-                          className="h-9 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
-                        />
+                {segments.map((seg, si) =>
+                  seg.group === null ? (
+                    <div key={`plain-${si}`} className="space-y-4">
+                      {seg.fields.map((f) => renderField(f))}
+                    </div>
+                  ) : (
+                    <div
+                      key={`group-${seg.group}`}
+                      role="group"
+                      aria-labelledby={`swc-grp-${si}`}
+                      className="rounded-xl border border-border/70 bg-background/40 p-4"
+                    >
+                      <p id={`swc-grp-${si}`} className="mb-3 text-sm font-semibold">
+                        {t(seg.group)}
+                      </p>
+                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        {seg.fields.map((f) => renderField(f))}
+                      </div>
+                      {seg.fields.some((f) => f.derived) && (
+                        <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">
+                          {t("settings.swAccDeriveHint")}
+                        </p>
                       )}
                     </div>
-                  );
-                })}
+                  ),
+                )}
               </div>
               <div className="mt-5 flex justify-end">
                 <button
