@@ -86,6 +86,11 @@ export const SOFTWARE_CONFIG_FIELDS: Record<
        نمی‌تواند صفر یا منفی باشد). آینهٔ فرانت:
        SOFTWARE_CONFIG_FIELDS در software-config-window.tsx. */
     accDetailLevels: { type: "number", min: 1, max: 20, integer: true, defaultValue: "10" },
+
+    /* Task 140 (پرامپت مالک — درختواره حسابها): کلید «کنترل دسترسی به
+       دفاتر»؛ تا زمان اعلام فیلد UI توسط مالک فقط از راه API تنظیم می‌شود
+       (چک‌باکس: «1» = تب «کاربران مجاز» در گره‌های سطح ≥ ۳ فعال می‌شود). */
+    enableLedgerAccessControl: { type: "checkbox", defaultValue: "0" },
   },
   receiptsPayment: {},
   inventory: {},

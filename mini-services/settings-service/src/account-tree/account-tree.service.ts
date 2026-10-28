@@ -5,7 +5,6 @@ import {
   Logger,
   NotFoundException,
 } from "@nestjs/common";
-import { Prisma } from "@prisma/client";
 import { PrismaService } from "../prisma/prisma.service";
 import { IdGenerationService } from "../id-generation/id-generation.service";
 import {
@@ -302,13 +301,37 @@ export class AccountTreeService {
 
     /* Task 139/140 — seed سطوح تفصیلی برای گره‌های سطح ≥ ۳: سطر «سطح اول» تا
        «سطح N» (N از accDetailLevels — پیش‌فرض ۱۰)؛ عناوین ارسالی فرم هم بلافاصله
-       اعمال می‌شوند تا چیزی که کاربر پیش از نخستین ذخیره تایپ کرده از دست نرود. */
+       اعمال می‌شوند تا چیزی که کاربر پیش از نخستین ذخیره تایپ کرده از دست نرود.
+       seed و اعمالِ عناوین هر دو «بدون تراکنش بیرونی»اند (IDGen ترکیب‌ناپذیر — §8). */
     if (level >= 3) {
       await this.seedDetailLevels(row.id, cfg.detailLevelsCount, structureRef);
       if (dto.detailLevels !== undefined) {
-        await this.prisma.$transaction((tx) =>
-          this.applyDetailLevels(tx, row.id, structureRef, dto.detailLevels ?? []),
-        );
+        const seeded = await this.prisma.accountDetailLevel.findMany({
+          where: { accountNodeRef: row.id },
+          select: { id: true, levelIndex: true },
+        });
+        for (const l of dto.detailLevels) {
+          if (l.levelIndex < 1 || l.levelIndex > ACCOUNT_MAX_DETAIL_LEVEL_INDEX) continue;
+          const cur = seeded.find((s) => s.levelIndex === l.levelIndex);
+          if (cur) {
+            await this.prisma.accountDetailLevel.update({
+              where: { id: cur.id },
+              data: { title: l.title.slice(0, 100), isActive: l.isActive },
+            });
+          } else {
+            const newLevelId = await this.idGen.generateNextId("AccountDetailLevel");
+            await this.prisma.accountDetailLevel.create({
+              data: {
+                id: BigInt(newLevelId),
+                accountNodeRef: row.id,
+                levelIndex: l.levelIndex,
+                title: l.title.slice(0, 100),
+                isActive: l.isActive,
+                ...appBaseOnCreate({ userId: SYSTEM_ACTOR.userId, nodeId: structureRef }),
+              },
+            });
+          }
+        }
       }
     }
 
@@ -372,112 +395,197 @@ export class AccountTreeService {
 
     const norm = this.normalizeLevelFields(level, dto);
 
-    /* بازنویسی تراکنشی مجموعه‌های ارسالی */
-    const result = await this.prisma.$transaction(async (tx) => {
-      const row = await tx.accountNode.update({
-        where: { id: existing.id },
-        data: {
-          code,
-          title,
-          latinTitle: dto.latinTitle?.trim() || null,
-          isActive: dto.isActive,
-          ...norm,
-          ...appBaseOnUpdate(SYSTEM_ACTOR),
-        },
-      });
+    /* §8 — پیش‌تولید همهٔ شناسه‌ها و پیش‌اعتبارسنجی ارجاع‌ها «بیرون» از تراکنش
+       (ID service هرگز با تراکنش بیزینسی ترکیب نمی‌شود — قفل نوشتن SQLite).
+       تراکنش بیرونی فقط می‌نویسد. */
+    const wantedLevels = new Map(
+      (dto.detailLevels ?? [])
+        .filter((l) => l.levelIndex >= 1 && l.levelIndex <= ACCOUNT_MAX_DETAIL_LEVEL_INDEX)
+        .map((l) => [l.levelIndex, l]),
+    );
+    const currentLevels =
+      dto.detailLevels !== undefined
+        ? await this.prisma.accountDetailLevel.findMany({
+            where: { accountNodeRef: existing.id },
+            select: { id: true, levelIndex: true },
+          })
+        : [];
+    const missingLevelIdx = [...wantedLevels.keys()].filter(
+      (idx) => !currentLevels.some((c) => c.levelIndex === idx),
+    );
+    const levelIds =
+      dto.detailLevels !== undefined && missingLevelIdx.length > 0
+        ? await this.idGen.generateNextIdBlock("AccountDetailLevel", missingLevelIdx.length)
+        : null;
 
-      if (dto.detailLevels !== undefined) {
-        await this.applyDetailLevels(tx, existing.id, existing.businessStructureRef, dto.detailLevels);
+    /* اعتبارسنجی هدف‌های تعدیل ماهیت و کاربران مجاز — بیرون از تراکنش */
+    const adjustTargets: bigint[] = [];
+    if (dto.natureAdjust !== undefined) {
+      for (const a of dto.natureAdjust) {
+        const target = await this.prisma.accountNode.findUnique({
+          where: { id: BigInt(a.adjustAccountRef) },
+          select: { id: true },
+        });
+        if (!target) {
+          throw new BadRequestException({
+            statusCode: 422,
+            message: "حساب معین منتخب برای تعدیل ماهیت یافت نشد.",
+            messageKey: "common.error",
+          });
+        }
+        if (target.id === existing.id) {
+          throw new BadRequestException({
+            statusCode: 422,
+            message: "خودِ حساب جاری برای تعدیل ماهیت قابل انتخاب نیست.",
+            messageKey: "common.error",
+          });
+        }
+        adjustTargets.push(target.id);
       }
-
-      if (dto.natureAdjust !== undefined) {
-        await tx.accountNatureAdjust.deleteMany({ where: { accountNodeRef: existing.id } });
-        for (const a of dto.natureAdjust) {
-          const target = await tx.accountNode.findUnique({ where: { id: BigInt(a.adjustAccountRef) } });
-          if (!target) {
-            throw new BadRequestException({
-              statusCode: 422,
-              message: "حساب معین منتخب برای تعدیل ماهیت یافت نشد.",
-              messageKey: "common.error",
-            });
-          }
-          if (target.id === existing.id) {
-            throw new BadRequestException({
-              statusCode: 422,
-              message: "خودِ حساب جاری برای تعدیل ماهیت قابل انتخاب نیست.",
-              messageKey: "common.error",
-            });
-          }
-          const newId = await this.idGen.generateNextId("AccountNatureAdjust");
-          await tx.accountNatureAdjust.create({
-            data: {
-              id: BigInt(newId),
-              accountNodeRef: existing.id,
-              adjustAccountRef: target.id,
-              description: a.description?.trim() || null,
-              description2: a.description2?.trim() || null,
-              ...appBaseOnCreate({
-                userId: SYSTEM_ACTOR.userId,
-                nodeId: existing.businessStructureRef,
-              }),
-            },
+    }
+    const adjustIds =
+      dto.natureAdjust !== undefined && dto.natureAdjust.length > 0
+        ? await this.idGen.generateNextIdBlock("AccountNatureAdjust", dto.natureAdjust.length)
+        : null;
+    const recurringIds =
+      dto.recurringDesc !== undefined && dto.recurringDesc.length > 0
+        ? await this.idGen.generateNextIdBlock("AccountRecurringDesc", dto.recurringDesc.length)
+        : null;
+    if (dto.allowedUsers !== undefined) {
+      for (const u of dto.allowedUsers) {
+        const user = await this.prisma.user.findUnique({
+          where: { id: BigInt(u.userRef) },
+          select: { id: true },
+        });
+        if (!user) {
+          throw new BadRequestException({
+            statusCode: 422,
+            message: "کاربر منتخب برای «کاربران مجاز» یافت نشد.",
+            messageKey: "common.error",
           });
         }
       }
+    }
+    const allowedIds =
+      dto.allowedUsers !== undefined && dto.allowedUsers.length > 0
+        ? await this.idGen.generateNextIdBlock("AccountAllowedUser", dto.allowedUsers.length)
+        : null;
 
-      if (dto.recurringDesc !== undefined) {
-        await tx.accountRecurringDesc.deleteMany({ where: { accountNodeRef: existing.id } });
-        for (const d of dto.recurringDesc) {
-          const newId = await this.idGen.generateNextId("AccountRecurringDesc");
-          await tx.accountRecurringDesc.create({
-            data: {
-              id: BigInt(newId),
-              accountNodeRef: existing.id,
-              description: d.description.trim(),
-              description2: d.description2?.trim() || null,
-              ...appBaseOnCreate({
-                userId: SYSTEM_ACTOR.userId,
-                nodeId: existing.businessStructureRef,
-              }),
-            },
-          });
-        }
-      }
+    /* بازنویسی تراکنشی مجموعه‌های ارسالی — فقط نوشتن، بدون IDGen */
+    const result = await this.prisma.$transaction(
+      async (tx) => {
+        const row = await tx.accountNode.update({
+          where: { id: existing.id },
+          data: {
+            code,
+            title,
+            latinTitle: dto.latinTitle?.trim() || null,
+            isActive: dto.isActive,
+            ...norm,
+            ...appBaseOnUpdate(SYSTEM_ACTOR),
+          },
+        });
 
-      if (dto.allowedUsers !== undefined) {
-        await tx.accountAllowedUser.deleteMany({ where: { accountNodeRef: existing.id } });
-        for (const u of dto.allowedUsers) {
-          const user = await tx.user.findUnique({ where: { id: BigInt(u.userRef) } });
-          if (!user) {
-            throw new BadRequestException({
-              statusCode: 422,
-              message: "کاربر منتخب برای «کاربران مجاز» یافت نشد.",
-              messageKey: "common.error",
+        if (dto.detailLevels !== undefined) {
+          /* به‌روزرسانی عنوان/فعالِ سطوح موجود + ساخت سطوح کم‌شمار با ID پیش‌تولیدشده
+             (انواع انتسابیِ سطوح حذف‌شده با cascade می‌روند) */
+          for (const cur of currentLevels) {
+            const w = wantedLevels.get(cur.levelIndex);
+            if (!w) {
+              await tx.accountDetailLevel.delete({ where: { id: BigInt(cur.id) } });
+              continue;
+            }
+            await tx.accountDetailLevel.update({
+              where: { id: BigInt(cur.id) },
+              data: { title: w.title.slice(0, 100), isActive: w.isActive },
             });
           }
-          const newId = await this.idGen.generateNextId("AccountAllowedUser");
-          await tx.accountAllowedUser.create({
-            data: {
-              id: BigInt(newId),
-              accountNodeRef: existing.id,
-              userRef: user.id,
-              permCreate: u.permCreate,
-              permView: u.permView,
-              permEdit: u.permEdit,
-              permDelete: u.permDelete,
-              permReport: u.permReport,
-              permSend: u.permSend,
-              ...appBaseOnCreate({
-                userId: SYSTEM_ACTOR.userId,
-                nodeId: existing.businessStructureRef,
-              }),
-            },
-          });
+          for (let i = 0; i < missingLevelIdx.length; i++) {
+            const idx = missingLevelIdx[i];
+            const w = wantedLevels.get(idx);
+            await tx.accountDetailLevel.create({
+              data: {
+                id: BigInt((levelIds as number) + i),
+                accountNodeRef: existing.id,
+                levelIndex: idx,
+                title: (w as { title: string }).title.slice(0, 100),
+                isActive: (w as { isActive: boolean }).isActive,
+                ...appBaseOnCreate({
+                  userId: SYSTEM_ACTOR.userId,
+                  nodeId: existing.businessStructureRef,
+                }),
+              },
+            });
+          }
         }
-      }
 
-      return row;
-    });
+        if (dto.natureAdjust !== undefined) {
+          await tx.accountNatureAdjust.deleteMany({ where: { accountNodeRef: existing.id } });
+          for (let i = 0; i < dto.natureAdjust.length; i++) {
+            const a = dto.natureAdjust[i];
+            await tx.accountNatureAdjust.create({
+              data: {
+                id: BigInt((adjustIds as number) + i),
+                accountNodeRef: existing.id,
+                adjustAccountRef: adjustTargets[i],
+                description: a.description?.trim() || null,
+                description2: a.description2?.trim() || null,
+                ...appBaseOnCreate({
+                  userId: SYSTEM_ACTOR.userId,
+                  nodeId: existing.businessStructureRef,
+                }),
+              },
+            });
+          }
+        }
+
+        if (dto.recurringDesc !== undefined) {
+          await tx.accountRecurringDesc.deleteMany({ where: { accountNodeRef: existing.id } });
+          for (let i = 0; i < dto.recurringDesc.length; i++) {
+            const d = dto.recurringDesc[i];
+            await tx.accountRecurringDesc.create({
+              data: {
+                id: BigInt((recurringIds as number) + i),
+                accountNodeRef: existing.id,
+                description: d.description.trim(),
+                description2: d.description2?.trim() || null,
+                ...appBaseOnCreate({
+                  userId: SYSTEM_ACTOR.userId,
+                  nodeId: existing.businessStructureRef,
+                }),
+              },
+            });
+          }
+        }
+
+        if (dto.allowedUsers !== undefined) {
+          await tx.accountAllowedUser.deleteMany({ where: { accountNodeRef: existing.id } });
+          for (let i = 0; i < dto.allowedUsers.length; i++) {
+            const u = dto.allowedUsers[i];
+            await tx.accountAllowedUser.create({
+              data: {
+                id: BigInt((allowedIds as number) + i),
+                accountNodeRef: existing.id,
+                userRef: BigInt(u.userRef),
+                permCreate: u.permCreate,
+                permView: u.permView,
+                permEdit: u.permEdit,
+                permDelete: u.permDelete,
+                permReport: u.permReport,
+                permSend: u.permSend,
+                ...appBaseOnCreate({
+                  userId: SYSTEM_ACTOR.userId,
+                  nodeId: existing.businessStructureRef,
+                }),
+              },
+            });
+          }
+        }
+
+        return row;
+      },
+      { timeout: 30_000, maxWait: 10_000 },
+    );
 
     this.logger.log(`AccountNode updated — ID=${id} L${level} Code=${code} Title=${title}`);
     return this.toNodeDto(result);
@@ -577,52 +685,6 @@ export class AccountTreeService {
   }
 
   /* ------------------------------ internals ------------------------------ */
-
-  /**
-   * اعمال سطرهای «سطوح تفصیلی» ارسالی فرم — تراکنشی: به‌روزرسانی عنوان/فعالِ
-   * سطوح موجود + ساخت سطوح کم‌شمار + حذف سطوح اضافی (انواع انتسابیِ سطوح
-   * حذف‌شده با cascade می‌روند).
-   */
-  private async applyDetailLevels(
-    tx: Prisma.TransactionClient,
-    nodeRef: bigint,
-    structureRef: bigint,
-    items: Array<{ levelIndex: number; title: string; isActive: boolean }>,
-  ) {
-    const current = await tx.accountDetailLevel.findMany({ where: { accountNodeRef: nodeRef } });
-    const wanted = new Map(
-      items
-        .filter((l) => l.levelIndex >= 1 && l.levelIndex <= ACCOUNT_MAX_DETAIL_LEVEL_INDEX)
-        .map((l) => [l.levelIndex, l]),
-    );
-    for (const cur of current) {
-      const w = wanted.get(cur.levelIndex);
-      if (!w) {
-        await tx.accountDetailLevel.delete({ where: { id: cur.id } });
-        continue;
-      }
-      await tx.accountDetailLevel.update({
-        where: { id: cur.id },
-        data: { title: w.title.slice(0, 100), isActive: w.isActive },
-      });
-    }
-    const existingIdx = new Set(current.map((c) => c.levelIndex));
-    for (const [idx, w] of wanted) {
-      if (!existingIdx.has(idx)) {
-        const newId = await this.idGen.generateNextId("AccountDetailLevel");
-        await tx.accountDetailLevel.create({
-          data: {
-            id: BigInt(newId),
-            accountNodeRef: nodeRef,
-            levelIndex: idx,
-            title: w.title.slice(0, 100),
-            isActive: w.isActive,
-            ...appBaseOnCreate({ userId: SYSTEM_ACTOR.userId, nodeId: structureRef }),
-          },
-        });
-      }
-    }
-  }
 
   /** seed سطرهای سطوح تفصیلی ۱..N برای گره تازه (عنوان خالی، فعال). */
   private async seedDetailLevels(nodeRef: bigint, count: number, structureRef: bigint) {
