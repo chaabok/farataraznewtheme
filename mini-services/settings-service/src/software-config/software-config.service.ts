@@ -62,6 +62,15 @@ export class SoftwareConfigService {
     let saved = 0;
     let deleted = 0;
 
+    /* Task 137 — نقشهٔ payload برای قانون فیلدهای مشتق‌شده (خط دوم دفاعی):
+       اگر from و همهٔ کلیدهای minus در همین payload حاضر باشند، مقدار فیلد
+       مشتق‌شده باید برابر from − Σ(minus) باشد؛ وگرنه فقط بازهٔ min/max
+       اعمال می‌شود. */
+    const incoming = new Map<string, string>();
+    for (const it of dto.items) {
+      incoming.set(String(it.configKey ?? "").trim(), String(it.configValue ?? "").trim());
+    }
+
     for (const it of dto.items) {
       const key = String(it.configKey ?? "").trim();
       const spec = registry[key];
@@ -107,6 +116,28 @@ export class SoftwareConfigService {
             message: `مقدار فیلد «${key}» نمی‌تواند بیشتر از ${spec.max} باشد`,
             messageKey: "common.error",
           });
+        }
+        /* Task 137 — قانون مشتق‌شده: معین = طول کد حسابها − طول گروه حساب −
+           طول حساب کل (فقط وقتی همهٔ مراجع در همین payload حاضرند؛ مقادیر
+           خالی = حذف ردیف و مشمول این قانون نیستند). */
+        if (spec.derived) {
+          const fromRaw = incoming.get(spec.derived.from) ?? "";
+          const minusRaws = spec.derived.minus.map((k) => incoming.get(k) ?? "");
+          if (fromRaw !== "" && minusRaws.every((v) => v !== "")) {
+            const fromN = Number(fromRaw);
+            const minusSum = minusRaws.reduce((s, v) => s + Number(v), 0);
+            if (
+              !Number.isFinite(fromN) ||
+              minusRaws.some((v) => !Number.isFinite(Number(v))) ||
+              num !== fromN - minusSum
+            ) {
+              throw new BadRequestException({
+                statusCode: 422,
+                message: `مقدار فیلد «${key}» باید برابر مقدار «${spec.derived.from}» منهای جمع «${spec.derived.minus.join("» و «")}» باشد`,
+                messageKey: "common.error",
+              });
+            }
+          }
         }
       }
 

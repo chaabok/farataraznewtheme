@@ -224,7 +224,27 @@ export function SoftwareConfigBody() {
     setValues((prev) => ({ ...prev, [activeTab]: { ...(prev[activeTab] ?? {}), [key]: v } }));
   };
 
+  /* Task 137 — مقدار مشتق‌شدهٔ زندهٔ یک فیلد (derived): value(from) − Σvalue(minus)
+     از مقادیر فعلی فرم؛ برای هر مرجع، مقدار ویرایش‌شده وگرنه defaultValue
+     (هم‌راستا با چیزی که پس از ذخیره/بازخوانی نمایش داده می‌شود)؛ اگر هر مرجع
+     عدد معتبری نباشد رشتهٔ خالی برمی‌گردد (ذخیره با خطای اختصاصی رد می‌شود). */
+  const derivedValue = (f: SwConfigFieldDef): string => {
+    if (!f.derived) return "";
+    const defs = SOFTWARE_CONFIG_FIELDS[activeTab] ?? [];
+    const eff = (key: string): string => {
+      const v = values[activeTab]?.[key];
+      if (v !== undefined && v !== "") return v;
+      return defs.find((d) => d.key === key)?.defaultValue ?? "";
+    };
+    const raws = [eff(f.derived.from), ...f.derived.minus.map(eff)];
+    if (raws.some((r) => r === "")) return "";
+    const nums = raws.map((r) => Number(r));
+    if (nums.some((n) => !Number.isFinite(n))) return "";
+    return String(nums[0] - nums.slice(1).reduce((s, n) => s + n, 0));
+  };
+
   const save = async () => {
+    if (fields.length === 0) return;
     if (values[activeTab] === undefined) return; // دادهٔ تب هنوز لود نشده
     /* Task 73 — اعتبارسنجی بازهٔ فیلدهای عددی پیش از ارسال (خط اول؛
        خط دوم همان قانون روی سرور است) */
@@ -303,8 +323,11 @@ export function SoftwareConfigBody() {
   }
 
   const renderField = (f: SwConfigFieldDef) => {
-    /* Task 73 — مقدار پیش‌فرض وقتی ردیف ذخیره‌شده‌ای نیست */
-    const val = values[activeTab]?.[f.key] ?? f.defaultValue ?? "";
+    /* Task 73 — مقدار پیش‌فرض وقتی ردیف ذخیره‌شده‌ای نیست؛ Task 137 — فیلد
+       مشتق‌شده مقدار زندهٔ محاسبه‌شده را نشان می‌دهد (فقط‌خواندنی) */
+    const val = f.derived
+      ? derivedValue(f)
+      : (values[activeTab]?.[f.key] ?? f.defaultValue ?? "");
     if (f.type === "checkbox") {
       return (
         <label
@@ -361,7 +384,15 @@ export function SoftwareConfigBody() {
             step={f.type === "number" ? 1 : undefined}
             value={val}
             onChange={(e) => setVal(f.key, e.target.value)}
-            className="h-9 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+            /* Task 137 — فیلد مشتق‌شده فقط‌خواندنی است؛ مقدارش از سه فیلد
+               دیگر به‌دست می‌آید و با تغییر آن‌ها زنده به‌روز می‌شود */
+            readOnly={!!f.derived}
+            aria-readonly={f.derived ? "true" : undefined}
+            title={f.derived ? t("settings.swAccDeriveHint") : undefined}
+            className={cn(
+              "h-9 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring",
+              f.derived && "cursor-default bg-muted/50 text-muted-foreground",
+            )}
           />
         )}
       </div>
@@ -457,6 +488,11 @@ export function SoftwareConfigBody() {
                       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         {seg.fields.map((f) => renderField(f))}
                       </div>
+                      {seg.fields.some((f) => f.derived) && (
+                        <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">
+                          {t("settings.swAccDeriveHint")}
+                        </p>
+                      )}
                     </div>
                   ),
                 )}
