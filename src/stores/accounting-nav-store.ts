@@ -20,7 +20,8 @@ import { create } from "zustand";
 export type AccountingSubPage =
   | "home"
   | "detail-type" // Task 120 — نوع تفصیل جدید (اطلاعات پایهٔ حسابداری)
-  | "detail-type-numbering"; // Task 131 — شماره گذاری تفصیلی ها (اطلاعات پایهٔ حسابداری)
+  | "detail-type-numbering" // Task 131 — شماره گذاری تفصیلی ها (اطلاعات پایهٔ حسابداری)
+  | "account-tree"; // Task 140 — درختواره حسابها (اطلاعات پایهٔ حسابداری)
 
 interface AccountingNavState {
   /** درخواست در انتظار (null = هیچ) */

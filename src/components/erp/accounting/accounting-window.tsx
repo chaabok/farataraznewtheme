@@ -9,6 +9,7 @@ import { useWindowChrome } from "@/components/desktop/app-window";
 import { AccountingMenuHome } from "./accounting-menu-home";
 import { DetailTypeForm } from "./detail-type-form";
 import { DetailTypeNumberingForm } from "./detail-type-numbering-form";
+import { AccountTreeForm } from "./account-tree-form";
 
 /**
  * AccountingWindow — Task 119/120/131 (درخواست مالک): پنجرهٔ نرم‌افزار
@@ -26,6 +27,7 @@ import { DetailTypeNumberingForm } from "./detail-type-numbering-form";
 const PAGE_TITLE_KEY: Partial<Record<AccountingSubPage, string>> = {
   "detail-type": "dt.formTitle",
   "detail-type-numbering": "dtn.formTitle",
+  "account-tree": "atr.formTitle",
 };
 
 export function AccountingWindow() {
@@ -90,6 +92,7 @@ export function AccountingWindow() {
         <div className="min-h-0 flex-1 overflow-y-auto p-3 scrollbar-slim">
           {page === "detail-type" && <DetailTypeForm onBack={() => go("home")} />}
           {page === "detail-type-numbering" && <DetailTypeNumberingForm />}
+          {page === "account-tree" && <AccountTreeForm onBack={() => go("home")} />}
         </div>
       </div>
     );

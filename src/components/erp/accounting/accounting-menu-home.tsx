@@ -1,6 +1,6 @@
 "use client";
 
-import { Calculator, Database, ListOrdered, Tags } from "lucide-react";
+import { Calculator, Database, ListOrdered, ListTree, Tags } from "lucide-react";
 import { AppMenuHome, type AppMenuGroupDef } from "@/components/erp/shared/app-menu-home";
 
 /**
@@ -48,6 +48,14 @@ const ACCOUNTING_MENU_GROUPS: AppMenuGroupDef[] = [
         icon: ListOrdered,
         gradient: "from-amber-500 to-orange-600",
       },
+      {
+        /* Task 140 — درختواره حسابها (SimpleTreeForm) */
+        page: "account-tree",
+        titleKey: "atr.formTitle",
+        descKey: "atr.formDesc",
+        icon: ListTree,
+        gradient: "from-teal-500 to-cyan-600",
+      },
     ],
   },
 ];
@@ -55,7 +63,7 @@ const ACCOUNTING_MENU_GROUPS: AppMenuGroupDef[] = [
 export function AccountingMenuHome({
   go,
 }: {
-  go: (page: "detail-type" | "detail-type-numbering") => void;
+  go: (page: "detail-type" | "detail-type-numbering" | "account-tree") => void;
 }) {
   return (
     <AppMenuHome
@@ -65,7 +73,7 @@ export function AccountingMenuHome({
       headerGradient="from-violet-500 to-violet-700"
       storageKey="accounting.menuView"
       groups={ACCOUNTING_MENU_GROUPS}
-      go={(page) => go(page as "detail-type" | "detail-type-numbering")}
+      go={(page) => go(page as "detail-type" | "detail-type-numbering" | "account-tree")}
     />
   );
 }
