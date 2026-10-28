@@ -269,7 +269,7 @@ export function MainDataGrid({
   /* ---------- Task 133 — جابجایی ستون‌ها (درگ‌اند‌دراپ سرستون) ---------- */
   /* نیمهٔ visual هدف → منطقِ before/after جهت‌آگاه: در RTL نیمهٔ راستِ
      هدف = «پیش از هدف» (جریان از راست به چپ)، در LTR = «پس از هدف» */
-  const sideAfter = (e: React.DragEvent, el: HTMLElement): boolean => {
+  const sideAfter = (e: React.DragEvent, el: Element): boolean => {
     const rect = el.getBoundingClientRect();
     const visualAfter = e.clientX - rect.left > rect.width / 2;
     return dir === "rtl" ? !visualAfter : visualAfter;
@@ -386,11 +386,20 @@ export function MainDataGrid({
             <tr>
               {visibleColumns.map((c) => {
                 const sorted = sort?.key === c.key;
+                const dropHere = dropAt?.key === c.key && dragKey !== null && dragKey !== c.key;
                 return (
                   <th
                     key={c.key}
-                    style={{ width: c.width, minWidth: c.width ?? 140 }}
-                    className="sticky top-0 z-20 border-b border-border/70 bg-muted/80 px-2 text-start font-semibold text-foreground/85 backdrop-blur"
+                    draggable
+                    onDragStart={(e) => onHeaderDragStart(e, c.key)}
+                    onDragOver={(e) => onHeaderDragOver(e, c.key)}
+                    onDrop={(e) => onHeaderDrop(e, c.key)}
+                    onDragEnd={onHeaderDragEnd}
+                    title={t("dfb.list.reorderHint")}
+                    className={cn(
+                      "relative sticky top-0 z-20 border-b border-border/70 bg-muted/80 px-2 text-start font-semibold text-foreground/85 backdrop-blur",
+                      dragKey === c.key && "opacity-40",
+                    )}
                   >
                     <button
                       type="button"
@@ -411,6 +420,42 @@ export function MainDataGrid({
                         )
                       ) : null}
                     </button>
+                    {/* Task 133 — نشانگر درجِ جابجایی در لبهٔ مقصد (منطقی) */}
+                    {dropHere && (
+                      <span
+                        aria-hidden
+                        className={cn(
+                          "pointer-events-none absolute inset-y-0 z-30 w-0.5 bg-primary",
+                          dropAt!.after ? "end-0" : "start-0",
+                        )}
+                      />
+                    )}
+                    {/* Task 133 — دستگیرهٔ تغییر عرض: لبهٔ انتهایی ستون
+                        (RTL = لبهٔ چپ، LTR = لبهٔ راست) — فقط همین ستون */}
+                    <span
+                      role="separator"
+                      tabIndex={0}
+                      aria-orientation="vertical"
+                      aria-label={`${t("dfb.list.resizeHint")} — ${c.label}`}
+                      title={t("dfb.list.resizeHint")}
+                      aria-valuenow={effWidth(c)}
+                      aria-valuemin={MIN_COL_W}
+                      onKeyDown={(e) => keyResize(e, c)}
+                      onPointerDown={(e) => startResize(e, c.key, effWidth(c))}
+                      onPointerMove={moveResize}
+                      onPointerUp={endResize}
+                      onPointerCancel={endResize}
+                      onDragStart={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                      }}
+                      className={cn(
+                        "absolute inset-y-0 end-0 z-30 flex w-1.5 cursor-col-resize touch-none items-center justify-center",
+                        "after:absolute after:inset-y-1.5 after:w-px after:bg-border/80",
+                        "hover:after:bg-primary/70 focus-visible:after:bg-primary focus-visible:outline-none",
+                        resizing && "after:bg-primary/70",
+                      )}
+                    />
                   </th>
                 );
               })}
@@ -418,6 +463,9 @@ export function MainDataGrid({
               <th className="sticky top-0 z-20 w-12 min-w-12 border-b border-border/70 border-s bg-muted/80 px-1 text-center text-[10px] font-medium text-muted-foreground backdrop-blur">
                 #
               </th>
+              {/* Task 133 — ستون مجازی جمع‌شونده: فضای مازاد قاب را می‌بلعد
+                  تا عرض ستون‌های واقعی دقیق و دست‌نخورده بماند */}
+              <th aria-hidden className="sticky top-0 z-20 border-b border-border/70 bg-muted/80 backdrop-blur" />
             </tr>
             {filterRow && (
               <tr>
@@ -428,7 +476,6 @@ export function MainDataGrid({
                   return (
                     <th
                       key={c.key}
-                      style={{ width: c.width, minWidth: c.width ?? 140 }}
                       className="sticky top-9 z-10 border-b border-border/60 bg-background/95 px-1.5 py-1 backdrop-blur"
                     >
                       <div className="flex items-center gap-1">
@@ -471,19 +518,20 @@ export function MainDataGrid({
                   );
                 })}
                 <th className="sticky top-9 z-10 border-b border-border/60 border-s bg-background/95 px-1 py-1 backdrop-blur" />
+                <th aria-hidden className="sticky top-9 z-10 border-b border-border/60 bg-background/95 backdrop-blur" />
               </tr>
             )}
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={visibleColumns.length + 1} className="py-16 text-center text-muted-foreground">
+                <td colSpan={visibleColumns.length + 2} className="py-16 text-center text-muted-foreground">
                   <Loader2 className="mx-auto h-5 w-5 animate-spin" aria-hidden />
                 </td>
               </tr>
             ) : filtered.length === 0 ? (
               <tr>
-                <td colSpan={visibleColumns.length + 1} className="py-16">
+                <td colSpan={visibleColumns.length + 2} className="py-16">
                   <div className="flex flex-col items-center gap-2 text-muted-foreground">
                     <span className="flex h-11 w-11 items-center justify-center rounded-full bg-muted/70" aria-hidden>
                       <Inbox className="h-5 w-5" />
@@ -527,6 +575,7 @@ export function MainDataGrid({
                     <td className="border-b border-border/40 border-s px-1 py-1.5 text-center font-mono text-[10px] text-muted-foreground">
                       {i + 1}
                     </td>
+                    <td aria-hidden className="border-b border-border/40" />
                   </tr>
                 );
               })
@@ -576,7 +625,7 @@ export function MainDataGrid({
             <DropdownMenuContent align="end" className="max-h-72 overflow-y-auto scrollbar-slim">
               <DropdownMenuLabel>{t("dfb.list.showColumns")}</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              {columns
+              {orderedColumns
                 .filter((c) => c.hideable !== false)
                 .map((c) => (
                   <DropdownMenuCheckboxItem
