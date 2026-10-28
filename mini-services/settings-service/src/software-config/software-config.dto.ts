@@ -77,7 +77,9 @@ export const SOFTWARE_CONFIG_FIELDS: Record<
       defaultValue: "2",
       derived: { from: "accCodeLen", minus: ["accGroupCodeLen", "accLedgerCodeLen"] },
     },
-    accDetailCodeLen: { type: "number", min: 0, max: 15, integer: true, defaultValue: "0" },
+    /* Task 138 — مالک: «فیلد طول کدتفصیلی را بصورت پیش فرض با عدد 6
+       تکمیل نمایید» ⇒ پیش‌فرض تفصیلی از ۰ به ۶. */
+    accDetailCodeLen: { type: "number", min: 0, max: 15, integer: true, defaultValue: "6" },
   },
   receiptsPayment: {},
   inventory: {},

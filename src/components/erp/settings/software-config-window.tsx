@@ -8,7 +8,6 @@ import {
   Landmark,
   ListPlus,
   ReceiptText,
-  Save,
   ShoppingCart,
   SlidersHorizontal,
   Warehouse,
@@ -19,6 +18,9 @@ import { useT } from "@/stores/settings-store";
 import { useTabDirty } from "@/components/desktop/app-window";
 import type { DictKey } from "@/i18n/dictionaries";
 import { LanguageSettingsSections } from "@/components/erp/settings/language-settings";
+/* Task 138 — دکمهٔ ذخیره از خانوادهٔ اکشن‌بار فرم‌ها: همان آیکون/ظاهر
+   ذخیرهٔ اکشن‌بار (دکمهٔ مربعی سبز با آیکون Save و تولتیپ) در هدر. */
+import { SaveButton } from "@/components/forms/action-bar/save-button";
 
 /* Task 72 (owner-approved consultation) — «پیکربندی نرم افزارها» hub inside
    the Settings window: one tab per system software (7 announced by the owner;
@@ -161,7 +163,9 @@ const SOFTWARE_CONFIG_FIELDS: Record<string, SwConfigFieldDef[]> = {
       min: 0,
       max: 15,
       integer: true,
-      defaultValue: "0",
+      /* Task 138 — مالک: «فیلد طول کدتفصیلی را بصورت پیش فرض با عدد 6
+         تکمیل نمایید» ⇒ پیش‌فرض از ۰ به ۶؛ آینهٔ سرور: software-config.dto.ts */
+      defaultValue: "6",
       groupLabelKey: "settings.swAccCodeLenGroup",
     },
   ],
@@ -401,16 +405,24 @@ export function SoftwareConfigBody() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      {/* hub header */}
+      {/* hub header — Task 138: دکمهٔ ذخیره به هدر منتقل شد (سمت مقابل عنوان؛
+         RTL: چپ / LTR: راست) با ظاهر اکشن‌بار (SaveButton)؛ در تب‌های بی‌فیلد
+         یا دادهٔ لودنشده غیرفعال است */}
       <div className="border-b border-border/60 bg-gradient-to-l from-primary/10 via-transparent to-transparent p-4">
-        <div className="flex items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-teal-500 to-teal-700 text-white shadow-md">
-            <SlidersHorizontal className="h-5 w-5" aria-hidden />
-          </span>
-          <div>
-            <h2 className="text-sm font-bold">{t("settings.swConfig")}</h2>
-            <p className="text-xs text-muted-foreground">{t("settings.swConfigDesc")}</p>
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-teal-500 to-teal-700 text-white shadow-md">
+              <SlidersHorizontal className="h-5 w-5" aria-hidden />
+            </span>
+            <div>
+              <h2 className="text-sm font-bold">{t("settings.swConfig")}</h2>
+              <p className="text-xs text-muted-foreground">{t("settings.swConfigDesc")}</p>
+            </div>
           </div>
+          <SaveButton
+            onClick={save}
+            disabled={fields.length === 0 || values[activeTab] === undefined}
+          />
         </div>
       </div>
 
@@ -496,16 +508,6 @@ export function SoftwareConfigBody() {
                     </div>
                   ),
                 )}
-              </div>
-              <div className="mt-5 flex justify-end">
-                <button
-                  onClick={save}
-                  disabled={values[activeTab] === undefined}
-                  className="flex h-9 items-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 disabled:opacity-60 cursor-pointer"
-                >
-                  <Save className="h-4 w-4" aria-hidden />
-                  {t("common.save")}
-                </button>
               </div>
             </section>
           )}
