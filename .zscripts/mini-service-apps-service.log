@@ -1,5 +1,5 @@
 [apps-service] Installing dependencies...
-[0.05ms] ".env"
+[0.03ms] ".env"
 bun install v1.3.14 (0d9b296a)
 
 + @types/node@22.20.5
@@ -12,17 +12,17 @@ bun install v1.3.14 (0d9b296a)
 + reflect-metadata@0.2.2
 + rxjs@7.8.2
 
-103 packages installed [2.07s]
+103 packages installed [1.81s]
 [apps-service] Running bun run dev...
 $ NODE_PATH=./node_modules bun --hot src/main.ts
-[32m[Nest] 1099  - [39m10/28/2026, 7:18:44 PM [32m    LOG[39m [38;5;3m[NestFactory] [39m[32mStarting Nest application...[39m
-[32m[Nest] 1099  - [39m10/28/2026, 7:18:44 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAppModule dependencies initialized[39m[38;5;3m +34ms[39m
-[32m[Nest] 1099  - [39m10/28/2026, 7:18:44 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAppsModule dependencies initialized[39m[38;5;3m +0ms[39m
-[32m[Nest] 1099  - [39m10/28/2026, 7:18:45 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAppsController {/}:[39m[38;5;3m +959ms[39m
-[32m[Nest] 1099  - [39m10/28/2026, 7:18:45 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/health, GET} route[39m[38;5;3m +33ms[39m
-[32m[Nest] 1099  - [39m10/28/2026, 7:18:45 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/apps, GET} route[39m[38;5;3m +1ms[39m
-[32m[Nest] 1099  - [39m10/28/2026, 7:18:45 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/:appKey/meta, GET} route[39m[38;5;3m +8ms[39m
-[32m[Nest] 1099  - [39m10/28/2026, 7:18:45 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/:appKey/health, GET} route[39m[38;5;3m +5ms[39m
-[32m[Nest] 1099  - [39m10/28/2026, 7:18:45 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/:appKey/integrations/status, GET} route[39m[38;5;3m +1ms[39m
-[32m[Nest] 1099  - [39m10/28/2026, 7:18:45 PM [32m    LOG[39m [38;5;3m[NestApplication] [39m[32mNest application successfully started[39m[38;5;3m +60ms[39m
-[32m[Nest] 1099  - [39m10/28/2026, 7:18:45 PM [32m    LOG[39m [38;5;3m[Bootstrap] [39m[32mapps-service listening on http://127.0.0.1:3002[39m
+[32m[Nest] 1146  - [39m10/28/2026, 10:09:23 PM [32m    LOG[39m [38;5;3m[NestFactory] [39m[32mStarting Nest application...[39m
+[32m[Nest] 1146  - [39m10/28/2026, 10:09:23 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAppModule dependencies initialized[39m[38;5;3m +173ms[39m
+[32m[Nest] 1146  - [39m10/28/2026, 10:09:23 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAppsModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 1146  - [39m10/28/2026, 10:09:24 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAppsController {/}:[39m[38;5;3m +1636ms[39m
+[32m[Nest] 1146  - [39m10/28/2026, 10:09:24 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/health, GET} route[39m[38;5;3m +19ms[39m
+[32m[Nest] 1146  - [39m10/28/2026, 10:09:24 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/apps, GET} route[39m[38;5;3m +34ms[39m
+[32m[Nest] 1146  - [39m10/28/2026, 10:09:24 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/:appKey/meta, GET} route[39m[38;5;3m +7ms[39m
+[32m[Nest] 1146  - [39m10/28/2026, 10:09:24 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/:appKey/health, GET} route[39m[38;5;3m +2ms[39m
+[32m[Nest] 1146  - [39m10/28/2026, 10:09:24 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/:appKey/integrations/status, GET} route[39m[38;5;3m +4ms[39m
+[32m[Nest] 1146  - [39m10/28/2026, 10:09:24 PM [32m    LOG[39m [38;5;3m[NestApplication] [39m[32mNest application successfully started[39m[38;5;3m +25ms[39m
+[32m[Nest] 1146  - [39m10/28/2026, 10:09:25 PM [32m    LOG[39m [38;5;3m[Bootstrap] [39m[32mapps-service listening on http://127.0.0.1:3002[39m
