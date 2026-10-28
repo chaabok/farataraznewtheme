@@ -20,8 +20,9 @@ import { AccountTreeForm } from "./account-tree-form";
  * ساختار پنجره الگوی عمومی (Task 75/117) است: home = منوی اعلامی با ۴ حالت
  * نمایش؛ فرم‌های اعلامی به‌صورت زیرصفحهٔ نوار-باریک (بازگشت + breadcrumb)
  * در همین پنجره باز می‌شوند — هر فرم اعلامی یک زیرصفحه به این switch اضافه
- * می‌کند. فرم‌ها: «نوع تفصیل جدید» (Task 120) و «شماره گذاری تفصیلی ها»
- * (Task 131).
+ * می‌کند. فرم‌ها: «نوع تفصیل جدید» (Task 120)، «شماره گذاری تفصیلی ها»
+ * (Task 131) و «ایجاد تفصیلی ها» (Task 144 — از Task 145 زیر زیرمنوی
+ * «اطلاعات تفصیلی ها»).
  */
 
 /** عنوان زندهٔ برگه به ازای هر زیرصفحهٔ فرم (Task 82 — الگوی عمومی) */
@@ -30,6 +31,15 @@ const PAGE_TITLE_KEY: Partial<Record<AccountingSubPage, string>> = {
   "detail-type-numbering": "dtn.formTitle",
   "detail-items": "di.formTitle",
   "account-tree": "atr.formTitle",
+};
+
+/** زیرمنوی مادر هر زیرصفحه برای breadcrumb — Task 145: تفصیلی ها زیرمنوی
+ *  مستقل خودش را دارد و دیگر زیر «اطلاعات پایه» نیست */
+const PAGE_GROUP_KEY: Partial<Record<AccountingSubPage, string>> = {
+  "detail-type": "acc.menuBasicInfo",
+  "detail-type-numbering": "acc.menuBasicInfo",
+  "detail-items": "acc.menuDetailInfo",
+  "account-tree": "acc.menuBasicInfo",
 };
 
 export function AccountingWindow() {
@@ -82,7 +92,7 @@ export function AccountingWindow() {
             /
           </span>
           <span className="shrink-0 text-xs font-medium text-muted-foreground">
-            {t("acc.menuBasicInfo")}
+            {t((PAGE_GROUP_KEY[page] ?? "acc.menuBasicInfo") as never)}
           </span>
           <span className="shrink-0 text-xs text-muted-foreground/50" aria-hidden>
             /

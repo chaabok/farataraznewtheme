@@ -1,6 +1,6 @@
 "use client";
 
-import { Calculator, Database, FolderPlus, ListOrdered, ListTree, Tags } from "lucide-react";
+import { Calculator, Database, FolderPlus, Layers, ListOrdered, ListTree, Tags } from "lucide-react";
 import { AppMenuHome, type AppMenuGroupDef } from "@/components/erp/shared/app-menu-home";
 
 /**
@@ -21,6 +21,14 @@ import { AppMenuHome, type AppMenuGroupDef } from "@/components/erp/shared/app-m
  *   · همان زیرمنو در درختوارهٔ فرمساز هم ثبت است (SYSTEM_SUBMENUS — dfb seed،
  *     کد "accBasicInfo"؛ SYSTEM_FORMS با anchorSubmenuCode همان) تا قرارداد
  *     Task 112 در هر دو منو برقرار بماند.
+ *
+ * زیرمنوی «اطلاعات تفصیلی ها» — Task 145 (درخواست مالک: «ایجاد تفصیلی ها
+ * باید یک زیرمنو باشد چون دارای فرم های متعددی است و نباید یک فرم باشد؛
+ * همانند اطلاعات پایه یک زیرمنو بنام اطلاعات تفصیلی ها ایجاد کنید و فرم های
+ * آن به مرور تکمیل خواهد شد»):
+ *   · Task 144: «ایجاد تفصیلی ها» — از زیرمنوی اطلاعات پایه به همین زیرمنو
+ *     منتقل شد؛ فرم‌های بعدی تفصیلی نیز به‌مرور فقط یک مدخل در همین گروه
+ *     + یک زیرصفحه در accounting-window می‌گیرند.
  */
 
 /** تک‌منبع دادهٔ منوی حسابداری — هر ۴ حالت نمایش از همین مدل رندر می‌شوند */
@@ -49,20 +57,31 @@ const ACCOUNTING_MENU_GROUPS: AppMenuGroupDef[] = [
         gradient: "from-amber-500 to-orange-600",
       },
       {
-        /* Task 144 — ایجاد تفصیلی ها (رکورد تفصیلی با کد خودکار از شماره‌گذاری) */
-        page: "detail-items",
-        titleKey: "di.formTitle",
-        descKey: "di.formDesc",
-        icon: FolderPlus,
-        gradient: "from-rose-500 to-pink-600",
-      },
-      {
         /* Task 140 — درختواره حسابها (SimpleTreeForm) */
         page: "account-tree",
         titleKey: "atr.formTitle",
         descKey: "atr.formDesc",
         icon: ListTree,
         gradient: "from-teal-500 to-cyan-600",
+      },
+    ],
+  },
+  {
+    /* Task 145 — زیرمنوی «اطلاعات تفصیلی ها» — هم‌تراز «اطلاعات پایه»؛
+       فرم‌های تفصیلی به‌مرور به همین گروه اعلان می‌شوند */
+    id: "detailInfo",
+    titleKey: "acc.menuDetailInfo",
+    descKey: "acc.menuDetailInfoDesc",
+    icon: Layers,
+    gradient: "from-fuchsia-500 to-pink-600",
+    items: [
+      {
+        /* Task 144 — ایجاد تفصیلی ها (رکورد تفصیلی با کد خودکار از شماره‌گذاری) */
+        page: "detail-items",
+        titleKey: "di.formTitle",
+        descKey: "di.formDesc",
+        icon: FolderPlus,
+        gradient: "from-rose-500 to-pink-600",
       },
     ],
   },
