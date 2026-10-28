@@ -2,16 +2,21 @@
 bun install v1.3.14 (0d9b296a)
 No packages! Deleted empty lockfile
 
-[4.00ms] done
+[1.00ms] done
 [auto-push-service] Running bun run dev...
 $ bun --hot index.ts
-[auto-push 2026-10-29 01:39:18] سرویس پوش خودکار راه‌اندازی شد — ریشهٔ پروژه: /home/z/my-project
-[auto-push 2026-10-29 01:39:18] HTTP وضعیت روی :3010 فعال شد (GET / → وضعیت، POST /run-now → چرخهٔ فوری)
-[auto-push 2026-10-29 01:39:18] زمان‌بند فعال شد — اولین بررسی تا 20 ثانیهٔ دیگر، سپس هر 10 دقیقه
-[auto-push 2026-10-29 01:39:18] نگهبان سلامت سرویس‌ها فعال شد (پاس اول فوری، سپس هر 30 ثانیه: settings-service، dfb-service)
-[auto-push 2026-10-29 01:39:19] نگهبان: settings-service پاسخ نمی‌دهد — اجرا…
-[auto-push 2026-10-29 01:39:19] نگهبان: settings-service spawn شد (pid=1134)
-[auto-push 2026-10-29 01:39:19] نگهبان: dfb-service پاسخ نمی‌دهد — اجرا…
-[auto-push 2026-10-29 01:39:19] نگهبان: dfb-service spawn شد (pid=1136)
-[auto-push 2026-10-29 01:39:42] تغییر شناسایی شد (timer): 10 مسیر سورس، دیتابیس بدون تغییر → بک‌آپ §0.9 → کامیت → پوش
-[auto-push 2026-10-29 01:39:42] بک‌آپ §0.9: 2 فایل (2026-10-29_0139))
+[auto-push 2026-10-28 02:51:29] سرویس پوش خودکار راه‌اندازی شد — ریشهٔ پروژه: /home/z/my-project
+266 |       g.__autoPushServer.stop(true);
+267 |     } catch {
+268 |       /* not listening */
+269 |     }
+270 |   }
+271 |   g.__autoPushServer = Bun.serve({
+                                 ^
+error: Failed to start server. Is port 3010 in use?
+ syscall: "listen",
+   errno: 0,
+    code: "EADDRINUSE"
+
+      at startServer (/home/z/my-project/mini-services/auto-push-service/index.ts:271:28)
+      at /home/z/my-project/mini-services/auto-push-service/index.ts:306:1

@@ -1,0 +1,23 @@
+// order-service - Prisma schema (PostgreSQL-ready)
+//
+// MIGRATION TO POSTGRESQL:
+//   1. provider = "postgresql"
+//   2. url      = env("DATABASE_URL")
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:/home/z/my-project/db/orders.db"
+}
+
+model CustomerOrder {
+  id        String   @id @default(uuid())
+  customer String
+  total Float
+  status String @default("new")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

@@ -1,0 +1,24 @@
+// payment-service - Prisma schema (PostgreSQL-ready)
+//
+// MIGRATION TO POSTGRESQL:
+//   1. provider = "postgresql"
+//   2. url      = env("DATABASE_URL")
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:/home/z/my-project/db/payments.db"
+}
+
+model PaymentRecord {
+  id        String   @id @default(uuid())
+  kind String
+  party String
+  amount Float
+  description String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

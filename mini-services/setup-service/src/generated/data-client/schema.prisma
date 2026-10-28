@@ -1,0 +1,36 @@
+// setup-service — shared schema of the TWO installation target databases
+//
+// The SAME schema is deployed twice at runtime (two separate SQLite files,
+// later two separate PostgreSQL instances):
+//   main      → db/main.db      (selected services)
+//   secondary → db/secondary.db (unselected services)
+//
+// The service opens two PrismaClient instances over this schema with
+// different datasourceUrl values, so every read/write is routed to the
+// database the service is currently installed in — and moving a service
+// between databases is a pure API-level data exchange.
+//
+// MIGRATION TO POSTGRESQL: provider = "postgresql" + env("DATA_DATABASE_URL").
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/data-client"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATA_DATABASE_URL")
+}
+
+/// A business record of one ERP module inside its installation database.
+/// Kept intentionally generic (title + JSON payload) so all 10 modules
+/// can be installed into either database without schema changes.
+model AppRecord {
+  id        String   @id @default(uuid())
+  moduleKey String
+  title     String
+  payload   String   @default("{}")
+  createdAt DateTime @default(now())
+
+  @@index([moduleKey])
+}

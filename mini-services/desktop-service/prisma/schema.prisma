@@ -1,0 +1,104 @@
+// Desktop service - Prisma schema (PostgreSQL-ready)
+//
+// MIGRATION TO POSTGRESQL:
+//   1. provider = "postgresql"
+//   2. url      = env("DATABASE_URL")
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:/home/z/my-project/db/desktop.db"
+}
+
+/// Icons displayed on the desktop grid
+model DesktopIcon {
+  id        String   @id @default(uuid())
+  name      String
+  iconKey   String
+  color     String   @default("#38bdf8")
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  /// Localized display names (fa, en, tr, ar). Base `name` stays the Persian default.
+  translations DesktopIconTranslation[]
+
+  @@index([sortOrder])
+}
+
+/// Localized display names for a desktop icon (fa, en, tr, ar)
+model DesktopIconTranslation {
+  id     String @id @default(uuid())
+  iconId String
+  locale String // 'fa' | 'en' | 'tr' | 'ar'
+  name   String
+
+  icon DesktopIcon @relation(fields: [iconId], references: [id], onDelete: Cascade)
+
+  @@unique([iconId, locale])
+  @@index([locale])
+}
+
+/// A menu (section) of a module, rendered inside the module flyout menu.
+/// `moduleKey` matches the icon's `iconKey` (= frontend module id).
+model ModuleMenu {
+  id        String   @id @default(uuid())
+  moduleKey String
+  name      String // base name (Persian default)
+  iconKey   String   @default("folder")
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  forms        ModuleMenuForm[]
+  translations ModuleMenuTranslation[]
+
+  @@index([moduleKey, sortOrder])
+}
+
+/// Localized names for a module menu (fa, en, tr, ar)
+model ModuleMenuTranslation {
+  id     String @id @default(uuid())
+  menuId String
+  locale String // 'fa' | 'en' | 'tr' | 'ar'
+  name   String
+
+  menu ModuleMenu @relation(fields: [menuId], references: [id], onDelete: Cascade)
+
+  @@unique([menuId, locale])
+  @@index([locale])
+}
+
+/// A form entry inside a module menu
+model ModuleMenuForm {
+  id        String   @id @default(uuid())
+  menuId    String
+  name      String // base name (Persian default)
+  formKey   String
+  iconKey   String   @default("fileText")
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  menu         ModuleMenu             @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  translations ModuleMenuFormTranslation[]
+
+  @@index([menuId, sortOrder])
+  @@index([formKey])
+}
+
+/// Localized names for a module menu form (fa, en, tr, ar)
+model ModuleMenuFormTranslation {
+  id     String @id @default(uuid())
+  formId String
+  locale String // 'fa' | 'en' | 'tr' | 'ar'
+  name   String
+
+  form ModuleMenuForm @relation(fields: [formId], references: [id], onDelete: Cascade)
+
+  @@unique([formId, locale])
+  @@index([locale])
+}

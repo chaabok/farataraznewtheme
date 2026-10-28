@@ -1,4 +1,19 @@
 {
+  "accounting.db": "6a32b933a95208ffddc1c410eb5f23dc8f483f83969358c58da58830cbbdcba5",
+  "auth.db": "4624f5f23b4ef83a5c9d205a894a30aed9b36b6322b2e15ffcfa371b51f9bc06",
+  "costing.db": "972da75d742491bd1b5ad50838c2c5025a6c95b6f46cd783c64a2303d9120fd6",
   "custom.db": "407e8780752b66b15cf8e84c6ea44beb4ee010b2c247663ece86b027fca03aad",
-  "dfb.db": "960f01521f55e7aa2d5283d3fad53b9e8c7197f6ac85e0b31c067c16ed41a3e4"
+  "desktop.db": "0e1f47b37c2c154305b3ad2f4b4fcc3544a873a70982cebb789c07cf4e9f4acb",
+  "dfb.db": "960f01521f55e7aa2d5283d3fad53b9e8c7197f6ac85e0b31c067c16ed41a3e4",
+  "financial_statements.db": "8b7f49e8da24c494db1396b6dce20947976ec6e968d6b1cd95122f014f7943ea",
+  "fixed_assets.db": "932d6c4a24ff8105a403ad4b885cd75ea4fa3ff41846ab0ebecbcf39ac839886",
+  "inventory.db": "221384d0702ea6346fccbc20e981d5ba198c40c2d6bf7115cc87a88e23e4852c",
+  "main.db": "e01072bb68af48381dc7555bec077e7fd62f4d414e301df36d34fb717f7f87dc",
+  "orders.db": "8a414db62b2cc40de62bddae2d944e7967ec11dd63e77a4c34a58e42d6080678",
+  "payments.db": "9755170fd5cb2b4ca548783faec317fa8e9e735f0188d2dd0f0e5f5f2477f750",
+  "procurement.db": "2ce3b63d82d0933f327341bb5f8ffee82d5e9293aae4542c9a67198db800a4bd",
+  "sales.db": "01435566f8e89baff5310893edd9e6bdaf7e9bc337b3e8dc5971b7ef8eaec503",
+  "secondary.db": "6e13c8e182bf839d1f8cbf77d6f2df56bdfec56ad968bc1891fa1fce619b9f31",
+  "settings.db": "b1c0be7386dae02ccf40002ff3c125c0227f55ff963542756baf32e61580eee6",
+  "setup.db": "3156779f3911a11bc31001ba669fabe4ab13ce751fffbe8fce286638fec1b7ba"
 }
