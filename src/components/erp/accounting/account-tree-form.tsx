@@ -166,13 +166,6 @@ const FEATURE_STYLES: { on: string; strong: string; dot: string }[] = [
   { on: "border-teal-300 bg-teal-500/15 text-teal-800 dark:text-teal-300", strong: "border-teal-500 bg-teal-600 text-white", dot: "bg-teal-500" },
 ];
 
-/** برچسب شمسیِ سطوح تفصیلی — فقط فارسی؛ سایر زبان‌ها الگوی «سطح {n}» */
-const FA_LEVEL_ORDINALS = [
-  "اول", "دوم", "سوم", "چهارم", "پنجم", "ششم", "هفتم", "هشتم", "نهم", "دهم",
-  "یازدهم", "دوازدهم", "سیزدهم", "چهاردهم", "پانزدهم", "شانزدهم", "هفدهم",
-  "هجدهم", "نوزدهم", "بیستم",
-];
-
 function toLatinDigits(s: string): string {
   return s
     .replace(/[۰-۹]/g, (d) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(d)))
@@ -183,7 +176,6 @@ export function AccountTreeForm({ onBack }: { onBack?: () => void }) {
   const t = useT();
   const locale = useSettings((s) => s.locale);
   const dir = useSettings((s) => s.dir());
-  const isFa = locale === "fa";
 
   const [items, setItems] = React.useState<AccountNodeDto[]>([]);
   const [cfg, setCfg] = React.useState<Cfg>(DEFAULT_CFG);
@@ -204,7 +196,7 @@ export function AccountTreeForm({ onBack }: { onBack?: () => void }) {
   const [deleteTarget, setDeleteTarget] = React.useState<string | null>(null);
   /* export modal: which output + the level checkboxes */
   const [exportKind, setExportKind] = React.useState<null | "excel" | "word" | "pdf" | "print">(null);
-  const [exportChecks, setExportChecks] = React.useState({ 1: true, 2: true, 3: true, 4: true });
+  const [exportChecks, setExportChecks] = React.useState<Record<number, boolean>>({ 1: true, 2: true, 3: true, 4: true });
   /* «انتخاب نوع تفصیلی» modal — level the picker assigns into */
   const [pickerLevel, setPickerLevel] = React.useState<number | null>(null);
   const [typeRows, setTypeRows] = React.useState<DetailTypeLite[]>([]);
@@ -801,10 +793,7 @@ export function AccountTreeForm({ onBack }: { onBack?: () => void }) {
       .slice(0, 8);
   }, [users, userSearch, detail]);
 
-  const levelName = (i: number) =>
-    isFa
-      ? `سطح ${FA_LEVEL_ORDINALS[i - 1] ?? i}`
-      : t("atr.levels.levelName").replace("{n}", String(i));
+  const levelName = (i: number) => t(`atr.levels.ord.${i}` as never);
 
   const tabsBar = (() => {
     if (!showTabs) return null;
@@ -1277,7 +1266,7 @@ export function AccountTreeForm({ onBack }: { onBack?: () => void }) {
 
   /* «ویژگی‌های حساب» — گروپ ۵ دکمهٔ toggle چندحالتهٔ معین */
   const featuresBox = (() => {
-    if (activeLevel !== 3 || mode === "idle") return null;
+    if (activeLevel !== 3) return null;
     const labels = [
       t("atr.feature.quantitative"),
       t("atr.feature.trackingNo"),
@@ -1362,6 +1351,7 @@ export function AccountTreeForm({ onBack }: { onBack?: () => void }) {
       <SimpleTreeForm
         treeTitle={t("atr.treeTitle")}
         nodes={treeNodes}
+        defaultSelectedId={selectedId}
         selectedId={selectedId}
         onSelect={(node) => {
           if (node) handleSelect(node.id);
@@ -1398,7 +1388,7 @@ export function AccountTreeForm({ onBack }: { onBack?: () => void }) {
         }
         /* Task 33 — right-click flyout with per-level add labels */
         onAddBranch={(parent) => startCreate(parent.id)}
-        canAddBranch={(node) => node.id === ROOT || node.level < 4}
+        canAddBranch={(node) => node.id === ROOT || (byId.get(node.id)?.level ?? 1) < 4}
         addBranchLabel={(node) =>
           addLabelFor(node.id === ROOT ? 0 : (byId.get(node.id)?.level ?? 1))
         }

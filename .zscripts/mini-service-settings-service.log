@@ -2419,3 +2419,4 @@ BadRequestException: مقدار فیلد «accSubsidiaryCodeLen» باید بر�
 [Nest] 8789  - 10/28/2026, 9:24:24 AM     LOG [SystemsService] Systems synced from APP_CATALOG (total 28, created 0, updated 0)
 [Nest] 8789  - 10/28/2026, 9:24:24 AM     LOG [NestApplication] Nest application successfully started +68ms
 [Nest] 8789  - 10/28/2026, 9:24:24 AM     LOG [NestApplication] Nest application successfully started +67ms
+[Nest] 8789  - 10/28/2026, 9:46:48 AM     LOG [AccountTreeService] AccountNode created — ID=1 L1 Code=01 Title=دارایی‌ها Parent=root
