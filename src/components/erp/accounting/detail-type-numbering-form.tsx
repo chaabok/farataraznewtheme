@@ -1,9 +1,10 @@
 "use client";
 
 import * as React from "react";
-import { ListOrdered, RefreshCw, Save } from "lucide-react";
+import { ListOrdered, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
+import { SaveButton } from "@/components/forms/action-bar";
 import { useT } from "@/stores/settings-store";
 import {
   useOrgScope,
@@ -19,10 +20,11 @@ import {
 import { cn } from "@/lib/utils";
 
 /**
- * DetailTypeNumberingForm — Task 131 (درخواست مالک): فرم «شماره گذاری
+ * DetailTypeNumberingForm — Task 131/132 (درخواست مالک): فرم «شماره گذاری
  * تفصیلی ها» در نرم‌افزار «حسابداری» ← زیرمنوی «اطلاعات پایه» با کامپوننت
- * MainDataGrid — عین تصویر مالک: شش ستون
- *   کد | عنوان تفصیل | خودکار | شرکت | شماره شروع | شماره پایان
+ * MainDataGrid — پس از Task 132: پنج ستون (ستون «شرکت» به درخواست مالک حذف
+ * شد؛ پرچم isCompany در بانک و PUT دست‌نخورده می‌ماند):
+ *   کد | عنوان تفصیل | خودکار | شماره شروع | شماره پایان
  *
  * قواعد مالک که این فرم پیاده‌شان می‌کند:
  *   ۱. هر نوع تفصیلی که در «نوع تفصیل جدید» (Task 120) ثبت شود به‌صورت
@@ -31,12 +33,13 @@ import { cn } from "@/lib/utils";
  *      شماره شروع/پایان‌اش خودکار تخصیص می‌یابد (پیوستهٔ ۱۰۰۰تایی).
  *   ۲. شماره‌ها نباید با تفصیل‌های دیگر تداخل کنند — کنترل دولایه:
  *      فرانت پیش از ارسال و سرور روی هر PUT (۴۰۹ پیام فارسی).
- *   ۳. ستون‌های «خودکار» و «شرکت» چک‌باکس‌اند (پیش‌فرض تصویر: تیک/خالی).
+ *   ۳. ستون «خودکار» چک‌باکس است (پیش‌فرض تصویر: تیک).
  *
- * ویرایش درجریان است: شماره شروع/پایان و چک‌باکس‌ها مستقیم در سلول ویرایش
- * و با دکمهٔ «ذخیره» (نوار پایینِ گرید — عین آیکون ذخیرهٔ تصویر مالک) همهٔ
- * ردیف‌های تغییرکرده یکجا PUT می‌شوند؛ کد/عنوان فقط‌خواندنی‌اند (مالکِ
- * آن‌ها فرم نوع تفصیل است). Task 82 — فلگ برگهٔ کثیف.
+ * ویرایش درجریان است: شماره شروع/پایان و چک‌باکس مستقیم در سلول ویرایش و
+ * با «آیکون ذخیرهٔ اکشن بار فرم» (Task 132 — کاشی استاندارد ذخیرهٔ قرارداد
+ * Task 20 در نوار ابزار بالای گرید؛ از نوار پایینِ گرید به اکشن بار فرم
+ * منتقل شد) همهٔ ردیف‌های تغییرکرده یکجا PUT می‌شوند؛ کد/عنوان
+ * فقط‌خواندنی‌اند (مالکِ آن‌ها فرم نوع تفصیل است). Task 82 — فلگ برگهٔ کثیف.
  */
 
 interface NumberingDto {
@@ -209,7 +212,7 @@ export function DetailTypeNumberingForm() {
     }
   }, [rows, dirtyIds, saving, t, refetch]);
 
-  /* ---- MainDataGrid — عین تصویر مالک (شش ستون؛ ویرایش درجریان) ---- */
+  /* ---- MainDataGrid — پس از Task 132: پنج ستون (ویرایش درجریان) ---- */
   const gridRows = React.useMemo<MainGridRow[]>(
     () =>
       rows.map((r) => ({
@@ -217,7 +220,6 @@ export function DetailTypeNumberingForm() {
         code: r.code,
         title: r.title,
         aut: r.aut,
-        comp: r.comp,
         start: r.start,
         end: r.end,
       })),
@@ -228,7 +230,7 @@ export function DetailTypeNumberingForm() {
 
   const checkboxCell = (
     row: MainGridRow,
-    field: "aut" | "comp",
+    field: "aut",
     label: string,
   ): React.ReactNode => (
     <input
@@ -273,14 +275,6 @@ export function DetailTypeNumberingForm() {
         render: (row) => checkboxCell(row, "aut", t("dtn.automatic")),
       },
       {
-        key: "comp",
-        label: t("dtn.company"),
-        width: 100,
-        align: "center",
-        value: (row) => yesNo(Boolean(row.comp)),
-        render: (row) => checkboxCell(row, "comp", t("dtn.company")),
-      },
-      {
         key: "start",
         label: t("dtn.startNumber"),
         width: 150,
@@ -318,6 +312,24 @@ export function DetailTypeNumberingForm() {
         <span className="text-[11px] text-muted-foreground/70">{t("dtn.hint")}</span>
       </div>
 
+      {/* Task 132 (درخواست مالک) — اکشن بار فرم: آیکون ذخیره از نوار پایینِ
+          گرید به همین نوار ابزار استاندارد فرم منتقل شد تا کاربر تنظیمات
+          شماره‌گذاری را تغییر داده و در بانک اطلاعاتی ذخیره کند؛ کاشیِ
+          «ذخیره» همان کاشی قرارداد Task 20 در همهٔ فرم‌هاست و تا وجود
+          تغییرِ ذخیره‌نشده غیرفعال است. */}
+      <div
+        role="toolbar"
+        aria-label={t("abar.toolbar")}
+        className="flex flex-wrap items-center gap-2 rounded-lg border border-border/60 bg-muted/40 px-3 py-2"
+      >
+        <SaveButton onClick={() => void doSave()} disabled={saving || !dirty} />
+        {dirty && !saving && (
+          <span className="ms-auto text-[11px] font-medium text-amber-600 dark:text-amber-400">
+            {t("dtn.unsavedNote")}
+          </span>
+        )}
+      </div>
+
       <MainDataGrid
         columns={gridColumns}
         rows={gridRows}
@@ -327,21 +339,12 @@ export function DetailTypeNumberingForm() {
         csvFileName="detail-type-numbering"
         className="max-h-[60vh] min-h-[280px]"
         actions={
-          <>
-            <GridActionButton
-              icon={Save}
-              label={t("abar.save")}
-              tint="emerald"
-              disabled={saving || !dirty}
-              onClick={() => void doSave()}
-            />
-            <GridActionButton
-              icon={RefreshCw}
-              label={t("abar.listRefresh")}
-              tint="violet"
-              onClick={() => void refetch()}
-            />
-          </>
+          <GridActionButton
+            icon={RefreshCw}
+            label={t("abar.listRefresh")}
+            tint="violet"
+            onClick={() => void refetch()}
+          />
         }
       />
     </section>
