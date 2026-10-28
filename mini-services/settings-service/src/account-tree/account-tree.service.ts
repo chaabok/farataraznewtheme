@@ -668,6 +668,31 @@ export class AccountTreeService {
         messageKey: "common.error",
       });
     }
+    /* Task 142 — خط دفاعی دوم (هویتی): اگر ردیف دیگری با همان کد یا همان
+       عنوان (دوقلوهای هم‌هویت از ساختارهای دیگر) در سطوح همین گره منتسب
+       باشد، انتساب دوبارهٔ همان نوع باید رد شود — نه فقط همان شناسه.
+       (AccountDetailLevelType رابطهٔ Prisma با DetailType ندارد؛ join دستی.) */
+    const assignedRefs = await this.prisma.accountDetailLevelType.findMany({
+      where: { level: { accountNodeRef: node.id } },
+      select: { detailTypeRef: true },
+    });
+    const refIds = assignedRefs.map((a) => a.detailTypeRef);
+    if (refIds.length > 0) {
+      const assignedTypes = await this.prisma.detailType.findMany({
+        where: { id: { in: refIds } },
+        select: { code: true, title: true },
+      });
+      const twin = assignedTypes.find(
+        (a) => a.code === type.code || a.title === type.title,
+      );
+      if (twin) {
+        throw new ConflictException({
+          statusCode: 409,
+          message: `نوع تفصیلی «${type.code} - ${type.title}» قبلاً در سطوح این حساب استفاده شده است.`,
+          messageKey: "common.error",
+        });
+      }
+    }
     const newId = await this.idGen.generateNextId("AccountDetailLevelType");
     const row = await this.prisma.accountDetailLevelType.create({
       data: {

@@ -15,6 +15,19 @@
       پیشوندش قفل است (کاربر فقط ادامهٔ کد را می‌نویسد)؛ همین قانون در
       validate() و به‌عنوان خط دوم دفاعی در سرور (POST) کنترل می‌شود.
 
+   Task 142 (درخواست مالک) — مودال «انتخاب نوع تفصیلی»:
+   ① «هر نوع تفصیلی چند بار تکرار شده است» — منبع فهرست حالا دامنه‌دار
+      است (structureId/headOfficeShares از OrgScope — قرارداد Task 122
+      فرم نوع تفصیل) و ردیف‌های هم‌هویت (کد+عنوان) دوباره حذف می‌شوند؛
+      «اگر نوع تفصیلی به یک سطح تفصیلی ارتباط پیدا کرد دیگر نباید برای
+      سطوح بعدی در لیست نمایش داده شود» — فیلتر استفاده‌شده‌ها حالا
+      هویتی است (کد+عنوان) نه صرفاً شناسه‌ای، تا دوقلوهای هم‌عنوان از
+      ساختارهای دیگر هم برای سطوح بعدی پنهان شوند.
+   ② «امکان انتخاب چندگانه» — چک‌باکس هر سطر + «انتخاب همه» سطرهای
+      قابل‌مشاهده + دکمهٔ «انتخاب» با شمارنده (انتساب ترتیبی).
+   ③ «با تک کلیک، نوع تفصیلی انتخاب شود» — دابل‌کلیک حذف شد؛ تک‌کلیک
+      انتخاب/لغو انتخاب می‌کند.
+
    【چیدمان】 دو پنل: راست = درخت با ریشهٔ مجازی «ساختار کدینگ حساب‌ها» و
    حداکثر ۴ سطح (گروه حساب ← حساب کل ← حساب معین ← شاخه تفصیلی) + جستجو؛
    چپ = پنل «جزئیات» با نوار ابزار (اکشن‌بار فرم‌ها + خوشهٔ خروجی
@@ -42,6 +55,7 @@ import {
 import { toast } from "sonner";
 import { api, ApiError } from "@/lib/api";
 import { useT, useSettings } from "@/stores/settings-store";
+import { useOrgScope } from "@/stores/org-context-store";
 import { useTabDirty } from "@/components/desktop/app-window";
 import {
   SimpleTreeForm,
@@ -202,6 +216,8 @@ export function AccountTreeForm({ onBack }: { onBack?: () => void }) {
   const t = useT();
   const locale = useSettings((s) => s.locale);
   const dir = useSettings((s) => s.dir());
+  /* Task 142 — دامنهٔ گرهٔ فعال برای فهرست انواع تفصیل (قرارداد Task 122) */
+  const { scope: orgScope } = useOrgScope();
 
   const [items, setItems] = React.useState<AccountNodeDto[]>([]);
   const [cfg, setCfg] = React.useState<Cfg>(DEFAULT_CFG);
@@ -227,6 +243,9 @@ export function AccountTreeForm({ onBack }: { onBack?: () => void }) {
   const [pickerLevel, setPickerLevel] = React.useState<number | null>(null);
   const [typeRows, setTypeRows] = React.useState<DetailTypeLite[]>([]);
   const [typeSearch, setTypeSearch] = React.useState("");
+  /* Task 142 — انتخاب چندگانه + وضعیت انتساب ترتیبی */
+  const [typeSelected, setTypeSelected] = React.useState<ReadonlySet<number>>(new Set());
+  const [typeAssigning, setTypeAssigning] = React.useState(false);
   /* users of «کاربران مجاز» */
   const [users, setUsers] = React.useState<UserRow[]>([]);
   const [userSearch, setUserSearch] = React.useState("");
@@ -848,20 +867,55 @@ export function AccountTreeForm({ onBack }: { onBack?: () => void }) {
 
   /* ------------------------------ detail-type picker ------------------------------ */
 
+  /** کلید هویتی نوع تفصیل — کد+عنوان (Task 142: یکتایی واقعی، نه شناسهٔ ردیف). */
+  const typeIdentityKey = (code: string, title: string) => `${code}\u241F${title}`;
+
   const openPicker = async (levelIndex: number) => {
     setPickerLevel(levelIndex);
     setTypeSearch("");
+    setTypeSelected(new Set());
     try {
-      const res = await api.get<{ items: DetailTypeLite[] }>("detail-type");
-      setTypeRows(res.items);
+      /* Task 142 — فهرست دامنه‌دار (گرهٔ فعال + دفتر مرکزی با تیک اشتراک)؛
+         عین قرارداد فرم «نوع تفصیلی» (Task 122) — بدون آن همهٔ ساختارها
+         می‌آمدند و هر نوع چند بار تکرار دیده می‌شد. */
+      const qs = new URLSearchParams();
+      if (orgScope.businessStructureRef != null) {
+        qs.set("structureId", String(orgScope.businessStructureRef));
+        qs.set("headOfficeShares", orgScope.shared ? "true" : "false");
+      }
+      const res = await api.get<{ items: DetailTypeLite[] }>(
+        `detail-type${qs.size ? `?${qs.toString()}` : ""}`,
+      );
+      /* دفاع فرانت: حذف ردیف‌های هم‌هویت (کد+عنوان) — حتی اگر در دامنه
+         نسخهٔ گره و نسخهٔ مشترک دفتر مرکزی هم‌زمان وجود داشته باشند. */
+      const seen = new Set<string>();
+      setTypeRows(
+        res.items.filter((r) => {
+          const k = typeIdentityKey(r.code, r.title);
+          if (seen.has(k)) return false;
+          seen.add(k);
+          return true;
+        }),
+      );
     } catch {
       setTypeRows([]);
     }
   };
 
+  /* شناسهٔ انواع انتسابیافته (هر سطحی از همین گره) */
   const usedTypeRefs = React.useMemo(() => {
     if (!detail) return new Set<number>();
     return new Set(detail.detailLevels.flatMap((l) => l.types.map((tp) => tp.detailTypeRef)));
+  }, [detail]);
+
+  /* Task 142 — هویت انواع انتسابیافته: «اگر نوع تفصیلی به یک سطح تفصیلی
+     ارتباط پیدا کرد دیگر نباید برای سطوح بعدی در لیست نمایش داده شود» —
+     با کلید هویتی، دوقلوهای هم‌کد/هم‌عنوان هم پنهان می‌شوند. */
+  const usedTypeKeys = React.useMemo(() => {
+    if (!detail) return new Set<string>();
+    return new Set(
+      detail.detailLevels.flatMap((l) => l.types.map((tp) => typeIdentityKey(tp.code, tp.title))),
+    );
   }, [detail]);
 
   const pickerRows = React.useMemo(() => {
@@ -869,26 +923,80 @@ export function AccountTreeForm({ onBack }: { onBack?: () => void }) {
     return typeRows.filter(
       (r) =>
         !usedTypeRefs.has(r.id) &&
+        !usedTypeKeys.has(typeIdentityKey(r.code, r.title)) &&
         (!q || r.code.toLowerCase().includes(q) || r.title.toLowerCase().includes(q)),
     );
-  }, [typeRows, typeSearch, usedTypeRefs]);
+  }, [typeRows, typeSearch, usedTypeRefs, usedTypeKeys]);
 
-  const assignType = async (levelIndex: number, detailTypeRef: number) => {
-    if (!selectedNode) return;
+  /** تک‌کلیک سطر = انتخاب/لغو انتخاب (Task 142). */
+  const toggleTypeSelected = (id: number) => {
+    setTypeSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  /** «انتخاب همه» فقط روی سطرهای قابل‌مشاهدهٔ فعلی. */
+  const allVisibleSelected = pickerRows.length > 0 && pickerRows.every((r) => typeSelected.has(r.id));
+  const toggleSelectAllVisible = () => {
+    setTypeSelected((prev) => {
+      const next = new Set(prev);
+      if (allVisibleSelected) {
+        for (const r of pickerRows) next.delete(r.id);
+      } else {
+        for (const r of pickerRows) next.add(r.id);
+      }
+      return next;
+    });
+  };
+
+  /** Task 142 — انتساب ترتیبی همهٔ انتخاب‌شده‌ها؛ خطای میانه فهرست را می‌شکند
+     اما detail تازه می‌شود تا آنچه ثبت شده دیده شود؛ مودال فقط با موفقیت کامل بسته می‌شود. */
+  const assignSelectedTypes = async () => {
+    if (!selectedNode || pickerLevel == null || typeSelected.size === 0) return;
+    setTypeAssigning(true);
+    let firstError: unknown = null;
     try {
-      await api.post(`account-tree/${selectedNode.id}/detail-types`, { levelIndex, detailTypeRef });
+      for (const ref of typeSelected) {
+        try {
+          await api.post(`account-tree/${selectedNode.id}/detail-types`, {
+            levelIndex: pickerLevel,
+            detailTypeRef: ref,
+          });
+        } catch (e) {
+          firstError = e;
+          break;
+        }
+      }
       const fresh = await loadDetail(selectedNode.id);
-      setDirty(true);
       setDetail(fresh);
-      toast.success(t("atr.msg.saved"));
-      setPickerLevel(null);
-    } catch (e) {
-      toast.error(t("atr.msg.saveError"), {
-        description: e instanceof ApiError ? e.message : undefined,
-      });
+      if (firstError == null) {
+        setDirty(true);
+        toast.success(t("atr.msg.saved"));
+        setPickerLevel(null);
+        setTypeSelected(new Set());
+      } else {
+        setTypeSelected((prev) => {
+          const still = new Set<number>();
+          for (const ref of prev) {
+            if (!fresh.detailLevels.some((l) => l.types.some((tp) => tp.detailTypeRef === ref))) {
+              still.add(ref);
+            }
+          }
+          return still;
+        });
+        toast.error(t("atr.msg.saveError"), {
+          description: firstError instanceof ApiError ? firstError.message : undefined,
+        });
+      }
+    } finally {
+      setTypeAssigning(false);
     }
   };
 
+  /* Task 142 — حذف انتسابِ تکی از تب «انواع تفصیلی سطح» (رفتار قبلی assignType) */
   const removeType = async (levelIndex: number, assignmentId: number) => {
     if (!selectedNode) return;
     try {
@@ -1722,7 +1830,8 @@ export function AccountTreeForm({ onBack }: { onBack?: () => void }) {
         </DialogContent>
       </Dialog>
 
-      {/* مودال «انتخاب نوع تفصیلی» — انتخاب با دابل‌کلیک */}
+      {/* مودال «انتخاب نوع تفصیلی» — Task 142: تک‌کلیک = انتخاب/لغو؛
+          انتخاب چندگانه با چک‌باکس + «انتخاب همه» + دکمهٔ «انتخاب» */}
       <Dialog open={pickerLevel != null} onOpenChange={(o) => !o && setPickerLevel(null)}>
         <DialogContent className="max-w-md" dir={dir}>
           <DialogHeader>
@@ -1740,6 +1849,17 @@ export function AccountTreeForm({ onBack }: { onBack?: () => void }) {
             <table className="w-full text-xs">
               <thead className="sticky top-0 bg-muted/70 text-muted-foreground">
                 <tr>
+                  <th className="w-8 px-2 py-1.5 text-center font-medium">
+                    <input
+                      type="checkbox"
+                      checked={allVisibleSelected}
+                      onChange={toggleSelectAllVisible}
+                      disabled={pickerRows.length === 0}
+                      aria-label={t("atr.levels.pickSelectAll")}
+                      title={t("atr.levels.pickSelectAll")}
+                      className="h-3.5 w-3.5 cursor-pointer accent-[hsl(var(--primary))]"
+                    />
+                  </th>
                   <th className="px-2 py-1.5 text-start font-medium">{t("atr.types.code")}</th>
                   <th className="px-2 py-1.5 text-start font-medium">{t("atr.types.title")}</th>
                 </tr>
@@ -1747,26 +1867,63 @@ export function AccountTreeForm({ onBack }: { onBack?: () => void }) {
               <tbody>
                 {pickerRows.length === 0 ? (
                   <tr>
-                    <td colSpan={2} className="px-2 py-6 text-center text-[11px] text-muted-foreground">
+                    <td colSpan={3} className="px-2 py-6 text-center text-[11px] text-muted-foreground">
                       {t("atr.levels.emptyTypes")}
                     </td>
                   </tr>
                 ) : (
-                  pickerRows.map((r) => (
-                    <tr
-                      key={r.id}
-                      onDoubleClick={() => void assignType(pickerLevel ?? 1, r.id)}
-                      className="cursor-pointer border-t border-border/50 transition-colors hover:bg-primary/10"
-                      title={t("atr.levels.pickHint")}
-                    >
-                      <td className="px-2 py-1.5 font-mono">{r.code}</td>
-                      <td className="px-2 py-1.5">{r.title}</td>
-                    </tr>
-                  ))
+                  pickerRows.map((r) => {
+                    const checked = typeSelected.has(r.id);
+                    return (
+                      <tr
+                        key={r.id}
+                        onClick={() => toggleTypeSelected(r.id)}
+                        className={cn(
+                          "cursor-pointer select-none border-t border-border/50 transition-colors",
+                          checked ? "bg-primary/10 font-semibold" : "hover:bg-foreground/5",
+                        )}
+                        title={t("atr.levels.pickHint")}
+                      >
+                        <td className="px-2 py-1.5 text-center">
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={() => toggleTypeSelected(r.id)}
+                            onClick={(e) => e.stopPropagation()}
+                            aria-label={`${r.code} — ${r.title}`}
+                            className="h-3.5 w-3.5 cursor-pointer accent-[hsl(var(--primary))]"
+                          />
+                        </td>
+                        <td className="px-2 py-1.5 font-mono">{r.code}</td>
+                        <td className="px-2 py-1.5">{r.title}</td>
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>
           </div>
+          <DialogFooter>
+            <span className="me-auto text-[11px] text-muted-foreground">
+              {t("atr.levels.pickSelectedCount").replace("{n}", String(typeSelected.size))}
+            </span>
+            <button
+              type="button"
+              onClick={() => setPickerLevel(null)}
+              disabled={typeAssigning}
+              className="h-8 rounded-lg border border-border px-3 text-xs font-medium transition-colors hover:bg-foreground/5 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {t("common.cancel")}
+            </button>
+            <button
+              type="button"
+              onClick={() => void assignSelectedTypes()}
+              disabled={typeSelected.size === 0 || typeAssigning}
+              className="h-8 rounded-lg bg-primary px-3 text-xs font-semibold text-primary-foreground shadow transition-colors hover:bg-primary/90 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {typeAssigning ? t("atr.levels.pickSaving") : t("atr.levels.pickConfirm")}
+            </button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
