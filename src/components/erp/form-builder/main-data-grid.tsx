@@ -5,7 +5,7 @@ import {
   Check, ChevronDown, ChevronUp, Columns3, FileDown, Filter, Inbox, Loader2, Minus,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useT } from "@/stores/settings-store";
+import { useSettings, useT } from "@/stores/settings-store";
 import {
   DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
@@ -20,6 +20,19 @@ import {
  * bottom action bar (actions slot + count chip + filter toggle / columns /
  * CSV export of the FILTERED rows). Purely presentational — data flows in via
  * props, so the grid stays reusable for any record source.
+ *
+ * Task 133 (درخواست مالک) — جابجایی و تغییر عرض ستون‌ها:
+ *   • تغییر عرض: دستگیرهٔ کشیدنی روی «لبهٔ انتهایی» هر سرستون (در RTL لبهٔ
+ *     چپ، در LTR لبهٔ راست — با موس؛ + کلیدهای پیکانی برای دسترس‌پذیری).
+ *     عرضِ فقط همان ستون عوض می‌شود و عرض بقیه دست‌نخورده می‌ماند؛ اگر جمع
+ *     عرض‌ها از پهنای قاب بیشتر شود اسکرول افقی داخل گرید ساخته می‌شود.
+ *     مکانیزم: table-fixed + colgroup با عرض دقیق + ستون جمع‌شوندهٔ مجازی
+ *     در انتها که فضای مازادِ قاب را می‌بلعد (در نبودِ مازاد صفر است) —
+ *     پس تغییر عرض یک ستون هرگز عرض ستون‌های دیگر را جابجا نمی‌کند.
+ *   • جابجایی: درگ‌اند‌دراپ سرستون روی سرستون دیگر (نشانگرِ درج در لبهٔ
+ *     مقصد؛ منطق نیمه‌چپ/نیمه‌راست هدف جهت‌آگاه است). ریل «#» ثابت است.
+ *   • هر دو فقط در نشستِ گرید می‌مانند (بدون ذخیرهٔ ماندگار) و فیلتر/سورت/
+ *     CSV/انتخاب‌گر ستون با ترتیب و عرض جدید هم‌گام‌اند (کلیدمحور).
  */
 
 export type GridFilterOp =
@@ -83,6 +96,10 @@ const ALL_OPS = Object.keys(OP_KEYS) as GridFilterOp[];
 
 const cellOf = (col: MainGridColumn, row: MainGridRow): string | null | undefined =>
   col.value ? col.value(row) : ((row[col.key] as string | null | undefined) ?? null);
+
+/* Task 133 — عرض ریل «#» و کفِ عرض ستون هنگام تغییر اندازه */
+const RAIL_W = 48;
+const MIN_COL_W = 48;
 
 function matches(raw: string | null | undefined, op: GridFilterOp, needle: string): boolean {
   const cell = (raw ?? "").toLowerCase();
@@ -153,6 +170,8 @@ export function MainDataGrid({
   onRowDoubleClick, actions, csvFileName, className,
 }: MainDataGridProps) {
   const t = useT();
+  /* Task 133 — جهت داشبورد برای ریاضیاتِ جهت‌آگاهِ تغییر عرض/جابجایی */
+  const dir = useSettings((s) => s.dir());
 
   /* filters: columnKey → { op, needle } */
   const [filters, setFilters] = React.useState<Record<string, { op: GridFilterOp; value: string }>>({});
@@ -160,7 +179,48 @@ export function MainDataGrid({
   const [filterRow, setFilterRow] = React.useState(true);
   const [hidden, setHidden] = React.useState<Set<string>>(new Set());
 
-  const visibleColumns = React.useMemo(() => columns.filter((c) => !hidden.has(c.key)), [columns, hidden]);
+  /* Task 133 — ترتیب ستون‌ها (درگ سرستون) و عرض‌های تغییرکرده (دستگیرهٔ لبه) */
+  const [order, setOrder] = React.useState<string[]>([]);
+  const [widths, setWidths] = React.useState<Record<string, number>>({});
+  const [dragKey, setDragKey] = React.useState<string | null>(null);
+  const [dropAt, setDropAt] = React.useState<{ key: string; after: boolean } | null>(null);
+  const [resizing, setResizing] = React.useState(false);
+  const resizeRef = React.useRef<{ key: string; startX: number; startW: number; w: number } | null>(null);
+  const colRefs = React.useRef<Map<string, HTMLTableColElement>>(new Map());
+  const registerCol = React.useCallback(
+    (key: string) => (el: HTMLTableColElement | null) => {
+      if (el) colRefs.current.set(key, el);
+      else colRefs.current.delete(key);
+    },
+    [],
+  );
+
+  const effWidth = React.useCallback(
+    (c: MainGridColumn) => widths[c.key] ?? c.width ?? 140,
+    [widths],
+  );
+
+  /* ترتیبِ اعلامیِ ستون‌ها: کلیدهای order + کلیدهای تازه در انتها (پایدار) */
+  const orderedColumns = React.useMemo(() => {
+    if (order.length === 0) return columns;
+    const idx = new Map(order.map((k, i) => [k, i] as const));
+    return [...columns].sort(
+      (a, b) => (idx.get(a.key) ?? Number.MAX_SAFE_INTEGER) - (idx.get(b.key) ?? Number.MAX_SAFE_INTEGER),
+    );
+  }, [columns, order]);
+
+  const visibleColumns = React.useMemo(
+    () => orderedColumns.filter((c) => !hidden.has(c.key)),
+    [orderedColumns, hidden],
+  );
+
+  /* جمع عرضِ ستون‌های نمایان + ریل — جدول هرگز باریک‌تر از این نمی‌شود؛
+     ستون مجازیِ انتهایی فضای مازادِ قاب را می‌بلعد (تغییر عرض یک ستون
+     هرگز عرض بقیه را عوض نمی‌کند) */
+  const totalW = React.useMemo(
+    () => visibleColumns.reduce((s, c) => s + effWidth(c), 0) + RAIL_W,
+    [visibleColumns, effWidth],
+  );
 
   const isFilterActive = React.useCallback(
     (f: { op: GridFilterOp; value: string }) =>
@@ -206,6 +266,85 @@ export function MainDataGrid({
   const cycleSort = (key: string) =>
     setSort((s) => (s?.key !== key ? { key, dir: "asc" } : s.dir === "asc" ? { key, dir: "desc" } : null));
 
+  /* ---------- Task 133 — جابجایی ستون‌ها (درگ‌اند‌دراپ سرستون) ---------- */
+  /* نیمهٔ visual هدف → منطقِ before/after جهت‌آگاه: در RTL نیمهٔ راستِ
+     هدف = «پیش از هدف» (جریان از راست به چپ)، در LTR = «پس از هدف» */
+  const sideAfter = (e: React.DragEvent, el: HTMLElement): boolean => {
+    const rect = el.getBoundingClientRect();
+    const visualAfter = e.clientX - rect.left > rect.width / 2;
+    return dir === "rtl" ? !visualAfter : visualAfter;
+  };
+  const onHeaderDragStart = (e: React.DragEvent, key: string) => {
+    setDragKey(key);
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", key); // فایرفاکس برای شروع درگ لازم است
+  };
+  const onHeaderDragOver = (e: React.DragEvent, key: string) => {
+    if (!dragKey || dragKey === key) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    const after = sideAfter(e, e.currentTarget);
+    setDropAt((p) => (p?.key === key && p.after === after ? p : { key, after }));
+  };
+  const onHeaderDrop = (e: React.DragEvent, key: string) => {
+    e.preventDefault();
+    const src = dragKey;
+    setDragKey(null);
+    setDropAt(null);
+    if (!src || src === key) return;
+    const after = sideAfter(e, e.currentTarget);
+    setOrder((prev) => {
+      const keys = orderedColumns.map((c) => c.key);
+      const from = keys.indexOf(src);
+      if (from < 0) return prev;
+      const moved = [...keys.slice(0, from), ...keys.slice(from + 1)];
+      const ti = moved.indexOf(key);
+      if (ti < 0) return prev;
+      const at = after ? ti + 1 : ti;
+      return [...moved.slice(0, at), src, ...moved.slice(at)];
+    });
+  };
+  const onHeaderDragEnd = () => {
+    setDragKey(null);
+    setDropAt(null);
+  };
+
+  /* ---------- Task 133 — تغییر عرض ستون (دستگیرهٔ لبهٔ انتهایی) ---------- */
+  /* RTL: دستگیره لبهٔ چپ است؛ کشیدن به چپ = پهن‌تر (factor = -1).
+     LTR: دستگیره لبهٔ راست است؛ کشیدن به راست = پهن‌تر (factor = +1). */
+  const startResize = (e: React.PointerEvent<HTMLSpanElement>, key: string, w0: number) => {
+    if (e.button !== 0) return;
+    e.preventDefault(); // مانع انتخاب متن و شروع درگ بومی سرستون
+    resizeRef.current = { key, startX: e.clientX, startW: w0, w: w0 };
+    setResizing(true);
+    e.currentTarget.setPointerCapture(e.pointerId);
+  };
+  const moveResize = (e: React.PointerEvent<HTMLSpanElement>) => {
+    const r = resizeRef.current;
+    if (!r) return;
+    const factor = dir === "rtl" ? -1 : 1;
+    r.w = Math.max(MIN_COL_W, Math.round(r.startW + (e.clientX - r.startX) * factor));
+    /* حینِ درگ مستقیم روی <col> اعمال می‌شود (بدون رندر مجددِ هر فریم) */
+    const col = colRefs.current.get(r.key);
+    if (col) col.style.width = `${r.w}px`;
+  };
+  const endResize = () => {
+    const r = resizeRef.current;
+    if (!r) return;
+    resizeRef.current = null;
+    setResizing(false);
+    setWidths((prev) => (prev[r.key] === r.w ? prev : { ...prev, [r.key]: r.w }));
+  };
+  const keyResize = (e: React.KeyboardEvent, c: MainGridColumn) => {
+    const step = e.shiftKey ? 48 : 16;
+    let d = 0;
+    if (e.key === "ArrowLeft") d = dir === "rtl" ? step : -step;
+    else if (e.key === "ArrowRight") d = dir === "rtl" ? -step : step;
+    else return;
+    e.preventDefault();
+    setWidths((prev) => ({ ...prev, [c.key]: Math.max(MIN_COL_W, effWidth(c) + d) }));
+  };
+
   /* CSV export — the FILTERED rows, Excel-friendly (BOM + quoted cells) */
   const exportCsv = () => {
     const head = visibleColumns.map((c) => c.label);
@@ -227,9 +366,22 @@ export function MainDataGrid({
 
   return (
     <div className={cn("flex min-h-0 flex-col overflow-hidden rounded-xl border bg-card shadow-sm", className)}>
-      {/* ── table (sticky header + sticky filter row, horizontal scroll) ── */}
+      {/* ── table (sticky header + sticky filter row, horizontal scroll) ──
+          Task 133: table-fixed + colgroup عرض دقیق؛ عرض جدول = max(۱۰۰٪, جمع)
+          و ستون مجازی انتهایی مازاد را می‌بلعد ⇒ تغییر عرض یک ستون هیچ
+          تغییری در عرض ستون‌های دیگر نمی‌سازد؛ سرریز = اسکرول افقی */}
       <div className="min-h-0 flex-1 overflow-auto">
-        <table className="w-full min-w-max border-separate border-spacing-0 text-xs">
+        <table
+          className={cn("table-fixed border-separate border-spacing-0 text-xs", resizing && "select-none")}
+          style={{ width: `max(100%, ${totalW}px)` }}
+        >
+          <colgroup>
+            {visibleColumns.map((c) => (
+              <col key={c.key} ref={registerCol(c.key)} style={{ width: effWidth(c) }} />
+            ))}
+            <col style={{ width: RAIL_W }} />
+            <col />
+          </colgroup>
           <thead>
             <tr>
               {visibleColumns.map((c) => {
