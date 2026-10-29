@@ -1,6 +1,6 @@
 "use client";
 
-import { Briefcase, Building2, Calculator, Database, FolderPlus, Layers, ListOrdered, ListTree, Tags } from "lucide-react";
+import { Briefcase, Building2, Calculator, Database, FileSignature, FolderPlus, Layers, ListOrdered, ListTree, Tags } from "lucide-react";
 import { AppMenuHome, type AppMenuGroupDef } from "@/components/erp/shared/app-menu-home";
 
 /**
@@ -33,6 +33,9 @@ import { AppMenuHome, type AppMenuGroupDef } from "@/components/erp/shared/app-m
  *     تفصیل) و Enum نوع مرکز هزینه.
  *   · Task 147: «تعریف پروژه» — کد سریالی لایو (پشت سرهم) + کد تفصیل لایو
  *     از نوع تفصیل «پروژه» (کد مرجع ۸).
+ *   · Task 148: «قرارداد جدید» — کد تفصیلی لایو از نوع تفصیل «قرارداد»
+ *     (کد مرجع ۹ — دقیقاً همانند پروژه) + دراپ‌داون ستون‌دار پروژه/طرف
+ *     قرارداد با کاشی «+» فرم پایه.
  */
 
 /** تک‌منبع دادهٔ منوی حسابداری — هر ۴ حالت نمایش از همین مدل رندر می‌شوند */
@@ -103,6 +106,14 @@ const ACCOUNTING_MENU_GROUPS: AppMenuGroupDef[] = [
         icon: Briefcase,
         gradient: "from-teal-500 to-emerald-600",
       },
+      {
+        /* Task 148 — قرارداد جدید (کد تفصیلی لایو از نوع «قرارداد» + دراپ‌داون ستون‌دار) */
+        page: "contract",
+        titleKey: "ct.formTitle",
+        descKey: "ct.formDesc",
+        icon: FileSignature,
+        gradient: "from-orange-500 to-amber-600",
+      },
     ],
   },
 ];
@@ -110,7 +121,7 @@ const ACCOUNTING_MENU_GROUPS: AppMenuGroupDef[] = [
 export function AccountingMenuHome({
   go,
 }: {
-  go: (page: "detail-type" | "detail-type-numbering" | "detail-items" | "cost-center" | "project" | "account-tree") => void;
+  go: (page: "detail-type" | "detail-type-numbering" | "detail-items" | "cost-center" | "project" | "contract" | "account-tree") => void;
 }) {
   return (
     <AppMenuHome
@@ -120,7 +131,7 @@ export function AccountingMenuHome({
       headerGradient="from-violet-500 to-violet-700"
       storageKey="accounting.menuView"
       groups={ACCOUNTING_MENU_GROUPS}
-      go={(page) => go(page as "detail-type" | "detail-type-numbering" | "detail-items" | "cost-center" | "project" | "account-tree")}
+      go={(page) => go(page as "detail-type" | "detail-type-numbering" | "detail-items" | "cost-center" | "project" | "contract" | "account-tree")}
     />
   );
 }

@@ -735,6 +735,26 @@ function ListPickerCell({
             >
               <AlignJustify className="h-3 w-3" />
             </span>
+            {/* Task 148 (درخواست مالک) — کاشی «+» کنار دراپ‌داونِ ستون‌دار:
+                فرم پایهٔ منبع داده (مثلاً «پروژه جدید» / «طرف حساب جدید»)
+                را برای ایجاد رکورد تازه باز می‌کند. stopPropagation ⇒ این
+                کاشی تریگرِ پاپ‌آور نیست و فقط لانچرِ فرم پایه است. */}
+            {field.onLookup && (
+              <button
+                type="button"
+                aria-label={`${field.label} — +`}
+                title={`${field.label} — +`}
+                disabled={field.disabled}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  field.onLookup?.();
+                }}
+                onKeyDown={(e) => e.stopPropagation()}
+                className="flex h-5.5 w-5.5 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-sky-500 to-sky-600 text-white shadow-md transition-all hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer disabled:opacity-40"
+              >
+                <Plus className="h-3.5 w-3.5" aria-hidden />
+              </button>
+            )}
           </div>
         </PopoverTrigger>
         <PopoverContent

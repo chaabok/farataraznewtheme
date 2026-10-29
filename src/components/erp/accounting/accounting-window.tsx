@@ -12,6 +12,7 @@ import { DetailTypeNumberingForm } from "./detail-type-numbering-form";
 import { DetailItemsForm } from "./detail-items-form";
 import { CostCenterForm } from "./cost-center-form";
 import { ProjectForm } from "./project-form";
+import { ContractForm } from "./contract-form";
 import { AccountTreeForm } from "./account-tree-form";
 
 /**
@@ -24,8 +25,8 @@ import { AccountTreeForm } from "./account-tree-form";
  * در همین پنجره باز می‌شوند — هر فرم اعلامی یک زیرصفحه به این switch اضافه
  * می‌کند. فرم‌ها: «نوع تفصیل جدید» (Task 120)، «شماره گذاری تفصیلی ها»
  * (Task 131)، «ایجاد تفصیلی ها» (Task 144)، «مرکز هزینه جدید» (Task 146)
- * و «تعریف پروژه» (Task 147)
- * — سه فرم آخر زیر زیرمنوی «اطلاعات تفصیلی ها» (Task 145).
+ * «تعریف پروژه» (Task 147) و «قرارداد جدید» (Task 148)
+ * — چهار فرم آخر زیر زیرمنوی «اطلاعات تفصیلی ها» (Task 145).
  */
 
 /** عنوان زندهٔ برگه به ازای هر زیرصفحهٔ فرم (Task 82 — الگوی عمومی) */
@@ -35,6 +36,7 @@ const PAGE_TITLE_KEY: Partial<Record<AccountingSubPage, string>> = {
   "detail-items": "di.formTitle",
   "cost-center": "cc.formTitle",
   "project": "pj.formTitle",
+  "contract": "ct.formTitle",
   "account-tree": "atr.formTitle",
 };
 
@@ -46,6 +48,7 @@ const PAGE_GROUP_KEY: Partial<Record<AccountingSubPage, string>> = {
   "detail-items": "acc.menuDetailInfo",
   "cost-center": "acc.menuDetailInfo",
   "project": "acc.menuDetailInfo",
+  "contract": "acc.menuDetailInfo",
   "account-tree": "acc.menuBasicInfo",
 };
 
@@ -114,6 +117,7 @@ export function AccountingWindow() {
           {page === "detail-items" && <DetailItemsForm onBack={() => go("home")} />}
           {page === "cost-center" && <CostCenterForm onBack={() => go("home")} />}
           {page === "project" && <ProjectForm onBack={() => go("home")} />}
+          {page === "contract" && <ContractForm onBack={() => go("home")} />}
           {page === "account-tree" && <AccountTreeForm onBack={() => go("home")} />}
         </div>
       </div>
