@@ -30,7 +30,7 @@ export type SoftwareConfigAppKey = (typeof SOFTWARE_CONFIG_APP_KEYS)[number];
  *   «تعداد ماه‌های مالی» — عددی، پیش‌فرض ۱۲، حداکثر ۱۶.
  */
 export interface SoftwareConfigFieldSpec {
-  type: "text" | "number" | "date" | "checkbox" | "select" | "textarea";
+  type: "text" | "number" | "date" | "checkbox" | "select" | "textarea" | "list";
   /** بازهٔ مجاز برای type:"number" (در صورت اعلام) */
   min?: number;
   max?: number;
@@ -38,6 +38,10 @@ export interface SoftwareConfigFieldSpec {
   integer?: boolean;
   /** مقدار پیش‌فرض — مالکیت نمایش با فرانت است؛ سرور همان بازه را اعتبارسنجی می‌کند */
   defaultValue?: string;
+  /** Task 157 — فقط برای type:"list": منبع گزینه‌های پویای «کامپوننت
+   *  لیست» (فعلاً: currencyType = ارزهای فرم «نوع ارز»)؛ سرور همان منبع
+   *  را برای اعتبارسنجی مقدار به‌کار می‌گیرد (خط دوم دفاعی). */
+  listSource?: string;
   /** Task 137 — فیلد مشتق‌شده (فقط‌خواندنی در فرانت): مقدار مجاز =
    *  value(from) − Σ value(minus). اگر from و همهٔ minus در «همین payload»
    *  حاضر باشند، سرور برابری را کنترل می‌کند (خط دوم دفاعی)؛ وگرنه فقط
@@ -98,6 +102,13 @@ export const SOFTWARE_CONFIG_FIELDS: Record<
     docDateTrackEntryMandatory: { type: "checkbox", defaultValue: "0" },
     showCurrencyCaps: { type: "checkbox", defaultValue: "0" },
     enableMoeinLevelAccess: { type: "checkbox", defaultValue: "0" },
+
+    /* Task 157 (درخواست مالک) — فیلد «ارز پایه» (تب حسابداری): «کامپوننت
+       لیست» با ارزهای تعریف‌شدهٔ فرم «نوع ارز» (CurrencyType)؛ مقدار = کد
+       ارز (مثل IRR) و پیش‌فرض ریال ایران — عبارت مالک: «بصورت پیش فرض ارز
+       ریال انتخاب شده باشد». سرور وجود کد در CurrencyType را کنترل می‌کند.
+       آینهٔ فرانت: SOFTWARE_CONFIG_FIELDS در software-config-window.tsx. */
+    baseCurrency: { type: "list", listSource: "currencyType", defaultValue: "IRR" },
 
     /* Task 140 (پرامپت مالک — درختواره حسابها): کلید «کنترل دسترسی به
        دفاتر»؛ تا زمان اعلام فیلد UI توسط مالک فقط از راه API تنظیم می‌شود

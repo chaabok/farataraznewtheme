@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { useT } from "@/stores/settings-store";
+import { useT, useSettings } from "@/stores/settings-store";
 import { useTabDirty } from "@/components/desktop/app-window";
 import type { DictKey } from "@/i18n/dictionaries";
 import { LanguageSettingsSections } from "@/components/erp/settings/language-settings";
@@ -40,17 +40,21 @@ export interface SwConfigFieldDef {
   /** پایدار — کلید ردیف در SoftwareConfig.ConfigKey (پس از انتشار تغییر نکنید). */
   key: string;
   labelKey: DictKey;
-  type: "text" | "number" | "date" | "checkbox" | "select" | "textarea";
+  type: "text" | "number" | "date" | "checkbox" | "select" | "textarea" | "list";
   required?: boolean;
   /** فقط برای type="number" — بازهٔ مجاز (اعتبارسنجی فرانت + آینهٔ قانون سرور) */
   min?: number;
   max?: number;
   /** فقط برای type="number" — فقط عدد صحیح (شمارنده‌ها) */
   integer?: boolean;
-  /** فقط برای type="number" — مقدار پیش‌فرض وقتی مقدار ذخیره‌شده‌ای وجود ندارد */
+  /** فقط برای type="number"/"list" — مقدار پیش‌فرض وقتی مقدار ذخیره‌شده‌ای وجود ندارد */
   defaultValue?: string;
   /** فقط برای type="select" */
   options?: { value: string; labelKey: DictKey }[];
+  /** Task 157 — فقط برای type="list": منبع گزینه‌های پویا؛ «کامپوننت
+   *  لیست» گزینه‌هایش را در زمان اجرا از دادهٔ تعریف‌شدهٔ همان فرم می‌خواند
+   *  (فعلاً: ارزهای تعریف‌شده در فرم «نوع ارز» — CurrencyType). */
+  listSource?: "currencyType";
   /** Task 135 — گروپ فیلد: فیلدهای هم‌گروه پشت‌سرهم داخل یک فیلدست با عنوان
    *  مشترک و شبکهٔ ۲ستونی (RTL: اولین فیلد = راست‌ترین — عین تصویر مالک) رندر
    *  می‌شوند؛ فیلدهای بی‌گروه مثل قبل ساده می‌آیند. */
@@ -183,6 +187,20 @@ const SOFTWARE_CONFIG_FIELDS: Record<string, SwConfigFieldDef[]> = {
       integer: true,
       defaultValue: "10",
     },
+    /* Task 157 (درخواست مالک) — فیلد «ارز پایه» (تب حسابداری): «با استفاده
+       از کامپوننت لیست، لیست ارزهای تعریف شده در فرم نوع ارز را به کاربر
+       نمایش دهید تا کاربر یک گزینه را انتخاب نماید؛ بصورت پیش فرض ارز ریال
+       انتخاب شده باشد». مقدار ذخیره‌شده = کد ارز (مثل IRR — پایدار در برابر
+       تغییر عنوان/ترجمه)؛ پیش‌فرض IRR = «ریال ایران» در seed فرم نوع ارز.
+       گزینه‌ها در زمان اجرا از GET /api/settings/currency-type خوانده می‌شوند.
+       آینهٔ سرور: software-config.dto.ts. */
+    {
+      key: "baseCurrency",
+      labelKey: "settings.swBaseCurrency",
+      type: "list",
+      listSource: "currencyType",
+      defaultValue: "IRR",
+    },
     /* Task 155 (درخواست مالک) — ۴ فیلد چک‌باکس تصویر مالک (تب حسابداری)،
        به ترتیب تصویر؛ فقط اولی پیش‌فرض تیک‌دار است و بقیه خالی:
        ۱. «سقف تاریخ و شماره پیگیری در سند نمایش داده شود» (تیک‌دار در تصویر)
@@ -287,13 +305,28 @@ const BENTO_LAYOUT: Record<string, BentoBoxSpec[]> = {
       variant: "plain",
       cls: "sm:col-span-2 lg:col-span-2",
     },
+    /* Task 157 — کارت «ارز پایه» (ردیف پایین بنتو): «کامپوننت لیست»
+       با گزینه‌های ارزهای فرم «نوع ارز»؛ پیش‌فرض ریال ایران (IRR) */
+    {
+      fields: ["baseCurrency"],
+      variant: "plain",
+      cls: "sm:col-span-2 lg:col-span-4",
+    },
   ],
 };
 
 type ValuesMap = Record<string, string>;
 
+/* Task 157 — سطر فهرست ارزهای فرم «نوع ارز» (گزینه‌های «کامپوننت لیست») */
+interface CurrencyListRow {
+  id: number;
+  code: string;
+  title: string;
+}
+
 export function SoftwareConfigBody() {
   const t = useT();
+  const locale = useSettings((s) => s.locale); // Task 157 — برچسب گزینه‌های لیست
   const [activeTab, setActiveTab] = React.useState<string>("general");
   const [values, setValues] = React.useState<Record<string, ValuesMap>>({});
   /* Task 82 — unsaved-data flag of the hosting tab (owner alarm contract):
@@ -336,6 +369,55 @@ export function SoftwareConfigBody() {
       alive = false;
     };
   }, [activeTab, values, fetchValues, applyValues]);
+
+  /* Task 157 — گزینه‌های «کامپوننت لیست» (listSource: currencyType):
+     ارزهای تعریف‌شده در فرم «نوع ارز» (GET /api/settings/currency-type)
+     + ترجمهٔ نرم عنوان‌ها برای زبان‌های غیر-fa از انبار DataTranslation
+     (همان قرارداد نمایش Task 99 فهرست فرم نوع ارز). یک‌بار واکشی و کش
+     در state — تا تعویض زبان نیازی به واکشی مجدد نیست. */
+  const [currencyItems, setCurrencyItems] = React.useState<CurrencyListRow[] | null>(null);
+  const [currencyTitleTr, setCurrencyTitleTr] = React.useState<Record<string, Record<string, string>>>({});
+  const needsCurrencyList = fields.some((f) => f.type === "list" && f.listSource === "currencyType");
+  React.useEffect(() => {
+    if (!needsCurrencyList || currencyItems !== null) return;
+    let alive = true;
+    fetch("/api/settings/currency-type")
+      .then((res) => {
+        if (!res.ok) throw new Error(String(res.status));
+        return res.json() as Promise<{ items?: CurrencyListRow[] }>;
+      })
+      .then((data) => {
+        if (!alive) return;
+        const items = (data.items ?? [])
+          .filter((c) => c?.code && c?.title)
+          .sort((a, b) => a.code.localeCompare(b.code));
+        setCurrencyItems(items);
+        if (items.length === 0) return;
+        const ids = items.map((c) => c.id).join(",");
+        fetch(`/api/settings/data-translations?entityType=CurrencyType&entityIds=${ids}&fieldKeys=title`)
+          .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
+          .then(
+            (tr: { items?: Array<{ entityId: number; fieldKey: string; locale: string; value: string }> }) => {
+              if (!alive) return;
+              const map: Record<string, Record<string, string>> = {};
+              for (const it of tr.items ?? []) {
+                if (it?.fieldKey !== "title" || !it?.entityId || !it?.locale || !it?.value) continue;
+                (map[String(it.entityId)] ??= {})[it.locale] = it.value;
+              }
+              setCurrencyTitleTr(map);
+            },
+          )
+          .catch(() => {
+            /* واکشی ترجمه ناموفق — گزینه‌ها با عنوان پایه می‌مانند */
+          });
+      })
+      .catch(() => {
+        if (alive) setCurrencyItems([]); // واکشی ناموفق — گزینهٔ احتیاطی
+      });
+    return () => {
+      alive = false;
+    };
+  }, [needsCurrencyList, currencyItems]);
 
   const setVal = (key: string, v: string) => {
     setCfgDirty(true); // Task 82 — ویرایش ذخیره‌نشده
@@ -493,6 +575,25 @@ export function SoftwareConfigBody() {
     });
   }
 
+  /* Task 157 — گزینه‌های فیلد «کامپوننت لیست» (listSource: currencyType):
+     برچسب هر گزینه = «کد - عنوان» (عین الگوی فهرست فرم نوع ارز)؛ در زبان
+     غیر-fa ترجمهٔ عنوان از انبار DataTranslation (نبودِ ترجمه = عنوان پایه).
+     اگر مقدار ذخیره‌شده در فهرست نباشد (ارز حذف‌شده)، خودش به‌صورت گزینهٔ
+     احتیاطی نمایش داده می‌شود تا انتخابِ ذخیره‌شده بی‌نمایش نماند. */
+  const currencyOptionLabel = (c: CurrencyListRow): string => {
+    const tr = locale === "fa" ? "" : (currencyTitleTr[String(c.id)]?.[locale] ?? "").trim();
+    return `${c.code} - ${tr || c.title}`;
+  };
+  const listOptionsOf = (f: SwConfigFieldDef): { value: string; label: string }[] => {
+    if (f.listSource !== "currencyType") return [];
+    const items = currencyItems;
+    if (items === null) return []; // در حال بارگذاری
+    const opts = items.map((c) => ({ value: c.code, label: currencyOptionLabel(c) }));
+    const cur = values[activeTab]?.[f.key] ?? f.defaultValue ?? "";
+    if (cur !== "" && !opts.some((o) => o.value === cur)) opts.unshift({ value: cur, label: cur });
+    return opts;
+  };
+
   const renderField = (f: SwConfigFieldDef, variant: BentoVariant = "plain", big = false) => {
     /* Task 73 — مقدار پیش‌فرض وقتی ردیف ذخیره‌شده‌ای نیست؛ Task 137 — فیلد
        مشتق‌شده مقدار زندهٔ محاسبه‌شده را نشان می‌دهد (فقط‌خواندنی) */
@@ -564,6 +665,33 @@ export function SoftwareConfigBody() {
                 {t(o.labelKey)}
               </option>
             ))}
+          </select>
+        ) : f.type === "list" ? (
+          /* Task 157 — «کامپوننت لیست»: گزینه‌های پویا از منبع فیلد (فعلاً
+             ارزهای فرم «نوع ارز»)؛ native select = سازگار با RTL/موبایل/تم
+             روشن و هم‌خانوادهٔ select موجود رجیستری. */
+          <select
+            id={`swc-${f.key}`}
+            dir="auto"
+            value={val}
+            disabled={currencyItems === null}
+            onChange={(e) => setVal(f.key, e.target.value)}
+            className={cn(
+              "h-9 w-full rounded-lg px-2 text-sm outline-none focus:ring-2 focus:ring-ring disabled:opacity-60",
+              accent
+                ? "border border-white/30 bg-white/15 text-white"
+                : "border border-border bg-background",
+            )}
+          >
+            {currencyItems === null ? (
+              <option value={val}>…</option>
+            ) : (
+              listOptionsOf(f).map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))
+            )}
           </select>
         ) : (
           <input

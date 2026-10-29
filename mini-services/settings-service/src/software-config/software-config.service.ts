@@ -141,6 +141,23 @@ export class SoftwareConfigService {
         }
       }
 
+      /* Task 157 — خط دوم دفاعی «کامپوننت لیست»: مقدار فیلد list (فعلاً
+         «ارز پایه») باید کد یکی از ارزهای ثبت‌شدهٔ فرم «نوع ارز»
+         (CurrencyType) باشد؛ وگرنه رد می‌شود. */
+      if (value !== "" && spec.type === "list" && spec.listSource === "currencyType") {
+        const found = await this.prisma.currencyType.findFirst({
+          where: { code: value },
+          select: { id: true },
+        });
+        if (!found) {
+          throw new BadRequestException({
+            statusCode: 422,
+            message: `ارز با کد «${value}» در فرم نوع ارز یافت نشد؛ ابتدا آن را در فرم نوع ارز ثبت کنید`,
+            messageKey: "common.error",
+          });
+        }
+      }
+
       if (value === "") {
         const res = await this.prisma.softwareConfig.deleteMany({
           where: { appKey, configKey: key },
