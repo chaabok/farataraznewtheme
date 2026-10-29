@@ -151,8 +151,11 @@ export interface SimpleFormTwoRowTabbedProps {
   titleClassName?: string;
   bodyStyle?: React.CSSProperties;
 
-  /** Task 80 — optional muted note rendered as a small line under the field
-      grid (e.g. «تاریخ‌ها به‌صورت خودکار محاسبه می‌شوند…»). Absent = nothing. */
+  /** Task 80 — optional muted note. Task 149 (owner rule «توضیحاتی که با
+      فلش قرمز مشخص کردم در انتهای فرم فقط نمایش داده شود»): the note NO
+      LONGER hugs the field grid mid-form — it renders ONCE as the LAST
+      pinned strip at the very end of the form (below tabs / footer band /
+      row-actions), at every viewport size. Absent = nothing. */
   hint?: React.ReactNode;
 
   /** the field rows — flows into a responsive 3-column grid (canonical two rows) */
@@ -659,9 +662,9 @@ export function SimpleFormTwoRowTabbed({
               ))}
             </div>
           )}
-          {hint != null && (
-            <p className="mt-1.5 text-[11px] leading-5 text-muted-foreground">{hint}</p>
-          )}
+          {/* Task 149 — the inline hint that used to sit here (hugging the
+              field grid mid-form) was REMOVED per owner rule; the note now
+              renders only in the pinned end-of-form zone below. */}
         </div>
 
         {hasTabs && (
@@ -790,6 +793,20 @@ export function SimpleFormTwoRowTabbed({
             </span>
           )}
         </footer>
+      )}
+
+      {/* 5) Task 149 (owner rule: «توضیحاتی که با فلش قرمز مشخص کردم در
+          انتهای فرم فقط نمایش داده شود») — the form note is pinned as the
+          LAST strip at the very end of the form at every viewport size
+          (same rationale as the Task 53 footer band: shrink-0 OUTSIDE the
+          scrolling body), never hugging the field grid mid-form. */}
+      {hint != null && (
+        <div
+          data-form-hint-zone
+          className="shrink-0 border-t border-border/60 px-4 pb-2 pt-2 text-[11px] leading-5 text-muted-foreground"
+        >
+          {hint}
+        </div>
       )}
     </section>
   );
