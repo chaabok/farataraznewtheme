@@ -4370,3 +4370,26 @@ Stage Summary:
 - فرم «قرارداد جدید» عین تصویر مالک در زیرمنوی «اطلاعات تفصیلی ها» فعال است: ۱۷ فیلد با همان چیدمان دوستونی، هفت فیلد اجباری با پیام‌های دقیق مالک، کد تفصیلی لایو از «متد اختصاصی» با نوع تفصیل «قرارداد» (کد مرجع ۹ — دقیقاً همانند قرارداد فرم پروژه و مبتنی بر ردیف شماره شروع/شماره پایان فرم شماره‌گذاری تفصیلی ها)، دراپ‌داون ستون‌دار پروژه (کد تفصیلی/عنوان) و طرف قرارداد (کد تفصیلی/نام/ماهیت) با کاشی «+» دیالوگ فرم پایه و تازه‌خوانی خودکار منبع، محاسبهٔ لایو مدت روز، وضعیت فعال پیش‌فرض.
 - هر رکورد = ردیف تفصیلی (DetailItem نوع ۹) + پروفایل Contract با ثبت/حذف اتمی؛ دو خط دفاعی فرانت/سرور برای الزامی‌ها و یکتایی‌ها (۴۲۲/۴۰۹/۴۰۴)؛ دامنهٔ گرهٔ فعال OrgScope (قرارداد Task 122) و ذخیرهٔ میلادی/نمایش تقویم زبان (Task 77).
 - artifacts: mini-services/settings-service (schema.prisma + src/contract/* + table-registry + prisma.service + app.module + detail-code-assignment)؛ src/components/erp/accounting/contract-form.tsx (تازه) + accounting-window/menu-home + src/stores/accounting-nav-store + src/components/forms/form-primitives.tsx (تعمیم additive کاشی «+») + src/i18n/dictionaries.ts (+۴۴۲) + scripts/t148-i18n.mjs. بکاپ §0.9 (timestamped 1359).
+
+---
+Task ID: 153
+Agent: Z.ai Code (main)
+Task: «در زیرمنوی سند حسابداری نرم افزار حسابداری فرم نوع سند جدید را اضافه کنید. فیلدهای فرم نوع سند (به ترتیب): کد اجباری، عنوان اجباری، توضیحات اختیاری، فعال بصورت پیش فرض تیک داشته باشد.» + تصویر «نوع سندهای پیش‌فرض موجود در فرم»: ۱ سند عادی، ۲ سند افتتاحیه، ۳ سند اختتامیه، ۴ سند بستن حساب‌ها، ۵ سند شرح و زبان، ۶ سند انتقال، ۷ اصلاح و حذف، ۸ حقوق و دستمزد، ۹ هزینه‌های عمومی.
+
+Work Log:
+- بک‌اند (settings-service): مدل VoucherType (schema.prisma — کد/عنوان یکتا در گره، توضیحات اختیاری، isActive پیش‌فرض true + بلوک ۸فیلدی AppBase) + ثبت در TABLE_REGISTRY (VoucherTypeID) و VERSIONED_MODELS + db:push موفق.
+- ماژول NestJS voucher-type (controller/service/dto): GET /voucher-type (ترتیب عددی-آگاه کد — ۱..۹ عین تصویر) / POST / PUT /vouchered DELETE (۴۲۲ کد/عنوان الزامی و سقف نویسه، ۴۰۹ کد یا عنوان تکراری در گره، ۴۰۴ ناموجود) + ثبت در app.module.
+- Seed §9 (SeedService.onModuleInit): ۹ نوع پیش‌فرض عین فهرست مالک با گارد «اگر نبود بساز» به ازای هر کد — اجرای مکرر امن؛ لاگ «seeded 9 default VoucherType rows (Task 153)» ✓.
+- فرانت (voucher-type-form.tsx روی SimpleFormTwoRowTabbed — الگوی نوع تفصیل Task 120/115/118/82/149): فیلدها به ترتیب مالک کد*/عنوان*/فعال (تیک پیش‌فرض)/توضیحات؛ نرمال‌سازی ارقام فارسی/عربی کد؛ اعتبارسنجی فرانت هم‌قوانین سرور؛ کاشی ترجمه (entityType «VoucherType» — عنوان+توضیحات) با overlay فرم و فهرست؛ MainDataGrid چهارستونه (کد/عنوان/توضیحات/فعال) با فیلتر/سورت/CSV + اکشن‌های جدید/بازکردن/بازخوانی.
+- ثبت در منو: accounting-nav-store (+voucher-type)، accounting-menu-home (ScrollText، emerald→teal در گروه documents — Task 150)، accounting-window (زیرصفحه + عنوان زندهٔ برگه «حسابداری — نوع سند جدید» + breadcrumb «سند حسابداری»).
+- i18n §1.3: ۱۰ کلید vt.* در هر ۱۳ زبان با اسکریپت scripts/t153-i18n.mjs (anchor "dt.errTitleRequired"؛ واژگان عین dt.* همان زبان: fiş/voucher/संड/전표/pièce/凭证/Beleg/документ) — خودآزما: هر کلید دقیقاً ×۱۳ (۱۳۰ سطر تازه).
+- E2E (agent-browser) fa/RTL: منو ← گروه «سند حسابداری» ← کاشی «نوع سند جدید» ← فرم با breadcrumb «حسابداری / سند حسابداری / نوع سند جدید» ✓؛ گرید ۹ سطر پیش‌فرض عین فهرست مالک (کد ۱..۹، همه فعال) ✓؛ ثبت کد ۱۰ «سند آزمایشی» با توضیحات ⇒ توست موفقیت + سطر در گرید ✓؛ ثبت مجدد همان رکورد = UPDATE (خودش مستثنا) ✓؛ رکورد جدید با کد ۱ ⇒ توست ۴۰۹ «نوع سند تکراری است: کد «1» قبلاً برای نوع سند «1 - سند عادی» ثبت شده است.» ✓؛ ذخیرهٔ خالی ⇒ توست «ثبت کد نوع سند الزامی است؛ کد نمی‌تواند خالی باشد.» ✓؛ حذف با دیالوگ «تأیید حذف» ⇒ گرید به ۹ سطر پیش‌فرض بازگشت ✓.
+- E2E en/LTR: breadcrumb «Accounting / Accounting Vouchers / New Voucher Type»، برچسب‌ها Code*/Title*/Active (تیک)/Description + placeholder «Description text (optional)» ✓.
+- حالت کاشی: گروه «سند حسابداری» با کاشی «نوع سند جدید» (ScrollText) در کنار یادداشت به‌مرور ✓. موبایل ۳۹۰×۸۴۴ (fa): فیلدها پشته، اکشن‌بار چندردیفی، بدون سرریز ✓.
+- کنسول/خطای مرورگر: صفر؛ dev.log پاک. lint ریشه = فایل‌های تسک ۰/۰ (۸ خطای قدیمی متعلق به فایل‌های دیگر).
+- پاک‌سازی: ردیف آزمون (کد ۱۰) حذف شد — وضعیت نهایی بانک: فقط ۹ نوع پیش‌فرض مالک.
+
+Stage Summary:
+- فرم «نوع سند جدید» عین فرمان مالک در زیرمنوی «سند حسابداری» فعال است: کد/عنوان اجباری با پیام‌های دقیق، توضیحات اختیاری، فعال تیک پیش‌فرض، و ۹ نوع پیش‌فرض فهرست مالک که در بدو ورود در فهرست (گرید و نوار رکوردها) دیده می‌شوند.
+- دو خط دفاعی فرانت/سرور (۴۲۲/۴۰۹/۴۰۴)؛ ID از IDGeneration (§۱۶) و Version با §۲.۵ auto-rowversion؛ ترتیب عددی-آگاه کد در فهرست.
+- artifacts: mini-services/settings-service (schema.prisma + src/voucher-type/* + table-registry + prisma.service + app.module + seed.service)؛ src/components/erp/accounting/voucher-type-form.tsx (تازه) + accounting-window/menu-home + src/stores/accounting-nav-store + src/i18n/dictionaries.ts (+۱۳۰) + scripts/t153-i18n.mjs. سورس پیش‌تر با auto-sync پوش شد.
