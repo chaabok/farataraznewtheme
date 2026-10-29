@@ -1,6 +1,6 @@
 "use client";
 
-import { Briefcase, Building2, Calculator, Database, FileSignature, FolderPlus, Layers, ListOrdered, ListTree, Tags } from "lucide-react";
+import { Briefcase, Building2, Calculator, Database, FileSignature, FileText, FolderPlus, Layers, ListOrdered, ListTree, Tags } from "lucide-react";
 import { AppMenuHome, type AppMenuGroupDef } from "@/components/erp/shared/app-menu-home";
 
 /**
@@ -36,6 +36,15 @@ import { AppMenuHome, type AppMenuGroupDef } from "@/components/erp/shared/app-m
  *   · Task 148: «قرارداد جدید» — کد تفصیلی لایو از نوع تفصیل «قرارداد»
  *     (کد مرجع ۹ — دقیقاً همانند پروژه) + دراپ‌داون ستون‌دار پروژه/طرف
  *     قرارداد با کاشی «+» فرم پایه.
+ *
+ * زیرمنوی «سند حسابداری» — Task 150 (درخواست مالک: «در منوی حسابداری یک
+ * زیرمنو ایجاد کنید بنام سند حسابداری. این زیرمنو هست و فرم های آن به مرور
+ * اضافه خواهند شد»):
+ *   · هم‌تراز «اطلاعات پایه» و «اطلاعات تفصیلی ها»؛ فعلاً بدون فرم — گروه
+ *     خالی با یادداشت «فرم‌های بعدی این بخش به‌مرور اعلان و اضافه می‌شوند»
+ *     (fy.menuPending) رندر می‌شود و فرم‌های اسناد (ثبت سند، فهرست اسناد،
+ *     دفاتر و …) به‌مرور فقط یک مدخل در همین گروه + یک زیرصفحه در
+ *     accounting-window می‌گیرند.
  */
 
 /** تک‌منبع دادهٔ منوی حسابداری — هر ۴ حالت نمایش از همین مدل رندر می‌شوند */
@@ -115,6 +124,17 @@ const ACCOUNTING_MENU_GROUPS: AppMenuGroupDef[] = [
         gradient: "from-orange-500 to-amber-600",
       },
     ],
+  },
+  {
+    /* Task 150 — زیرمنوی «سند حسابداری» — هم‌تراز «اطلاعات پایه» و
+       «اطلاعات تفصیلی ها»؛ فعلاً بدون فرم (گروه خالی) — فرم‌های اسناد
+       به‌مرور به همین گروه اعلان می‌شوند */
+    id: "documents",
+    titleKey: "acc.menuDocuments",
+    descKey: "acc.menuDocumentsDesc",
+    icon: FileText,
+    gradient: "from-emerald-500 to-green-600",
+    items: [],
   },
 ];
 
