@@ -240,6 +240,38 @@ model CurrencyType {
   @@map("CurrencyType")
 }
 
+/// VoucherType — Task 153 (درخواست مالک): فرم «نوع سند جدید» در نرم‌افزار
+/// «حسابداری» ← زیرمنوی «سند حسابداری» (Task 150). فیلدها عین فرمان مالک:
+///   · کد*        — اجباری، یکتا در ساختار سازمانی (نمونه‌های پیش‌فرض ۱..۹).
+///   · عنوان*     — اجباری، یکتا در ساختار سازمانی.
+///   · توضیحات    — اختیاری.
+///   · فعال       — پیش‌فرض تیک‌خورده.
+/// + بلوک اجباری ۸فیلدی AppBaseEntity مطابق همهٔ جداول master data؛
+///   ۹ نوع پیش‌فرض تصویر مالک (سند عادی، افتتاحیه، اختتامیه، بستن حساب‌ها،
+///   شرح و زبان، انتقال، اصلاح و حذف، حقوق و دستمزد، هزینه‌های عمومی) در
+///   SeedService با گارد «اگر نبود بساز» بذر می‌شود.
+model VoucherType {
+  id                   BigInt   @id @map("VoucherTypeID")
+  code                 String   @map("Code") // کد نوع سند (یکتا در ساختار)
+  title                String   @map("Title") // عنوان نوع سند (یکتا در ساختار)
+  description          String?  @map("Description") // توضیحات اختیاری
+  isActive             Boolean  @default(true) @map("IsActive") // فعال (پیش‌فرض تیک)
+  version              Int      @default(1) @map("Version") // §2.5 auto-rowversion
+  creator              String   @map("Creator")
+  lastModifier         String?  @map("LastModifier")
+  businessStructureRef BigInt   @map("BusinessStructureRef")
+  companyRef           BigInt?  @map("CompanyRef")
+  branchRef            BigInt?  @map("BranchRef")
+  agencyRef            BigInt?  @map("AgencyRef")
+  shopRef              BigInt?  @map("ShopRef")
+  createdAt            DateTime @default(now()) @map("CreatedAt")
+  updatedAt            DateTime @updatedAt @map("UpdatedAt")
+
+  @@unique([code, businessStructureRef])
+  @@unique([title, businessStructureRef])
+  @@map("VoucherType")
+}
+
 /// ExchangeRate — Task 116 (درخواست مالک): فرم «نرخ برابری جدید» در نرم‌افزار
 /// «عمومی» → زیرمنوی «عملیات» (گروه نوپای منوی عمومی). فیلدها عین تصویر مالک
 /// (بدون فیلد شناسه به فرمان مالک: «نیازی به فیلد شناسه نمی باشد»):

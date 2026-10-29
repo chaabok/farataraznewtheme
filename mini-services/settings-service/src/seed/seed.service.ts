@@ -335,5 +335,60 @@ export class SeedService implements OnModuleInit {
         `seeded ${seededBranches} canonical DetailType rows for existing holding/company nodes (Task 122 — قاعدهٔ شاخه)`,
       );
     }
+
+    /* 9) Task 153 (درخواست مالک): «فرم نوع سند جدید» در زیرمنوی «سند حسابداری»
+       + «نوع سندهای پیش‌فرض موجود در فرم به شرح زیر می باشد» ⇒ ۹ نوع سند
+       پیش‌فرضِ عین فهرست مالک برای دفتر مرکزی؛ گارد «اگر نبود بساز» (به ازای
+       هر کد) تا اجرای مکرر امن باشد و ردیف‌های حذف‌شدهٔ دستیِ مالک هم فقط
+       با کدِ غایب بازساخته شوند. */
+    const seededVt = await seedDefaultVoucherTypes(
+      this.prisma,
+      this.idGen,
+      SYSTEM_ACTOR,
+    );
+    if (seededVt > 0) {
+      this.logger.log(`seeded ${seededVt} default VoucherType rows (Task 153)`);
+    }
   }
+}
+
+/** ۹ نوع سند پیش‌فرض عین فهرست مالک (Task 153) — کد ۱..۹ به ترتیب تصویر. */
+const DEFAULT_VOUCHER_TYPES: ReadonlyArray<{ code: string; title: string }> = [
+  { code: "1", title: "سند عادی" },
+  { code: "2", title: "سند افتتاحیه" },
+  { code: "3", title: "سند اختتامیه" },
+  { code: "4", title: "سند بستن حساب‌ها" },
+  { code: "5", title: "سند شرح و زبان" },
+  { code: "6", title: "سند انتقال" },
+  { code: "7", title: "اصلاح و حذف" },
+  { code: "8", title: "حقوق و دستمزد" },
+  { code: "9", title: "هزینه‌های عمومی" },
+];
+
+/** بذر انواع سند پیش‌فرض — امن برای اجرای مکرر (گارد به ازای هر کد). */
+async function seedDefaultVoucherTypes(
+  prisma: PrismaService,
+  idGen: IdGenerationService,
+  actor: { userId: string },
+): Promise<number> {
+  let seeded = 0;
+  for (const vt of DEFAULT_VOUCHER_TYPES) {
+    const exists = await prisma.voucherType.findFirst({
+      where: { businessStructureRef: 1n, code: vt.code },
+    });
+    if (exists) continue;
+    const newId = await idGen.generateNextId("VoucherType");
+    await prisma.voucherType.create({
+      data: {
+        id: BigInt(newId),
+        code: vt.code,
+        title: vt.title,
+        description: null,
+        isActive: true,
+        ...appBaseOnCreate(actor),
+      },
+    });
+    seeded++;
+  }
+  return seeded;
 }

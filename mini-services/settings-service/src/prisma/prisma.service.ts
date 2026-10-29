@@ -49,6 +49,7 @@ const VERSIONED_MODELS: ReadonlySet<string> = new Set([
   "CostCenter", // Task 146 — مرکز هزینه جدید (اطلاعات تفصیلی ها)
   "Project", // Task 147 — تعریف پروژه (اطلاعات تفصیلی ها)
   "Contract", // Task 148 — قرارداد جدید (اطلاعات تفصیلی ها)
+  "VoucherType", // Task 153 — نوع سند جدید (سند حسابداری)
   "User", // Task 126 — کاربران (مدیریت کاربران)
   "UserAccess", // Task 126 — درختوارهٔ دسترسی کاربران
   "AccountNode", // Task 140 — درختواره حسابها (اطلاعات پایهٔ حسابداری)

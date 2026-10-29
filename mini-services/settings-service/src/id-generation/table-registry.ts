@@ -38,6 +38,7 @@ export type TableKey =
   | "CostCenter" // Task 146 — مرکز هزینه جدید (اطلاعات تفصیلی ها)
   | "Project" // Task 147 — تعریف پروژه (اطلاعات تفصیلی ها)
   | "Contract" // Task 148 — قرارداد جدید (اطلاعات تفصیلی ها)
+  | "VoucherType" // Task 153 — نوع سند جدید (سند حسابداری)
   | "User" // Task 126 — کاربران (مدیریت کاربران)
   | "UserAccess" // Task 126 — درختوارهٔ دسترسی کاربران
   | "AccountNode" // Task 140 — درختواره حسابها (اطلاعات پایهٔ حسابداری)
@@ -141,6 +142,10 @@ export const TABLE_REGISTRY: Record<TableKey, TableEntry> = {
   Contract: {
     canonical: "Contract", // Task 148 — قرارداد جدید
     pk: "ContractID", // §2.7
+  },
+  VoucherType: {
+    canonical: "VoucherType", // Task 153 — نوع سند جدید (سند حسابداری)
+    pk: "VoucherTypeID", // §2.7
   },
   User: {
     canonical: "User", // Task 126 — کاربران (مدیریت کاربران)
