@@ -50,6 +50,7 @@ export const DETAIL_FORM_TYPE_MAP: Readonly<
 > = {
   "cost-center": { canonicalCode: "15", title: "مراکز هزینه" },
   "project": { canonicalCode: "8", title: "پروژه" }, // Task 147 — تعریف پروژه
+  "contract": { canonicalCode: "9", title: "قرارداد" }, // Task 148 — قرارداد جدید
 };
 
 /** اطلاعات ردیف شماره‌گذاری یک نوع تفصیل در یک گره. */

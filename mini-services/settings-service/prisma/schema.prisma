@@ -763,6 +763,64 @@ model Project {
   @@map("Project")
 }
 
+/// Contract — Task 148 (درخواست مالک): فرم «قرارداد جدید» در نرم‌افزار
+/// «حسابداری» ← زیرمنوی «اطلاعات تفصیلی ها». قرارداد یک «حساب تفصیلی» است
+/// که نوع آن («قرارداد» — کد مرجع ۹ از فرم نوع تفصیلی) تعریف شده و فرم
+/// پایهٔ آن در نرم‌افزار ساخته شده است؛ بنابراین هر قرارداد همزمان یک ردیف
+/// DetailItem (کد تفصیلی، عنوان تفصیلی، شرح، فعال) از آن نوع است + پروفایل
+/// اختصاصی همین جدول (عین فیلدهای فرم مالک):
+///   · detailItemRef — پیوند ۱:۱ به ردیف تفصیلی مالک (DetailItem).
+///   · number        — شماره قرارداد (اجباری؛ یکتا در گرهٔ ساختار).
+///   · date          — تاریخ قرارداد (اجباری؛ ذخیرهٔ میلادی ISO — Task 77).
+///   · projectRef    — پروژهٔ مرتبط (اختیاری؛ ارجاع به Project).
+///   · partyRef      — طرف قرارداد (اجباری؛ ارجاع به Party).
+///   · workLocation  — محل انجام کار (اختیاری).
+///   · subject/subject2 — موضوع قرارداد / موضوع قرارداد (۲) (اولی اجباری).
+///   · title2        — عنوان تفصیلی (۲) (اختیاری؛ اصلی در DetailItem.Title).
+///   · startDate/endDate — تاریخ شروع / تاریخ خاتمه (اختیاری؛ ISO).
+///   · durationDays  — مدت قرارداد به روز (اختیاری).
+///   · amount        — مبلغ قرارداد (اجباری؛ رشتهٔ رقم لاتین — دقت بی‌کاستی).
+///   · description2  — شرح (۲) (اختیاری؛ اصلی در DetailItem.Description).
+///   · کد تفصیلی در DetailItem هم‌جدول ذخیره می‌شود و با «متد اختصاصی
+///     تخصیص کد تفصیل» (detail-code-assignment — Task 146؛ formKey "contract"
+///     ← نوع تفصیل «قرارداد» کد ۹) بر پایهٔ تنظیمات ساختار کسب و کار و ردیف
+///     شماره‌گذاری همان نوع (ستون‌های شماره شروع/شماره پایان — Task 131)
+///     بصورت لایو ایجکس تخصیص می‌یابد — عین قرارداد فرم پروژه (Task 147).
+/// اقامت ردیف = گرهٔ ساختار فعالِ فرم با بلوک کامل ارث‌بری AppBaseEntity.
+model Contract {
+  id              BigInt   @id @map("ContractID") // §2.7
+  detailItemRef   BigInt   @map("DetailItemRef") // پیوند ۱:۱ به DetailItem
+  number          String   @map("Number") // شماره قرارداد (اجباری؛ یکتا در گرهٔ ساختار)
+  date            String   @map("Date") // تاریخ قرارداد — میلادی ISO (Task 77)
+  projectRef      BigInt?  @map("ProjectRef") // پروژهٔ مرتبط (اختیاری)
+  partyRef        BigInt   @map("PartyRef") // طرف قرارداد (اجباری) → Party
+  workLocation    String?  @map("WorkLocation") // محل انجام کار
+  subject         String   @map("Subject") // موضوع قرارداد (اجباری)
+  subject2        String?  @map("Subject2") // موضوع قرارداد (۲)
+  title2          String?  @map("Title2") // عنوان تفصیلی (۲)
+  startDate       String?  @map("StartDate") // تاریخ شروع — میلادی ISO
+  endDate         String?  @map("EndDate") // تاریخ خاتمه — میلادی ISO
+  durationDays    Int?     @map("DurationDays") // مدت قرارداد (روز)
+  amount          String   @map("Amount") // مبلغ قرارداد (رقم لاتین — دقت بی‌کاستی)
+  description2    String?  @map("Description2") // شرح (۲)
+  version              Int      @default(1) @map("Version") // §2.5 auto-rowversion
+  creator              String   @map("Creator")
+  lastModifier         String?  @map("LastModifier")
+  businessStructureRef BigInt   @map("BusinessStructureRef")
+  companyRef           BigInt?  @map("CompanyRef")
+  branchRef            BigInt?  @map("BranchRef")
+  agencyRef            BigInt?  @map("AgencyRef")
+  shopRef              BigInt?  @map("ShopRef")
+  createdAt            DateTime @default(now()) @map("CreatedAt")
+  updatedAt            DateTime @updatedAt @map("UpdatedAt")
+
+  @@unique([detailItemRef])
+  @@unique([number, businessStructureRef])
+  @@index([projectRef])
+  @@index([partyRef])
+  @@map("Contract")
+}
+
 /// User — Task 126 (درخواست مالک): فرم «کاربر جدید» در تنظیمات ← مدیریت
 /// کاربران با کامپوننت SimpleTreeForm. هر کاربر به یک ردیف طرف حساب (لیست
 /// «نام / نام خانوادگی») متصل است و یک نقش کاربری (UserRole) دارد.
