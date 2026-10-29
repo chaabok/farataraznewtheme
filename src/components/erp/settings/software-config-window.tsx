@@ -183,6 +183,37 @@ const SOFTWARE_CONFIG_FIELDS: Record<string, SwConfigFieldDef[]> = {
       integer: true,
       defaultValue: "10",
     },
+    /* Task 155 (درخواست مالک) — ۴ فیلد چک‌باکس تصویر مالک (تب حسابداری)،
+       به ترتیب تصویر؛ فقط اولی پیش‌فرض تیک‌دار است و بقیه خالی:
+       ۱. «سقف تاریخ و شماره پیگیری در سند نمایش داده شود» (تیک‌دار در تصویر)
+       ۲. «ورود اطلاعات تاریخ و شماره پیگیری اجباری باشد»
+       ۳. «سقف های ارزی نمایش داده شود»
+       ۴. «دسترسی مجاز در سطح معین فعال باشد»
+       آینهٔ سرور: software-config.dto.ts. */
+    {
+      key: "showDocDateTrackCap",
+      labelKey: "settings.swDocDateTrackCap",
+      type: "checkbox",
+      defaultValue: "1",
+    },
+    {
+      key: "docDateTrackEntryMandatory",
+      labelKey: "settings.swDocDateTrackMandatory",
+      type: "checkbox",
+      defaultValue: "0",
+    },
+    {
+      key: "showCurrencyCaps",
+      labelKey: "settings.swCurrencyCaps",
+      type: "checkbox",
+      defaultValue: "0",
+    },
+    {
+      key: "enableMoeinLevelAccess",
+      labelKey: "settings.swMoeinLevelAccess",
+      type: "checkbox",
+      defaultValue: "0",
+    },
   ],
   receiptsPayment: [],
   inventory: [],

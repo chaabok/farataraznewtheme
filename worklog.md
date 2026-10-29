@@ -4415,3 +4415,22 @@ Stage Summary:
 - نوع «سایر» به‌عنوان پنجمین دستهٔ کلاسیک تفصیلی معین سمت سرور تضمین می‌شود (اگر نبود بساز — کد آزاد از ۲۲) و در فرم‌های نوع تفصیل/ایجاد تفصیلی ها/شماره‌گذاری هم دیده می‌شود (یک منبع واحد DetailType).
 - دو خط دفاعی فرانت/سرور (۴۲۲/۴۰۹/۴۰۴)؛ ID از IDGeneration (§۱۶) و Version با §۲.۵ auto-rowversion؛ اقامت ردیف = گرهٔ فعال OrgScope (Task 122).
 - artifacts: mini-services/settings-service (src/detail-item/detail-item.service.ts + detail-item.controller.ts — بدون تغییر اسکیما)؛ src/components/erp/accounting/detail-other-form.tsx (تازه) + accounting-window/accounting-menu-home + src/stores/accounting-nav-store + src/i18n/dictionaries.ts (+۱۴۳) + scripts/t154-i18n.mjs.
+
+---
+Task ID: 155
+Agent: Z.ai Code (main)
+Task: درخواست مالک — «فیلدهایی که در تصویر وجود دارد را در فرم تنظیمات و پیکربندی نرم افزار و تب حسابداری اضافه کنید» (تصویر: ۴ چک‌باکس).
+
+Work Log:
+- فرانت (software-config-window.tsx — رجیستری SOFTWARE_CONFIG_FIELDS تب حسابداری): ۴ فیلد چک‌باکس به ترتیب عین تصویر پس از «تعداد سطوح تفصیلی» افزوده شد — ۱) showDocDateTrackCap «سقف تاریخ و شماره پیگیری در سند نمایش داده شود» پیش‌فرض تیک‌دار (defaultValue "1" — عین تیک تصویر مالک) ۲) docDateTrackEntryMandatory «ورود اطلاعات تاریخ و شماره پیگیری اجباری باشد» ۳) showCurrencyCaps «سقف های ارزی نمایش داده شود» ۴) enableMoeinLevelAccess «دسترسی مجاز در سطح معین فعال باشد» (سه‌گانهٔ آخر پیش‌فرض "0")؛ بدون هیچ تغییر رندر — موتور چک‌باکس موجود (accent-primary، لیبل راست/چک‌باکس چپ در RTL) خودکار اعمال شد.
+- آینهٔ سرور (settings-service software-config.dto.ts): ۴ کلید به whitelist تب accounting اضافه شد (type checkbox با همان defaultValue) — بدون مهاجرت دیتابیس (الگوی Task 72)؛ سرویس با bun --hot خودکار reload شد.
+- i18n §1.3: ۴ کلید settings.swDocDateTrackCap / swDocDateTrackMandatory / swCurrencyCaps / swMoeinLevelAccess در هر ۱۳ زبان با اسکریپت scripts/t155-i18n.mjs (anchor "settings.swAccDetailLevels"؛ فارسی = عین واژگان تصویر مالک) — خودآزما: هر کلید دقیقاً ×۱۳ (۵۲ سطر تازه).
+- E2E (agent-browser) fa/RTL: تنظیمات ← پیکربندی نرم افزارها ← تب حسابداری: ۴ چک‌باکس با برچسب دقیق فارسی و ترتیب تصویر، اولی تیک‌دار و سه‌گانهٔ دوم خالی ✓؛ تیک‌زدن ۲ و ۴ + ذخیره ⇒ PUT /api/settings/software-config/accounting 200 ✓؛ reload کامل صفحه و بازگشت به تب ⇒ هر ۴ وضعیت باقی (ماندگاری) ✓؛ بازگرداندن به وضعیت تصویر (فقط اولی تیک‌دار) + ذخیرهٔ نهایی 200 ✓.
+- E2E en/LTR: برچسب‌ها «Date and tracking-number cap displayed in the voucher / Entering date and tracking-number data is mandatory / Currency caps displayed / Access allowed at subsidiary (Moein) level» با آینه‌شدن صحیح (لیبل چپ/چک‌باکس راست) ✓. تم تیرهٔ اجباری: توکن‌های تم، بدون رنگ ثابت ✓. موبایل ۳۹۰×۸۴۴: لیبل‌های بلند شکسته و چک‌باکس‌ها سالم ✓.
+- کنسول/خطای مرورگر: صفر؛ dev.log پاک (فقط 502های قدیمی advancedTools). lint ریشه = فایل‌های تسک ۰/۰ (۸ خطای قدیمی متعلق به فایل‌های دیگر).
+- پاک‌سازی: وضعیت نهایی بانک = ۴ ردیف جدید با مقدار تصویر مالک (1/0/0/0) — بدون رکورد آزمایشی اضافی.
+
+Stage Summary:
+- تب «حسابداری» پیکربندی نرم افزارها اکنون ۴ چک‌باکس جدید تصویر مالک را به ترتیب و با وضعیت پیش‌فرض عین تصویر (فقط «سقف تاریخ و شماره پیگیری در سند نمایش داده شود» تیک‌دار) نشان می‌دهد.
+- الگوی «هر اعلام فیلد = یک ورودی رجیستری + آینهٔ سرور + ترجمه» بدون مهاجرت دیتابیس حفظ شد (Task 72/73/95/135-140)؛ مقادیر در SoftwareConfig ماندگار و پس از reload پابرجا هستند.
+- artifacts: src/components/erp/settings/software-config-window.tsx (+۴ فیلد)؛ mini-services/settings-service/src/software-config/software-config.dto.ts (+۴ کلید)؛ src/i18n/dictionaries.ts (+۵۲)؛ scripts/t155-i18n.mjs (تازه).

@@ -87,6 +87,18 @@ export const SOFTWARE_CONFIG_FIELDS: Record<
        SOFTWARE_CONFIG_FIELDS در software-config-window.tsx. */
     accDetailLevels: { type: "number", min: 1, max: 20, integer: true, defaultValue: "10" },
 
+    /* Task 155 (درخواست مالک) — ۴ فیلد چک‌باکس تصویر مالک (تب حسابداری)،
+       به ترتیب تصویر؛ فقط اولی پیش‌فرض تیک‌دار است و بقیه خالی:
+       ۱. «سقف تاریخ و شماره پیگیری در سند نمایش داده شود» (تیک‌دار در تصویر)
+       ۲. «ورود اطلاعات تاریخ و شماره پیگیری اجباری باشد»
+       ۳. «سقف های ارزی نمایش داده شود»
+       ۴. «دسترسی مجاز در سطح معین فعال باشد»
+       آینهٔ فرانت: SOFTWARE_CONFIG_FIELDS در software-config-window.tsx. */
+    showDocDateTrackCap: { type: "checkbox", defaultValue: "1" },
+    docDateTrackEntryMandatory: { type: "checkbox", defaultValue: "0" },
+    showCurrencyCaps: { type: "checkbox", defaultValue: "0" },
+    enableMoeinLevelAccess: { type: "checkbox", defaultValue: "0" },
+
     /* Task 140 (پرامپت مالک — درختواره حسابها): کلید «کنترل دسترسی به
        دفاتر»؛ تا زمان اعلام فیلد UI توسط مالک فقط از راه API تنظیم می‌شود
        (چک‌باکس: «1» = تب «کاربران مجاز» در گره‌های سطح ≥ ۳ فعال می‌شود). */
