@@ -1,6 +1,6 @@
 "use client";
 
-import { Calculator, Database, FolderPlus, Layers, ListOrdered, ListTree, Tags } from "lucide-react";
+import { Building2, Calculator, Database, FolderPlus, Layers, ListOrdered, ListTree, Tags } from "lucide-react";
 import { AppMenuHome, type AppMenuGroupDef } from "@/components/erp/shared/app-menu-home";
 
 /**
@@ -29,6 +29,8 @@ import { AppMenuHome, type AppMenuGroupDef } from "@/components/erp/shared/app-m
  *   · Task 144: «ایجاد تفصیلی ها» — از زیرمنوی اطلاعات پایه به همین زیرمنو
  *     منتقل شد؛ فرم‌های بعدی تفصیلی نیز به‌مرور فقط یک مدخل در همین گروه
  *     + یک زیرصفحه در accounting-window می‌گیرند.
+ *   · Task 146: «مرکز هزینه جدید» — دومین فرم همین زیرمنو با کد تفصیل لایو
+ *     (متد اختصاصی تخصیص کد تفصیل) و Enum نوع مرکز هزینه.
  */
 
 /** تک‌منبع دادهٔ منوی حسابداری — هر ۴ حالت نمایش از همین مدل رندر می‌شوند */
@@ -83,6 +85,14 @@ const ACCOUNTING_MENU_GROUPS: AppMenuGroupDef[] = [
         icon: FolderPlus,
         gradient: "from-rose-500 to-pink-600",
       },
+      {
+        /* Task 146 — مرکز هزینه جدید (کد تفصیل لایو از متد اختصاصی + Enum نوع) */
+        page: "cost-center",
+        titleKey: "cc.formTitle",
+        descKey: "cc.formDesc",
+        icon: Building2,
+        gradient: "from-amber-500 to-rose-600",
+      },
     ],
   },
 ];
@@ -90,7 +100,7 @@ const ACCOUNTING_MENU_GROUPS: AppMenuGroupDef[] = [
 export function AccountingMenuHome({
   go,
 }: {
-  go: (page: "detail-type" | "detail-type-numbering" | "detail-items" | "account-tree") => void;
+  go: (page: "detail-type" | "detail-type-numbering" | "detail-items" | "cost-center" | "account-tree") => void;
 }) {
   return (
     <AppMenuHome
@@ -100,7 +110,7 @@ export function AccountingMenuHome({
       headerGradient="from-violet-500 to-violet-700"
       storageKey="accounting.menuView"
       groups={ACCOUNTING_MENU_GROUPS}
-      go={(page) => go(page as "detail-type" | "detail-type-numbering" | "detail-items" | "account-tree")}
+      go={(page) => go(page as "detail-type" | "detail-type-numbering" | "detail-items" | "cost-center" | "account-tree")}
     />
   );
 }
