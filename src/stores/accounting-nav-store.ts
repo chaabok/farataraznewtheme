@@ -23,6 +23,7 @@ export type AccountingSubPage =
   | "detail-type-numbering" // Task 131 — شماره گذاری تفصیلی ها (اطلاعات پایهٔ حسابداری)
   | "detail-items" // Task 144 — ایجاد تفصیلی ها (زیرمنوی «اطلاعات تفصیلی ها» — Task 145)
   | "cost-center" // Task 146 — مرکز هزینه جدید (زیرمنوی «اطلاعات تفصیلی ها»)
+  | "project" // Task 147 — تعریف پروژه (زیرمنوی «اطلاعات تفصیلی ها»)
   | "account-tree"; // Task 140 — درختواره حسابها (اطلاعات پایهٔ حسابداری)
 
 interface AccountingNavState {

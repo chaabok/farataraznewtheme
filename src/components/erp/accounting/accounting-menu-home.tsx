@@ -1,6 +1,6 @@
 "use client";
 
-import { Building2, Calculator, Database, FolderPlus, Layers, ListOrdered, ListTree, Tags } from "lucide-react";
+import { Briefcase, Building2, Calculator, Database, FolderPlus, Layers, ListOrdered, ListTree, Tags } from "lucide-react";
 import { AppMenuHome, type AppMenuGroupDef } from "@/components/erp/shared/app-menu-home";
 
 /**
@@ -29,8 +29,10 @@ import { AppMenuHome, type AppMenuGroupDef } from "@/components/erp/shared/app-m
  *   · Task 144: «ایجاد تفصیلی ها» — از زیرمنوی اطلاعات پایه به همین زیرمنو
  *     منتقل شد؛ فرم‌های بعدی تفصیلی نیز به‌مرور فقط یک مدخل در همین گروه
  *     + یک زیرصفحه در accounting-window می‌گیرند.
- *   · Task 146: «مرکز هزینه جدید» — دومین فرم همین زیرمنو با کد تفصیل لایو
- *     (متد اختصاصی تخصیص کد تفصیل) و Enum نوع مرکز هزینه.
+ *   · Task 146: «مرکز هزینه جدید» — با کد تفصیل لایو (متد اختصاصی تخصیص کد
+ *     تفصیل) و Enum نوع مرکز هزینه.
+ *   · Task 147: «تعریف پروژه» — کد سریالی لایو (پشت سرهم) + کد تفصیل لایو
+ *     از نوع تفصیل «پروژه» (کد مرجع ۸).
  */
 
 /** تک‌منبع دادهٔ منوی حسابداری — هر ۴ حالت نمایش از همین مدل رندر می‌شوند */
@@ -93,6 +95,14 @@ const ACCOUNTING_MENU_GROUPS: AppMenuGroupDef[] = [
         icon: Building2,
         gradient: "from-amber-500 to-rose-600",
       },
+      {
+        /* Task 147 — تعریف پروژه (کد سریالی لایو + کد تفصیل لایو از نوع «پروژه») */
+        page: "project",
+        titleKey: "pj.formTitle",
+        descKey: "pj.formDesc",
+        icon: Briefcase,
+        gradient: "from-teal-500 to-emerald-600",
+      },
     ],
   },
 ];
@@ -100,7 +110,7 @@ const ACCOUNTING_MENU_GROUPS: AppMenuGroupDef[] = [
 export function AccountingMenuHome({
   go,
 }: {
-  go: (page: "detail-type" | "detail-type-numbering" | "detail-items" | "cost-center" | "account-tree") => void;
+  go: (page: "detail-type" | "detail-type-numbering" | "detail-items" | "cost-center" | "project" | "account-tree") => void;
 }) {
   return (
     <AppMenuHome
@@ -110,7 +120,7 @@ export function AccountingMenuHome({
       headerGradient="from-violet-500 to-violet-700"
       storageKey="accounting.menuView"
       groups={ACCOUNTING_MENU_GROUPS}
-      go={(page) => go(page as "detail-type" | "detail-type-numbering" | "detail-items" | "cost-center" | "account-tree")}
+      go={(page) => go(page as "detail-type" | "detail-type-numbering" | "detail-items" | "cost-center" | "project" | "account-tree")}
     />
   );
 }
