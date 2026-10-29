@@ -46,6 +46,7 @@ const VERSIONED_MODELS: ReadonlySet<string> = new Set([
   "DetailType", // Task 120 — نوع تفصیل جدید (حسابداری)
   "DetailTypeNumbering", // Task 131 — شماره گذاری تفصیلی ها (حسابداری)
   "DetailItem", // Task 144 — ایجاد تفصیلی ها (حسابداری)
+  "CostCenter", // Task 146 — مرکز هزینه جدید (اطلاعات تفصیلی ها)
   "User", // Task 126 — کاربران (مدیریت کاربران)
   "UserAccess", // Task 126 — درختوارهٔ دسترسی کاربران
   "AccountNode", // Task 140 — درختواره حسابها (اطلاعات پایهٔ حسابداری)

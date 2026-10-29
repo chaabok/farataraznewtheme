@@ -689,6 +689,44 @@ model DetailItem {
   @@map("DetailItem")
 }
 
+/// CostCenter — Task 146 (درخواست مالک): فرم «مرکز هزینه جدید» در نرم‌افزار
+/// «حسابداری» ← زیرمنوی «اطلاعات تفصیلی ها». مرکز هزینه یک «حساب تفصیلی» است
+/// که نوع آن («مراکز هزینه» — کد مرجع ۱۵) در فرم نوع تفصیلی تعریف شده و
+/// فرم پایهٔ آن در نرم‌افزار ساخته شده است؛ بنابراین هر مرکز هزینه همزمان
+/// یک ردیف DetailItem (کد تفصیل، عنوان، توضیحات، فعال) از آن نوع است +
+/// پروفایل اختصاصی همین جدول:
+///   · detailItemRef — پیوند ۱:۱ به ردیف تفصیلی مالک (DetailItem).
+///   · کد            — کد مرکز هزینه (یکتا در گرهٔ ساختار؛ مستقل از کد تفصیل).
+///   · CostCenterType — Enum مالک: ۱=اداری و تشکیلاتی، ۲=بازرگانی،
+///     ۳=تولیدی، ۴=خدماتی، ۵=عمومی (SQLite نوع Enum ندارد ⇒ Int با گارد
+///     اعتبارسنجی سرویس؛ تعریف Enum در cost-center-type.ts).
+///   · کد تفصیل در DetailItem هم‌جدول ذخیره می‌شود و با «متد اختصاصی
+///     تخصیص کد تفصیل» (detail-code-assignment — Task 146) بر پایهٔ تنظیمات
+///     ساختار کسب و کار (گرهٔ فعال OrgScope) و ردیف شماره‌گذاری همان نوع
+///     (ستون‌های شماره شروع/شماره پایان — Task 131) بصورت لایو ایجکس تخصیص می‌یابد.
+/// اقامت ردیف = گرهٔ ساختار فعالِ فرم با بلوک کامل ارث‌بری AppBaseEntity.
+model CostCenter {
+  id              BigInt   @id @map("CostCenterID") // §2.7
+  detailItemRef   BigInt   @map("DetailItemRef") // پیوند ۱:۱ به DetailItem
+  code            String   @map("Code") // کد مرکز هزینه (یکتا در گرهٔ ساختار)
+  costCenterType  Int      @map("CostCenterType") // Enum 1..5 (SQLite: Int)
+  version              Int      @default(1) @map("Version") // §2.5 auto-rowversion
+  creator              String   @map("Creator")
+  lastModifier         String?  @map("LastModifier")
+  businessStructureRef BigInt   @map("BusinessStructureRef")
+  companyRef           BigInt?  @map("CompanyRef")
+  branchRef            BigInt?  @map("BranchRef")
+  agencyRef            BigInt?  @map("AgencyRef")
+  shopRef              BigInt?  @map("ShopRef")
+  createdAt            DateTime @default(now()) @map("CreatedAt")
+  updatedAt            DateTime @updatedAt @map("UpdatedAt")
+
+  @@unique([detailItemRef])
+  @@unique([code, businessStructureRef])
+  @@index([costCenterType])
+  @@map("CostCenter")
+}
+
 /// User — Task 126 (درخواست مالک): فرم «کاربر جدید» در تنظیمات ← مدیریت
 /// کاربران با کامپوننت SimpleTreeForm. هر کاربر به یک ردیف طرف حساب (لیست
 /// «نام / نام خانوادگی») متصل است و یک نقش کاربری (UserRole) دارد.
