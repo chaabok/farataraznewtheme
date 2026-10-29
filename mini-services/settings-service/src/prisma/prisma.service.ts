@@ -50,6 +50,9 @@ const VERSIONED_MODELS: ReadonlySet<string> = new Set([
   "Project", // Task 147 — تعریف پروژه (اطلاعات تفصیلی ها)
   "Contract", // Task 148 — قرارداد جدید (اطلاعات تفصیلی ها)
   "VoucherType", // Task 153 — نوع سند جدید (سند حسابداری)
+  "Voucher", // Task 158 — سند حسابداری جدید
+  "VoucherItem", // Task 158 — اقلام سند
+  "VoucherItemDetail", // Task 158 — تفصیلی‌های ردیف سند
   "User", // Task 126 — کاربران (مدیریت کاربران)
   "UserAccess", // Task 126 — درختوارهٔ دسترسی کاربران
   "AccountNode", // Task 140 — درختواره حسابها (اطلاعات پایهٔ حسابداری)

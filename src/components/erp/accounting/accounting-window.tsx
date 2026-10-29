@@ -15,6 +15,7 @@ import { ProjectForm } from "./project-form";
 import { ContractForm } from "./contract-form";
 import { AccountTreeForm } from "./account-tree-form";
 import { VoucherTypeForm } from "./voucher-type-form";
+import { VoucherNewForm } from "./voucher-new-form";
 import { DetailOtherForm } from "./detail-other-form";
 
 /**
@@ -43,6 +44,7 @@ const PAGE_TITLE_KEY: Partial<Record<AccountingSubPage, string>> = {
   "contract": "ct.formTitle",
   "account-tree": "atr.formTitle",
   "voucher-type": "vt.formTitle",
+  "voucher-new": "vc.formTitle",
   "detail-other": "do.formTitle",
 };
 
@@ -57,6 +59,7 @@ const PAGE_GROUP_KEY: Partial<Record<AccountingSubPage, string>> = {
   "contract": "acc.menuDetailInfo",
   "account-tree": "acc.menuBasicInfo",
   "voucher-type": "acc.menuDocuments",
+  "voucher-new": "acc.menuDocuments",
   "detail-other": "acc.menuDetailInfo",
 };
 
@@ -128,6 +131,7 @@ export function AccountingWindow() {
           {page === "contract" && <ContractForm onBack={() => go("home")} />}
           {page === "account-tree" && <AccountTreeForm onBack={() => go("home")} />}
           {page === "voucher-type" && <VoucherTypeForm onBack={() => go("home")} />}
+          {page === "voucher-new" && <VoucherNewForm onBack={() => go("home")} />}
           {page === "detail-other" && <DetailOtherForm onBack={() => go("home")} />}
         </div>
       </div>

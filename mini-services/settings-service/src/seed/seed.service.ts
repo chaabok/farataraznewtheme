@@ -352,12 +352,16 @@ export class SeedService implements OnModuleInit {
   }
 }
 
-/** ۹ نوع سند پیش‌فرض عین فهرست مالک (Task 153) — کد ۱..۹ به ترتیب تصویر. */
-const DEFAULT_VOUCHER_TYPES: ReadonlyArray<{ code: string; title: string }> = [
+/** ۹ نوع سند پیش‌فرض عین فهرست مالک (Task 153) — کد ۱..۹ به ترتیب تصویر.
+ *  Task 158 — isSystem: انواع سیستمی (افتتاحیه/اختتامیه/بستن حساب‌ها) در
+ *  دراپ‌داون «نوع سند» فرم «سند حسابداری جدید» نمایش داده نمی‌شوند
+ *  (فرمان مالک Task 158: «نوع سندهای سیستمی در این فهرست نمایش داده نمی‌شوند»)،
+ *  در فرم «نوع سند جدید» همچنان همه دیده می‌شوند. */
+const DEFAULT_VOUCHER_TYPES: ReadonlyArray<{ code: string; title: string; isSystem?: boolean }> = [
   { code: "1", title: "سند عادی" },
-  { code: "2", title: "سند افتتاحیه" },
-  { code: "3", title: "سند اختتامیه" },
-  { code: "4", title: "سند بستن حساب‌ها" },
+  { code: "2", title: "سند افتتاحیه", isSystem: true },
+  { code: "3", title: "سند اختتامیه", isSystem: true },
+  { code: "4", title: "سند بستن حساب‌ها", isSystem: true },
   { code: "5", title: "سند شرح و زبان" },
   { code: "6", title: "سند انتقال" },
   { code: "7", title: "اصلاح و حذف" },
@@ -376,7 +380,17 @@ async function seedDefaultVoucherTypes(
     const exists = await prisma.voucherType.findFirst({
       where: { businessStructureRef: 1n, code: vt.code },
     });
-    if (exists) continue;
+    if (exists) {
+      /* Task 158 — نروی‌کردن پرچم سیستمی روی ردیف‌های از قبل بذرشده
+         (idempotent؛ فقط وقتی مقدار فرق کرده باشد به‌روز می‌شود) */
+      if (exists.isSystem !== (vt.isSystem ?? false)) {
+        await prisma.voucherType.update({
+          where: { id: exists.id },
+          data: { isSystem: vt.isSystem ?? false },
+        });
+      }
+      continue;
+    }
     const newId = await idGen.generateNextId("VoucherType");
     await prisma.voucherType.create({
       data: {
@@ -385,6 +399,7 @@ async function seedDefaultVoucherTypes(
         title: vt.title,
         description: null,
         isActive: true,
+        isSystem: vt.isSystem ?? false,
         ...appBaseOnCreate(actor),
       },
     });

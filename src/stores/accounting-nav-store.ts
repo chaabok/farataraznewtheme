@@ -27,6 +27,7 @@ export type AccountingSubPage =
   | "contract" // Task 148 — قرارداد جدید (زیرمنوی «اطلاعات تفصیلی ها»)
   | "account-tree" // Task 140 — درختواره حسابها (اطلاعات پایهٔ حسابداری)
   | "voucher-type" // Task 153 — نوع سند جدید (زیرمنوی «سند حسابداری»)
+  | "voucher-new" // Task 158 — سند حسابداری جدید (زیرمنوی «سند حسابداری»)
   | "detail-other"; // Task 154 — تفصیلی سایر (زیرمنوی «اطلاعات تفصیلی ها»)
 
 interface AccountingNavState {

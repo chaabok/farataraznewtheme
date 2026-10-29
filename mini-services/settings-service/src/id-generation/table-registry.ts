@@ -39,6 +39,9 @@ export type TableKey =
   | "Project" // Task 147 — تعریف پروژه (اطلاعات تفصیلی ها)
   | "Contract" // Task 148 — قرارداد جدید (اطلاعات تفصیلی ها)
   | "VoucherType" // Task 153 — نوع سند جدید (سند حسابداری)
+  | "Voucher" // Task 158 — سند حسابداری جدید (سند حسابداری)
+  | "VoucherItem" // Task 158 — اقلام سند
+  | "VoucherItemDetail" // Task 158 — تفصیلی‌های ردیف سند
   | "User" // Task 126 — کاربران (مدیریت کاربران)
   | "UserAccess" // Task 126 — درختوارهٔ دسترسی کاربران
   | "AccountNode" // Task 140 — درختواره حسابها (اطلاعات پایهٔ حسابداری)
@@ -146,6 +149,18 @@ export const TABLE_REGISTRY: Record<TableKey, TableEntry> = {
   VoucherType: {
     canonical: "VoucherType", // Task 153 — نوع سند جدید (سند حسابداری)
     pk: "VoucherTypeID", // §2.7
+  },
+  Voucher: {
+    canonical: "Voucher", // Task 158 — سند حسابداری جدید (سند حسابداری)
+    pk: "VoucherID", // §2.7
+  },
+  VoucherItem: {
+    canonical: "VoucherItem", // Task 158 — اقلام سند
+    pk: "VoucherItemID", // §2.7
+  },
+  VoucherItemDetail: {
+    canonical: "VoucherItemDetail", // Task 158 — تفصیلی‌های ردیف سند
+    pk: "VoucherItemDetailID", // §2.7
   },
   User: {
     canonical: "User", // Task 126 — کاربران (مدیریت کاربران)

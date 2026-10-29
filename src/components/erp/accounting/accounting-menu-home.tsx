@@ -1,6 +1,6 @@
 "use client";
 
-import { Briefcase, Boxes, Building2, Calculator, Database, FileSignature, FileText, FolderPlus, Layers, ListOrdered, ListTree, ScrollText, Tags } from "lucide-react";
+import { Briefcase, Boxes, Building2, Calculator, Database, FileSignature, FileText, FilePlus2, FolderPlus, Layers, ListOrdered, ListTree, ScrollText, Tags } from "lucide-react";
 import { AppMenuHome, type AppMenuGroupDef } from "@/components/erp/shared/app-menu-home";
 
 /**
@@ -151,6 +151,14 @@ const ACCOUNTING_MENU_GROUPS: AppMenuGroupDef[] = [
         icon: ScrollText,
         gradient: "from-emerald-500 to-teal-600",
       },
+      {
+        /* Task 158 — سند حسابداری جدید (هدر/اقلام/فوتر — فرم صدور سند) */
+        page: "voucher-new",
+        titleKey: "vc.formTitle",
+        descKey: "vc.formDesc",
+        icon: FilePlus2,
+        gradient: "from-green-500 to-emerald-600",
+      },
     ],
   },
 ];
@@ -158,7 +166,7 @@ const ACCOUNTING_MENU_GROUPS: AppMenuGroupDef[] = [
 export function AccountingMenuHome({
   go,
 }: {
-  go: (page: "detail-type" | "detail-type-numbering" | "detail-items" | "cost-center" | "project" | "contract" | "account-tree" | "voucher-type" | "detail-other") => void;
+  go: (page: "detail-type" | "detail-type-numbering" | "detail-items" | "cost-center" | "project" | "contract" | "account-tree" | "voucher-type" | "voucher-new" | "detail-other") => void;
 }) {
   return (
     <AppMenuHome
@@ -168,7 +176,7 @@ export function AccountingMenuHome({
       headerGradient="from-violet-500 to-violet-700"
       storageKey="accounting.menuView"
       groups={ACCOUNTING_MENU_GROUPS}
-      go={(page) => go(page as "detail-type" | "detail-type-numbering" | "detail-items" | "cost-center" | "project" | "contract" | "account-tree" | "voucher-type" | "detail-other")}
+      go={(page) => go(page as "detail-type" | "detail-type-numbering" | "detail-items" | "cost-center" | "project" | "contract" | "account-tree" | "voucher-type" | "voucher-new" | "detail-other")}
     />
   );
 }

@@ -254,8 +254,10 @@ model VoucherType {
   id                   BigInt   @id @map("VoucherTypeID")
   code                 String   @map("Code") // کد نوع سند (یکتا در ساختار)
   title                String   @map("Title") // عنوان نوع سند (یکتا در ساختار)
+  latinTitle           String?  @map("LatinTitle") // عنوان لاتین (ستون دراپ‌داون فرم سند — Task 158)
   description          String?  @map("Description") // توضیحات اختیاری
   isActive             Boolean  @default(true) @map("IsActive") // فعال (پیش‌فرض تیک)
+  isSystem             Boolean  @default(false) @map("IsSystem") // Task 158 — نوع سیستمی (افتتاحیه/اختتامیه/…) در فهرست فرم صدور سند نمایش داده نمی‌شود
   version              Int      @default(1) @map("Version") // §2.5 auto-rowversion
   creator              String   @map("Creator")
   lastModifier         String?  @map("LastModifier")
@@ -1107,4 +1109,120 @@ model AccountAllowedUser {
   @@unique([accountNodeRef, userRef])
   @@index([userRef])
   @@map("AccountAllowedUser")
+}
+
+/// Voucher — Task 158 (درخواست مالک): فرم «سند حسابداری جدید» در نرم‌افزار
+/// «حسابداری» ← زیرمنوی «سند حسابداری». سرشاخهٔ اسناد حسابداری با ۳ بخش
+/// هدر/اقلام/فوتر. فیلدهای هدر عین فرمان مالک:
+///   · voucherNo  (شماره سند)  — الزامی، خودکار طبق شماره‌گذاری (پیوسته به ازای
+///                 هر نوع سند در گرهٔ ساختار؛ سرور در POST اگر خالی/تکراری بود
+///                 MAX+۱ همان نوع را تخصیص می‌دهد).
+///   · serialNo   (شماره عطف)  — الزامی، خودکار (پیوستهٔ سراسری گره؛ سرور).
+///   · subNo      (شماره فرعی) — اختیاری.
+///   · voucherTypeRef (نوع سند) — الزامی؛ انواع سیستمی (IsSystem) در فرم صدور
+///                 انتخاب نمی‌شوند و سرور هم ۴۲۲ می‌دهد.
+///   · nature     (ماهیت سند) — ۱=عادی، ۲=قانونی (لیست ثابت فرم).
+///   · status     (وضعیت)     — ۱=ثبت اولیه، ۲=یادداشت؛ ۳=تاییدشده، ۴=دائمی
+///                 (پس از تایید — در فرم صدور انتخاب‌ناپذیر).
+///   · date       (تاریخ سند) — میلادی 'YYYY-MM-DD' (قرارداد Task 77).
+///   · description (شرح)      — الزامی؛ description2 شرح به زبان دوم (اختیاری —
+///                 عین فرم قدیمی تصویر مالک).
+/// + بلوک اجباری ۸فیلدی AppBaseEntity (قرارداد §16 — ID دستی از IDGeneration).
+model Voucher {
+  id                   BigInt   @id @map("VoucherID")
+  voucherNo            BigInt   @map("VoucherNo") // شماره سند (خودکار طبق شماره‌گذاری)
+  serialNo             BigInt   @map("SerialNo") // شماره عطف (خودکار)
+  subNo                BigInt?  @map("SubNo") // شماره فرعی (اختیاری)
+  voucherTypeRef       BigInt   @map("VoucherTypeRef") // نوع سند
+  nature               Int      @default(1) @map("Nature") // ۱=عادی، ۲=قانونی
+  status               Int      @default(1) @map("Status") // ۱=ثبت اولیه، ۲=یادداشت، ۳=تاییدشده، ۴=دائمی
+  date                 String   @map("Date") // میلادی 'YYYY-MM-DD' (Task 77)
+  description          String   @map("Description") // شرح (الزامی)
+  description2         String?  @map("Description2") // شرح به زبان دوم (اختیاری)
+  version              Int      @default(1) @map("Version") // §2.5 auto-rowversion
+  creator              String   @map("Creator") // ایجاد کننده (IAM UserID)
+  lastModifier         String?  @map("LastModifier")
+  businessStructureRef BigInt   @map("BusinessStructureRef")
+  companyRef           BigInt?  @map("CompanyRef")
+  branchRef            BigInt?  @map("BranchRef")
+  agencyRef            BigInt?  @map("AgencyRef")
+  shopRef              BigInt?  @map("ShopRef")
+  createdAt            DateTime @default(now()) @map("CreatedAt")
+  updatedAt            DateTime @updatedAt @map("UpdatedAt")
+
+  items VoucherItem[]
+
+  @@unique([voucherTypeRef, voucherNo, businessStructureRef])
+  @@index([serialNo])
+  @@index([date])
+  @@map("Voucher")
+}
+
+/// VoucherItem — Task 158: اقلام سند (ردیف‌های آرتیکل). هر ردیف:
+///   · rowIndex      — ردیف (خودکار ۱..n به ترتیب ورود).
+///   · moeinRef      — کد معین (الزامی؛ باید AccountNode سطح ۳ باشد).
+///   · description   — شرح ردیف (اجباری — عین جدول مالک).
+///   · debit/credit  — بدهکار/بستانکار (عدد به‌صورت رشتهٔ نرمال؛ «یکی از
+///                     بدهکار یا بستانکار» — هر دو همزمان رد ۴۲۲).
+///   · ستون‌های شرطی — تاریخ پیگیری/شماره پیگیری (سقف showDocDateTrackCap)
+///                     و ارز پایه/ارزش ارزی/نرخ ارز (سقف showCurrencyCaps)
+///                     فقط وقتی در پیکربندی نرم‌افزار فعال باشند.
+model VoucherItem {
+  id                   BigInt   @id @map("VoucherItemID") // §2.7
+  voucherRef           BigInt   @map("VoucherRef")
+  rowIndex             Int      @map("RowIndex") // ردیف (خودکار)
+  moeinRef             BigInt   @map("MoeinRef") // حساب معین (AccountNode سطح ۳)
+  description          String   @map("Description") // شرح ردیف (اجباری)
+  debit                String   @default("0") @map("Debit") // بدهکار (رشتهٔ عددی نرمال)
+  credit               String   @default("0") @map("Credit") // بستانکار
+  trackDate            String?  @map("TrackDate") // تاریخ پیگیری (میلادی ISO)
+  trackNumber          String?  @map("TrackNumber") // شماره پیگیری
+  currencyRef          BigInt?  @map("CurrencyRef") // ارز پایه
+  currencyValue        String?  @map("CurrencyValue") // ارزش ارزی
+  currencyRate         String?  @map("CurrencyRate") // نرخ ارز
+  version              Int      @default(1) @map("Version")
+  creator              String   @map("Creator")
+  lastModifier         String?  @map("LastModifier")
+  businessStructureRef BigInt   @map("BusinessStructureRef")
+  companyRef           BigInt?  @map("CompanyRef")
+  branchRef            BigInt?  @map("BranchRef")
+  agencyRef            BigInt?  @map("AgencyRef")
+  shopRef              BigInt?  @map("ShopRef")
+  createdAt            DateTime @default(now()) @map("CreatedAt")
+  updatedAt            DateTime @updatedAt @map("UpdatedAt")
+
+  voucher Voucher             @relation(fields: [voucherRef], references: [id], onDelete: Cascade)
+  details VoucherItemDetail[]
+
+  @@index([voucherRef])
+  @@index([moeinRef])
+  @@map("VoucherItem")
+}
+
+/// VoucherItemDetail — Task 158: مقادیر تفصیلی هر ردیف سند؛ هر (ردیف،
+/// سطح تفصیلی) حداکثر یک مقدار. تفصیلیِ بی‌ارتباط با معین سمت سرور هم رد
+/// می‌شود: detailTypeRef باید در کدینگ (AccountDetailLevelType) به همان
+/// سطحِ همان معین متصل شده باشد (پرچم قفل 🔒 فرم).
+model VoucherItemDetail {
+  id                   BigInt   @id @map("VoucherItemDetailID") // §2.7
+  itemRef              BigInt   @map("ItemRef")
+  levelIndex           Int      @map("LevelIndex") // ۱..۲۰
+  detailItemRef        BigInt   @map("DetailItemRef") // رکورد تفصیلی
+  detailTypeRef        BigInt   @map("DetailTypeRef") // نوع تفصیل مالکِ رکورد (آینه برای اعتبارسنجی)
+  version              Int      @default(1) @map("Version")
+  creator              String   @map("Creator")
+  lastModifier         String?  @map("LastModifier")
+  businessStructureRef BigInt   @map("BusinessStructureRef")
+  companyRef           BigInt?  @map("CompanyRef")
+  branchRef            BigInt?  @map("BranchRef")
+  agencyRef            BigInt?  @map("AgencyRef")
+  shopRef              BigInt?  @map("ShopRef")
+  createdAt            DateTime @default(now()) @map("CreatedAt")
+  updatedAt            DateTime @updatedAt @map("UpdatedAt")
+
+  item VoucherItem @relation(fields: [itemRef], references: [id], onDelete: Cascade)
+
+  @@unique([itemRef, levelIndex])
+  @@index([detailItemRef])
+  @@map("VoucherItemDetail")
 }

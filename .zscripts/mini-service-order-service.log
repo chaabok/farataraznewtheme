@@ -1,4 +1,9 @@
 [order-service] Installing dependencies...
 bun install v1.3.14 (0d9b296a)
-error: Fail extracting tarball for "prisma"
-error: Fail extracting tarball from prisma
+
++ @erp/shared@../shared
+
+1 package installed [83.00ms]
+[order-service] Running bun run dev...
+$ bun --hot src/main.ts
+error: Cannot find module '@nestjs/core' from '/home/z/my-project/mini-services/shared/src/index.ts'

@@ -22,6 +22,7 @@ import { CostCenterModule } from "./cost-center/cost-center.module";
 import { ProjectModule } from "./project/project.module";
 import { ContractModule } from "./contract/contract.module";
 import { VoucherTypeModule } from "./voucher-type/voucher-type.module";
+import { VoucherModule } from "./voucher/voucher.module";
 import { UsersModule } from "./users/users.module";
 import { AccountTreeModule } from "./account-tree/account-tree.module";
 import { HealthController } from "./health/health.controller";
@@ -50,6 +51,7 @@ import { SeedModule } from "./seed/seed.module";
     ProjectModule, // Task 147 — تعریف پروژه (اطلاعات تفصیلی ها)
     ContractModule, // Task 148 — قرارداد جدید (اطلاعات تفصیلی ها)
     VoucherTypeModule, // Task 153 — نوع سند جدید (سند حسابداری)
+    VoucherModule, // Task 158 — سند حسابداری جدید (هدر/اقلام/فوتر)
     UsersModule, // Task 126 — کاربران (مدیریت کاربران — فرم کاربر جدید)
     AccountTreeModule, // Task 140 — درختواره حسابها (اطلاعات پایهٔ حسابداری)
     SeedModule,
