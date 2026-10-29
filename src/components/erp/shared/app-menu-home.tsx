@@ -294,6 +294,111 @@ function PendingNote({ asTile }: { asTile?: boolean }) {
   );
 }
 
+/* ------------------------------------------------------------------ */
+/* Task 151 — بنتوی «منوی کشویی» (استایل تصویر مالک: بوم تیره + کارت‌های */
+/* گرد سبز/سفید). سرگروه‌ها به‌صورت کارت‌های «ایستاده» در یک راستا (یک ردیف) */
+/* کنار هم می‌ایستند — هیچ سرگروهی زیر بقیه رندر نمی‌شود — و پنل کشویی */
+/* سرگروه فعال زیر ردیف، فرم‌ها را به‌صورت کاشی‌های سفید بنتویی نشان می‌دهد. */
+/* ------------------------------------------------------------------ */
+
+/** کارت ایستادهٔ سرگروه — حالت فعال با گرادیان سبز (سبک تصویر مالک) */
+function BentoGroupCard({
+  group,
+  open,
+  onToggle,
+}: {
+  group: AppMenuGroupDef;
+  open: boolean;
+  onToggle: () => void;
+}) {
+  const t = useT();
+  const dir = useSettings((s) => s.dir());
+  const Icon = group.icon;
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-expanded={open}
+      className={cn(
+        "group flex w-full items-center gap-3 rounded-2xl border p-3.5 text-start shadow-lg shadow-black/25 transition-all duration-200 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/70 cursor-pointer",
+        open
+          ? "border-emerald-400/40 bg-gradient-to-br from-emerald-500 to-teal-600 text-white"
+          : "border-white/10 bg-white/[0.06] text-white hover:bg-white/[0.1]",
+      )}
+    >
+      <span
+        className={cn(
+          "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br text-white shadow-md transition-transform group-hover:scale-105",
+          group.gradient,
+          open && "ring-2 ring-white/40",
+        )}
+      >
+        <Icon className="h-5 w-5" aria-hidden />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-sm font-bold">{t(group.titleKey as never)}</span>
+        <span className={cn("block truncate text-xs", open ? "text-white/85" : "text-slate-400")}>
+          {t(group.descKey as never)}
+        </span>
+      </span>
+      <ChevronDown
+        className={cn(
+          "h-4 w-4 shrink-0 transition-transform duration-200",
+          open ? "text-white/90" : "text-slate-500",
+          !open && (dir === "rtl" ? "rotate-90" : "-rotate-90"),
+        )}
+        aria-hidden
+      />
+    </button>
+  );
+}
+
+/** کاشی سفید بنتویی یک فرم (سبک کارت‌های سفید تصویر مالک) */
+function BentoFormTile({ item, onClick }: { item: AppMenuItemDef; onClick: () => void }) {
+  const t = useT();
+  const dir = useSettings((s) => s.dir());
+  const Icon = item.icon;
+  const ForwardIcon = dir === "rtl" ? ChevronLeft : ChevronRight;
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="group flex w-full items-center gap-3 rounded-xl bg-white p-3.5 text-start shadow-lg shadow-black/20 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 cursor-pointer"
+    >
+      <span
+        className={cn(
+          "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br text-white shadow-sm transition-transform group-hover:scale-105",
+          item.gradient,
+        )}
+      >
+        <Icon className="h-4 w-4" aria-hidden />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-sm font-semibold text-slate-900">
+          {t(item.titleKey as never)}
+        </span>
+        <span className="block line-clamp-2 text-xs leading-5 text-slate-500">
+          {t(item.descKey as never)}
+        </span>
+      </span>
+      <ForwardIcon
+        className="h-4 w-4 shrink-0 text-slate-400 transition-colors group-hover:text-slate-700"
+        aria-hidden
+      />
+    </button>
+  );
+}
+
+/** یادداشت «به‌مرور اعلان می‌شوند» روی بوم تیره (نسخهٔ بنتو) */
+function BentoPendingNote() {
+  const t = useT();
+  return (
+    <div className="flex items-center gap-2 rounded-xl border border-dashed border-white/15 px-3 py-2.5">
+      <span className="text-xs leading-relaxed text-slate-400">{t("fy.menuPending")}</span>
+    </div>
+  );
+}
+
 /** props موتور منو — هر برنامهٔ اعلامی فقط داده می‌دهد */
 export interface AppMenuHomeProps {
   /** appKey کاتالوگ — برای DfbAppFormsSection (فرم‌های فرمسازِ همین برنامه) */
@@ -334,15 +439,17 @@ export function AppMenuHome({
   );
   const changeView = React.useCallback((v: MenuView) => store.write(v), [store]);
 
-  /* وضعیت باز/بستهٔ گروه‌ها — فقط در حالت «کشویی» معنا دارد؛ groups مدل
-     ماژول‌سطح است ⇒ محاسبهٔ اولیه یک‌بار کافی است. */
-  const [openGroups, setOpenGroups] = React.useState<Record<string, boolean>>(
-    () => Object.fromEntries(groups.map((g) => [g.id, true])),
+  /* وضعیت «کشویی» تک‌باز (Task 151 — ردیف ایستادهٔ سرگروه‌ها): هر لحظه حداکثر
+     یک سرگروه پنل باز دارد (رفتار کلاسیک آکاردئون)؛ پیش‌فرض = نخستین سرگروه.
+     کلیک روی کارت فعال، پنل را می‌بندد. فقط در حالت «کشویی» معنا دارد. */
+  const [activeGroup, setActiveGroup] = React.useState<string | null>(
+    () => groups[0]?.id ?? null,
   );
   const toggleGroup = React.useCallback(
-    (id: string) => setOpenGroups((prev) => ({ ...prev, [id]: !prev[id] })),
+    (id: string) => setActiveGroup((prev) => (prev === id ? null : id)),
     [],
   );
+  const activeGroupDef = groups.find((g) => g.id === activeGroup) ?? null;
 
   return (
     <div className="h-full overflow-y-auto scrollbar-slim">
@@ -367,39 +474,48 @@ export function AppMenuHome({
         </div>
       </div>
 
-      <div className="mx-auto max-w-xl space-y-4 p-4" dir="auto">
+      <div className="mx-auto max-w-4xl space-y-4 p-4" dir="auto">
         {/* Task 111/113 — فقط فرم‌های ساختهٔ کاربر در فرمساز؛ فرم‌های سیستمی
             بدنهٔ بومی خودشان را دارند (بدون دوبل). */}
         <DfbAppFormsSection appKey={appKey} hideSystem />
 
         {/* بدنهٔ منو — با هر تغییر حالت، fade-in ملایم (ظرافت UX) */}
         <div key={view} className="fade-in space-y-4">
-          {/* ─── حالت ۱: کشویی (رفتار کلاسیک) ─── */}
-          {view === "accordion" &&
-            groups.map((group) => {
-              const open = openGroups[group.id] ?? false;
-              return (
-                <section
-                  key={group.id}
-                  className="overflow-hidden rounded-xl border border-border/70 bg-card/60"
-                >
-                  <GroupHeader
+          {/* ─── حالت ۱: کشویی — بنتوی تیره (Task 151 — استایل تصویر مالک):
+              ردیف ایستادهٔ سرگروه‌ها در یک راستا + پنل کشویی سرگروه فعال ─── */}
+          {view === "accordion" && (
+            <div className="rounded-3xl border border-white/10 bg-[#0e1420] p-2.5 shadow-2xl shadow-black/30 sm:p-3">
+              {/* ردیف ایستاده — همهٔ سرگروه‌ها (از جمله «سند حسابداری») در یک راستا */}
+              <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+                {groups.map((group) => (
+                  <BentoGroupCard
+                    key={group.id}
                     group={group}
-                    open={open}
+                    open={activeGroup === group.id}
                     onToggle={() => toggleGroup(group.id)}
-                    collapsible
                   />
-                  {open && (
-                    <div className="space-y-1 border-t border-border/60 p-2">
-                      {group.items.map((item) => (
-                        <MenuRow key={item.page} item={item} onClick={() => go?.(item.page)} />
-                      ))}
-                      <PendingNote />
-                    </div>
-                  )}
+                ))}
+              </div>
+              {/* پنل کشویی سرگروه فعال — کاشی‌های سفید بنتویی فرم‌ها */}
+              {activeGroupDef && (
+                <section
+                  aria-label={t(activeGroupDef.titleKey as never)}
+                  className="mt-3 rounded-2xl border border-white/10 bg-white/[0.04] p-2.5 sm:p-3"
+                >
+                  <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+                    {activeGroupDef.items.map((item) => (
+                      <BentoFormTile
+                        key={item.page}
+                        item={item}
+                        onClick={() => go?.(item.page)}
+                      />
+                    ))}
+                    <BentoPendingNote />
+                  </div>
                 </section>
-              );
-            })}
+              )}
+            </div>
+          )}
 
           {/* ─── حالت ۲: کنار هم (دوستونه، همه‌چیز هم‌زمان دیده می‌شود) ─── */}
           {view === "columns" && (
