@@ -36,6 +36,7 @@ export type TableKey =
   | "DetailTypeNumbering" // Task 131 — شماره گذاری تفصیلی ها (اطلاعات پایهٔ حسابداری)
   | "DetailItem" // Task 144 — ایجاد تفصیلی ها (اطلاعات پایهٔ حسابداری)
   | "CostCenter" // Task 146 — مرکز هزینه جدید (اطلاعات تفصیلی ها)
+  | "Project" // Task 147 — تعریف پروژه (اطلاعات تفصیلی ها)
   | "User" // Task 126 — کاربران (مدیریت کاربران)
   | "UserAccess" // Task 126 — درختوارهٔ دسترسی کاربران
   | "AccountNode" // Task 140 — درختواره حسابها (اطلاعات پایهٔ حسابداری)
@@ -131,6 +132,10 @@ export const TABLE_REGISTRY: Record<TableKey, TableEntry> = {
   CostCenter: {
     canonical: "CostCenter", // Task 146 — مرکز هزینه جدید
     pk: "CostCenterID", // §2.7
+  },
+  Project: {
+    canonical: "Project", // Task 147 — تعریف پروژه
+    pk: "ProjectID", // §2.7
   },
   User: {
     canonical: "User", // Task 126 — کاربران (مدیریت کاربران)

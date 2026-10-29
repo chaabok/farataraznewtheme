@@ -727,6 +727,42 @@ model CostCenter {
   @@map("CostCenter")
 }
 
+/// Project — Task 147 (درخواست مالک): فرم «تعریف پروژه» در نرم‌افزار
+/// «حسابداری» ← زیرمنوی «اطلاعات تفصیلی ها». پروژه یک «حساب تفصیلی» است که
+/// نوع آن («پروژه» — کد مرجع ۸ از فرم نوع تفصیلی) از قبل تعریف شده و فرم
+/// پایهٔ آن در نرم‌افزار ساخته شده است؛ بنابراین هر پروژه همزمان یک ردیف
+/// DetailItem (کد تفصیل، عنوان، توضیحات، فعال) از آن نوع است + پروفایل
+/// اختصاصی همین جدول:
+///   · detailItemRef — پیوند ۱:۱ به ردیف تفصیلی مالک (DetailItem).
+///   · کد            — کد پروژه؛ بنا به فرمان مالک «بصورت سریالی و پشت
+///                     سرهم» توسط سرور تخصیص می‌یابد (نخستین عدد بلااستفاده
+///                     در گرهٔ ساختار — متد nextSerialCode) و پس از ثبت
+///                     تغییرناپذیر است؛ یکتا در گرهٔ ساختار.
+///   · کد تفصیل در DetailItem هم‌جدول ذخیره می‌شود و با «متد اختصاصی
+///     تخصیص کد تفصیل» (detail-code-assignment — Task 146) بر پایهٔ تنظیمات
+///     ساختار کسب و کار و ردیف شماره‌گذاری نوع «پروژه» (ستون‌های شماره
+///     شروع/شماره پایان — Task 131) بصورت لایو ایجکس تخصیص می‌یابد.
+/// اقامت ردیف = گرهٔ ساختار فعالِ فرم با بلوک کامل ارث‌بری AppBaseEntity.
+model Project {
+  id              BigInt   @id @map("ProjectID") // §2.7
+  detailItemRef   BigInt   @map("DetailItemRef") // پیوند ۱:۱ به DetailItem
+  code            String   @map("Code") // کد پروژه (سریالی سرور؛ یکتا در گرهٔ ساختار)
+  version              Int      @default(1) @map("Version") // §2.5 auto-rowversion
+  creator              String   @map("Creator")
+  lastModifier         String?  @map("LastModifier")
+  businessStructureRef BigInt   @map("BusinessStructureRef")
+  companyRef           BigInt?  @map("CompanyRef")
+  branchRef            BigInt?  @map("BranchRef")
+  agencyRef            BigInt?  @map("AgencyRef")
+  shopRef              BigInt?  @map("ShopRef")
+  createdAt            DateTime @default(now()) @map("CreatedAt")
+  updatedAt            DateTime @updatedAt @map("UpdatedAt")
+
+  @@unique([detailItemRef])
+  @@unique([code, businessStructureRef])
+  @@map("Project")
+}
+
 /// User — Task 126 (درخواست مالک): فرم «کاربر جدید» در تنظیمات ← مدیریت
 /// کاربران با کامپوننت SimpleTreeForm. هر کاربر به یک ردیف طرف حساب (لیست
 /// «نام / نام خانوادگی») متصل است و یک نقش کاربری (UserRole) دارد.

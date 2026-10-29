@@ -19,6 +19,7 @@ import { DetailTypeNumberingModule } from "./detail-type-numbering/detail-type-n
 import { DetailItemModule } from "./detail-item/detail-item.module";
 import { DetailCodeAssignmentModule } from "./detail-code-assignment/detail-code-assignment.module";
 import { CostCenterModule } from "./cost-center/cost-center.module";
+import { ProjectModule } from "./project/project.module";
 import { UsersModule } from "./users/users.module";
 import { AccountTreeModule } from "./account-tree/account-tree.module";
 import { HealthController } from "./health/health.controller";
@@ -44,6 +45,7 @@ import { SeedModule } from "./seed/seed.module";
     DetailItemModule, // Task 144 — ایجاد تفصیلی ها (اطلاعات پایهٔ حسابداری)
     DetailCodeAssignmentModule, // Task 146 — متد اختصاصی تخصیص کد تفصیل (لایو ایجکس)
     CostCenterModule, // Task 146 — مرکز هزینه جدید (اطلاعات تفصیلی ها)
+    ProjectModule, // Task 147 — تعریف پروژه (اطلاعات تفصیلی ها)
     UsersModule, // Task 126 — کاربران (مدیریت کاربران — فرم کاربر جدید)
     AccountTreeModule, // Task 140 — درختواره حسابها (اطلاعات پایهٔ حسابداری)
     SeedModule,
