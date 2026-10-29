@@ -222,6 +222,74 @@ const SOFTWARE_CONFIG_FIELDS: Record<string, SwConfigFieldDef[]> = {
   payroll: [],
 };
 
+/* Task 156 (درخواست مالک) — بنتوگرید باکس‌های فیلدها (همهٔ تب‌ها):
+   «برای نمایش فیلدها به کاربر از باکس های مختلف استفاده کنید که همه فیلدها
+   در یک باکس نباشد. باکس ها باید با استایل تصویری که برات بارگذاری کردم
+   نمایش داده شوند. چیدمان باکس ها دقیقا مشابه تصویر باشد. پس زمینه تیره
+   نباشد. می خواهم بنتوگرید باشد.»
+   سبک تصویر: کارت‌های گرد (rounded-3xl) با اندازه‌های متنوع — کارت بلند
+   سفید (یک‌طرف)، کارت سبز پهن (بالا)، کارت روشن (وسط)، کارت سبز بلند
+   (طرف دیگر) و کارت روشن پهن (پایین)؛ همه با توکن‌های تم — بدون هیچ
+   پس‌زمینهٔ تیره (الگوی تاییدشدهٔ Task 152). هر ورودی = یک باکس مستقل؛
+   تب‌های بدون چیدمان صریح به‌صورت خودکار هر قطعه (segment) را در یک باکس
+   جدا نشان می‌دهند تا اعلام‌های آینده هم بنتو بمانند. */
+type BentoVariant = "plain" | "accent";
+
+interface BentoBoxSpec {
+  /** عنوان باکس (اختیاری — سبک برچسب کوچک تصویر) */
+  titleKey?: DictKey;
+  /** کلید فیلدهای این باکس به ترتیب نمایش */
+  fields: string[];
+  /** plain = کارت روشن تم‌پسند | accent = کارت سبز زمردی (سبک تصویر) */
+  variant: BentoVariant;
+  /** ورودی عددی درشت (سبک «$12.99»/«Aa» کارت سبز تصویر) */
+  big?: boolean;
+  /** کلاس جای‌گذاری در گرید بنتو (span ستون/ردیف) */
+  cls?: string;
+}
+
+const BENTO_LAYOUT: Record<string, BentoBoxSpec[]> = {
+  accounting: [
+    /* کارت بلند سفید (یک‌طرف بنتو — عین کارت «UPGRADE DISCOUNT» تصویر):
+       گروپ «طول کدینگ حسابها» با ۵ فیلد پشت‌سرهم + پانوشت قاعدهٔ مشتق‌شده */
+    {
+      titleKey: "settings.swAccCodeLenGroup",
+      fields: ["accCodeLen", "accGroupCodeLen", "accLedgerCodeLen", "accSubsidiaryCodeLen", "accDetailCodeLen"],
+      variant: "plain",
+      cls: "sm:col-span-2 lg:col-span-1 lg:row-span-2",
+    },
+    /* کارت سبز پهن با عدد درشت (سبک کارت «Urbanist Aa» تصویر) */
+    {
+      titleKey: "settings.swFiscalMonths",
+      fields: ["fiscalMonthsCount"],
+      variant: "accent",
+      big: true,
+    },
+    /* کارت روشن کوچک (سبک کارت «ANALYSIS» تصویر — روشن نه تیره) */
+    {
+      titleKey: "settings.swAccDetailLevels",
+      fields: ["accDetailLevels"],
+      variant: "plain",
+    },
+    /* کارت سبز بلند (طرف دیگر بنتو — سبک کارت موبایل تصویر):
+       دو چک‌باکسِ «تاریخ و شماره پیگیری» */
+    {
+      titleKey: "settings.swDocDateTrackGroup",
+      fields: ["showDocDateTrackCap", "docDateTrackEntryMandatory"],
+      variant: "accent",
+      cls: "sm:col-span-2 lg:col-span-1 lg:row-span-2",
+    },
+    /* کارت روشن پهن پایین (سبک کارت «technexus» تصویر):
+       دو چک‌باکس دیگر در کنار هم */
+    {
+      titleKey: "settings.swDocOtherGroup",
+      fields: ["showCurrencyCaps", "enableMoeinLevelAccess"],
+      variant: "plain",
+      cls: "sm:col-span-2 lg:col-span-2",
+    },
+  ],
+};
+
 type ValuesMap = Record<string, string>;
 
 export function SoftwareConfigBody() {
@@ -361,9 +429,9 @@ export function SoftwareConfigBody() {
     }
   };
 
-  /* Task 135 — قطعه‌بندی فیلدها: فیلدهای هم‌گروهِ پشت‌سرهم در یک فیلدست با
-     عنوان مشترک و شبکهٔ ۲ستونی می‌نشینند (RTL: اولین فیلد = راست‌ترین —
-     عین چینش تصویر مالک)؛ فیلدهای بی‌گروه مثل قبل ساده می‌آیند. */
+  /* Task 135 — قطعه‌بندی فیلدها (fallback بنتوی خودکار برای تب‌های بدون
+     چیدمان صریح): فیلدهای هم‌گروهِ پشت‌سرهم یک باکس می‌شوند؛ هر قطعه = یک
+     باکس مستقل تا همهٔ تب‌ها (حالا و آینده) بنتو بمانند. */
   const segments: { group: DictKey | null; fields: SwConfigFieldDef[] }[] = [];
   for (const f of fields) {
     const g = f.groupLabelKey ?? null;
@@ -372,33 +440,96 @@ export function SoftwareConfigBody() {
     else segments.push({ group: g, fields: [f] });
   }
 
-  const renderField = (f: SwConfigFieldDef) => {
+  /* Task 156 — مونتاژ باکس‌های بنتوی تب فعال:
+     چیدمان صریح BENTO_LAYOUT اگر هست، وگرنه قطعه‌بندی خودکار؛ فیلدهای
+     ثبت‌شده در رجیستری ولی خارج از چیدمان صریح هم در باکس احتیاطی دیده
+     می‌شوند تا هیچ فیلد اعلام‌شده‌ای بی‌باکس نماند. */
+  const bentoBoxes: {
+    key: string;
+    titleKey?: DictKey;
+    defs: SwConfigFieldDef[];
+    variant: BentoVariant;
+    big?: boolean;
+    cls?: string;
+  }[] = [];
+  const layout = BENTO_LAYOUT[activeTab];
+  if (layout) {
+    const covered = new Set<string>();
+    layout.forEach((spec, i) => {
+      const defs = spec.fields
+        .map((key) => fields.find((f) => f.key === key))
+        .filter((f): f is SwConfigFieldDef => !!f);
+      defs.forEach((d) => covered.add(d.key));
+      if (defs.length > 0)
+        bentoBoxes.push({
+          key: `bento-${i}`,
+          titleKey: spec.titleKey,
+          defs,
+          variant: spec.variant,
+          big: spec.big,
+          cls: spec.cls,
+        });
+    });
+    const leftovers = fields.filter((f) => !covered.has(f.key));
+    if (leftovers.length > 0)
+      bentoBoxes.push({
+        key: "bento-leftover",
+        defs: leftovers,
+        variant: "plain",
+        cls: "sm:col-span-2 lg:col-span-4",
+      });
+  } else {
+    segments.forEach((seg, si) => {
+      bentoBoxes.push({
+        key: `auto-${si}`,
+        titleKey: seg.group ?? undefined,
+        defs: seg.fields,
+        variant: "plain",
+        cls:
+          segments.length === 1
+            ? "sm:col-span-2 lg:col-span-4"
+            : "sm:col-span-1 lg:col-span-2",
+      });
+    });
+  }
+
+  const renderField = (f: SwConfigFieldDef, variant: BentoVariant = "plain", big = false) => {
     /* Task 73 — مقدار پیش‌فرض وقتی ردیف ذخیره‌شده‌ای نیست؛ Task 137 — فیلد
        مشتق‌شده مقدار زندهٔ محاسبه‌شده را نشان می‌دهد (فقط‌خواندنی) */
     const val = f.derived
       ? derivedValue(f)
       : (values[activeTab]?.[f.key] ?? f.defaultValue ?? "");
+    const accent = variant === "accent";
     if (f.type === "checkbox") {
       return (
         <label
           key={f.key}
-          className="flex cursor-pointer items-center justify-between gap-3 text-sm"
+          className={cn(
+            "flex cursor-pointer items-center justify-between gap-3 text-sm",
+            /* Task 156 — کاشی سفیدنما روی کارت سبز (سبک ویجت‌های تصویر مالک) */
+            accent && "rounded-2xl bg-white/10 px-3.5 py-3 text-white",
+          )}
         >
-          <span className="font-medium">{t(f.labelKey)}</span>
+          <span className="font-medium leading-6">{t(f.labelKey)}</span>
           <input
             type="checkbox"
             checked={val === "1"}
             onChange={(e) => setVal(f.key, e.target.checked ? "1" : "0")}
-            className="h-4 w-4 accent-[hsl(var(--primary))]"
+            className={cn(
+              "h-4 w-4 shrink-0",
+              accent ? "accent-white" : "accent-[hsl(var(--primary))]",
+            )}
           />
         </label>
       );
     }
     return (
       <div key={f.key} className="space-y-1.5">
-        <label htmlFor={`swc-${f.key}`} className="text-sm font-medium">
+        <label htmlFor={`swc-${f.key}`} className={cn("text-sm font-medium", accent && "text-white/90")}>
           {t(f.labelKey)}
-          {f.required ? <span className="text-rose-500"> *</span> : null}
+          {f.required ? (
+            <span className={accent ? "text-emerald-100" : "text-rose-500"}> *</span>
+          ) : null}
         </label>
         {f.type === "textarea" ? (
           <textarea
@@ -407,7 +538,12 @@ export function SoftwareConfigBody() {
             rows={3}
             value={val}
             onChange={(e) => setVal(f.key, e.target.value)}
-            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+            className={cn(
+              "w-full rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring",
+              accent
+                ? "border border-white/30 bg-white/15 text-white placeholder:text-white/60"
+                : "border border-border bg-background",
+            )}
           />
         ) : f.type === "select" ? (
           <select
@@ -415,7 +551,12 @@ export function SoftwareConfigBody() {
             dir="auto"
             value={val}
             onChange={(e) => setVal(f.key, e.target.value)}
-            className="h-9 w-full rounded-lg border border-border bg-background px-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+            className={cn(
+              "h-9 w-full rounded-lg px-2 text-sm outline-none focus:ring-2 focus:ring-ring",
+              accent
+                ? "border border-white/30 bg-white/15 text-white"
+                : "border border-border bg-background",
+            )}
           >
             <option value="">—</option>
             {(f.options ?? []).map((o) => (
@@ -440,10 +581,74 @@ export function SoftwareConfigBody() {
             aria-readonly={f.derived ? "true" : undefined}
             title={f.derived ? t("settings.swAccDeriveHint") : undefined}
             className={cn(
-              "h-9 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring",
-              f.derived && "cursor-default bg-muted/50 text-muted-foreground",
+              "w-full outline-none focus:ring-2",
+              big
+                ? /* Task 156 — عدد درشت کارت سبز (سبک «$12.99»/«Aa» تصویر) */
+                  "h-14 rounded-2xl border border-white/30 bg-white/15 px-4 text-3xl font-bold text-white focus:ring-white/60"
+                : cn(
+                    "h-9 rounded-lg px-3 text-sm focus:ring-ring",
+                    accent
+                      ? "border border-white/30 bg-white/15 text-white"
+                      : "border border-border bg-background",
+                    f.derived && !accent && "cursor-default bg-muted/50 text-muted-foreground",
+                  ),
             )}
           />
+        )}
+      </div>
+    );
+  };
+
+  /* Task 156 — رندر یک باکس بنتو (کارت گرد تصویر مالک؛ روشن یا سبز زمردی) */
+  const renderBentoBox = (box: (typeof bentoBoxes)[number]) => {
+    const accent = box.variant === "accent";
+    const hasDerived = box.defs.some((f) => f.derived);
+    const bigDef = box.big ? box.defs[0] : undefined;
+    return (
+      <div
+        key={box.key}
+        role={box.titleKey ? "group" : undefined}
+        aria-label={box.titleKey ? t(box.titleKey) : undefined}
+        className={cn(
+          "flex flex-col gap-3 rounded-3xl p-5",
+          accent
+            ? "bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-md shadow-emerald-500/20"
+            : "border border-border/70 bg-card shadow-sm",
+          box.cls,
+        )}
+      >
+        {box.titleKey && (
+          <p
+            className={cn(
+              "text-xs font-bold uppercase tracking-wider",
+              accent ? "text-white/85" : "text-muted-foreground",
+            )}
+          >
+            {t(box.titleKey)}
+          </p>
+        )}
+        {box.big ? (
+          <div className="flex flex-1 items-center">{box.defs.map((f) => renderField(f, box.variant, true))}</div>
+        ) : (
+          <div className="flex flex-1 flex-col justify-center gap-3">{box.defs.map((f) => renderField(f, box.variant))}</div>
+        )}
+        {bigDef && bigDef.min !== undefined && bigDef.max !== undefined && (
+          /* پانوشت کارت سبز (سبک نوار پیشرفت تصویر) — بازهٔ مجاز مقدار */
+          <div className="flex items-center justify-between">
+            <span dir="ltr" className="rounded-full bg-white/20 px-2.5 py-0.5 font-mono text-[11px] text-white">
+              {bigDef.min}–{bigDef.max}
+            </span>
+          </div>
+        )}
+        {hasDerived && (
+          <p
+            className={cn(
+              "text-[11px] leading-relaxed",
+              accent ? "text-white/75" : "text-muted-foreground",
+            )}
+          >
+            {t("settings.swAccDeriveHint")}
+          </p>
         )}
       </div>
     );
@@ -501,62 +706,32 @@ export function SoftwareConfigBody() {
         })}
       </div>
 
-      {/* tab content */}
+      {/* tab content — Task 156: بنتوگرید باکس‌ها در همهٔ تب‌ها (سبک تصویر
+         مالک؛ پس‌زمینه روشن و تم‌پسند) */}
       <div className="min-h-0 flex-1 overflow-y-auto scrollbar-slim" dir="auto">
-        <div className="mx-auto max-w-xl space-y-4 p-4">
-          {activeTab === "general" && (
-            /* Task 73 — محتوای اعلام‌شدهٔ تب «عمومی»: زبان + زبان‌های فعال
-               (تنظیمات سمت کلاینت با ماندگاری erp.settings؛ ردیف‌های
-               SoftwareConfig این تب هنوز اعلام نشده‌اند) */
-            <LanguageSettingsSections />
-          )}
-          {fields.length === 0 && activeTab !== "general" && (
-            /* placeholder — فیلدهای این تب هنوز اعلام نشده‌اند */
-            <div className="rounded-2xl border border-dashed border-border/80 bg-card/40 p-8">
-              <div className="flex flex-col items-center gap-4 text-center">
-                <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-muted/60">
-                  <ListPlus className="h-7 w-7 text-muted-foreground" aria-hidden />
-                </span>
-                <p className="max-w-sm text-xs leading-relaxed text-muted-foreground">
-                  {t("settings.swConfigPending")}
-                </p>
+        <div className="mx-auto max-w-5xl p-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {activeTab === "general" && (
+              /* Task 73 — محتوای اعلام‌شدهٔ تب «عمومی»: زبان + زبان‌های فعال
+                 (دو کارت بنتوی مستقل؛ تنظیمات سمت کلاینت با ماندگاری
+                 erp.settings) */
+              <LanguageSettingsSections />
+            )}
+            {bentoBoxes.map((box) => renderBentoBox(box))}
+            {fields.length === 0 && activeTab !== "general" && (
+              /* placeholder — فیلدهای این تب هنوز اعلام نشده‌اند (کارت بنتوی خط‌چین) */
+              <div className="rounded-3xl border border-dashed border-border/80 bg-card/40 p-8 sm:col-span-2 lg:col-span-4">
+                <div className="flex h-full flex-col items-center justify-center gap-4 text-center">
+                  <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-muted/60">
+                    <ListPlus className="h-7 w-7 text-muted-foreground" aria-hidden />
+                  </span>
+                  <p className="max-w-sm text-xs leading-relaxed text-muted-foreground">
+                    {t("settings.swConfigPending")}
+                  </p>
+                </div>
               </div>
-            </div>
-          )}
-          {fields.length > 0 && (
-            /* فرم فیلدهای اعلام‌شده — هر اعلام جدید فقط از رجیستری می‌آید؛
-               Task 135: فیلدهای هم‌گروه داخل فیلدست با شبکهٔ ۲ستونی */
-            <section className="rounded-xl border border-border/70 bg-card/60 p-4">
-              <div className="space-y-4">
-                {segments.map((seg, si) =>
-                  seg.group === null ? (
-                    <div key={`plain-${si}`} className="space-y-4">
-                      {seg.fields.map((f) => renderField(f))}
-                    </div>
-                  ) : (
-                    <div
-                      key={`group-${seg.group}`}
-                      role="group"
-                      aria-labelledby={`swc-grp-${si}`}
-                      className="rounded-xl border border-border/70 bg-background/40 p-4"
-                    >
-                      <p id={`swc-grp-${si}`} className="mb-3 text-sm font-semibold">
-                        {t(seg.group)}
-                      </p>
-                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        {seg.fields.map((f) => renderField(f))}
-                      </div>
-                      {seg.fields.some((f) => f.derived) && (
-                        <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">
-                          {t("settings.swAccDeriveHint")}
-                        </p>
-                      )}
-                    </div>
-                  ),
-                )}
-              </div>
-            </section>
-          )}
+            )}
+          </div>
         </div>
       </div>
     </div>

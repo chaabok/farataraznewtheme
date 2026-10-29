@@ -20,8 +20,8 @@ export function LanguageSettingsSections() {
 
   return (
     <>
-      {/* language */}
-      <section className="rounded-xl border border-border/70 bg-card/60 p-4">
+      {/* language — Task 156: کارت بنتو (هم‌سبک باکس‌های تصویر مالک) */}
+      <section className="rounded-3xl border border-border/70 bg-card p-5 shadow-sm lg:col-span-2">
         <div className="mb-3 flex items-center gap-2">
           <Globe className="h-4 w-4 text-primary" />
           <h3 className="text-sm font-semibold">{t("common.language")}</h3>
@@ -50,7 +50,7 @@ export function LanguageSettingsSections() {
 
       {/* Task 70 — active languages: which locales the switcher and the
           translation panels show (fa is the base language and always on) */}
-      <section className="rounded-xl border border-border/70 bg-card/60 p-4">
+      <section className="rounded-3xl border border-border/70 bg-card p-5 shadow-sm lg:col-span-2">
         <div className="mb-1 flex items-center gap-2">
           <Languages className="h-4 w-4 text-primary" />
           <h3 className="text-sm font-semibold">{t("settings.activeLangs")}</h3>
