@@ -335,7 +335,25 @@ export function ContractForm({ onBack }: { onBack?: () => void }) {
     };
   }, [fetchRecords, applyRecords]);
 
-  /* منابع دراپ‌داون‌ها هنگام آماده شدن دامنهٔ سازمانی + پس از بستن دیالوگ‌های «+» */
+  /* منابع دراپ‌داون‌ها هنگام آماده شدن دامنهٔ سازمانی (الگوی effect فرم پروژه) */
+  React.useEffect(() => {
+    if (!orgLoaded) return;
+    let alive = true;
+    (async () => {
+      const [pj, pt] = await Promise.all([
+        fetchProjectOptions().catch(() => [] as ProjectOption[]),
+        fetchPartyOptions().catch(() => [] as PartyOption[]),
+      ]);
+      if (!alive) return; // پاسخ کهنه — unmount یا دامنهٔ تازه
+      setProjects(pj);
+      setParties(pt);
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [orgLoaded, fetchProjectOptions, fetchPartyOptions]);
+
+  /** تازه‌خوانی منابع دراپ‌داون‌ها پس از بستن دیالوگ‌های «+» فرم پایه (event handler). */
   const refreshOptions = React.useCallback(async (): Promise<void> => {
     const [pj, pt] = await Promise.all([
       fetchProjectOptions().catch(() => [] as ProjectOption[]),
@@ -344,16 +362,6 @@ export function ContractForm({ onBack }: { onBack?: () => void }) {
     setProjects(pj);
     setParties(pt);
   }, [fetchProjectOptions, fetchPartyOptions]);
-
-  React.useEffect(() => {
-    let alive = true;
-    void refreshOptions().then(() => {
-      void alive;
-    });
-    return () => {
-      alive = false;
-    };
-  }, [refreshOptions]);
 
   /**
    * واکشی خالص پاسخ متد اختصاصی (بدون setState — قابل استفاده در effect).
@@ -669,10 +677,6 @@ export function ContractForm({ onBack }: { onBack?: () => void }) {
   const listTitleOf = (r: ContractDto): string => {
     const tr = locale === "fa" ? "" : (listTr[String(r.detailItemId)]?.title?.[locale] ?? "").trim();
     return tr || r.title;
-  };
-  const listDescOf = (r: ContractDto): string => {
-    const tr = locale === "fa" ? "" : (listTr[String(r.detailItemId)]?.description?.[locale] ?? "").trim();
-    return tr || r.description || "";
   };
 
   /* فهرست کامل با MainDataGrid: انتخاب مستقل + دبل‌کلیک = بازکردن */
