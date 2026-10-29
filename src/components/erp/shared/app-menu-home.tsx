@@ -24,7 +24,8 @@ import { DfbAppFormsSection } from "@/components/erp/form-builder/dfb-app-forms"
  * باشد و کاربر هر کدام را انتخاب کرد نحوهٔ نمایش زیرمنوها تغییر کند.»
  *
  * ۴ مدل نمایش:
- *  ۱) accordion «کشویی» — کارت‌های گروهِ جمع‌شونده (رفتار کلاسیک ERP؛ پیش‌فرض)
+ *  ۱) accordion «کشویی» — ردیف ایستادهٔ سرگروه‌ها + پنل کشویی (Task 151/152؛
+ *     بنتوی روشنِ توکن‌تم — بازخورد مالک: بوم تیره حذف شد)
  *  ۲) columns  «کنار هم» — گروه‌ها دوستونه هم‌زمان دیده می‌شوند؛ بدون جمع‌شدن
  *  ۳) list     «لیستی» — یک فهرست فشردهٔ تک‌کارت با سرگروه‌های کوچک (اسکن سریع)
  *  ۴) tiles    «کاشی» — کاشی‌های آیکونیِ شبکه‌ای (الگوی وین ۱۱؛ لمسی‌پسند)
@@ -295,13 +296,17 @@ function PendingNote({ asTile }: { asTile?: boolean }) {
 }
 
 /* ------------------------------------------------------------------ */
-/* Task 151 — بنتوی «منوی کشویی» (استایل تصویر مالک: بوم تیره + کارت‌های */
-/* گرد سبز/سفید). سرگروه‌ها به‌صورت کارت‌های «ایستاده» در یک راستا (یک ردیف) */
-/* کنار هم می‌ایستند — هیچ سرگروهی زیر بقیه رندر نمی‌شود — و پنل کشویی */
-/* سرگروه فعال زیر ردیف، فرم‌ها را به‌صورت کاشی‌های سفید بنتویی نشان می‌دهد. */
+/* Task 151/152 — بنتوی «منوی کشویی». سرگروه‌ها به‌صورت کارت‌های «ایستاده» */
+/* در یک راستا (یک ردیف) کنار هم می‌ایستند — هیچ سرگروهی زیر بقیه رندر */
+/* نمی‌شود — و پنل کشویی سرگروه فعال زیر ردیف، فرم‌ها را کاشی‌وار نشان */
+/* می‌دهد. Task 152 — بازخورد مالک: «بک‌گراند مشکی تم کشویی خیلی تیره است؛ */
+/* رنگ نداشته باشد یا یک رنگ ساده روشن سازگار با تم» ⇒ بوم تیرهٔ #0e1420 */
+/* و همهٔ رنگ‌های ثابتِ سفید/سنگی حذف شد؛ همه‌چیز توکن تم است (bg-muted/40، */
+/* bg-card، border-border، text-foreground/muted) تا در تم روشن و تیره هر */
+/* دو درست دیده شود؛ کارت فعال گرادیان سبز می‌ماند (سبز کارت‌های تصویر). */
 /* ------------------------------------------------------------------ */
 
-/** کارت ایستادهٔ سرگروه — حالت فعال با گرادیان سبز (سبک تصویر مالک) */
+/** کارت ایستادهٔ سرگروه — رنگ‌های توکن تم؛ حالت فعال با گرادیان سبز (سبک تصویر مالک) */
 function BentoGroupCard({
   group,
   open,
@@ -320,10 +325,10 @@ function BentoGroupCard({
       onClick={onToggle}
       aria-expanded={open}
       className={cn(
-        "group flex w-full items-center gap-3 rounded-2xl border p-3.5 text-start shadow-lg shadow-black/25 transition-all duration-200 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/70 cursor-pointer",
+        "group flex w-full items-center gap-3 rounded-2xl border p-3.5 text-start transition-all duration-200 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer",
         open
-          ? "border-emerald-400/40 bg-gradient-to-br from-emerald-500 to-teal-600 text-white"
-          : "border-white/10 bg-white/[0.06] text-white hover:bg-white/[0.1]",
+          ? "border-emerald-400/40 bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-md shadow-emerald-500/25"
+          : "border-border bg-card text-foreground shadow-sm hover:border-border hover:bg-accent/60 hover:shadow-md",
       )}
     >
       <span
@@ -337,14 +342,16 @@ function BentoGroupCard({
       </span>
       <span className="min-w-0 flex-1">
         <span className="block truncate text-sm font-bold">{t(group.titleKey as never)}</span>
-        <span className={cn("block truncate text-xs", open ? "text-white/85" : "text-slate-400")}>
+        <span
+          className={cn("block truncate text-xs", open ? "text-white/85" : "text-muted-foreground")}
+        >
           {t(group.descKey as never)}
         </span>
       </span>
       <ChevronDown
         className={cn(
           "h-4 w-4 shrink-0 transition-transform duration-200",
-          open ? "text-white/90" : "text-slate-500",
+          open ? "text-white/90" : "text-muted-foreground/70",
           !open && (dir === "rtl" ? "rotate-90" : "-rotate-90"),
         )}
         aria-hidden
@@ -353,7 +360,7 @@ function BentoGroupCard({
   );
 }
 
-/** کاشی سفید بنتویی یک فرم (سبک کارت‌های سفید تصویر مالک) */
+/** کاشی یک فرم در پنل کشویی — کارت تم‌پسند (جانشین کاشی سفیدِ بوم تیرهٔ Task 151) */
 function BentoFormTile({ item, onClick }: { item: AppMenuItemDef; onClick: () => void }) {
   const t = useT();
   const dir = useSettings((s) => s.dir());
@@ -363,7 +370,7 @@ function BentoFormTile({ item, onClick }: { item: AppMenuItemDef; onClick: () =>
     <button
       type="button"
       onClick={onClick}
-      className="group flex w-full items-center gap-3 rounded-xl bg-white p-3.5 text-start shadow-lg shadow-black/20 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 cursor-pointer"
+      className="group flex w-full items-center gap-3 rounded-xl border border-border/70 bg-card p-3.5 text-start shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-border hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
     >
       <span
         className={cn(
@@ -374,27 +381,27 @@ function BentoFormTile({ item, onClick }: { item: AppMenuItemDef; onClick: () =>
         <Icon className="h-4 w-4" aria-hidden />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-sm font-semibold text-slate-900">
+        <span className="block truncate text-sm font-semibold text-foreground">
           {t(item.titleKey as never)}
         </span>
-        <span className="block line-clamp-2 text-xs leading-5 text-slate-500">
+        <span className="block line-clamp-2 text-xs leading-5 text-muted-foreground">
           {t(item.descKey as never)}
         </span>
       </span>
       <ForwardIcon
-        className="h-4 w-4 shrink-0 text-slate-400 transition-colors group-hover:text-slate-700"
+        className="h-4 w-4 shrink-0 text-muted-foreground/60 transition-colors group-hover:text-foreground"
         aria-hidden
       />
     </button>
   );
 }
 
-/** یادداشت «به‌مرور اعلان می‌شوند» روی بوم تیره (نسخهٔ بنتو) */
+/** یادداشت «به‌مرور اعلان می‌شوند» در پنل کشویی (نسخهٔ بنتو — توکن تم) */
 function BentoPendingNote() {
   const t = useT();
   return (
-    <div className="flex items-center gap-2 rounded-xl border border-dashed border-white/15 px-3 py-2.5">
-      <span className="text-xs leading-relaxed text-slate-400">{t("fy.menuPending")}</span>
+    <div className="flex items-center gap-2 rounded-xl border border-dashed border-border/80 px-3 py-2.5">
+      <span className="text-xs leading-relaxed text-muted-foreground/80">{t("fy.menuPending")}</span>
     </div>
   );
 }
@@ -481,10 +488,11 @@ export function AppMenuHome({
 
         {/* بدنهٔ منو — با هر تغییر حالت، fade-in ملایم (ظرافت UX) */}
         <div key={view} className="fade-in space-y-4">
-          {/* ─── حالت ۱: کشویی — بنتوی تیره (Task 151 — استایل تصویر مالک):
-              ردیف ایستادهٔ سرگروه‌ها در یک راستا + پنل کشویی سرگروه فعال ─── */}
+          {/* ─── حالت ۱: کشویی — بنتوی روشنِ سازگار با تم (Task 152 — بازخورد
+              مالک: بوم مشکی حذف شد): ردیف ایستادهٔ سرگروه‌ها در یک راستا +
+              پنل کشویی سرگروه فعال ─── */}
           {view === "accordion" && (
-            <div className="rounded-3xl border border-white/10 bg-[#0e1420] p-2.5 shadow-2xl shadow-black/30 sm:p-3">
+            <div className="rounded-3xl border border-border/70 bg-muted/40 p-2.5 shadow-sm sm:p-3">
               {/* ردیف ایستاده — همهٔ سرگروه‌ها (از جمله «سند حسابداری») در یک راستا */}
               <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
                 {groups.map((group) => (
@@ -496,11 +504,11 @@ export function AppMenuHome({
                   />
                 ))}
               </div>
-              {/* پنل کشویی سرگروه فعال — کاشی‌های سفید بنتویی فرم‌ها */}
+              {/* پنل کشویی سرگروه فعال — کاشی‌های تم‌پسند فرم‌ها */}
               {activeGroupDef && (
                 <section
                   aria-label={t(activeGroupDef.titleKey as never)}
-                  className="mt-3 rounded-2xl border border-white/10 bg-white/[0.04] p-2.5 sm:p-3"
+                  className="mt-3 rounded-2xl border border-border/60 bg-card/60 p-2.5 sm:p-3"
                 >
                   <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
                     {activeGroupDef.items.map((item) => (
