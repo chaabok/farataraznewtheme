@@ -14,6 +14,7 @@ import { CostCenterForm } from "./cost-center-form";
 import { ProjectForm } from "./project-form";
 import { ContractForm } from "./contract-form";
 import { AccountTreeForm } from "./account-tree-form";
+import { VoucherTypeForm } from "./voucher-type-form";
 
 /**
  * AccountingWindow — Task 119/120/131 (درخواست مالک): پنجرهٔ نرم‌افزار
@@ -26,7 +27,8 @@ import { AccountTreeForm } from "./account-tree-form";
  * می‌کند. فرم‌ها: «نوع تفصیل جدید» (Task 120)، «شماره گذاری تفصیلی ها»
  * (Task 131)، «ایجاد تفصیلی ها» (Task 144)، «مرکز هزینه جدید» (Task 146)
  * «تعریف پروژه» (Task 147) و «قرارداد جدید» (Task 148)
- * — چهار فرم آخر زیر زیرمنوی «اطلاعات تفصیلی ها» (Task 145).
+ * — چهار فرم آخر زیر زیرمنوی «اطلاعات تفصیلی ها» (Task 145)؛
+ * «نوع سند جدید» (Task 153) زیر زیرمنوی «سند حسابداری» (Task 150).
  */
 
 /** عنوان زندهٔ برگه به ازای هر زیرصفحهٔ فرم (Task 82 — الگوی عمومی) */
@@ -38,6 +40,7 @@ const PAGE_TITLE_KEY: Partial<Record<AccountingSubPage, string>> = {
   "project": "pj.formTitle",
   "contract": "ct.formTitle",
   "account-tree": "atr.formTitle",
+  "voucher-type": "vt.formTitle",
 };
 
 /** زیرمنوی مادر هر زیرصفحه برای breadcrumb — Task 145: تفصیلی ها زیرمنوی
@@ -50,6 +53,7 @@ const PAGE_GROUP_KEY: Partial<Record<AccountingSubPage, string>> = {
   "project": "acc.menuDetailInfo",
   "contract": "acc.menuDetailInfo",
   "account-tree": "acc.menuBasicInfo",
+  "voucher-type": "acc.menuDocuments",
 };
 
 export function AccountingWindow() {
@@ -119,6 +123,7 @@ export function AccountingWindow() {
           {page === "project" && <ProjectForm onBack={() => go("home")} />}
           {page === "contract" && <ContractForm onBack={() => go("home")} />}
           {page === "account-tree" && <AccountTreeForm onBack={() => go("home")} />}
+          {page === "voucher-type" && <VoucherTypeForm onBack={() => go("home")} />}
         </div>
       </div>
     );

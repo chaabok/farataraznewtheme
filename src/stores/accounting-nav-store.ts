@@ -25,7 +25,8 @@ export type AccountingSubPage =
   | "cost-center" // Task 146 — مرکز هزینه جدید (زیرمنوی «اطلاعات تفصیلی ها»)
   | "project" // Task 147 — تعریف پروژه (زیرمنوی «اطلاعات تفصیلی ها»)
   | "contract" // Task 148 — قرارداد جدید (زیرمنوی «اطلاعات تفصیلی ها»)
-  | "account-tree"; // Task 140 — درختواره حسابها (اطلاعات پایهٔ حسابداری)
+  | "account-tree" // Task 140 — درختواره حسابها (اطلاعات پایهٔ حسابداری)
+  | "voucher-type"; // Task 153 — نوع سند جدید (زیرمنوی «سند حسابداری»)
 
 interface AccountingNavState {
   /** درخواست در انتظار (null = هیچ) */
