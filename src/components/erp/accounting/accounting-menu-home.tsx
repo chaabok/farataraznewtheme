@@ -1,6 +1,6 @@
 "use client";
 
-import { Briefcase, Building2, Calculator, Database, FileSignature, FileText, FolderPlus, Layers, ListOrdered, ListTree, ScrollText, Tags } from "lucide-react";
+import { Briefcase, Boxes, Building2, Calculator, Database, FileSignature, FileText, FolderPlus, Layers, ListOrdered, ListTree, ScrollText, Tags } from "lucide-react";
 import { AppMenuHome, type AppMenuGroupDef } from "@/components/erp/shared/app-menu-home";
 
 /**
@@ -36,6 +36,8 @@ import { AppMenuHome, type AppMenuGroupDef } from "@/components/erp/shared/app-m
  *   · Task 148: «قرارداد جدید» — کد تفصیلی لایو از نوع تفصیل «قرارداد»
  *     (کد مرجع ۹ — دقیقاً همانند پروژه) + دراپ‌داون ستون‌دار پروژه/طرف
  *     قرارداد با کاشی «+» فرم پایه.
+ *   · Task 154: «تفصیلی سایر» — دقیقاً ۳ فیلد فرمان مالک (کد تفصیل و عنوان
+ *     اجباری + فعال تیک پیش‌فرض) روی نوع ثابت «سایر» (تضمین سمت سرور).
  *
  * زیرمنوی «سند حسابداری» — Task 150 (درخواست مالک: «در منوی حسابداری یک
  * زیرمنو ایجاد کنید بنام سند حسابداری. این زیرمنو هست و فرم های آن به مرور
@@ -122,6 +124,14 @@ const ACCOUNTING_MENU_GROUPS: AppMenuGroupDef[] = [
         icon: FileSignature,
         gradient: "from-orange-500 to-amber-600",
       },
+      {
+        /* Task 154 — تفصیلی سایر (۳ فیلد مالک: کد تفصیل/عنوان/فعال تیک پیش‌فرض) */
+        page: "detail-other",
+        titleKey: "do.formTitle",
+        descKey: "do.formDesc",
+        icon: Boxes,
+        gradient: "from-purple-500 to-fuchsia-600",
+      },
     ],
   },
   {
@@ -148,7 +158,7 @@ const ACCOUNTING_MENU_GROUPS: AppMenuGroupDef[] = [
 export function AccountingMenuHome({
   go,
 }: {
-  go: (page: "detail-type" | "detail-type-numbering" | "detail-items" | "cost-center" | "project" | "contract" | "account-tree" | "voucher-type") => void;
+  go: (page: "detail-type" | "detail-type-numbering" | "detail-items" | "cost-center" | "project" | "contract" | "account-tree" | "voucher-type" | "detail-other") => void;
 }) {
   return (
     <AppMenuHome
@@ -158,7 +168,7 @@ export function AccountingMenuHome({
       headerGradient="from-violet-500 to-violet-700"
       storageKey="accounting.menuView"
       groups={ACCOUNTING_MENU_GROUPS}
-      go={(page) => go(page as "detail-type" | "detail-type-numbering" | "detail-items" | "cost-center" | "project" | "contract" | "account-tree" | "voucher-type")}
+      go={(page) => go(page as "detail-type" | "detail-type-numbering" | "detail-items" | "cost-center" | "project" | "contract" | "account-tree" | "voucher-type" | "detail-other")}
     />
   );
 }

@@ -7,6 +7,7 @@ import { UpsertDetailItemDto } from "./detail-item.dto";
  * (نرم‌افزار «حسابداری» ← زیرمنوی «اطلاعات پایه»).
  * GET    /detail-items            — فهرست تفصیلی‌ها (+ join نوع تفصیل)
  * GET    /detail-items/next-code  — پیشنهاد کد خودکار از بازهٔ شماره‌گذاری نوع
+ * GET    /detail-items/other-category — تضمین نوع «سایر» (Task 154 — تفصیلی سایر)
  * POST   /detail-items            — ثبت جدید با زنجیرهٔ اعتبارسنجی
  * PUT    /detail-items/:id        — ویرایش (همان قوانین، خود رکورد مستثنا)
  * DELETE /detail-items/:id        — حذف
@@ -42,6 +43,22 @@ export class DetailItemController {
     const sid = Number(structureId);
     return this.detailItems.nextCode({
       detailTypeRef: detailTypeRef && Number.isFinite(tref) && tref > 0 ? tref : 0,
+      structureId: structureId && Number.isFinite(sid) && sid > 0 ? sid : undefined,
+      headOfficeShares: headOfficeShares === "true",
+    });
+  }
+
+  /**
+   * Task 154 — فرم «تفصیلی سایر»: تضمین نوع تفصیل «سایر» (کد آزاد از ۲۲)
+   * + ردیف شماره‌گذاری خودکار؛ شناسهٔ نوع برای فیلتر/ثبت رکوردهای فرم.
+   */
+  @Get("other-category")
+  otherCategory(
+    @Query("structureId") structureId?: string,
+    @Query("headOfficeShares") headOfficeShares?: string,
+  ) {
+    const sid = Number(structureId);
+    return this.detailItems.ensureOtherCategory({
       structureId: structureId && Number.isFinite(sid) && sid > 0 ? sid : undefined,
       headOfficeShares: headOfficeShares === "true",
     });

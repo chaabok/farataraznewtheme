@@ -17,6 +17,19 @@ import {
 } from "../../../_shared/app-base-entity";
 import { UpsertDetailItemDto } from "./detail-item.dto";
 import { resolveDetailTypeChain } from "../detail-type/canonical-detail-types";
+import { allocateDetailTypeNumbering } from "../detail-type-numbering/allocate";
+
+/**
+ * Task 154 (درخواست مالک): فرم «تفصیلی سایر» در زیرمنوی «اطلاعات تفصیلی ها»
+ * — رکوردهای این فرم تفصیلی‌های نوع ثابت «سایر»اند (پنجمین دستهٔ کلاسیک
+ * تفصیلی معین: شناور/مراکز/پروژه/قرارداد/سایر — هم‌تراز فرم‌های اختصاصی
+ * مرکز هزینه/پروژه/قرارداد). نوع «سایر» اگر نبود سمت سرور ساخته می‌شود
+ * (کد ۲۲ — بلافاصله پس از ۲۱ آیتم مرجع Task 122) با ردیف شماره‌گذاری
+ * خودکار (allocateDetailTypeNumbering — Task 131) تا کد تفصیل لایو باشد.
+ */
+const OTHER_CATEGORY_TITLE = "سایر";
+/** نخستین کد پیشنهادی برای نوع «سایر» — در اشغال بودن، بعدی آزاد می‌گیرد. */
+const OTHER_CATEGORY_BASE_CODE = 22;
 
 /**
  * DetailItemService — Task 144 (درخواست مالک): فرم «ایجاد تفصیلی ها» در
@@ -191,6 +204,108 @@ export class DetailItemService {
   }
 
   /* ------------------------------- mutations ------------------------------ */
+
+  /**
+   * Task 154 — تضمین وجود نوع تفصیل «سایر» برای فرم «تفصیلی سایر»:
+   *   · ابتدا جست‌وجو در دامنهٔ خواندن گرهٔ فعال (با اشتراک دفتر مرکزی —
+   *     قرارداد Task 122)؛ نوع موجود همان مرجع است و دوبل ساخته نمی‌شود.
+   *   · نبود ⇒ ساخت با کد آزاد (از ۲۲) + ردیف شماره‌گذاری خودکار
+   *     (allocateDetailTypeNumbering — عین DetailTypeService.create).
+   *   · همیشه ردیف شماره‌گذاری گارانتی می‌شود تا /next-code حالت
+   *     «automatic» بدهد و کد تفصیل لایو پیشنهاد شود.
+   * اجرای مکرر امن است (idempotent — P2002 همزمانی هم گرفته می‌شود).
+   */
+  async ensureOtherCategory(q: {
+    structureId?: number;
+    headOfficeShares?: boolean;
+  }) {
+    const target = await this.resolveTargetStructure(q.structureId);
+    const scope: AppBaseScope = { nodeId: target.structureRef, ...target.chain };
+    /* ۱) نوع «سایر» در دامنهٔ خواندن (عین assertTypeVisible — اشتراک همیشه) */
+    let type = await this.prisma.detailType.findFirst({
+      where: {
+        ...baseDataScopeWhere(scope, true),
+        title: OTHER_CATEGORY_TITLE,
+      },
+      select: {
+        id: true,
+        code: true,
+        title: true,
+        businessStructureRef: true,
+        companyRef: true,
+        branchRef: true,
+        agencyRef: true,
+        shopRef: true,
+      },
+    });
+    let created = false;
+    if (!type) {
+      /* ۲) ساخت نوع «سایر» با نخستین کد عددی آزاد (از ۲۲) */
+      let code = String(OTHER_CATEGORY_BASE_CODE);
+      for (let guard = 0; guard < 100; guard++) {
+        const taken = await this.prisma.detailType.findFirst({
+          where: { businessStructureRef: target.structureRef, code },
+          select: { id: true },
+        });
+        if (!taken) break;
+        code = String(Number(code) + 1);
+      }
+      const newId = await this.idGen.generateNextId("DetailType");
+      try {
+        type = await this.prisma.detailType.create({
+          data: {
+            id: BigInt(newId),
+            code,
+            title: OTHER_CATEGORY_TITLE,
+            description: null,
+            isActive: true,
+            ...appBaseOnCreate({
+              userId: SYSTEM_ACTOR.userId,
+              nodeId: target.structureRef,
+              ...target.chain,
+            }),
+          },
+        });
+        created = true;
+      } catch (e) {
+        /* همزمانی: P2002 ⇒ رکورد را که رقیب ساخته بازخوانی کن */
+        const refetched = await this.prisma.detailType.findFirst({
+          where: { businessStructureRef: target.structureRef, title: OTHER_CATEGORY_TITLE },
+          select: {
+            id: true,
+            code: true,
+            title: true,
+            businessStructureRef: true,
+            companyRef: true,
+            branchRef: true,
+            agencyRef: true,
+            shopRef: true,
+          },
+        });
+        if (!refetched) throw e;
+        type = refetched;
+      }
+    }
+    /* ۳) گارانتی ردیف شماره‌گذاری خودکار (Task 131 — تفصیل‌های قدیمی هم) */
+    const numbering = await this.prisma.detailTypeNumbering.findFirst({
+      where: { detailTypeRef: type.id, businessStructureRef: type.businessStructureRef },
+      select: { id: true },
+    });
+    if (!numbering) {
+      await allocateDetailTypeNumbering(this.prisma, this.idGen, type, SYSTEM_ACTOR);
+    }
+    if (created) {
+      this.logger.log(
+        `OtherCategory ensured — DetailType «${OTHER_CATEGORY_TITLE}» created ID=${type.id} Code=${type.code} Structure=${target.structureRef} (Task 154)`,
+      );
+    }
+    return {
+      id: Number(type.id),
+      code: type.code,
+      title: type.title,
+      created,
+    };
+  }
 
   /** ثبت تفصیلی — کد خالی + شماره‌گذاری خودکار ⇒ تخصیص خودکار نخستین عدد آزاد. */
   async create(dto: UpsertDetailItemDto) {
