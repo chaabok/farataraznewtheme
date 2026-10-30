@@ -1046,7 +1046,9 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
 
   /* Task 165 (مدل افقی): زنجیرهٔ حساب «هر» ردیف سند به‌صورت جفت‌های label/value —
      گروه حساب / حساب کل / حساب معین از معینِ همان ردیف و تفصیلی‌ها فقط وقتی انتخاب
-     شده‌اند (فرمان مالک: سطح تفصیلی خالی نمایش داده نمی‌شود)؛ ردیف بدون حساب ⇒ «—» */
+     شده‌اند (فرمان مالک: سطح تفصیلی خالی نمایش داده نمی‌شود)؛ ردیف بدون حساب ⇒ «—».
+     هوک باید قبل از early-returnهای meta باشد ⇒ سطوح تفصیلی با شمارندهٔ detailLevelsCount
+     (نه آرایهٔ levelColumns که پس از بازگشت‌های زودهنگام تعریف می‌شود) پیمایش می‌شود */
   const acctChainPairs = React.useMemo(
     () =>
       rows.map((row) => {
@@ -1057,7 +1059,7 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
           pairs.push({ label: t("vc.footerLedger"), value: m.ledgerTitle });
           pairs.push({ label: t("vc.footerMoein"), value: m.title });
         }
-        for (const li of levelColumns) {
+        for (let li = 1; li <= detailLevelsCount; li++) {
           if (levelInfoOf(row.moeinRef ?? null, li).locked) continue;
           const selId = row.details[li] ?? null;
           const d = selId != null ? detailById.get(selId) : undefined;
@@ -1065,7 +1067,7 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
         }
         return pairs;
       }),
-    [rows, moeinById, detailById, levelColumns, levelInfoOf, t],
+    [rows, moeinById, detailById, detailLevelsCount, levelInfoOf, t],
   );
 
   /* ------------------------------ بازکردن سند ------------------------------ */
