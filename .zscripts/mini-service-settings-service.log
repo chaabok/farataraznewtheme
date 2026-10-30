@@ -48,3 +48,17 @@ $ NODE_PATH=./node_modules bun --hot src/main.ts
 error: Cannot find module '@prisma/client' from '/home/z/my-project/mini-services/settings-service/src/prisma/prisma.service.ts'
 $ NODE_PATH=./node_modules bun --hot src/main.ts
 error: Cannot find module '@prisma/client' from '/home/z/my-project/mini-services/settings-service/src/business-structure/business-structure.service.ts'
+$ NODE_PATH=./node_modules bun --hot src/main.ts
+error: Cannot find module '@prisma/client' from '/home/z/my-project/mini-services/settings-service/src/business-structure/business-structure.service.ts'
+$ NODE_PATH=./node_modules bun --hot src/main.ts
+error: Cannot find module '@prisma/client' from '/home/z/my-project/mini-services/settings-service/src/prisma/prisma.service.ts'
+$ NODE_PATH=./node_modules bun --hot src/main.ts
+error: Cannot find module '@prisma/client' from '/home/z/my-project/mini-services/settings-service/src/prisma/prisma.service.ts'
+$ NODE_PATH=./node_modules bun --hot src/main.ts
+error: Cannot find module '@prisma/client' from '/home/z/my-project/mini-services/settings-service/src/business-structure/business-structure.service.ts'
+$ NODE_PATH=./node_modules bun --hot src/main.ts
+error: Cannot find module '@prisma/client' from '/home/z/my-project/mini-services/settings-service/src/prisma/prisma.service.ts'
+$ NODE_PATH=./node_modules bun --hot src/main.ts
+error: Cannot find module '@prisma/client' from '/home/z/my-project/mini-services/settings-service/src/geo-location/geo-location.service.ts'
+$ NODE_PATH=./node_modules bun --hot src/main.ts
+error: Cannot find module '@prisma/client' from '/home/z/my-project/mini-services/settings-service/src/prisma/prisma.service.ts'
