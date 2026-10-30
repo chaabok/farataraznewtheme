@@ -59,3 +59,4 @@ $ DATABASE_URL="file:/home/z/my-project/db/dfb.db" NODE_PATH=./node_modules bun 
 [32m[Nest] 2400  - [39m10/30/2026, 7:52:02 AM [32m    LOG[39m [38;5;3m[PrismaService] [39m[32mPrisma connected (dfb.db) — §2.5 auto-rowversion active on: IDGeneration, DfbMenu, DfbForm, DfbFormTab, DfbFormField, DfbQuery, DfbQueryField, DfbFormData, DfbFormDataValue, DfbTranslation[39m
 [32m[Nest] 2400  - [39m10/30/2026, 7:52:02 AM [32m    LOG[39m [38;5;3m[NestApplication] [39m[32mNest application successfully started[39m[38;5;3m +205ms[39m
 [32m[Nest] 2400  - [39m10/30/2026, 7:52:02 AM [32m    LOG[39m [38;5;3m[Bootstrap] [39m[32mdfb-service listening on http://127.0.0.1:3003[39m
+error: script "dev" was terminated by signal SIGKILL (Forced quit)

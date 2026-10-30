@@ -1,13 +1,17 @@
-[desktop-service] Installing dependencies...
-bun install v1.3.14 (0d9b296a)
-
-+ bun-types@1.4.3
-+ prisma@6.19.3
-+ @erp/shared@../shared
-+ @prisma/client@6.19.3
-+ reflect-metadata@0.2.2
-
-151 packages installed [68.46s]
-[desktop-service] Running bun run dev...
 $ bun --hot src/main.ts
-error: Cannot find module '@nestjs/core' from '/home/z/my-project/mini-services/shared/src/index.ts'
+[Nest] 10595  - 10/30/2026, 9:03:27 AM     LOG [NestFactory] Starting Nest application...
+[Nest] 10595  - 10/30/2026, 9:03:27 AM     LOG [InstanceLoader] AppModule dependencies initialized +15ms
+[Nest] 10595  - 10/30/2026, 9:03:27 AM     LOG [InstanceLoader] PrismaModule dependencies initialized +0ms
+[Nest] 10595  - 10/30/2026, 9:03:27 AM     LOG [InstanceLoader] HealthModule dependencies initialized +0ms
+[Nest] 10595  - 10/30/2026, 9:03:27 AM     LOG [InstanceLoader] IconsModule dependencies initialized +0ms
+[Nest] 10595  - 10/30/2026, 9:03:27 AM     LOG [InstanceLoader] MenusModule dependencies initialized +0ms
+[Nest] 10595  - 10/30/2026, 9:03:27 AM     LOG [RoutesResolver] IconsController {/api/icons}: +10ms
+[Nest] 10595  - 10/30/2026, 9:03:27 AM     LOG [RouterExplorer] Mapped {/api/icons, GET} route +4ms
+[Nest] 10595  - 10/30/2026, 9:03:27 AM     LOG [RouterExplorer] Mapped {/api/icons/:id, GET} route +1ms
+[Nest] 10595  - 10/30/2026, 9:03:27 AM     LOG [RouterExplorer] Mapped {/api/icons, POST} route +0ms
+[Nest] 10595  - 10/30/2026, 9:03:27 AM     LOG [RoutesResolver] MenusController {/api/menus}: +0ms
+[Nest] 10595  - 10/30/2026, 9:03:27 AM     LOG [RouterExplorer] Mapped {/api/menus/:moduleKey, GET} route +0ms
+[Nest] 10595  - 10/30/2026, 9:03:27 AM     LOG [RoutesResolver] HealthController {/api/health}: +0ms
+[Nest] 10595  - 10/30/2026, 9:03:27 AM     LOG [RouterExplorer] Mapped {/api/health, GET} route +1ms
+[Nest] 10595  - 10/30/2026, 9:03:27 AM     LOG [NestApplication] Nest application successfully started +107ms
+[Nest] 10595  - 10/30/2026, 9:03:27 AM     LOG [Bootstrap] desktop-service listening on http://127.0.0.1:3001/api

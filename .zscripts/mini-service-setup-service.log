@@ -1,14 +1,15 @@
-[setup-service] Installing dependencies...
-bun install v1.3.14 (0d9b296a)
-warn: Slow filesystem detected. If /home/z/.bun/install/cache is a network drive, consider setting $BUN_INSTALL_CACHE_DIR to a local folder.
-
-+ bun-types@1.4.3
-+ prisma@6.19.3
-+ @erp/shared@../shared
-+ @prisma/client@6.19.3
-+ reflect-metadata@0.2.2
-
-152 packages installed [74.91s]
-[setup-service] Running bun run dev...
 $ bun --hot src/main.ts
-error: Cannot find module '@nestjs/core' from '/home/z/my-project/mini-services/shared/src/index.ts'
+[Nest] 10647  - 10/30/2026, 9:03:26 AM     LOG [NestFactory] Starting Nest application...
+[Nest] 10647  - 10/30/2026, 9:03:26 AM     LOG [InstanceLoader] AppModule dependencies initialized +220ms
+[Nest] 10647  - 10/30/2026, 9:03:26 AM     LOG [InstanceLoader] PrismaModule dependencies initialized +6ms
+[Nest] 10647  - 10/30/2026, 9:03:26 AM     LOG [InstanceLoader] DataModule dependencies initialized +0ms
+[Nest] 10647  - 10/30/2026, 9:03:26 AM     LOG [InstanceLoader] SetupModule dependencies initialized +5ms
+[Nest] 10647  - 10/30/2026, 9:03:26 AM     LOG [RoutesResolver] SetupController {/api/setup}: +210ms
+[Nest] 10647  - 10/30/2026, 9:03:26 AM     LOG [RouterExplorer] Mapped {/api/setup/health, GET} route +46ms
+[Nest] 10647  - 10/30/2026, 9:03:26 AM     LOG [RouterExplorer] Mapped {/api/setup/overview, GET} route +28ms
+[Nest] 10647  - 10/30/2026, 9:03:26 AM     LOG [RouterExplorer] Mapped {/api/setup/services/:moduleKey, PUT} route +1ms
+[Nest] 10647  - 10/30/2026, 9:03:26 AM     LOG [RouterExplorer] Mapped {/api/setup/services/:moduleKey/records, GET} route +11ms
+[Nest] 10647  - 10/30/2026, 9:03:26 AM     LOG [RouterExplorer] Mapped {/api/setup/services/:moduleKey/records, POST} route +1ms
+[Nest] 10647  - 10/30/2026, 9:03:26 AM     LOG [RouterExplorer] Mapped {/api/setup/exchange, POST} route +0ms
+[Nest] 10647  - 10/30/2026, 9:03:27 AM     LOG [NestApplication] Nest application successfully started +195ms
+[Nest] 10647  - 10/30/2026, 9:03:27 AM     LOG [Bootstrap] setup-service listening on http://127.0.0.1:3013/api
