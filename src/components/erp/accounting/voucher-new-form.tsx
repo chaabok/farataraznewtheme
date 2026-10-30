@@ -2244,8 +2244,10 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
       <Dialog open={refForm !== null} onOpenChange={(o) => !o && closeRefForm()}>
         <DialogContent
           className={cn(
-            "flex h-[85vh] w-[min(94vw,56rem)] max-w-none flex-col gap-0 overflow-hidden rounded-2xl p-0 [&>button]:hidden",
-            refForm === "account-tree" && "w-[min(94vw,72rem)]",
+            /* Task 160 — vw/vh تحت zoom ریشه اسکیل می‌شوند ⇒ تقسیم بر --erp-zoom تا
+               عرض/ارتفاع «دیداری» مودال دقیقاً ۹۴vw/۸۵dvh بماند (موبایل بدون سرریز) */
+            "flex h-[calc(85dvh/var(--erp-zoom,1))] w-[min(calc(94vw/var(--erp-zoom,1)),56rem)] max-w-none flex-col gap-0 overflow-hidden rounded-2xl p-0 [&>button]:hidden",
+            refForm === "account-tree" && "w-[min(calc(94vw/var(--erp-zoom,1)),72rem)]",
           )}
         >
           <DialogTitle className="sr-only">
