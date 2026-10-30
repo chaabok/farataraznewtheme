@@ -7,7 +7,7 @@ import * as React from "react";
  *
  * زومِ داخلی با ویژگی استاندارد CSS `zoom` روی <html> اعمال می‌شود (برخلاف
  * zoom مرورگر، فقط نرم‌افزار را اسکیل می‌کند و در localStorage می‌ماند).
- * پیش‌فرض ۷۵٪ طبق فرمان مالک؛ بازهٔ مجاز ۵۰٪ تا ۱۵۰٪ با گام ۵٪.
+ * پیش‌فرض ۱۱۰٪ طبق فرمان مالک (t162)؛ بازهٔ مجاز ۵۰٪ تا ۱۵۰٪ با گام ۵٪.
  *
  * دو ثابت CSS روی documentElement نگه داشته می‌شود:
  *   --erp-zoom      = z        (زوم اپ)
@@ -17,7 +17,9 @@ import * as React from "react";
  * می‌کند (آزمایش‌شده در Chromium: wrapper خودش 1/z و محتوا دوباره z).
  */
 
-export const DEFAULT_ZOOM = 0.75;
+export const DEFAULT_ZOOM = 1.1;
+/** پیش‌فرض قدیمی (تا t161) — مقادیر ذخیره‌شدهٔ برابر با آن هنگام خواندن به پیش‌فرض تازه مهاجرت می‌کنند. */
+const LEGACY_DEFAULT_ZOOM = 0.75;
 export const MIN_ZOOM = 0.5;
 export const MAX_ZOOM = 1.5;
 export const STEP_ZOOM = 0.05;
@@ -40,7 +42,13 @@ export function erpZoom(): number {
   try {
     const raw = document.documentElement.style.zoom || localStorage.getItem(LS_KEY);
     const parsed = raw ? parseFloat(String(raw)) : NaN;
-    if (Number.isFinite(parsed) && parsed >= MIN_ZOOM && parsed <= MAX_ZOOM) v = parsed;
+    if (
+      Number.isFinite(parsed) &&
+      parsed >= MIN_ZOOM &&
+      parsed <= MAX_ZOOM &&
+      parsed !== LEGACY_DEFAULT_ZOOM /* t162 — پیش‌فرض قدیمی ⇒ ۱۱۰٪ */
+    )
+      v = parsed;
   } catch {
     /* private mode و… — پیش‌فرض */
   }
@@ -82,7 +90,7 @@ function subscribe(cb: () => void): () => void {
   return () => listeners.delete(cb);
 }
 
-/** هوک واکنش‌پذیر زوم (server snapshot = پیش‌فرض ۷۵٪ — بدون mismatch). */
+/** هوک واکنش‌پذیر زوم (server snapshot = پیش‌فرض ۱۱۰٪ — بدون mismatch). */
 export function useErpZoom(): number {
   return React.useSyncExternalStore(subscribe, erpZoom, () => DEFAULT_ZOOM);
 }
