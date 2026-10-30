@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { erpZoom } from "@/lib/erp-zoom";
 import { api } from "@/lib/api";
 import { useT, useSettings } from "@/stores/settings-store";
 import { useDesktop } from "@/stores/desktop-store";
@@ -45,7 +46,7 @@ import { useAlignedLabels } from "@/components/forms/use-aligned-labels";
 import { displayToStoredDate, storedToDisplayDate } from "@/lib/calendar-date";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Dialog,
   DialogContent,
@@ -104,7 +105,19 @@ import { CurrencyTypeForm } from "@/components/erp/general/currency-type-form";
  * پنهان‌اند و مرحله‌به‌مرحله تا بیشترین سطحی که حداقل یک ردیف به آن معین متصل
  * است ظاهر می‌شوند (سطوح ۱..max برای حفظ سلسله‌مراتب)؛ سلول هر ردیف فقط وقتی
  * فعال است که معینِ همان ردیف به آن سطح متصل باشد وگرنه 🔒 — ردیفِ بدون ارتباط
- * ستونِ نمایش‌داده‌شده را «قفل» می‌بیند نه حذف‌شده.
+ * ستونِ نمایش‌داده‌شده را «قفل» می‌بیند نه حذف‌شده؛ سلول قفل مثل بقیه سلول‌ها
+ * قاب (بوردر) دارد.
+ *
+ * Task 170 (فرمان مالک): ① ارتفاع‌دهی بخش‌ها با موس — روی بوردرِ پایین هدر
+ * (یا بوردرِ بالای فوتر) دابل‌کلیک ⇒ آن بخش «انتخاب» می‌شود (حلقهٔ فیروزه‌ای)،
+ * سپس کشیدن همان بوردر یا چرخ موس روی بخشِ انتخاب‌شده ارتفاعش را کم/زیاد
+ * می‌کند (اقلام = فضای باقیمانده و با هر دو بوردر تنظیم می‌شود؛ فقط lg+).
+ * ② سلول‌های قفل تفصیلی در گرید قاب‌دار شدند. ③ ناوبری Enter از معین: معینِ
+ * بدون تفصیلی ⇒ ستون شرح؛ دارای تفصیلی ⇒ پرش به اولین سطحِ آزاد تفصیلی.
+ * ④ «افزودن ردیف» فوراً فوکوس را به ستون معین ردیف تازه می‌برد. ⑤ ستون‌های
+ * معین و تفصیلی تایپ‌پذیرند (کد یا عنوان)؛ Enter با عبارتِ بی‌معنا ⇒ دراپ‌داون
+ * باز می‌شود و عبارت در فیلتر فیلترِ همان دراپ‌داون می‌نشیند؛ Enter با تطابق
+ * دقیق ⇒ همان حساب انتخاب و ناوبری ادامه می‌یابد.
  */
 
 /* ---------------------------------- meta DTOs ---------------------------------- */
