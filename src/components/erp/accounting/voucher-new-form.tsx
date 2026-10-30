@@ -60,7 +60,9 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
  *     تب اقلام سند حسابداری را تعبیه کنید»): «جدولی» (گرید شیت‌مانند) و
  *     «فرمی» (کارت تک‌ردیف با ناوبری — Task 161: عرض فیلدهای معین،
  *     تفصیلی‌ها، بدهکار، بستانکار، تاریخ و شماره پیگیری ۶۰٪ کم شده =
- *     max-w-[40%] روی خودِ کنترل نسبت به پهنای فعلی). ستون‌ها: ردیف
+ *     max-w-[40%] روی خودِ کنترل نسبت به پهنای فعلی). تاگل مدل‌ها در
+ *     فوتربار اقلام کنار «افزودن ردیف» است (Task 166) و هدر اقلام
+ *     هم‌اندازهٔ هدر سند (h-11). ستون‌ها: ردیف
  *     (خودکار) / کد معین
  *     (الزامی — از کدینگ سطح معین؛ دراپ‌داون چندانتخابی، هر انتخاب اضافی
  *     ردیف جدید می‌سازد) / تفصیلی ۱..۲۰ (تا سقف accDetailLevels؛ فقط
@@ -1564,22 +1566,11 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
               Task 161: زیر lg کارت حداقلِ ارتفاع محتوا را دارد (اسکرول طبیعی بدنه) تا ویرایشگر فرمی
               در موبایل به لبهٔ ۳۶ فشرده نشود؛ در lg+ قرارداد Task 159 (کف min-h-36 + اسکرول داخلی) */}
           <div className="mt-3 flex min-h-36 max-lg:min-h-max flex-1 flex-col rounded-2xl border border-border/70 bg-card shadow-sm">
-            <div className="flex flex-wrap items-center gap-2 border-b border-border/50 px-3 py-2">
+            {/* Task 166 (فرمان مالک): تاگل «جدولی/فرمی» به فوتربار اقلام (کنار «افزودن ردیف») منتقل شد؛
+                هدر اقلام فقط عنوان است و ارتفاعش دقیقاً هم‌اندازهٔ هدر سند (نوار عنوان پنجره، h-11) است */}
+            <div className="flex h-11 shrink-0 items-center gap-2 border-b border-border/50 px-3">
               <Table2 className="h-3.5 w-3.5 text-teal-600" aria-hidden />
               <h3 className="text-xs font-bold text-foreground/90">{t("vc.items")}</h3>
-              {/* چند مدل ورود اطلاعات (فرمان مالک): جدولی / فرمی */}
-              <div
-                role="group"
-                aria-label={t("vc.modeLabel")}
-                className="ms-auto flex items-center gap-0.5 rounded-lg border bg-background/60 p-0.5"
-              >
-                <ModeButton active={mode === "grid"} onClick={() => setMode("grid")} icon={<Table2 className="h-3.5 w-3.5" aria-hidden />}>
-                  {t("vc.modeGrid")}
-                </ModeButton>
-                <ModeButton active={mode === "form"} onClick={() => setMode("form")} icon={<SquarePen className="h-3.5 w-3.5" aria-hidden />}>
-                  {t("vc.modeForm")}
-                </ModeButton>
-              </div>
             </div>
 
             {mode === "grid" ? (
@@ -1993,8 +1984,21 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
             )}
 
             {/* Task 163 — فوتربار اقلام (فرمان مالک): نوار پایین کارت اقلام با دکمه‌های افزودن/حذف ردیف،
-                مشترک بین مدل جدولی و فرمی؛ حذف، ردیفِ فعال را هدف می‌گیرد (فرمی = ردیف جاری، جدولی = ردیف انتخاب‌شده) */}
+                مشترک بین مدل جدولی و فرمی؛ حذف، ردیفِ فعال را هدف می‌گیرد (فرمی = ردیف جاری، جدولی = ردیف انتخاب‌شده)
+                Task 166 (فرمان مالک): تاگل «جدولی/فرمی» از هدر اقلام به همین نوار منتقل شد — کنار «افزودن ردیف» */}
             <div className="flex shrink-0 flex-wrap items-center gap-1.5 border-t border-border/50 px-3 py-2">
+              <div
+                role="group"
+                aria-label={t("vc.modeLabel")}
+                className="flex items-center gap-0.5 rounded-lg border bg-background/60 p-0.5"
+              >
+                <ModeButton active={mode === "grid"} onClick={() => setMode("grid")} icon={<Table2 className="h-3.5 w-3.5" aria-hidden />}>
+                  {t("vc.modeGrid")}
+                </ModeButton>
+                <ModeButton active={mode === "form"} onClick={() => setMode("form")} icon={<SquarePen className="h-3.5 w-3.5" aria-hidden />}>
+                  {t("vc.modeForm")}
+                </ModeButton>
+              </div>
               <button
                 type="button"
                 onClick={addRow}
