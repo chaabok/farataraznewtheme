@@ -19,6 +19,7 @@ import {
   Minus,
   MoveHorizontal,
   Plus,
+  Sparkles,
   Square,
   SquarePen,
   Table2,
@@ -66,13 +67,13 @@ import { CurrencyTypeForm } from "@/components/erp/general/currency-type-form";
  *     لیست از فرم «نوع سند» بدون انواع سیستمی) / ماهیت سند (عادی/قانونی) /
  *     وضعیت (ثبت اولیه، یادداشت — تاییدشده/دائمی پس از تایید) / شرح.
  *
- *  ۲) اقلام — دو «مدل ورود اطلاعات» (فرمان مالک: «چند مدل ورود اطلاعات
- *     تب اقلام سند حسابداری را تعبیه کنید»): «جدولی» (گرید شیت‌مانند) و
+ *  ۲) اقلام — سه «مدل ورود اطلاعات» (فرمان مالک: «چند مدل ورود اطلاعات
+ *     تب اقلام سند حسابداری را تعبیه کنید»): «جدولی» (گرید شیت‌مانند)،
  *     «فرمی» (کارت تک‌ردیف با ناوبری — Task 161: عرض فیلدهای معین،
  *     تفصیلی‌ها، بدهکار، بستانکار، تاریخ و شماره پیگیری ۶۰٪ کم شده =
- *     max-w-[40%] روی خودِ کنترل نسبت به پهنای فعلی). تاگل مدل‌ها در
- *     فوتربار اقلام کنار «افزودن ردیف» است (Task 166) و هدر اقلام
- *     هم‌اندازهٔ هدر سند (h-11). ستون‌ها: ردیف
+ *     max-w-[40%] روی خودِ کنترل نسبت به پهنای فعلی). تاگل مدل‌ها (جدولی / فرمی /
+ *     هوشمند — Task 169) در سمت چپ فوتربار اقلام است و فقط‌آیکونی با تولتیپ؛
+ *     هدر اقلام هم‌اندازهٔ هدر سند (h-11). ستون‌ها: ردیف
  *     (خودکار) / کد معین
  *     (الزامی — از کدینگ سطح معین؛ دراپ‌داون چندانتخابی، هر انتخاب اضافی
  *     ردیف جدید می‌سازد) / تفصیلی ۱..۲۰ (تا سقف accDetailLevels؛ فقط
@@ -96,6 +97,14 @@ import { CurrencyTypeForm } from "@/components/erp/general/currency-type-form";
  * منابع با GET /vouchers/meta تازه می‌شوند تا رکورد تازه در لیست دیده شود.
  * حالت دراپ‌داونِ انتخاب‌ها دست‌نخورده است؛ چندانتخاب معین (t158) با چیپ
  * «افزودن (n)» که فقط وقتی تیک‌خورده‌ای هست ظاهر می‌شود، زنده می‌ماند.
+ *
+ * Task 169 (فرمان مالک): ① تاگل «جدولی/فرمی» به سمت چپ فوتربار اقلام (انتها در
+ * RTL) منتقل شد و فقط‌آیکونی شد — عنوان هر آیکون در تولتیپ (title + aria-label)
+ * نمایش داده می‌شود. ② مدل سوم «نمایش هوشمند»: ستون‌های تفصیلی به‌صورت پیش‌فرض
+ * پنهان‌اند و مرحله‌به‌مرحله تا بیشترین سطحی که حداقل یک ردیف به آن معین متصل
+ * است ظاهر می‌شوند (سطوح ۱..max برای حفظ سلسله‌مراتب)؛ سلول هر ردیف فقط وقتی
+ * فعال است که معینِ همان ردیف به آن سطح متصل باشد وگرنه 🔒 — ردیفِ بدون ارتباط
+ * ستونِ نمایش‌داده‌شده را «قفل» می‌بیند نه حذف‌شده.
  */
 
 /* ---------------------------------- meta DTOs ---------------------------------- */
@@ -880,7 +889,8 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
   /* ------------------------------ اقلام سند ------------------------------ */
   const [rows, setRows] = React.useState<ItemRow[]>(() => [blankRow()]);
   const [selectedRow, setSelectedRow] = React.useState(0);
-  const [mode, setMode] = React.useState<"grid" | "form">("grid");
+  /* Task 169 (فرمان مالک): مدل سوم «هوشمند» — گرید جدولی با ستون‌های تفصیلیِ پویا */
+  const [mode, setMode] = React.useState<"grid" | "form" | "smart">("grid");
   const [formRow, setFormRow] = React.useState(0); // ردیف فعال حالت فرمی
   /* Task 165 (فرمان مالک): مدل نمایش حساب‌های فوتر — «افقی» پیش‌فرض است */
   const [acctMode, setAcctMode] = React.useState<"h" | "v">("h");
@@ -1167,6 +1177,23 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
     [rows, moeinById, detailById, detailLevelsCount, levelInfoOf, t],
   );
 
+  /* Task 169 — نمایش هوشمند: بیشترین سطح تفصیلیِ موردنیاز در بین همهٔ ردیف‌ها؛
+     ستون‌های تفصیلیِ نمای هوشمند = سطوح ۱..این‌مقدار (حفظ سلسله‌مراتب طبق
+     فرمان مالک: اگر معینی فقط به سطح دوم متصل باشد، تفصیلی ۱ هم نمایش داده
+     می‌شود ولی برای ردیف‌های غیرمتصل قفل است). صفر = هیچ ستون تفصیلی نیست.
+     (قبل از early-returnهای meta — همان قید acctChainPairs) */
+  const smartMaxLevel = React.useMemo(() => {
+    if (mode !== "smart") return 0;
+    let max = 0;
+    for (const row of rows) {
+      if (row.moeinRef == null) continue;
+      for (let li = 1; li <= detailLevelsCount; li++) {
+        if (!levelInfoOf(row.moeinRef, li).locked) max = Math.max(max, li);
+      }
+    }
+    return max;
+  }, [mode, rows, detailLevelsCount, levelInfoOf]);
+
   /* ------------------------------ بازکردن سند ------------------------------ */
   const applyDetail = React.useCallback(
     (d: VoucherDetail["item"]) => {
@@ -1392,6 +1419,9 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
   ];
 
   const levelColumns = Array.from({ length: detailLevelsCount }, (_, i) => i + 1);
+  /* Task 169 — ستون‌های تفصیلیِ نمای جاری: جدولی = همهٔ سطوح؛ هوشمند = ۱..smartMaxLevel */
+  const gridLevelColumns =
+    mode === "smart" ? Array.from({ length: smartMaxLevel }, (_, i) => i + 1) : levelColumns;
 
   /* ------------------------------ حالت فرمی ------------------------------ */
   const formIdx = Math.min(formRow, rows.length - 1);
@@ -1667,15 +1697,16 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
               <h3 className="text-xs font-bold text-foreground/90">{t("vc.items")}</h3>
             </div>
 
-            {mode === "grid" ? (
-              /* ----- مدل جدولی: گرید شیت‌مانند با همهٔ ستون‌ها ----- */
-              <div className="min-h-0 flex-1 overflow-auto scrollbar-slim" data-items-grid>
+            {mode !== "form" ? (
+              /* ----- مدل جدولی / هوشمند: گرید شیت‌مانند — Task 169: در «هوشمند»
+                 ستون‌های تفصیلی فقط تا سطحِ موردنیاز ردیف‌ها رندر می‌شوند ----- */
+              <div className="min-h-0 flex-1 overflow-auto scrollbar-slim" data-items-grid data-items-mode={mode}>
                 <table className="w-full min-w-max border-separate border-spacing-0 text-xs">
                   <thead>
                     <tr>
                       <Th className="w-12 text-center">{t("vc.row")}</Th>
                       <Th className="min-w-36">{t("vc.moeinCode")}</Th>
-                      {levelColumns.map((li) => (
+                      {gridLevelColumns.map((li) => (
                         <Th key={li} className="min-w-32 text-center">
                           {t("vc.detailCol").replace("{n}", String(li))}
                         </Th>
@@ -1720,7 +1751,7 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                               clearCheckedLabel={t("vc.pickerClearChecked")}
                             />
                           </Td>
-                          {levelColumns.map((li) => {
+                          {gridLevelColumns.map((li) => {
                             const info = levelInfoOf(row.moeinRef, li);
                             const selId = row.details[li] ?? null;
                             const selDetail = selId != null ? detailById.get(selId) : undefined;
@@ -2082,21 +2113,10 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
             )}
 
             {/* Task 163 — فوتربار اقلام (فرمان مالک): نوار پایین کارت اقلام با دکمه‌های افزودن/حذف ردیف،
-                مشترک بین مدل جدولی و فرمی؛ حذف، ردیفِ فعال را هدف می‌گیرد (فرمی = ردیف جاری، جدولی = ردیف انتخاب‌شده)
-                Task 166 (فرمان مالک): تاگل «جدولی/فرمی» از هدر اقلام به همین نوار منتقل شد — کنار «افزودن ردیف» */}
+                مشترک بین مدل جدولی و فرمی؛ حذف، ردیفِ فعال را هدف می‌گیرد (فرمی = ردیف جاری، جدولی/هوشمند = ردیف انتخاب‌شده)
+                Task 169 (فرمان مالک): تاگل مدل‌ها به سمت چپ نوار (انتها در RTL) منتقل و فقط‌آیکونی شد —
+                عنوان هر آیکون در تولتیپ است و مدل سوم «نمایش هوشمند» افزوده شد */}
             <div className="flex shrink-0 flex-wrap items-center gap-1.5 border-t border-border/50 px-3 py-2">
-              <div
-                role="group"
-                aria-label={t("vc.modeLabel")}
-                className="flex items-center gap-0.5 rounded-lg border bg-background/60 p-0.5"
-              >
-                <ModeButton active={mode === "grid"} onClick={() => setMode("grid")} icon={<Table2 className="h-3.5 w-3.5" aria-hidden />}>
-                  {t("vc.modeGrid")}
-                </ModeButton>
-                <ModeButton active={mode === "form"} onClick={() => setMode("form")} icon={<SquarePen className="h-3.5 w-3.5" aria-hidden />}>
-                  {t("vc.modeForm")}
-                </ModeButton>
-              </div>
               <button
                 type="button"
                 onClick={addRow}
@@ -2116,6 +2136,34 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
               <span className="ms-auto text-[11px] tabular-nums text-muted-foreground">
                 {t("vc.rowOf").replace("{i}", String((mode === "form" ? formIdx : footerRowIdx) + 1)).replace("{n}", String(rows.length))}
               </span>
+              <div
+                role="group"
+                aria-label={t("vc.modeLabel")}
+                data-mode-toggle
+                className="flex items-center gap-0.5 rounded-lg border bg-background/60 p-0.5"
+              >
+                <ModeButton
+                  active={mode === "grid"}
+                  onClick={() => setMode("grid")}
+                  tooltip={t("vc.modeGrid")}
+                  iconOnly
+                  icon={<Table2 className="h-3.5 w-3.5" aria-hidden />}
+                />
+                <ModeButton
+                  active={mode === "form"}
+                  onClick={() => setMode("form")}
+                  tooltip={t("vc.modeForm")}
+                  iconOnly
+                  icon={<SquarePen className="h-3.5 w-3.5" aria-hidden />}
+                />
+                <ModeButton
+                  active={mode === "smart"}
+                  onClick={() => setMode("smart")}
+                  tooltip={t("vc.modeSmart")}
+                  iconOnly
+                  icon={<Sparkles className="h-3.5 w-3.5" aria-hidden />}
+                />
+              </div>
             </div>
           </div>
 
@@ -2300,24 +2348,32 @@ function ModeButton({
   onClick,
   icon,
   children,
+  iconOnly,
+  tooltip,
 }: {
   active: boolean;
   onClick: () => void;
   icon: React.ReactNode;
-  children: React.ReactNode;
+  children?: React.ReactNode;
+  /** Task 169 (فرمان مالک): فقط آیکون — عنوان دکمه در تولتیپ (title) و aria-label */
+  iconOnly?: boolean;
+  tooltip?: string;
 }) {
   return (
     <button
       type="button"
       aria-pressed={active}
+      aria-label={iconOnly ? tooltip : undefined}
+      title={iconOnly ? tooltip : undefined}
       onClick={onClick}
       className={cn(
-        "flex h-6 items-center gap-1 rounded-md px-2 text-[11px] font-medium transition-colors cursor-pointer",
+        "flex h-6 items-center gap-1 rounded-md font-medium transition-colors cursor-pointer",
+        iconOnly ? "w-7 justify-center" : "px-2 text-[11px]",
         active ? "bg-gradient-to-br from-teal-500 to-emerald-600 text-white shadow-sm" : "text-muted-foreground hover:bg-foreground/5",
       )}
     >
       {icon}
-      {children}
+      {!iconOnly && children}
     </button>
   );
 }
