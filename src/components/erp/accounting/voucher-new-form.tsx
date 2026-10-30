@@ -313,18 +313,16 @@ function HeaderField({
 
 /* ------------------------------- columnar picker cell ------------------------------- */
 
-interface PickerColumn {
-  label: string;
-  width?: string;
-}
 interface PickerRow {
   id: number;
   cells: string[];
 }
 
 /**
- * CellPicker — «کامپوننت لیست» ستون‌دار درون خانه‌های گرید اقلام:
- * پاپ‌آور با فیلتر + سرستون + ردیف‌ها (الگوی ListPickerCell فرم‌ها).
+ * CellPicker — «کامپوننت لیست» درون خانه‌های گرید اقلام:
+ * پاپ‌آور سبک مرجع مالک (Task 167 — عین تصویر مرجع): فیلتر + لیست فشرده
+ * «بدون سرستون» (عنوان در ابتدای ردیف، کد در انتهای کم‌رنگ، سلول سوم =
+ * توضیح جانبی) + نوار پایین با تولبار آیکونی و شمارندهٔ «{n} مورد».
  */
 function CellPicker({
   ariaLabel,
@@ -332,7 +330,8 @@ function CellPicker({
   placeholder,
   filterPlaceholder,
   emptyLabel,
-  columns,
+  countLabel,
+  clearFilterLabel,
   rows,
   onPick,
   disabled,
@@ -343,7 +342,8 @@ function CellPicker({
   placeholder: string;
   filterPlaceholder: string;
   emptyLabel: string;
-  columns: PickerColumn[];
+  countLabel: string;
+  clearFilterLabel: string;
   rows: PickerRow[];
   onPick: (id: number) => void;
   disabled?: boolean;
@@ -352,6 +352,7 @@ function CellPicker({
   const dir = useSettings((s) => s.dir());
   const [open, setOpen] = React.useState(false);
   const [query, setQuery] = React.useState("");
+  const filterRef = React.useRef<HTMLInputElement | null>(null);
 
   const filtered = React.useMemo(() => {
     const needle = query.trim().toLowerCase();
@@ -388,6 +389,7 @@ function CellPicker({
           <div className="relative">
             <Filter aria-hidden className="pointer-events-none absolute start-2 top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground/70" />
             <input
+              ref={filterRef}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={filterPlaceholder}
@@ -397,65 +399,64 @@ function CellPicker({
           </div>
         </div>
         <div className="max-h-56 overflow-y-auto scrollbar-slim">
-          {rows.length === 0 ? (
+          {rows.length === 0 || filtered.length === 0 ? (
             <div className="flex flex-col items-center gap-1.5 p-5 text-muted-foreground">
               <Inbox className="h-4 w-4 opacity-50" aria-hidden />
               <span className="text-[11px]">{emptyLabel}</span>
             </div>
           ) : (
-            <table className="w-full border-collapse text-xs" aria-label={ariaLabel}>
-              <thead className="sticky top-0 z-10 bg-muted/95 backdrop-blur">
-                <tr>
-                  {columns.map((c) => (
-                    <th
-                      key={c.label}
-                      scope="col"
-                      className={cn("border-b border-border/70 px-2 py-1 text-start font-semibold text-foreground/80", c.width)}
-                    >
-                      {c.label}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.length === 0 ? (
-                  <tr>
-                    <td colSpan={columns.length} className="px-3 py-4 text-center text-[11px] text-muted-foreground">
-                      {emptyLabel}
-                    </td>
-                  </tr>
-                ) : (
-                  filtered.map((r) => (
-                    <tr
-                      key={r.id}
-                      tabIndex={0}
-                      onClick={() => {
+            /* Task 167 — لیست فشردهٔ سبک مرجع: بدون سرستون؛ عنوان (سلول ۲) در ابتدای ردیف،
+                کد (سلول ۱) در انتهای کم‌رنگ و سلول ۳ به‌عنوان توضیح جانبی */
+            <ul role="listbox" aria-label={ariaLabel} className="py-0.5">
+              {filtered.map((r) => {
+                const title = r.cells[1] ?? r.cells[0] ?? "—";
+                const code = r.cells[0] ?? "";
+                const extra = r.cells[2] ?? "";
+                return (
+                  <li
+                    key={r.id}
+                    role="option"
+                    aria-selected={false}
+                    aria-label={r.cells.filter(Boolean).join(" - ")}
+                    tabIndex={0}
+                    onClick={() => {
+                      onPick(r.id);
+                      setOpen(false);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
                         onPick(r.id);
                         setOpen(false);
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                          e.preventDefault();
-                          onPick(r.id);
-                          setOpen(false);
-                        }
-                      }}
-                      className="cursor-pointer transition-colors hover:bg-accent/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    >
-                      {r.cells.map((c, ci) => (
-                        <td
-                          key={ci}
-                          className={cn("max-w-36 truncate px-2 py-1", ci === 0 ? "font-medium text-foreground" : "text-foreground/75")}
-                        >
-                          {c || "—"}
-                        </td>
-                      ))}
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                      }
+                    }}
+                    className="flex cursor-pointer items-center gap-2 px-2.5 py-1.5 transition-colors hover:bg-accent/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+                  >
+                    <span className="min-w-0 flex-1 truncate text-xs font-medium text-foreground">{title}</span>
+                    {extra ? <span className="max-w-24 truncate text-[10px] text-muted-foreground/80">{extra}</span> : null}
+                    <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground">{code || "—"}</span>
+                  </li>
+                );
+              })}
+            </ul>
           )}
+        </div>
+        {/* Task 167 — نوار پایین سبک مرجع (عین تصویر مرجع مالک): تولبار آیکونی در ابتدا + شمارندهٔ «{n} مورد» در انتها */}
+        <div className="flex items-center justify-between gap-2 border-t border-border/60 bg-muted/40 px-2 py-1">
+          <button
+            type="button"
+            onClick={() => {
+              setQuery("");
+              filterRef.current?.focus();
+            }}
+            disabled={!query}
+            aria-label={clearFilterLabel}
+            title={clearFilterLabel}
+            className="flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-foreground/5 disabled:cursor-not-allowed disabled:opacity-30 cursor-pointer"
+          >
+            <X className="h-3.5 w-3.5" aria-hidden />
+          </button>
+          <span className="text-[10px] tabular-nums text-muted-foreground">{countLabel.replace("{n}", String(filtered.length))}</span>
         </div>
       </PopoverContent>
     </Popover>
@@ -466,6 +467,9 @@ function CellPicker({
  * MoeinPickerCell — دراپ‌داون چندانتخابی «کد معین»: کلیک روی ردیف = انتخابِ
  * همان حساب برای ردیف جاری؛ تیک چک‌باکس‌ها + دکمهٔ «افزودن» = هر حساب
  * انتخابیِ اضافی یک ردیف جدید می‌سازد (فرمان مالک Task 158).
+ * Task 167: پاپ‌آور با سبک مرجع مالک — لیست فشرده بدون سرستون (عنوان ابتدا،
+ * کد انتها) + نوار پایین با دکمه‌های آیکونی [+ افزودن] [پاک‌کردن انتخاب‌ها]
+ * و شمارندهٔ «{n} مورد».
  */
 function MoeinPickerCell({
   meta,
@@ -481,6 +485,8 @@ function MoeinPickerCell({
   codeLabel,
   titleLabel,
   searchLabel,
+  countLabel,
+  clearCheckedLabel,
 }: {
   meta: MoeinMeta[];
   value: number | null;
@@ -495,6 +501,8 @@ function MoeinPickerCell({
   codeLabel: string;
   titleLabel: string;
   searchLabel: string;
+  countLabel: string;
+  clearCheckedLabel: string;
 }) {
   const dir = useSettings((s) => s.dir());
   const [open, setOpen] = React.useState(false);
@@ -563,83 +571,91 @@ function MoeinPickerCell({
           </div>
         </div>
         <div className="max-h-56 overflow-y-auto scrollbar-slim">
-          {meta.length === 0 ? (
+          {meta.length === 0 || filtered.length === 0 ? (
             <div className="flex flex-col items-center gap-1.5 p-5 text-muted-foreground">
               <Inbox className="h-4 w-4 opacity-50" aria-hidden />
               <span className="text-[11px]">{emptyLabel}</span>
             </div>
           ) : (
-            <table className="w-full border-collapse text-xs" aria-label={searchLabel}>
-              <thead className="sticky top-0 z-10 bg-muted/95 backdrop-blur">
-                <tr>
-                  <th scope="col" className="w-8 border-b border-border/70 px-1 py-1" aria-label="" />
-                  <th scope="col" className="border-b border-border/70 px-2 py-1 text-start font-semibold text-foreground/80">
-                    {codeLabel}
-                  </th>
-                  <th scope="col" className="border-b border-border/70 px-2 py-1 text-start font-semibold text-foreground/80">
-                    {titleLabel}
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((m) => {
-                  const isChecked = checked.has(m.id);
-                  return (
-                    <tr
-                      key={m.id}
-                      tabIndex={0}
-                      onClick={() => {
+            /* Task 167 — لیست فشردهٔ سبک مرجع: بدون سرستون؛ عنوان در ابتدای ردیف، کد در انتهای کم‌رنگ؛
+                چک‌باکس چندانتخاب (Task 158) در ابتدای ردیف، پیش از عنوان */
+            <ul aria-label={searchLabel} className="py-0.5">
+              {filtered.map((m) => {
+                const isChecked = checked.has(m.id);
+                return (
+                  <li
+                    key={m.id}
+                    tabIndex={0}
+                    aria-label={`${m.code} - ${m.title}`}
+                    onClick={() => {
+                      onPick(m.id);
+                      setOpen(false);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
                         onPick(m.id);
                         setOpen(false);
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                          e.preventDefault();
-                          onPick(m.id);
-                          setOpen(false);
-                        }
-                      }}
-                      className={cn("cursor-pointer transition-colors hover:bg-accent/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring", value === m.id && "bg-primary/10")}
-                    >
-                      <td className="px-1 py-1 text-center" onClick={(e) => e.stopPropagation()}>
-                        <input
-                          type="checkbox"
-                          aria-label={`${codeLabel} ${m.code} — ${titleLabel} ${m.title}`}
-                          checked={isChecked}
-                          onChange={() =>
-                            setChecked((prev) => {
-                              const next = new Set(prev);
-                              if (next.has(m.id)) next.delete(m.id);
-                              else next.add(m.id);
-                              return next;
-                            })
-                          }
-                          className="h-3.5 w-3.5 cursor-pointer accent-emerald-600"
-                        />
-                      </td>
-                      <td className="px-2 py-1 font-medium text-foreground">{m.code}</td>
-                      <td className="max-w-40 truncate px-2 py-1 text-foreground/75">{m.title}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                      }
+                    }}
+                    className={cn(
+                      "flex cursor-pointer items-center gap-2 px-2 py-1.5 transition-colors hover:bg-accent/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
+                      value === m.id && "bg-primary/10",
+                    )}
+                  >
+                    <input
+                      type="checkbox"
+                      aria-label={`${codeLabel} ${m.code} — ${titleLabel} ${m.title}`}
+                      checked={isChecked}
+                      onClick={(e) => e.stopPropagation()}
+                      onChange={() =>
+                        setChecked((prev) => {
+                          const next = new Set(prev);
+                          if (next.has(m.id)) next.delete(m.id);
+                          else next.add(m.id);
+                          return next;
+                        })
+                      }
+                      className="h-3.5 w-3.5 shrink-0 cursor-pointer accent-emerald-600"
+                    />
+                    <span className="min-w-0 flex-1 truncate text-xs font-medium text-foreground">{m.title}</span>
+                    <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground">{m.code}</span>
+                  </li>
+                );
+              })}
+            </ul>
           )}
         </div>
-        <div className="flex items-center justify-between gap-2 border-t border-border/60 bg-muted/40 px-2.5 py-1.5">
-          <span className="text-[10px] text-muted-foreground">{selLabel}</span>
-          <button
-            type="button"
-            onClick={applyMany}
-            disabled={checked.size === 0}
-            className="flex h-6 items-center gap-1 rounded-md bg-gradient-to-br from-emerald-500 to-teal-600 px-2.5 text-[11px] font-medium text-white shadow-sm transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
-          >
-            <Plus className="h-3 w-3" aria-hidden />
-            {addLabel}
-            {checked.size > 0 && (
-              <span className="rounded-full bg-white/25 px-1.5 text-[10px] tabular-nums">{checked.size}</span>
-            )}
-          </button>
+        {/* Task 167 — نوار پایین سبک مرجع (عین تصویر مرجع مالک): [+ افزودن] [پاک‌کردن انتخاب‌ها] + شمارندهٔ «{n} مورد» */}
+        <div className="flex items-center justify-between gap-2 border-t border-border/60 bg-muted/40 px-2 py-1">
+          <div className="flex items-center gap-0.5">
+            <button
+              type="button"
+              onClick={applyMany}
+              disabled={checked.size === 0}
+              aria-label={addLabel}
+              title={`${addLabel} — ${selLabel}`}
+              className="relative flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-sm transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
+            >
+              <Plus className="h-3.5 w-3.5" aria-hidden />
+              {checked.size > 0 && (
+                <span className="absolute -end-1.5 -top-1.5 rounded-full bg-white px-1 text-[9px] font-semibold tabular-nums text-emerald-700 ring-1 ring-emerald-600/40">
+                  {checked.size}
+                </span>
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={() => setChecked(new Set())}
+              disabled={checked.size === 0}
+              aria-label={clearCheckedLabel}
+              title={clearCheckedLabel}
+              className="flex h-6 w-6 items-center justify-center rounded-md text-rose-500 transition-colors hover:bg-rose-500/10 disabled:cursor-not-allowed disabled:text-muted-foreground/40 disabled:hover:bg-transparent cursor-pointer"
+            >
+              <X className="h-3.5 w-3.5" aria-hidden />
+            </button>
+          </div>
+          <span className="text-[10px] tabular-nums text-muted-foreground">{countLabel.replace("{n}", String(filtered.length))}</span>
         </div>
       </PopoverContent>
     </Popover>
@@ -1487,11 +1503,8 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                   placeholder={t("vc.selectPlaceholder")}
                   filterPlaceholder={t("abar.listFilterPh")}
                   emptyLabel={t("vc.docTypeEmpty")}
-                  columns={[
-                    { label: t("vc.colCode"), width: "w-14" },
-                    { label: t("vc.colTitle") },
-                    { label: t("vc.colLatin") },
-                  ]}
+                  countLabel={t("vc.pickerCount")}
+                  clearFilterLabel={t("vc.pickerClearFilter")}
                   rows={docTypeRows}
                   onPick={(id) => {
                     setVoucherTypeRef(id);
@@ -1620,6 +1633,8 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                               codeLabel={t("vc.moeinPickCode")}
                               titleLabel={t("vc.moeinPickTitle")}
                               searchLabel={t("vc.moeinPickSearch")}
+                              countLabel={t("vc.pickerCount")}
+                              clearCheckedLabel={t("vc.pickerClearChecked")}
                             />
                           </Td>
                           {levelColumns.map((li) => {
@@ -1648,11 +1663,8 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                                   placeholder={t("vc.selectPlaceholder")}
                                   filterPlaceholder={t("abar.listFilterPh")}
                                   emptyLabel={t("vc.detailEmpty")}
-                                  columns={[
-                                    { label: t("vc.colCode"), width: "w-16" },
-                                    { label: t("vc.colTitle") },
-                                    { label: t("vc.colDetailType") },
-                                  ]}
+                                  countLabel={t("vc.pickerCount")}
+                                  clearFilterLabel={t("vc.pickerClearFilter")}
                                   rows={meta.detailItems
                                     .filter((d) => info.typeRefs.includes(d.detailTypeRef))
                                     .map((d) => ({ id: d.id, cells: [d.code, d.title, d.typeTitle] }))}
@@ -1732,11 +1744,8 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                                 placeholder={t("vc.selectPlaceholder")}
                                 filterPlaceholder={t("abar.listFilterPh")}
                                 emptyLabel={t("vc.currencyEmpty")}
-                                columns={[
-                                  { label: t("vc.colCode"), width: "w-16" },
-                                  { label: t("vc.colTitle") },
-                                  { label: t("vc.colLatin") },
-                                ]}
+                                countLabel={t("vc.pickerCount")}
+                                clearFilterLabel={t("vc.pickerClearFilter")}
                                 rows={currencyRows}
                                 onPick={(id) => setRow(idx, { currencyRef: id })}
                               />
@@ -1833,6 +1842,8 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                       codeLabel={t("vc.moeinPickCode")}
                       titleLabel={t("vc.moeinPickTitle")}
                       searchLabel={t("vc.moeinPickSearch")}
+                      countLabel={t("vc.pickerCount")}
+                      clearCheckedLabel={t("vc.pickerClearChecked")}
                     />
                   </HeaderField>
                   {levelColumns.map((li) => {
@@ -1859,11 +1870,8 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                           placeholder={t("vc.selectPlaceholder")}
                           filterPlaceholder={t("abar.listFilterPh")}
                           emptyLabel={t("vc.detailEmpty")}
-                          columns={[
-                            { label: t("vc.colCode"), width: "w-16" },
-                            { label: t("vc.colTitle") },
-                            { label: t("vc.colDetailType") },
-                          ]}
+                          countLabel={t("vc.pickerCount")}
+                          clearFilterLabel={t("vc.pickerClearFilter")}
                           rows={meta.detailItems
                             .filter((d) => info.typeRefs.includes(d.detailTypeRef))
                             .map((d) => ({ id: d.id, cells: [d.code, d.title, d.typeTitle] }))}
@@ -1948,11 +1956,8 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                           placeholder={t("vc.selectPlaceholder")}
                           filterPlaceholder={t("abar.listFilterPh")}
                           emptyLabel={t("vc.currencyEmpty")}
-                          columns={[
-                            { label: t("vc.colCode"), width: "w-16" },
-                            { label: t("vc.colTitle") },
-                            { label: t("vc.colLatin") },
-                          ]}
+                          countLabel={t("vc.pickerCount")}
+                          clearFilterLabel={t("vc.pickerClearFilter")}
                           rows={currencyRows}
                           onPick={(id) => setRow(formIdx, { currencyRef: id })}
                         />
