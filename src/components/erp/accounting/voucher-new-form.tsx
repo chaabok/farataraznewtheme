@@ -56,7 +56,10 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
  *
  *  ۲) اقلام — دو «مدل ورود اطلاعات» (فرمان مالک: «چند مدل ورود اطلاعات
  *     تب اقلام سند حسابداری را تعبیه کنید»): «جدولی» (گرید شیت‌مانند) و
- *     «فرمی» (کارت تک‌ردیف با ناوبری). ستون‌ها: ردیف (خودکار) / کد معین
+ *     «فرمی» (کارت تک‌ردیف با ناوبری — Task 161: عرض فیلدهای معین،
+ *     تفصیلی‌ها، بدهکار، بستانکار، تاریخ و شماره پیگیری ۶۰٪ کم شده =
+ *     max-w-[40%] روی خودِ کنترل نسبت به پهنای فعلی). ستون‌ها: ردیف
+ *     (خودکار) / کد معین
  *     (الزامی — از کدینگ سطح معین؛ دراپ‌داون چندانتخابی، هر انتخاب اضافی
  *     ردیف جدید می‌سازد) / تفصیلی ۱..۲۰ (تا سقف accDetailLevels؛ فقط
  *     انواعِ متصل‌شده به همان معین — ستون بی‌ارتباط با قفل 🔒) / شرح
@@ -424,6 +427,7 @@ function MoeinPickerCell({
   onPick,
   onPickMany,
   disabled,
+  className,
   emptyLabel,
   phLabel,
   addLabel,
@@ -437,6 +441,7 @@ function MoeinPickerCell({
   onPick: (id: number) => void;
   onPickMany: (ids: number[]) => void;
   disabled?: boolean;
+  className?: string;
   emptyLabel: string;
   phLabel: string;
   addLabel: string;
@@ -482,7 +487,10 @@ function MoeinPickerCell({
           aria-label={searchLabel}
           disabled={disabled}
           onClick={() => !disabled && setOpen((v) => !v)}
-          className="flex h-7 w-full min-w-0 items-center gap-1 rounded-md border border-input bg-background/70 px-2 text-xs transition-colors hover:border-ring/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+          className={cn(
+            "flex h-7 w-full min-w-0 items-center gap-1 rounded-md border border-input bg-background/70 px-2 text-xs transition-colors hover:border-ring/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer disabled:cursor-not-allowed disabled:opacity-50",
+            className,
+          )}
         >
           <span className={cn("min-w-0 flex-1 truncate text-start", display ? "text-foreground" : "text-muted-foreground/70")}>
             {display || phLabel}
@@ -1648,8 +1656,11 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                   </div>
                 </div>
                 <div className="grid grid-cols-1 gap-2 rounded-xl border border-border/60 bg-background/50 p-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {/* Task 161 (فرمان مالک): در حالت فرمی عرض فیلدهای معین/تفصیلی‌ها/بدهکار/بستانکار/تاریخ و شماره پیگیری ۶۰٪ کم شده —
+                      max-w-[40%] روی خودِ کنترل نسبت به پهنای فعلی (wrapper های flex-1)؛ شرح و ستون‌های ارز دست‌نخورده */}
                   <HeaderField label={t("vc.moeinCode")} required>
                     <MoeinPickerCell
+                      className="max-w-[40%]"
                       meta={meta.moeinAccounts}
                       value={formRowData?.moeinRef ?? null}
                       onPick={(id) => {
@@ -1673,7 +1684,7 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                     return info.locked ? (
                       <HeaderField key={li} label={t("vc.detailCol").replace("{n}", String(li))}>
                         <span
-                          className="flex h-7 items-center justify-center rounded-md border border-dashed border-border bg-muted/30 text-muted-foreground/50"
+                          className="flex h-7 max-w-[40%] items-center justify-center rounded-md border border-dashed border-border bg-muted/30 text-muted-foreground/50"
                           role="img"
                           aria-label={t("vc.colLocked")}
                           title={t("vc.colLocked")}
@@ -1684,6 +1695,7 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                     ) : (
                       <HeaderField key={li} label={t("vc.detailCol").replace("{n}", String(li))}>
                         <CellPicker
+                          className="max-w-[40%]"
                           ariaLabel={`${t("vc.detailCol").replace("{n}", String(li))} — ${t("vc.row")} ${formIdx + 1}`}
                           display={selDetail ? `${selDetail.code} - ${selDetail.title}` : ""}
                           placeholder={t("vc.selectPlaceholder")}
@@ -1724,7 +1736,7 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                       aria-label={`${t("vc.debit")} — ${t("vc.row")} ${formIdx + 1}`}
                       dir="ltr"
                       placeholder="0"
-                      className="h-7 text-center text-xs tabular-nums"
+                      className="h-7 max-w-[40%] text-center text-xs tabular-nums"
                     />
                   </HeaderField>
                   <HeaderField label={t("vc.credit")}>
@@ -1737,7 +1749,7 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                       aria-label={`${t("vc.credit")} — ${t("vc.row")} ${formIdx + 1}`}
                       dir="ltr"
                       placeholder="0"
-                      className="h-7 text-center text-xs tabular-nums"
+                      className="h-7 max-w-[40%] text-center text-xs tabular-nums"
                     />
                   </HeaderField>
                   {showTrackCols && (
@@ -1749,7 +1761,7 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                           aria-label={`${t("vc.trackDate")} — ${t("vc.row")} ${formIdx + 1}`}
                           dir="ltr"
                           placeholder="____/__/__"
-                          className="h-7 text-center text-xs tabular-nums"
+                          className="h-7 max-w-[40%] text-center text-xs tabular-nums"
                         />
                       </HeaderField>
                       <HeaderField label={t("vc.trackNumber")}>
@@ -1757,7 +1769,7 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                           value={formRowData?.trackNumber ?? ""}
                           onChange={(e) => setRow(formIdx, { trackNumber: e.target.value })}
                           aria-label={`${t("vc.trackNumber")} — ${t("vc.row")} ${formIdx + 1}`}
-                          className="h-7 text-xs"
+                          className="h-7 max-w-[40%] text-xs"
                         />
                       </HeaderField>
                     </>
