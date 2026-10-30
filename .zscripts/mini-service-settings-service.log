@@ -880,3 +880,5 @@ $ NODE_PATH=./node_modules bun --hot src/main.ts
 [Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [Bootstrap] settings-service listening on http://127.0.0.1:3001
 [Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [NestApplication] Nest application successfully started +91ms
 [Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [Bootstrap] settings-service listening on http://127.0.0.1:3001
+[Nest] 3069  - 10/30/2026, 11:17:15 PM     LOG [AccountTreeService] AccountNode updated — ID=5 L3 Code=010101 Title=صندوق
+[Nest] 3069  - 10/30/2026, 11:18:08 PM     LOG [AccountTreeService] AccountNode updated — ID=5 L3 Code=010101 Title=صندوق
