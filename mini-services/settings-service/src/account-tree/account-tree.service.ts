@@ -721,6 +721,59 @@ export class AccountTreeService {
     return { deleted: true };
   }
 
+  /**
+   * Task 171 (درخواست مالک) — افزودن «یک» شرح پرتکرار به معین از فرم سند
+   * (کلید F6 روی ستون شرح یا دکمهٔ دیسکت همان فیلد). متن شرحِ قلم سند به
+   * تب «شرح های پرتکرار» همان معین در درختواره حسابها افزوده می‌شود؛
+   * شرح تکراری دوباره ساخته نمی‌شود (duplicate: true) و شناسهٔ IDGeneration می‌گیرد.
+   */
+  async addRecurringDesc(id: number, dto: { description: string; description2?: string }) {
+    const node = await this.prisma.accountNode.findUnique({
+      where: { id: BigInt(id) },
+      select: { id: true, level: true, businessStructureRef: true },
+    });
+    if (!node) {
+      throw new NotFoundException({
+        statusCode: 404,
+        message: `گره حساب با شناسه «${id}» یافت نشد`,
+        messageKey: "common.error",
+      });
+    }
+    if (node.level < 3) {
+      throw new BadRequestException({
+        statusCode: 422,
+        message: "شرح پرتکرار فقط برای حساب معین (سطح ۳) قابل ذخیره است",
+        messageKey: "common.error",
+      });
+    }
+    const text = dto.description.trim();
+    if (text === "") {
+      throw new BadRequestException({
+        statusCode: 422,
+        message: "متن شرح خالی است",
+        messageKey: "common.error",
+      });
+    }
+    const dup = await this.prisma.accountRecurringDesc.findFirst({
+      where: { accountNodeRef: node.id, description: text },
+      select: { id: true },
+    });
+    if (dup) {
+      return { item: { id: Number(dup.id), description: text, description2: "" }, duplicate: true };
+    }
+    const newId = await this.idGen.generateNextId("AccountRecurringDesc");
+    const row = await this.prisma.accountRecurringDesc.create({
+      data: {
+        id: BigInt(newId),
+        accountNodeRef: node.id,
+        description: text,
+        description2: dto.description2?.trim() || null,
+        ...appBaseOnCreate({ userId: SYSTEM_ACTOR.userId, nodeId: node.businessStructureRef }),
+      },
+    });
+    return { item: { id: Number(row.id), description: row.description, description2: row.description2 ?? "" } };
+  }
+
   /* ------------------------------ internals ------------------------------ */
 
   /** seed سطرهای سطوح تفصیلی ۱..N برای گره تازه (عنوان خالی، فعال). */

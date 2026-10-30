@@ -14,11 +14,13 @@ import {
   FilePlus2,
   Filter,
   Inbox,
+  ListPlus,
   Loader2,
   Lock,
   Minus,
   MoveHorizontal,
   Plus,
+  Save,
   Sparkles,
   Square,
   SquarePen,
@@ -510,6 +512,10 @@ function CellPicker({
       aria-label={ariaLabel}
       disabled={disabled}
       onClick={() => !disabled && setOpen((v) => !v)}
+      /* Task 171 — data-cell/data-row روی شاخهٔ غیرتایپ‌پذیر هم می‌نشیند تا
+         ستون‌های ارز (پیکر ساده) در عملیات صفحه‌کلید ردیف (F3/F4/F5) شرکت کنند */
+      data-cell={dataCell}
+      data-row={dataRow}
       className={cn(
         "flex h-7 w-full min-w-0 items-center gap-1 rounded-md border border-input bg-background/70 px-2 text-xs transition-colors hover:border-ring/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer disabled:cursor-not-allowed disabled:opacity-50",
         className,
@@ -1121,6 +1127,14 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
     return () => cancelAnimationFrame(raf);
   }, [focusTick, mode]);
 
+  /* ---------------- Task 171 — حافظهٔ ردیف برای Ctrl+C / Ctrl+V ----------------
+     الزام ۴ فرمان مالک: کپی اطلاعات «یک ردیف» و چسباندن آن در «ردیف مورد نظر».
+     حافظه داخلی فرم است؛ ردیفِ منبع تا چسباندن با ته‌رنگ سبز هایلایت می‌ماند
+     (data-row-copied روی tr). اگر در ورودی متنیِ سلول، متنی انتخاب شده باشد،
+     Ctrl+C/Ctrl+V عادیِ مرورگر (کپی/چسباندنِ متن) دست‌نخورده می‌ماند. */
+  const clipboardRowRef = React.useRef<Omit<ItemRow, "key"> | null>(null);
+  const [clipboardKey, setClipboardKey] = React.useState<string | null>(null);
+
   /* ---------------- Task 170 — ارتفاع‌دهی بخش‌ها با موس (الزام ۱) ----------------
      دابل‌کلیک روی بوردرِ پایین هدر (یا بالای فوتر) ⇒ انتخاب بخش (حلقهٔ فیروزه‌ای)؛
      کشیدن همان بوردر یا چرخ موس روی بخشِ انتخاب‌شده ⇒ ارتفاع کم/زیاد می‌شود.
@@ -1694,6 +1708,219 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
   };
   const focusRowOf = (idx: number): number | "form" => (mode === "form" ? "form" : idx);
 
+  /* ---------------- Task 171 — عملیات صفحه‌کلید اقلام (الزامات ۱ تا ۴ و ۶) ----------------
+     F3: کپی مقدار «ستون بالایی» در «ستون پایینی» — سلولِ همان ستون از ردیف قبل
+         (کشیدن از بالا به پایین؛ ردیفِ اول منبع ندارد و بی‌اثر است).
+     F4: جابجایی مبالغ بدهکار/بستانکارِ ردیفِ فوکوس‌شده.
+     F5: کپی «کل اطلاعات» ردیف بالایی در ردیفِ فوکوس‌شده.
+     Ctrl+C/Ctrl+V: کپی/چسباندن کل ردیف در ردیفِ دلخواه (حافظهٔ داخلی فرم).
+     F6: افزودن شرح قلم سند به شرح‌های پرتکرار معینِ همان ردیف (همان کاری که
+         دکمهٔ دیسکت ستون شرح می‌کند).
+     ردیف فعال از data-row/data-cell سلولِ فوکوس‌شده خوانده می‌شود (هر دو مدل
+     جدولی و فرمی)؛ F5 مرورگر و F3 مرورگر (یافتن) با preventDefault مهار می‌شوند. */
+  const activeIdxOf = (row: number | "form"): number | null =>
+    row === "form"
+      ? mode === "form"
+        ? formIdx
+        : null
+      : Number.isFinite(row) && row >= 0 && row < rows.length
+        ? row
+        : null;
+
+  /** آیا در ورودیِ فوکوس‌شده متنی انتخاب شده است؟ (در این صورت کپی/پیستِ متنِ پیش‌فرض) */
+  const hasInputSelection = (): boolean => {
+    const el = document.activeElement;
+    if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) {
+      return (el.selectionStart ?? 0) !== (el.selectionEnd ?? 0);
+    }
+    return Boolean(window.getSelection()?.toString());
+  };
+
+  /** سلولِ فوکوس‌شده از DOM — data-cell + data-row (روی ظرف سلول در هر دو مدل) */
+  const focusedCellCtx = (): { cell: string; row: number | "form" } | null => {
+    const holder = document.activeElement?.closest?.("[data-cell]") as HTMLElement | null;
+    const cell = holder?.getAttribute("data-cell") ?? "";
+    const raw = holder?.getAttribute("data-row") ?? "";
+    if (!cell || raw === "") return null;
+    if (raw === "form") return { cell, row: "form" };
+    const n = Number(raw);
+    return Number.isFinite(n) ? { cell, row: n } : null;
+  };
+
+  /** عکس فوری از همهٔ فیلدهای قابل‌کپی ردیف (بدون کلید). */
+  const rowSnapshot = (r: ItemRow): Omit<ItemRow, "key"> => ({
+    moeinRef: r.moeinRef,
+    details: { ...r.details },
+    description: r.description,
+    debit: r.debit,
+    credit: r.credit,
+    trackDate: r.trackDate,
+    trackNumber: r.trackNumber,
+    currencyRef: r.currencyRef,
+    currencyValue: r.currencyValue,
+    currencyRate: r.currencyRate,
+  });
+
+  const applyRowSnapshot = (idx: number, snap: Omit<ItemRow, "key">) => {
+    setRows((prev) => prev.map((r, i) => (i === idx ? { ...r, ...snap, details: { ...snap.details } } : r)));
+    markDirty();
+  };
+
+  const copyRowToClipboard = (idx: number) => {
+    const r = rows[idx];
+    if (!r) return;
+    clipboardRowRef.current = rowSnapshot(r);
+    setClipboardKey(r.key);
+    toast.success(t("vc.rowCopyToast"));
+  };
+
+  const pasteRowFromClipboard = (idx: number) => {
+    const clip = clipboardRowRef.current;
+    if (!clip) return;
+    applyRowSnapshot(idx, clip);
+    toast.success(t("vc.rowPasteToast"));
+  };
+
+  /** F3 — کپی یک سلول از ردیف بالا؛ برای معین از pickMoein (پاک‌سازی قفل‌ها) و
+      برای تفصیلی فقط اگر سطح در ردیفِ جاری قفل نباشد. */
+  const copyCellFromAbove = (idx: number, cell: string): void => {
+    if (idx <= 0) return;
+    const src = rows[idx - 1];
+    const dst = rows[idx];
+    if (cell === "moein") {
+      if (src.moeinRef == null) return;
+      pickMoein(idx, src.moeinRef);
+      return;
+    }
+    if (cell.startsWith("detail-")) {
+      const li = Number(cell.slice("detail-".length));
+      const v = src.details[li] ?? null;
+      if (!Number.isFinite(li) || v == null || levelInfoOf(dst.moeinRef, li).locked) return;
+      pickDetail(idx, li, v);
+      return;
+    }
+    if (cell === "desc") {
+      if (src.description) setRow(idx, { description: src.description });
+      return;
+    }
+    if (cell === "debit") {
+      if (src.debit) setRow(idx, { debit: src.debit, credit: "" });
+      return;
+    }
+    if (cell === "credit") {
+      if (src.credit) setRow(idx, { credit: src.credit, debit: "" });
+      return;
+    }
+    if (cell === "trackDate") {
+      if (src.trackDate) setRow(idx, { trackDate: src.trackDate });
+      return;
+    }
+    if (cell === "trackNumber") {
+      if (src.trackNumber) setRow(idx, { trackNumber: src.trackNumber });
+      return;
+    }
+    if (cell === "currencyRef") {
+      if (src.currencyRef != null) setRow(idx, { currencyRef: src.currencyRef });
+      return;
+    }
+    if (cell === "currencyValue") {
+      if (src.currencyValue) setRow(idx, { currencyValue: src.currencyValue });
+      return;
+    }
+    if (cell === "currencyRate") {
+      if (src.currencyRate) setRow(idx, { currencyRate: src.currencyRate });
+      return;
+    }
+  };
+
+  /** F5 — کپی کامل ردیف بالا در ردیف جاری (همهٔ فیلدها؛ کلیدِ ردیف حفظ می‌شود). */
+  const copyRowFromAbove = (idx: number) => {
+    if (idx <= 0) return;
+    applyRowSnapshot(idx, rowSnapshot(rows[idx - 1]));
+    toast.success(t("vc.rowCopiedAboveToast"));
+  };
+
+  /** F4 — جابجایی بدهکار/بستانکار ردیف. */
+  const swapRowAmounts = (idx: number) => {
+    const r = rows[idx];
+    if (!r) return;
+    if (amountOf(r.debit) === 0 && amountOf(r.credit) === 0) {
+      toast.info(t("vc.swapNothingToast"));
+      return;
+    }
+    setRow(idx, { debit: r.credit, credit: r.debit });
+    toast.success(t("vc.swapDoneToast"));
+  };
+
+  /** F6/دکمهٔ دیسکت — ذخیرهٔ شرح قلم سند در شرح‌های پرتکرار معینِ همان ردیف؛
+      شرح در تب «شرح های پرتکرار» درختواره حسابها همان معین نمایش داده می‌شود. */
+  const saveFrequentDesc = async (idx: number) => {
+    const r = rows[idx];
+    if (!r) return;
+    const text = r.description.trim();
+    if (r.moeinRef == null || text === "") {
+      toast.error(t("vc.freqDescNeedMoeinDesc"));
+      return;
+    }
+    try {
+      const res = await api.post<{ duplicate?: boolean }>(
+        `account-tree/${r.moeinRef}/recurring-descriptions`,
+        { description: text },
+      );
+      if (res?.duplicate) toast.info(t("vc.freqDescDupToast"));
+      else toast.success(t("vc.freqDescSavedToast"));
+    } catch (e) {
+      toast.error(e instanceof Error && e.message ? e.message : t("common.error"));
+    }
+  };
+
+  /** الزام ۵ — درج ردیف خالی «بین» ردیف‌ها: پس از ردیفِ داده‌شده؛ شمارهٔ ردیف‌های
+      بعدی یک واحد افزایش می‌یابد (شماره‌ها از اندیس مشتق می‌شوند) و فوکوس به
+      ستون معینِ ردیفِ تازه پرش می‌کند (هم‌سو با «افزودن ردیف» — Task 170). */
+  const insertRowBelow = (idx: number) => {
+    setRows((prev) => {
+      const next = [...prev];
+      next.splice(idx + 1, 0, blankRow());
+      return next;
+    });
+    setSelectedRow(idx + 1);
+    setFormRow(idx + 1);
+    markDirty();
+    queueFocus("moein", mode === "form" ? "form" : idx + 1);
+  };
+
+  const onItemsKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    const key = e.key;
+    const isCtrl = e.ctrlKey || e.metaKey;
+    if (isCtrl) {
+      const lk = key.toLowerCase();
+      if (lk !== "c" && lk !== "v") return;
+      const ctx = focusedCellCtx();
+      if (!ctx) return;
+      const idx = activeIdxOf(ctx.row);
+      if (idx == null) return;
+      if (hasInputSelection()) return; /* متنِ انتخاب‌شده: رفتار پیش‌فرض مرورگر */
+      if (lk === "c") {
+        e.preventDefault();
+        copyRowToClipboard(idx);
+      } else if (clipboardRowRef.current != null) {
+        e.preventDefault();
+        pasteRowFromClipboard(idx);
+      }
+      return;
+    }
+    if (key !== "F3" && key !== "F4" && key !== "F5" && key !== "F6") return;
+    const ctx = focusedCellCtx();
+    if (!ctx) return;
+    const idx = activeIdxOf(ctx.row);
+    if (idx == null) return;
+    e.preventDefault();
+    if (key === "F3") copyCellFromAbove(idx, ctx.cell);
+    else if (key === "F4") swapRowAmounts(idx);
+    else if (key === "F5") copyRowFromAbove(idx);
+    else void saveFrequentDesc(idx);
+  };
+
   /* ---------------- Task 170 — درگ ارتفاع بخش‌ها (الزام ۱) ---------------- */
   const beginSectionResize = (e: React.PointerEvent<HTMLDivElement>, kind: "header" | "footer") => {
     if (e.button !== 0) return;
@@ -2042,7 +2269,10 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
           {/* flex-1: تمام ارتفاع صرفه‌جویی‌شدهٔ فوتر (Task 159) به همین بخش اختصاص می‌یابد؛
               Task 161: زیر lg کارت حداقلِ ارتفاع محتوا را دارد (اسکرول طبیعی بدنه) تا ویرایشگر فرمی
               در موبایل به لبهٔ ۳۶ فشرده نشود؛ در lg+ قرارداد Task 159 (کف min-h-36 + اسکرول داخلی) */}
-          <div className="mt-3 flex min-h-36 max-lg:min-h-max flex-1 flex-col rounded-2xl border border-border/70 bg-card shadow-sm">
+          <div
+            onKeyDown={onItemsKeyDown}
+            className="mt-3 flex min-h-36 max-lg:min-h-max flex-1 flex-col rounded-2xl border border-border/70 bg-card shadow-sm"
+          >
             {/* Task 166 (فرمان مالک): تاگل «جدولی/فرمی» به فوتربار اقلام (کنار «افزودن ردیف») منتقل شد؛
                 هدر اقلام فقط عنوان است و ارتفاعش دقیقاً هم‌اندازهٔ هدر سند (نوار عنوان پنجره، h-11) است */}
             <div className="flex h-11 shrink-0 items-center gap-2 border-b border-border/50 px-3">
@@ -2082,9 +2312,34 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                         <tr
                           key={row.key}
                           onClick={() => setSelectedRow(idx)}
-                          className={cn("transition-colors", isSel ? "bg-primary/5" : "hover:bg-foreground/[0.03]")}
+                          /* Task 171 — ردیفِ منبعِ Ctrl+C با ته‌رنگ سبز تا چسباندن هایلایت می‌ماند */
+                          data-row-copied={row.key === clipboardKey || undefined}
+                          className={cn(
+                            "transition-colors",
+                            isSel ? "bg-primary/5" : "hover:bg-foreground/[0.03]",
+                            row.key === clipboardKey && "bg-emerald-500/[0.08] hover:bg-emerald-500/[0.12]",
+                          )}
                         >
-                          <Td className="text-center tabular-nums text-muted-foreground">{idx + 1}</Td>
+                          {/* Task 171 — الزام ۵: درج ردیف خالی بین ردیف‌ها — دکمهٔ + روی سلول شمارهٔ ردیف
+                              در hover/focus ظاهر می‌شود؛ ردیف خالی پس از این ردیف درج و شمارهٔ ردیف‌های بعدی یکی زیاد می‌شود */}
+                          <Td className="text-center">
+                            <div className="group/rowno relative flex h-7 items-center justify-center">
+                              <span className="tabular-nums text-muted-foreground">{idx + 1}</span>
+                              <button
+                                type="button"
+                                data-insert-row={idx}
+                                aria-label={`${t("vc.insertRowHere")} — ${t("vc.row")} ${idx + 1}`}
+                                title={t("vc.insertRowHere")}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  insertRowBelow(idx);
+                                }}
+                                className="absolute inset-0 flex h-7 w-full items-center justify-center rounded-md bg-background/90 text-emerald-600 opacity-0 transition-opacity hover:bg-emerald-500/10 focus-visible:opacity-100 group-hover/rowno:opacity-100 cursor-pointer"
+                              >
+                                <Plus className="h-3.5 w-3.5" aria-hidden />
+                              </button>
+                            </div>
+                          </Td>
                           <Td>
                             <MoeinPickerCell
                               dataCell="moein"
@@ -2155,14 +2410,30 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                             );
                           })}
                           <Td>
-                            <Input
-                              value={row.description}
-                              onChange={(e) => setRow(idx, { description: e.target.value })}
-                              data-cell="desc"
-                              data-row={idx}
-                              aria-label={`${t("vc.description")} — ${t("vc.row")} ${idx + 1}`}
-                              className="h-7 border-input/70 bg-background/70 text-xs"
-                            />
+                            {/* Task 171 — الزام ۶: دکمهٔ دیسکت ذخیرهٔ شرح در شرح‌های پرتکرار معین داخل فیلد شرح
+                                (همان کاری که F6 می‌کند)؛ data-cell/data-row روی ظرف تا فوکوسِ دکمه هم در ناوبری ردیف دیده شود */}
+                            <div className="relative" data-cell="desc" data-row={idx}>
+                              <Input
+                                value={row.description}
+                                onChange={(e) => setRow(idx, { description: e.target.value })}
+                                aria-label={`${t("vc.description")} — ${t("vc.row")} ${idx + 1}`}
+                                className="h-7 border-input/70 bg-background/70 pe-6 text-xs"
+                              />
+                              <button
+                                type="button"
+                                data-desc-save={idx}
+                                disabled={!row.moeinRef || row.description.trim() === ""}
+                                aria-label={t("vc.freqDescSave")}
+                                title={t("vc.freqDescSave")}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  void saveFrequentDesc(idx);
+                                }}
+                                className="absolute end-1 top-1/2 flex h-4 w-4 -translate-y-1/2 items-center justify-center rounded text-muted-foreground/60 transition-colors hover:text-teal-600 disabled:cursor-not-allowed disabled:opacity-30 cursor-pointer"
+                              >
+                                <Save className="h-3 w-3" aria-hidden />
+                              </button>
+                            </div>
                           </Td>
                           <Td>
                             <Input
@@ -2171,6 +2442,8 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                                 const next = sanitizeAmount(e.target.value);
                                 setRow(idx, { debit: next, credit: next ? "" : row.credit });
                               }}
+                              data-cell="debit"
+                              data-row={idx}
                               aria-label={`${t("vc.debit")} — ${t("vc.row")} ${idx + 1}`}
                               dir="ltr"
                               placeholder="0"
@@ -2184,6 +2457,8 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                                 const next = sanitizeAmount(e.target.value);
                                 setRow(idx, { credit: next, debit: next ? "" : row.debit });
                               }}
+                              data-cell="credit"
+                              data-row={idx}
                               aria-label={`${t("vc.credit")} — ${t("vc.row")} ${idx + 1}`}
                               dir="ltr"
                               placeholder="0"
@@ -2195,6 +2470,8 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                               <Input
                                 value={row.trackDate}
                                 onChange={(e) => setRow(idx, { trackDate: applyDateMask(e.target.value, false) })}
+                                data-cell="trackDate"
+                                data-row={idx}
                                 aria-label={`${t("vc.trackDate")} — ${t("vc.row")} ${idx + 1}`}
                                 dir="ltr"
                                 placeholder={trackMandatory ? "" : "____/__/__"}
@@ -2207,6 +2484,8 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                               <Input
                                 value={row.trackNumber}
                                 onChange={(e) => setRow(idx, { trackNumber: e.target.value })}
+                                data-cell="trackNumber"
+                                data-row={idx}
                                 aria-label={`${t("vc.trackNumber")} — ${t("vc.row")} ${idx + 1}`}
                                 className="h-7 border-input/70 bg-background/70 text-xs"
                               />
@@ -2215,6 +2494,8 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                           {showCurrencyCols && (
                             <Td>
                               <CellPicker
+                                dataCell="currencyRef"
+                                dataRow={idx}
                                 ariaLabel={`${t("vc.baseCurrencyCol")} — ${t("vc.row")} ${idx + 1}`}
                                 display={
                                   row.currencyRef != null
@@ -2241,6 +2522,8 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                               <Input
                                 value={row.currencyValue}
                                 onChange={(e) => setRow(idx, { currencyValue: sanitizeAmount(e.target.value) })}
+                                data-cell="currencyValue"
+                                data-row={idx}
                                 aria-label={`${t("vc.currencyValueCol")} — ${t("vc.row")} ${idx + 1}`}
                                 dir="ltr"
                                 placeholder="0"
@@ -2253,6 +2536,8 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                               <Input
                                 value={row.currencyRate}
                                 onChange={(e) => setRow(idx, { currencyRate: sanitizeAmount(e.target.value) })}
+                                data-cell="currencyRate"
+                                data-row={idx}
                                 aria-label={`${t("vc.currencyRateCol")} — ${t("vc.row")} ${idx + 1}`}
                                 dir="ltr"
                                 placeholder="0"
@@ -2303,6 +2588,8 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                       disabled={formIdx >= rows.length - 1}
                     />
                     <SmallTool label={t("sft.last")} onClick={() => setFormRow(rows.length - 1)} Icon={ChevronLast} disabled={formIdx >= rows.length - 1} />
+                    {/* Task 171 — الزام ۵: درج ردیف خالی بین ردیف‌ها در حالت فرمی (پس از ردیف فعال) */}
+                    <SmallTool label={t("vc.insertRowHere")} onClick={() => insertRowBelow(formIdx)} Icon={ListPlus} />
                     {/* Task 163: افزودن/حذف ردیف از این نوار به فوتربار مشترکِ پایین کارت منتقل شد */}
                   </div>
                 </div>
@@ -2382,15 +2669,27 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                     );
                   })}
                   <HeaderField label={t("vc.description")} required className="sm:col-span-2 lg:col-span-3">
-                    <Textarea
-                      value={formRowData?.description ?? ""}
-                      onChange={(e) => setRow(formIdx, { description: e.target.value })}
-                      data-cell="desc"
-                      data-row="form"
-                      aria-label={`${t("vc.description")} — ${t("vc.row")} ${formIdx + 1}`}
-                      rows={2}
-                      className="resize-none text-xs"
-                    />
+                    {/* Task 171 — الزام ۶: دکمهٔ دیسکت ذخیرهٔ شرح پرتکرار معین داخل فیلد شرح (حالت فرمی) */}
+                    <div className="relative" data-cell="desc" data-row="form">
+                      <Textarea
+                        value={formRowData?.description ?? ""}
+                        onChange={(e) => setRow(formIdx, { description: e.target.value })}
+                        aria-label={`${t("vc.description")} — ${t("vc.row")} ${formIdx + 1}`}
+                        rows={2}
+                        className="resize-none pe-8 text-xs"
+                      />
+                      <button
+                        type="button"
+                        data-desc-save="form"
+                        disabled={!formRowData?.moeinRef || (formRowData?.description ?? "").trim() === ""}
+                        aria-label={t("vc.freqDescSave")}
+                        title={t("vc.freqDescSave")}
+                        onClick={() => void saveFrequentDesc(formIdx)}
+                        className="absolute end-2 top-2 flex h-5 w-5 items-center justify-center rounded text-muted-foreground/60 transition-colors hover:text-teal-600 disabled:cursor-not-allowed disabled:opacity-30 cursor-pointer"
+                      >
+                        <Save className="h-3.5 w-3.5" aria-hidden />
+                      </button>
+                    </div>
                   </HeaderField>
                   <HeaderField label={t("vc.debit")}>
                     <Input
@@ -2399,6 +2698,8 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                         const next = sanitizeAmount(e.target.value);
                         setRow(formIdx, { debit: next, credit: next ? "" : (formRowData?.credit ?? "") });
                       }}
+                      data-cell="debit"
+                      data-row="form"
                       aria-label={`${t("vc.debit")} — ${t("vc.row")} ${formIdx + 1}`}
                       dir="ltr"
                       placeholder="0"
@@ -2412,6 +2713,8 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                         const next = sanitizeAmount(e.target.value);
                         setRow(formIdx, { credit: next, debit: next ? "" : (formRowData?.debit ?? "") });
                       }}
+                      data-cell="credit"
+                      data-row="form"
                       aria-label={`${t("vc.credit")} — ${t("vc.row")} ${formIdx + 1}`}
                       dir="ltr"
                       placeholder="0"
@@ -2424,6 +2727,8 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                         <Input
                           value={formRowData?.trackDate ?? ""}
                           onChange={(e) => setRow(formIdx, { trackDate: applyDateMask(e.target.value, false) })}
+                          data-cell="trackDate"
+                          data-row="form"
                           aria-label={`${t("vc.trackDate")} — ${t("vc.row")} ${formIdx + 1}`}
                           dir="ltr"
                           placeholder="____/__/__"
@@ -2434,6 +2739,8 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                         <Input
                           value={formRowData?.trackNumber ?? ""}
                           onChange={(e) => setRow(formIdx, { trackNumber: e.target.value })}
+                          data-cell="trackNumber"
+                          data-row="form"
                           aria-label={`${t("vc.trackNumber")} — ${t("vc.row")} ${formIdx + 1}`}
                           className="h-7 max-w-[40%] text-xs"
                         />
@@ -2444,6 +2751,8 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                     <>
                       <HeaderField label={t("vc.baseCurrencyCol")}>
                         <CellPicker
+                          dataCell="currencyRef"
+                          dataRow="form"
                           ariaLabel={`${t("vc.baseCurrencyCol")} — ${t("vc.row")} ${formIdx + 1}`}
                           display={
                             formRowData?.currencyRef != null
@@ -2468,6 +2777,8 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                         <Input
                           value={formRowData?.currencyValue ?? ""}
                           onChange={(e) => setRow(formIdx, { currencyValue: sanitizeAmount(e.target.value) })}
+                          data-cell="currencyValue"
+                          data-row="form"
                           aria-label={`${t("vc.currencyValueCol")} — ${t("vc.row")} ${formIdx + 1}`}
                           dir="ltr"
                           placeholder="0"
@@ -2478,6 +2789,8 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                         <Input
                           value={formRowData?.currencyRate ?? ""}
                           onChange={(e) => setRow(formIdx, { currencyRate: sanitizeAmount(e.target.value) })}
+                          data-cell="currencyRate"
+                          data-row="form"
                           aria-label={`${t("vc.currencyRateCol")} — ${t("vc.row")} ${formIdx + 1}`}
                           dir="ltr"
                           placeholder="0"

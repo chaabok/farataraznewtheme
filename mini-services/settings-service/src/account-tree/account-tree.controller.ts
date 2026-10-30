@@ -1,6 +1,6 @@
 import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put } from "@nestjs/common";
 import { AccountTreeService } from "./account-tree.service";
-import { AssignDetailTypeDto, SaveAccountNodeDto } from "./account-tree.dto";
+import { AddRecurringDescDto, AssignDetailTypeDto, SaveAccountNodeDto } from "./account-tree.dto";
 
 /**
  * AccountTree — Task 140 (درخواست مالک): فرم «درختواره حسابها»
@@ -12,6 +12,7 @@ import { AssignDetailTypeDto, SaveAccountNodeDto } from "./account-tree.dto";
  * DELETE /account-tree/:id                  — حذف گره (با فرزند رد می‌شود)
  * POST   /account-tree/:id/detail-types     — انتساب نوع تفصیلی به سطح
  * DELETE /account-tree/:id/detail-types/:aid — حذف انتساب
+ * POST   /account-tree/:id/recurring-descriptions — افزودن یک شرح پرتکرار (Task 171 — F6/دکمهٔ دیسکت فرم سند)
  * Guarded by the global InternalAuthGuard — only the signed BFF reaches this
  * (browser path: /api/settings/account-tree/**).
  */
@@ -55,5 +56,11 @@ export class AccountTreeController {
     @Param("assignmentId", ParseIntPipe) assignmentId: number,
   ) {
     return this.accountTree.removeDetailType(id, assignmentId);
+  }
+
+  /** Task 171 — افزودن یک شرح پرتکرار به معین از فرم سند (F6 یا دکمهٔ دیسکت ستون شرح). */
+  @Post(":id/recurring-descriptions")
+  addRecurringDesc(@Param("id", ParseIntPipe) id: number, @Body() dto: AddRecurringDescDto) {
+    return this.accountTree.addRecurringDesc(id, dto);
   }
 }

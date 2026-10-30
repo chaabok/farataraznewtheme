@@ -228,3 +228,20 @@ export class AssignDetailTypeDto {
   @Min(1)
   detailTypeRef!: number;
 }
+
+/**
+ * Task 171 (درخواست مالک) — افزودن «یک» شرح پرتکرار به معین از خودِ فرم سند
+ * (کلید F6 روی ستون شرح یا دکمهٔ دیسکت همان فیلد): متن شرحِ قلم سند به
+ * تب «شرح های پرتکرار» همان معین در درختواره حسابها افزوده می‌شود.
+ */
+export class AddRecurringDescDto {
+  @IsString()
+  @MinLength(1)
+  @MaxLength(500)
+  description!: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  description2?: string;
+}
