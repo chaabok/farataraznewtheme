@@ -814,6 +814,15 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
     [markDirty],
   );
 
+  /** افزودن ردیف تازه — فوتربار مشترک هر دو مدل (Task 163): ردیف appended و
+   *  انتخابِ جدولی و ناوبریِ فرمی هر دو به ردیف تازه می‌روند. */
+  const addRow = React.useCallback(() => {
+    setRows((prev) => [...prev, blankRow()]);
+    setSelectedRow(rows.length);
+    setFormRow(rows.length);
+    markDirty();
+  }, [rows.length, markDirty]);
+
   /** انتخاب معین برای ردیف — تفصیلی‌های ستون‌های قفل‌شده پاک می‌شوند. */
   const pickMoein = React.useCallback(
     (idx: number, moeinId: number) => {
@@ -1646,17 +1655,7 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                       disabled={formIdx >= rows.length - 1}
                     />
                     <SmallTool label={t("sft.last")} onClick={() => setFormRow(rows.length - 1)} Icon={ChevronLast} disabled={formIdx >= rows.length - 1} />
-                    <SmallTool
-                      label={t("vc.addRow")}
-                      onClick={() => {
-                        setRows((prev) => [...prev, blankRow()]);
-                        setFormRow(rows.length);
-                        setSelectedRow(rows.length);
-                        markDirty();
-                      }}
-                      Icon={Plus}
-                    />
-                    <SmallTool label={t("vc.deleteRow")} onClick={() => deleteRow(formIdx)} Icon={X} danger />
+                    {/* Task 163: افزودن/حذف ردیف از این نوار به فوتربار مشترکِ پایین کارت منتقل شد */}
                   </div>
                 </div>
                 <div className="grid min-h-0 flex-1 grid-cols-1 gap-2 overflow-y-auto rounded-xl border border-border/60 bg-background/50 p-3 scrollbar-slim sm:grid-cols-2 lg:grid-cols-3">
@@ -1826,21 +1825,32 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                     </>
                   )}
                 </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setRows((prev) => [...prev, blankRow()]);
-                    setFormRow(rows.length);
-                    setSelectedRow(rows.length);
-                    markDirty();
-                  }}
-                  className="mt-2 flex h-8 shrink-0 items-center gap-1.5 self-start rounded-lg border border-dashed border-emerald-500/50 px-3 text-xs font-medium text-emerald-700 transition-colors hover:bg-emerald-500/10 dark:text-emerald-400 cursor-pointer"
-                >
-                  <Plus className="h-3.5 w-3.5" aria-hidden />
-                  {t("vc.addRow")}
-                </button>
               </div>
             )}
+
+            {/* Task 163 — فوتربار اقلام (فرمان مالک): نوار پایین کارت اقلام با دکمه‌های افزودن/حذف ردیف،
+                مشترک بین مدل جدولی و فرمی؛ حذف، ردیفِ فعال را هدف می‌گیرد (فرمی = ردیف جاری، جدولی = ردیف انتخاب‌شده) */}
+            <div className="flex shrink-0 flex-wrap items-center gap-1.5 border-t border-border/50 px-3 py-2">
+              <button
+                type="button"
+                onClick={addRow}
+                className="flex h-7 items-center gap-1.5 rounded-lg border border-dashed border-emerald-500/50 px-2.5 text-xs font-medium text-emerald-700 transition-colors hover:bg-emerald-500/10 dark:text-emerald-400 cursor-pointer"
+              >
+                <Plus className="h-3.5 w-3.5" aria-hidden />
+                {t("vc.addRow")}
+              </button>
+              <button
+                type="button"
+                onClick={() => deleteRow(mode === "form" ? formIdx : footerRowIdx)}
+                className="flex h-7 items-center gap-1.5 rounded-lg border border-rose-500/40 px-2.5 text-xs font-medium text-rose-600 transition-colors hover:bg-rose-500/10 dark:text-rose-400 cursor-pointer"
+              >
+                <X className="h-3.5 w-3.5" aria-hidden />
+                {t("vc.deleteRow")}
+              </button>
+              <span className="ms-auto text-[11px] tabular-nums text-muted-foreground">
+                {t("vc.rowOf").replace("{i}", String((mode === "form" ? formIdx : footerRowIdx) + 1)).replace("{n}", String(rows.length))}
+              </span>
+            </div>
           </div>
 
           {/* ---------- بخش فوتر سند ---------- */}
@@ -1898,18 +1908,7 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                 <TotalCell label={t("vc.balanceDebit")} value={formatAmount(totals.balanceDebit, locale)} tone="debit" />
                 <TotalCell label={t("vc.balanceCredit")} value={formatAmount(totals.balanceCredit, locale)} tone="credit" />
               </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setRows((prev) => [...prev, blankRow()]);
-                  setSelectedRow(rows.length);
-                  markDirty();
-                }}
-                className="mt-3 flex h-8 items-center gap-1.5 rounded-lg border border-dashed border-emerald-500/50 px-3 text-xs font-medium text-emerald-700 transition-colors hover:bg-emerald-500/10 dark:text-emerald-400 cursor-pointer"
-              >
-                <Plus className="h-3.5 w-3.5" aria-hidden />
-                {t("vc.addRow")}
-              </button>
+              {/* Task 163: دکمهٔ افزودن ردیف به فوتربار کارت اقلام منتقل شد */}
             </div>
           </div>
         </div>
