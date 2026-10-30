@@ -27,15 +27,21 @@ interface Saved {
   outlineOffset: string;
 }
 
+/* ثابت — هرگز خبری نمی‌دهد (فقط برای تمایز SSR/کلاینت در useSyncExternalStore) */
+const subscribeNever = () => () => {};
+
 export function LoupeLayer() {
   const active = useLoupe((s) => s.active);
-  const [mounted, setMounted] = React.useState(false);
+  /* hydration-safe mount flag (no setState-in-effect) */
+  const mounted = React.useSyncExternalStore(
+    subscribeNever,
+    () => true,
+    () => false,
+  );
   const lensRef = React.useRef<HTMLDivElement>(null);
   const savedRef = React.useRef<Saved | null>(null);
   const lastPoint = React.useRef<{ x: number; y: number } | null>(null);
   const rafRef = React.useRef(0);
-
-  React.useEffect(() => setMounted(true), []);
 
   /* پاک‌سازی بزرگ‌نمایی عنصر قبلی */
   const clearMagnify = React.useCallback(() => {
@@ -59,8 +65,10 @@ export function LoupeLayer() {
       if (!p || !lens) return;
       /* لِنز با counter-zoom رندر می‌شود ⇒ transform مستقیماً visual است */
       lens.style.transform = `translate3d(${p.x}px, ${p.y}px, 0)`;
-      const el = document.elementFromPoint(p.x, p.y);
-      if (!(el instanceof HTMLElement) || el === document.body || el === root) {
+      /* عنصر زیر نشانگر؛ SVG و… به نزدیک‌ترین والد HTML معنادار می‌رود */
+      let el: Element | null = document.elementFromPoint(p.x, p.y);
+      while (el && !(el instanceof HTMLElement)) el = el.parentElement;
+      if (!el || el === document.body || el === root) {
         clearMagnify();
         return;
       }

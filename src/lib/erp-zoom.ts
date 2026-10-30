@@ -50,7 +50,7 @@ export function erpZoom(): number {
 
 /** اعمال زوم روی <html> + دو متغیر CSS + ماندگاری. */
 export function applyZoom(v: number): void {
-  const z = clamp(v);
+  const z = Math.round(clamp(v) * 100) / 100; /* بدون نویز ممیز شناور */
   current = z;
   try {
     localStorage.setItem(LS_KEY, String(z));

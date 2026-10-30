@@ -236,3 +236,10 @@ html.loupe-active,
 html.loupe-active * {
   cursor: zoom-in !important;
 }
+
+/* پوستهٔ اصلی: واحدهای viewport (dvh/vw) تحت zoom ریشه اسکیل نمی‌شوند ⇒
+   تقسیم بر زوم برای پرکردن کامل پنجره (Task 160) */
+.erp-shell {
+  height: calc(100dvh / var(--erp-zoom, 1));
+  width: calc(100vw / var(--erp-zoom, 1));
+}

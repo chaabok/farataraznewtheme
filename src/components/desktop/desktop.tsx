@@ -685,7 +685,9 @@ export function Desktop() {
       <TooltipProvider delayDuration={300}>
       <div
         className={cn(
-          "relative h-dvh w-screen overflow-hidden",
+          /* Task 160 — h-dvh/w-screen تحت zoom ریشه کوچک می‌ماند؛ کلاس erp-shell
+             واحدهای viewport را بر زوم تقسیم می‌کند تا پوسته همیشه تمام‌صفحه باشد */
+          "erp-shell relative overflow-hidden",
           resolvedTheme === "dark" ? "erp-wallpaper-dark" : "erp-wallpaper",
         )}
         onPointerDown={(e) => {
