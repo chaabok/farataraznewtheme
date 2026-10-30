@@ -1,30 +1,3 @@
-$ bun --hot src/main.ts
-[Nest] 10592  - 10/30/2026, 9:03:26 AM     LOG [NestFactory] Starting Nest application...
-[Nest] 10592  - 10/30/2026, 9:03:26 AM     LOG [InstanceLoader] AppModule dependencies initialized +182ms
-[Nest] 10592  - 10/30/2026, 9:03:26 AM     LOG [InstanceLoader] PrismaModule dependencies initialized +1ms
-[Nest] 10592  - 10/30/2026, 9:03:26 AM     LOG [InstanceLoader] AuthModule dependencies initialized +0ms
-[Nest] 10592  - 10/30/2026, 9:03:26 AM     LOG [RoutesResolver] AuthController {/api/auth}: +114ms
-[Nest] 10592  - 10/30/2026, 9:03:26 AM     LOG [RouterExplorer] Mapped {/api/auth/login, POST} route +56ms
-[Nest] 10592  - 10/30/2026, 9:03:26 AM     LOG [RouterExplorer] Mapped {/api/auth/verify, GET} route +32ms
-[Nest] 10592  - 10/30/2026, 9:03:26 AM     LOG [NestApplication] Nest application successfully started +354ms
-[Nest] 10592  - 10/30/2026, 9:03:26 AM   ERROR [NestApplication] Error: Failed to start server. Is port 3002 in use? +17ms
-186 |             this.httpServer.once('error', errorHandler);
-187 |             const isCallbackInOriginalArgs = (0, shared_utils_1.isFunction)(args[args.length - 1]);
-188 |             const listenFnArgs = isCallbackInOriginalArgs
-189 |                 ? args.slice(0, args.length - 1)
-190 |                 : args;
-191 |             this.httpAdapter.listen(port, ...listenFnArgs, (...originalCallbackArgs) => {
-      ^
-error: Failed to start server. Is port 3002 in use?
- syscall: "listen",
-   errno: 0,
-    code: "EADDRINUSE"
-
-      at serve (unknown:1:1)
-      at node:_http_server:281:39
-      at node:_http_server:258:33
-      at /home/z/my-project/mini-services/shared/node_modules/@nestjs/core/nest-application.js:191:30
-      at Promise (unknown:1:11)
-      at listen (/home/z/my-project/mini-services/shared/node_modules/@nestjs/core/nest-application.js:203:21)
-      at processTicksAndRejections (unknown:7:39)
-error: script "dev" was terminated by signal SIGKILL (Forced quit)
+[auth-service] Installing dependencies...
+bun install v1.3.14 (0d9b296a)
+warn: Slow filesystem detected. If /home/z/.bun/install/cache is a network drive, consider setting $BUN_INSTALL_CACHE_DIR to a local folder.

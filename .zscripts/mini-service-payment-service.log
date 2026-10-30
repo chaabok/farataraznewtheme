@@ -1,11 +1,3 @@
-$ bun --hot src/main.ts
-[Nest] 12587  - 10/30/2026, 9:19:15 AM     LOG [NestFactory] Starting Nest application...
-[Nest] 12587  - 10/30/2026, 9:19:15 AM     LOG [InstanceLoader] AppModule dependencies initialized +78ms
-[Nest] 12587  - 10/30/2026, 9:19:15 AM     LOG [InstanceLoader] PrismaModule dependencies initialized +0ms
-[Nest] 12587  - 10/30/2026, 9:19:15 AM     LOG [InstanceLoader] ItemsModule dependencies initialized +0ms
-[Nest] 12587  - 10/30/2026, 9:19:15 AM     LOG [RoutesResolver] ItemsController {/api/items}: +76ms
-[Nest] 12587  - 10/30/2026, 9:19:15 AM     LOG [RouterExplorer] Mapped {/api/items, GET} route +3ms
-[Nest] 12587  - 10/30/2026, 9:19:15 AM     LOG [RouterExplorer] Mapped {/api/items/stats, GET} route +0ms
-[Nest] 12587  - 10/30/2026, 9:19:15 AM     LOG [RouterExplorer] Mapped {/api/items, POST} route +1ms
-[Nest] 12587  - 10/30/2026, 9:19:15 AM     LOG [NestApplication] Nest application successfully started +49ms
-[Nest] 12587  - 10/30/2026, 9:19:15 AM     LOG [Bootstrap] payment-service listening on http://127.0.0.1:3005/api
+[payment-service] Installing dependencies...
+bun install v1.3.14 (0d9b296a)
+warn: Slow filesystem detected. If /home/z/.bun/install/cache is a network drive, consider setting $BUN_INSTALL_CACHE_DIR to a local folder.
