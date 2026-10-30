@@ -45,6 +45,16 @@ import { displayToStoredDate, storedToDisplayDate } from "@/lib/calendar-date";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { AccountTreeForm } from "./account-tree-form";
+import { DetailItemsForm } from "./detail-items-form";
+import { VoucherTypeForm } from "./voucher-type-form";
+import { CurrencyTypeForm } from "@/components/erp/general/currency-type-form";
 
 /**
  * VoucherNewForm — Task 158 (درخواست مالک): فرم «سند حسابداری جدید» در
@@ -78,6 +88,14 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
  *
  * منابع دراپ‌داون‌ها با یک GET /vouchers/meta یک‌واکشی می‌شوند؛ شماره‌گذاری
  * خودکار با GET /vouchers/next-number (تک‌مرجع نهایی = سرور در POST).
+ *
+ * Task 168 (فرمان مالک): دکمهٔ «+» در فوتر دراپ‌داون‌ها «ایجاد موجودیت» است
+ * نه انتخاب — کلیک روی آن فرم مرجع همان آیتم را به‌صورت مودال داخل همین فرم
+ * باز می‌کند (معین ⇒ درختواره حسابها، تفصیلی ⇒ ایجاد تفصیلی ها، نوع سند ⇒
+ * نوع سند جدید، ارز ⇒ نوع ارز) تا کاربر رکورد جدید را بسازد؛ پس از بستن،
+ * منابع با GET /vouchers/meta تازه می‌شوند تا رکورد تازه در لیست دیده شود.
+ * حالت دراپ‌داونِ انتخاب‌ها دست‌نخورده است؛ چندانتخاب معین (t158) با چیپ
+ * «افزودن (n)» که فقط وقتی تیک‌خورده‌ای هست ظاهر می‌شود، زنده می‌ماند.
  */
 
 /* ---------------------------------- meta DTOs ---------------------------------- */
@@ -323,6 +341,9 @@ interface PickerRow {
  * پاپ‌آور سبک مرجع مالک (Task 167 — عین تصویر مرجع): فیلتر + لیست فشرده
  * «بدون سرستون» (عنوان در ابتدای ردیف، کد در انتهای کم‌رنگ، سلول سوم =
  * توضیح جانبی) + نوار پایین با تولبار آیکونی و شمارندهٔ «{n} مورد».
+ * Task 168 (فرمان مالک): دکمهٔ «+» = ایجاد موجودیتِ همان آیتم (نه انتخاب) —
+ * با onCreate فرم مرجع (درختواره حسابها/ایجاد تفصیلی ها/نوع سند/نوع ارز)
+ * به‌صورت مودال باز می‌شود.
  */
 function CellPicker({
   ariaLabel,
@@ -334,6 +355,8 @@ function CellPicker({
   clearFilterLabel,
   rows,
   onPick,
+  onCreate,
+  createLabel,
   disabled,
   className,
 }: {
@@ -346,6 +369,9 @@ function CellPicker({
   clearFilterLabel: string;
   rows: PickerRow[];
   onPick: (id: number) => void;
+  /** Task 168 — موجود => دکمهٔ «+ ایجاد» (فرم مرجع) در فوتر پاپ‌آور */
+  onCreate?: () => void;
+  createLabel?: string;
   disabled?: boolean;
   className?: string;
 }) {
@@ -441,21 +467,39 @@ function CellPicker({
             </ul>
           )}
         </div>
-        {/* Task 167 — نوار پایین سبک مرجع (عین تصویر مرجع مالک): تولبار آیکونی در ابتدا + شمارندهٔ «{n} مورد» در انتها */}
+        {/* Task 167 — نوار پایین سبک مرجع (عین تصویر مرجع مالک): تولبار آیکونی در ابتدا + شمارندهٔ «{n} مورد» در انتها
+            Task 168 — «+» = ایجاد موجودیت با فرم مرجع (فرمان مالک) */}
         <div className="flex items-center justify-between gap-2 border-t border-border/60 bg-muted/40 px-2 py-1">
-          <button
-            type="button"
-            onClick={() => {
-              setQuery("");
-              filterRef.current?.focus();
-            }}
-            disabled={!query}
-            aria-label={clearFilterLabel}
-            title={clearFilterLabel}
-            className="flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-foreground/5 disabled:cursor-not-allowed disabled:opacity-30 cursor-pointer"
-          >
-            <X className="h-3.5 w-3.5" aria-hidden />
-          </button>
+          <div className="flex items-center gap-0.5">
+            {onCreate && (
+              <button
+                type="button"
+                onClick={() => {
+                  setOpen(false);
+                  onCreate();
+                }}
+                aria-label={createLabel}
+                title={createLabel}
+                data-picker-create
+                className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-sm transition-all hover:brightness-110 cursor-pointer"
+              >
+                <Plus className="h-3.5 w-3.5" aria-hidden />
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => {
+                setQuery("");
+                filterRef.current?.focus();
+              }}
+              disabled={!query}
+              aria-label={clearFilterLabel}
+              title={clearFilterLabel}
+              className="flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-foreground/5 disabled:cursor-not-allowed disabled:opacity-30 cursor-pointer"
+            >
+              <X className="h-3.5 w-3.5" aria-hidden />
+            </button>
+          </div>
           <span className="text-[10px] tabular-nums text-muted-foreground">{countLabel.replace("{n}", String(filtered.length))}</span>
         </div>
       </PopoverContent>
@@ -465,17 +509,21 @@ function CellPicker({
 
 /**
  * MoeinPickerCell — دراپ‌داون چندانتخابی «کد معین»: کلیک روی ردیف = انتخابِ
- * همان حساب برای ردیف جاری؛ تیک چک‌باکس‌ها + دکمهٔ «افزودن» = هر حساب
+ * همان حساب برای ردیف جاری؛ تیک چک‌باکس‌ها + چیپ «افزودن» = هر حساب
  * انتخابیِ اضافی یک ردیف جدید می‌سازد (فرمان مالک Task 158).
  * Task 167: پاپ‌آور با سبک مرجع مالک — لیست فشرده بدون سرستون (عنوان ابتدا،
- * کد انتها) + نوار پایین با دکمه‌های آیکونی [+ افزودن] [پاک‌کردن انتخاب‌ها]
- * و شمارندهٔ «{n} مورد».
+ * کد انتها) + نوار پایین با دکمه‌های آیکونی و شمارندهٔ «{n} مورد».
+ * Task 168 (فرمان مالک): دکمهٔ «+» دیگر «افزودن انتخاب‌ها» نیست — ایجاد
+ * موجودیت است: فرم «درختواره حسابها» مودال باز می‌شود تا معین جدید تعریف شود؛
+ * اعمالِ چندانتخاب به چیپ متنی «افزودن (n)» که فقط با تیک ظاهر می‌شود منتقل شد.
  */
 function MoeinPickerCell({
   meta,
   value,
   onPick,
   onPickMany,
+  onCreate,
+  createLabel,
   disabled,
   className,
   emptyLabel,
@@ -492,6 +540,9 @@ function MoeinPickerCell({
   value: number | null;
   onPick: (id: number) => void;
   onPickMany: (ids: number[]) => void;
+  /** Task 168 — موجود => دکمهٔ «+ ایجاد» (درختواره حسابها) در فوتر پاپ‌آور */
+  onCreate?: () => void;
+  createLabel?: string;
   disabled?: boolean;
   className?: string;
   emptyLabel: string;
@@ -626,24 +677,26 @@ function MoeinPickerCell({
             </ul>
           )}
         </div>
-        {/* Task 167 — نوار پایین سبک مرجع (عین تصویر مرجع مالک): [+ افزودن] [پاک‌کردن انتخاب‌ها] + شمارندهٔ «{n} مورد» */}
+        {/* Task 167 — نوار پایین سبک مرجع (عین تصویر مرجع مالک): [+ ایجاد] [پاک‌کردن انتخاب‌ها] + شمارندهٔ «{n} مورد»
+            Task 168 (فرمان مالک): «+» = فرم مرجع «درختواره حسابها» برای تعریف معین جدید؛
+            اعمال چندانتخاب (t158) = چیپ متنی «افزودن (n)» که فقط وقتی تیک‌خورده‌ای هست ظاهر می‌شود */}
         <div className="flex items-center justify-between gap-2 border-t border-border/60 bg-muted/40 px-2 py-1">
           <div className="flex items-center gap-0.5">
-            <button
-              type="button"
-              onClick={applyMany}
-              disabled={checked.size === 0}
-              aria-label={addLabel}
-              title={`${addLabel} — ${selLabel}`}
-              className="relative flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-sm transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
-            >
-              <Plus className="h-3.5 w-3.5" aria-hidden />
-              {checked.size > 0 && (
-                <span className="absolute -end-1.5 -top-1.5 rounded-full bg-white px-1 text-[9px] font-semibold tabular-nums text-emerald-700 ring-1 ring-emerald-600/40">
-                  {checked.size}
-                </span>
-              )}
-            </button>
+            {onCreate && (
+              <button
+                type="button"
+                onClick={() => {
+                  setOpen(false);
+                  onCreate();
+                }}
+                aria-label={createLabel}
+                title={createLabel}
+                data-picker-create
+                className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-sm transition-all hover:brightness-110 cursor-pointer"
+              >
+                <Plus className="h-3.5 w-3.5" aria-hidden />
+              </button>
+            )}
             <button
               type="button"
               onClick={() => setChecked(new Set())}
@@ -654,6 +707,19 @@ function MoeinPickerCell({
             >
               <X className="h-3.5 w-3.5" aria-hidden />
             </button>
+            {checked.size > 0 && (
+              <button
+                type="button"
+                onClick={applyMany}
+                aria-label={`${addLabel} (${checked.size})`}
+                title={`${addLabel} — ${selLabel}`}
+                data-picker-add-checked
+                className="ms-0.5 flex h-6 items-center gap-1 rounded-full bg-emerald-500/15 px-2 text-[10px] font-semibold text-emerald-700 ring-1 ring-emerald-600/30 transition-colors hover:bg-emerald-500/25 dark:text-emerald-400 cursor-pointer"
+              >
+                <Plus className="h-3 w-3" aria-hidden />
+                {`${addLabel} (${checked.size})`}
+              </button>
+            )}
           </div>
           <span className="text-[10px] tabular-nums text-muted-foreground">{countLabel.replace("{n}", String(filtered.length))}</span>
         </div>
@@ -819,6 +885,13 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
   /* Task 165 (فرمان مالک): مدل نمایش حساب‌های فوتر — «افقی» پیش‌فرض است */
   const [acctMode, setAcctMode] = React.useState<"h" | "v">("h");
 
+  /* ---------------- Task 168 — فرم مرجع «+ ایجاد» دراپ‌داون‌ها ----------------
+     فرمان مالک: دکمهٔ + فوتر دراپ‌داون فرم مرجع همان موجودیت را باز می‌کند
+     (نه انتخاب) تا کاربر رکورد جدید بسازد؛ پس از بستن، meta تازه واکشی می‌شود. */
+  type RefFormKind = "account-tree" | "detail-items" | "voucher-type" | "currency-type";
+  const [refForm, setRefForm] = React.useState<RefFormKind | null>(null);
+  const openRefForm = React.useCallback((kind: RefFormKind) => setRefForm(kind), []);
+
   /* ------------------------------ لیست/ناوبری ------------------------------ */
   const [records, setRecords] = React.useState<VoucherListItem[]>([]);
   const [listLoading, setListLoading] = React.useState(true);
@@ -863,6 +936,12 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
       setMetaLoading(false);
     }
   }, []);
+
+  /** Task 168 — بستن مودال فرم مرجع + تازه‌سازی منابع دراپ‌داون‌ها (رکورد تازه در لیست دیده شود) */
+  const closeRefForm = React.useCallback(() => {
+    setRefForm(null);
+    void loadMeta();
+  }, [loadMeta]);
 
   const fetchRecords = React.useCallback(async (): Promise<VoucherListItem[]> => {
     const res = await api.get<{ items: VoucherListItem[] }>(
@@ -1505,6 +1584,8 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                   emptyLabel={t("vc.docTypeEmpty")}
                   countLabel={t("vc.pickerCount")}
                   clearFilterLabel={t("vc.pickerClearFilter")}
+                  onCreate={() => openRefForm("voucher-type")}
+                  createLabel={t("vc.pickerCreate")}
                   rows={docTypeRows}
                   onPick={(id) => {
                     setVoucherTypeRef(id);
@@ -1626,6 +1707,8 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                               value={row.moeinRef}
                               onPick={(id) => pickMoein(idx, id)}
                               onPickMany={(ids) => pickMoeinMany(idx, ids)}
+                              onCreate={() => openRefForm("account-tree")}
+                              createLabel={t("vc.pickerCreate")}
                               emptyLabel={t("vc.moeinNoData")}
                               phLabel={t("vc.selectPlaceholder")}
                               addLabel={t("vc.addSelected")}
@@ -1665,6 +1748,8 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                                   emptyLabel={t("vc.detailEmpty")}
                                   countLabel={t("vc.pickerCount")}
                                   clearFilterLabel={t("vc.pickerClearFilter")}
+                                  onCreate={() => openRefForm("detail-items")}
+                                  createLabel={t("vc.pickerCreate")}
                                   rows={meta.detailItems
                                     .filter((d) => info.typeRefs.includes(d.detailTypeRef))
                                     .map((d) => ({ id: d.id, cells: [d.code, d.title, d.typeTitle] }))}
@@ -1746,6 +1831,8 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                                 emptyLabel={t("vc.currencyEmpty")}
                                 countLabel={t("vc.pickerCount")}
                                 clearFilterLabel={t("vc.pickerClearFilter")}
+                                onCreate={() => openRefForm("currency-type")}
+                                createLabel={t("vc.pickerCreate")}
                                 rows={currencyRows}
                                 onPick={(id) => setRow(idx, { currencyRef: id })}
                               />
@@ -1835,6 +1922,8 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                         setSelectedRow(formIdx);
                       }}
                       onPickMany={(ids) => pickMoeinMany(formIdx, ids)}
+                      onCreate={() => openRefForm("account-tree")}
+                      createLabel={t("vc.pickerCreate")}
                       emptyLabel={t("vc.moeinNoData")}
                       phLabel={t("vc.selectPlaceholder")}
                       addLabel={t("vc.addSelected")}
@@ -1872,6 +1961,8 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                           emptyLabel={t("vc.detailEmpty")}
                           countLabel={t("vc.pickerCount")}
                           clearFilterLabel={t("vc.pickerClearFilter")}
+                          onCreate={() => openRefForm("detail-items")}
+                          createLabel={t("vc.pickerCreate")}
                           rows={meta.detailItems
                             .filter((d) => info.typeRefs.includes(d.detailTypeRef))
                             .map((d) => ({ id: d.id, cells: [d.code, d.title, d.typeTitle] }))}
@@ -1958,6 +2049,8 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                           emptyLabel={t("vc.currencyEmpty")}
                           countLabel={t("vc.pickerCount")}
                           clearFilterLabel={t("vc.pickerClearFilter")}
+                          onCreate={() => openRefForm("currency-type")}
+                          createLabel={t("vc.pickerCreate")}
                           rows={currencyRows}
                           onPick={(id) => setRow(formIdx, { currencyRef: id })}
                         />
@@ -2142,6 +2235,35 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
           </div>
         </div>
       </section>
+
+      {/* ---------- Task 168 — مودال فرم مرجع «+ ایجاد» دراپ‌داون‌ها (فرمان مالک) ----------
+          دکمهٔ + فوتر دراپ‌داون = ایجاد موجودیت، نه انتخاب: فرم مرجع همان آیتم داخل
+          همین پنجره مودال باز می‌شود تا سندِ در حال ویرایش دست‌نخورده بماند؛
+          بستن (✕ فرم، Esc یا بیرون‌کلیک) ⇒ closeRefForm ⇒ تازه‌سازی meta.
+          هدر فرم‌های مرجع خودشان ✕ دارند ⇒ دکمهٔ پیش‌فرض Dialog پنهان می‌شود. */}
+      <Dialog open={refForm !== null} onOpenChange={(o) => !o && closeRefForm()}>
+        <DialogContent
+          className={cn(
+            "flex h-[85vh] w-[min(94vw,56rem)] max-w-none flex-col gap-0 overflow-hidden rounded-2xl p-0 [&>button]:hidden",
+            refForm === "account-tree" && "w-[min(94vw,72rem)]",
+          )}
+        >
+          <DialogTitle className="sr-only">
+            {refForm === "account-tree"
+              ? t("atr.formTitle")
+              : refForm === "detail-items"
+                ? t("di.formTitle")
+                : refForm === "voucher-type"
+                  ? t("vt.formTitle")
+                  : t("currency.formTitle")}
+          </DialogTitle>
+          <DialogDescription className="sr-only">{t("vc.pickerCreate")}</DialogDescription>
+          {refForm === "account-tree" && <AccountTreeForm onBack={closeRefForm} />}
+          {refForm === "detail-items" && <DetailItemsForm onBack={closeRefForm} />}
+          {refForm === "voucher-type" && <VoucherTypeForm onBack={closeRefForm} />}
+          {refForm === "currency-type" && <CurrencyTypeForm onBack={closeRefForm} />}
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

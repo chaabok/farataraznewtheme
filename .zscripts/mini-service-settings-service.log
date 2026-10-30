@@ -160,3 +160,4 @@ $ NODE_PATH=./node_modules bun --hot src/main.ts
 [Nest] 3069  - 10/30/2026, 12:52:01 PM     LOG [SystemsService] Systems synced from APP_CATALOG (total 28, created 0, updated 0)
 [Nest] 3069  - 10/30/2026, 12:52:02 PM     LOG [NestApplication] Nest application successfully started +62ms
 [Nest] 3069  - 10/30/2026, 12:52:02 PM     LOG [Bootstrap] settings-service listening on http://127.0.0.1:3001
+[Nest] 3069  - 10/30/2026, 6:58:29 PM     LOG [VoucherTypeService] VoucherType created — ID=11 Code=T168 Title=نوع سند تست ۱۶۸
