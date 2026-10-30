@@ -1,5 +1,185 @@
 [dfb-service] Installing dependencies...
 [0.12ms] ".env"
 bun install v1.3.14 (0d9b296a)
-warn: Slow filesystem detected. If /home/z/.bun/install/cache is a network drive, consider setting $BUN_INSTALL_CACHE_DIR to a local folder.
-ervice/src/main.ts'
+
++ @types/node@22.20.5
++ prisma@6.19.3
++ typescript@5.9.3
++ @nestjs/common@11.2.8
++ @nestjs/core@11.2.8
++ @nestjs/platform-express@11.2.8
++ @prisma/client@6.19.3
++ class-transformer@0.5.1
++ class-validator@0.14.4
++ reflect-metadata@0.2.2
++ rxjs@7.8.2
+
+139 packages installed [89.84s]
+[dfb-service] Running bun run dev...
+$ DATABASE_URL="file:/home/z/my-project/db/dfb.db" NODE_PATH=./node_modules bun --hot src/main.ts
+[Nest] 2385  - 10/30/2026, 12:51:37 PM     LOG [NestFactory] Starting Nest application...
+[Nest] 2385  - 10/30/2026, 12:51:38 PM   ERROR [ExceptionHandler] Error: @prisma/client did not initialize yet. Please run "prisma generate" and try to import it again.
+    at new PrismaClient (/home/z/my-project/mini-services/dfb-service/node_modules/.prisma/client/default.js:43:15)
+    at createVersionedPrismaClient (/home/z/my-project/mini-services/dfb-service/src/prisma/prisma.service.ts:30:16)
+    at instantiateClass (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/injector.js:458:55)
+    at <anonymous> (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/injector.js:71:45)
+    at async resolveConstructorParams (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/injector.js:196:30)
+    at async loadInstance (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/injector.js:76:24)
+    at async loadProvider (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/injector.js:115:20)
+    at async <anonymous> (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/instance-loader.js:56:33)
+    at async createInstancesOfProviders (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/instance-loader.js:55:23)
+    at async <anonymous> (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/instance-loader.js:40:24)
+    at async createInstances (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/instance-loader.js:39:23)
+    at async createInstancesOfDependencies (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/instance-loader.js:22:24)
+    at async <anonymous> (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/nest-factory.js:113:38)
+    at async asyncRun (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/errors/exceptions-zone.js:22:19)
+    at async initialize (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/nest-factory.js:111:52)
+    at async create (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/nest-factory.js:43:20)
+    at async bootstrap (/home/z/my-project/mini-services/dfb-service/src/main.ts:9:33)
+error: script "dev" exited with code 1
+[Nest] 2426  - 10/30/2026, 12:51:39 PM     LOG [NestFactory] Starting Nest application...
+[Nest] 2426  - 10/30/2026, 12:51:39 PM   ERROR [ExceptionHandler] Error: @prisma/client did not initialize yet. Please run "prisma generate" and try to import it again.
+    at new PrismaClient (/home/z/my-project/mini-services/dfb-service/node_modules/.prisma/client/default.js:43:15)
+    at createVersionedPrismaClient (/home/z/my-project/mini-services/dfb-service/src/prisma/prisma.service.ts:30:16)
+    at instantiateClass (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/injector.js:458:55)
+    at <anonymous> (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/injector.js:71:45)
+    at async resolveConstructorParams (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/injector.js:196:30)
+    at async loadInstance (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/injector.js:76:24)
+    at async loadProvider (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/injector.js:115:20)
+    at async <anonymous> (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/instance-loader.js:56:33)
+    at async createInstancesOfProviders (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/instance-loader.js:55:23)
+    at async <anonymous> (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/instance-loader.js:40:24)
+    at async createInstances (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/instance-loader.js:39:23)
+    at async createInstancesOfDependencies (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/instance-loader.js:22:24)
+    at async <anonymous> (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/nest-factory.js:113:38)
+    at async asyncRun (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/errors/exceptions-zone.js:22:19)
+    at async initialize (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/nest-factory.js:111:52)
+    at async create (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/nest-factory.js:43:20)
+    at async bootstrap (/home/z/my-project/mini-services/dfb-service/src/main.ts:9:33)
+error: script "dev" exited with code 1
+$ DATABASE_URL="file:/home/z/my-project/db/dfb.db" NODE_PATH=./node_modules bun --hot src/main.ts
+[Nest] 3140  - 10/30/2026, 12:52:57 PM     LOG [NestFactory] Starting Nest application...
+[Nest] 3140  - 10/30/2026, 12:52:57 PM   ERROR [ExceptionHandler] Error: @prisma/client did not initialize yet. Please run "prisma generate" and try to import it again.
+    at new PrismaClient (/home/z/my-project/mini-services/dfb-service/node_modules/.prisma/client/default.js:43:15)
+    at createVersionedPrismaClient (/home/z/my-project/mini-services/dfb-service/src/prisma/prisma.service.ts:30:16)
+    at instantiateClass (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/injector.js:458:55)
+    at <anonymous> (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/injector.js:71:45)
+    at async resolveConstructorParams (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/injector.js:196:30)
+    at async loadInstance (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/injector.js:76:24)
+    at async loadProvider (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/injector.js:115:20)
+    at async <anonymous> (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/instance-loader.js:56:33)
+    at async createInstancesOfProviders (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/instance-loader.js:55:23)
+    at async <anonymous> (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/instance-loader.js:40:24)
+    at async createInstances (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/instance-loader.js:39:23)
+    at async createInstancesOfDependencies (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/instance-loader.js:22:24)
+    at async <anonymous> (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/nest-factory.js:113:38)
+    at async asyncRun (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/errors/exceptions-zone.js:22:19)
+    at async initialize (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/nest-factory.js:111:52)
+    at async create (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/nest-factory.js:43:20)
+    at async bootstrap (/home/z/my-project/mini-services/dfb-service/src/main.ts:9:33)
+error: script "dev" exited with code 1
+$ DATABASE_URL="file:/home/z/my-project/db/dfb.db" NODE_PATH=./node_modules bun --hot src/main.ts
+[Nest] 3198  - 10/30/2026, 12:53:57 PM     LOG [NestFactory] Starting Nest application...
+[Nest] 3198  - 10/30/2026, 12:53:57 PM   ERROR [ExceptionHandler] Error: @prisma/client did not initialize yet. Please run "prisma generate" and try to import it again.
+    at new PrismaClient (/home/z/my-project/mini-services/dfb-service/node_modules/.prisma/client/default.js:43:15)
+    at createVersionedPrismaClient (/home/z/my-project/mini-services/dfb-service/src/prisma/prisma.service.ts:30:16)
+    at instantiateClass (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/injector.js:458:55)
+    at <anonymous> (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/injector.js:71:45)
+    at async resolveConstructorParams (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/injector.js:196:30)
+    at async loadInstance (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/injector.js:76:24)
+    at async loadProvider (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/injector.js:115:20)
+    at async <anonymous> (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/instance-loader.js:56:33)
+    at async createInstancesOfProviders (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/instance-loader.js:55:23)
+    at async <anonymous> (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/instance-loader.js:40:24)
+    at async createInstances (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/instance-loader.js:39:23)
+    at async createInstancesOfDependencies (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/instance-loader.js:22:24)
+    at async <anonymous> (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/nest-factory.js:113:38)
+    at async asyncRun (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/errors/exceptions-zone.js:22:19)
+    at async initialize (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/nest-factory.js:111:52)
+    at async create (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/nest-factory.js:43:20)
+    at async bootstrap (/home/z/my-project/mini-services/dfb-service/src/main.ts:9:33)
+error: script "dev" exited with code 1
+$ DATABASE_URL="file:/home/z/my-project/db/dfb.db" NODE_PATH=./node_modules bun --hot src/main.ts
+[Nest] 3267  - 10/30/2026, 12:54:57 PM     LOG [NestFactory] Starting Nest application...
+[Nest] 3267  - 10/30/2026, 12:54:57 PM   ERROR [ExceptionHandler] Error: @prisma/client did not initialize yet. Please run "prisma generate" and try to import it again.
+    at new PrismaClient (/home/z/my-project/mini-services/dfb-service/node_modules/.prisma/client/default.js:43:15)
+    at createVersionedPrismaClient (/home/z/my-project/mini-services/dfb-service/src/prisma/prisma.service.ts:30:16)
+    at instantiateClass (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/injector.js:458:55)
+    at <anonymous> (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/injector.js:71:45)
+    at async resolveConstructorParams (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/injector.js:196:30)
+    at async loadInstance (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/injector.js:76:24)
+    at async loadProvider (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/injector.js:115:20)
+    at async <anonymous> (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/instance-loader.js:56:33)
+    at async createInstancesOfProviders (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/instance-loader.js:55:23)
+    at async <anonymous> (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/instance-loader.js:40:24)
+    at async createInstances (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/instance-loader.js:39:23)
+    at async createInstancesOfDependencies (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/instance-loader.js:22:24)
+    at async <anonymous> (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/nest-factory.js:113:38)
+    at async asyncRun (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/errors/exceptions-zone.js:22:19)
+    at async initialize (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/nest-factory.js:111:52)
+    at async create (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/nest-factory.js:43:20)
+    at async bootstrap (/home/z/my-project/mini-services/dfb-service/src/main.ts:9:33)
+error: script "dev" exited with code 1
+$ DATABASE_URL="file:/home/z/my-project/db/dfb.db" NODE_PATH=./node_modules bun --hot src/main.ts
+[Nest] 3331  - 10/30/2026, 12:55:57 PM     LOG [NestFactory] Starting Nest application...
+[Nest] 3331  - 10/30/2026, 12:55:57 PM   ERROR [ExceptionHandler] Error: @prisma/client did not initialize yet. Please run "prisma generate" and try to import it again.
+    at new PrismaClient (/home/z/my-project/mini-services/dfb-service/node_modules/.prisma/client/default.js:43:15)
+    at createVersionedPrismaClient (/home/z/my-project/mini-services/dfb-service/src/prisma/prisma.service.ts:30:16)
+    at instantiateClass (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/injector.js:458:55)
+    at <anonymous> (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/injector.js:71:45)
+    at async resolveConstructorParams (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/injector.js:196:30)
+    at async loadInstance (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/injector.js:76:24)
+    at async loadProvider (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/injector.js:115:20)
+    at async <anonymous> (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/instance-loader.js:56:33)
+    at async createInstancesOfProviders (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/instance-loader.js:55:23)
+    at async <anonymous> (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/instance-loader.js:40:24)
+    at async createInstances (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/instance-loader.js:39:23)
+    at async createInstancesOfDependencies (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/instance-loader.js:22:24)
+    at async <anonymous> (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/nest-factory.js:113:38)
+    at async asyncRun (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/errors/exceptions-zone.js:22:19)
+    at async initialize (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/nest-factory.js:111:52)
+    at async create (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/nest-factory.js:43:20)
+    at async bootstrap (/home/z/my-project/mini-services/dfb-service/src/main.ts:9:33)
+error: script "dev" exited with code 1
+$ DATABASE_URL="file:/home/z/my-project/db/dfb.db" NODE_PATH=./node_modules bun --hot src/main.ts
+[Nest] 3429  - 10/30/2026, 12:57:27 PM     LOG [NestFactory] Starting Nest application...
+[Nest] 3429  - 10/30/2026, 12:57:27 PM   ERROR [ExceptionHandler] Error: @prisma/client did not initialize yet. Please run "prisma generate" and try to import it again.
+    at new PrismaClient (/home/z/my-project/mini-services/dfb-service/node_modules/.prisma/client/default.js:43:15)
+    at createVersionedPrismaClient (/home/z/my-project/mini-services/dfb-service/src/prisma/prisma.service.ts:30:16)
+    at instantiateClass (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/injector.js:458:55)
+    at <anonymous> (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/injector.js:71:45)
+    at async resolveConstructorParams (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/injector.js:196:30)
+    at async loadInstance (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/injector.js:76:24)
+    at async loadProvider (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/injector.js:115:20)
+    at async <anonymous> (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/instance-loader.js:56:33)
+    at async createInstancesOfProviders (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/instance-loader.js:55:23)
+    at async <anonymous> (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/instance-loader.js:40:24)
+    at async createInstances (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/instance-loader.js:39:23)
+    at async createInstancesOfDependencies (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/instance-loader.js:22:24)
+    at async <anonymous> (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/nest-factory.js:113:38)
+    at async asyncRun (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/errors/exceptions-zone.js:22:19)
+    at async initialize (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/nest-factory.js:111:52)
+    at async create (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/nest-factory.js:43:20)
+    at async bootstrap (/home/z/my-project/mini-services/dfb-service/src/main.ts:9:33)
+error: script "dev" exited with code 1
+$ DATABASE_URL="file:/home/z/my-project/db/dfb.db" NODE_PATH=./node_modules bun --hot src/main.ts
+[Nest] 3528  - 10/30/2026, 12:58:57 PM     LOG [NestFactory] Starting Nest application...
+[Nest] 3528  - 10/30/2026, 12:58:57 PM   ERROR [ExceptionHandler] Error: @prisma/client did not initialize yet. Please run "prisma generate" and try to import it again.
+    at new PrismaClient (/home/z/my-project/mini-services/dfb-service/node_modules/.prisma/client/default.js:43:15)
+    at createVersionedPrismaClient (/home/z/my-project/mini-services/dfb-service/src/prisma/prisma.service.ts:30:16)
+    at instantiateClass (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/injector.js:458:55)
+    at <anonymous> (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/injector.js:71:45)
+    at async resolveConstructorParams (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/injector.js:196:30)
+    at async loadInstance (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/injector.js:76:24)
+    at async loadProvider (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/injector.js:115:20)
+    at async <anonymous> (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/instance-loader.js:56:33)
+    at async createInstancesOfProviders (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/instance-loader.js:55:23)
+    at async <anonymous> (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/instance-loader.js:40:24)
+    at async createInstances (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/instance-loader.js:39:23)
+    at async createInstancesOfDependencies (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/injector/instance-loader.js:22:24)
+    at async <anonymous> (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/nest-factory.js:113:38)
+    at async asyncRun (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/errors/exceptions-zone.js:22:19)
+    at async initialize (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/nest-factory.js:111:52)
+    at async create (/home/z/my-project/mini-services/dfb-service/node_modules/@nestjs/core/nest-factory.js:43:20)
+    at async bootstrap (/home/z/my-project/mini-services/dfb-service/src/main.ts:9:33)
+error: script "dev" exited with code 1

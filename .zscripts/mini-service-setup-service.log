@@ -1,3 +1,33 @@
 [setup-service] Installing dependencies...
 bun install v1.3.14 (0d9b296a)
-warn: Slow filesystem detected. If /home/z/.bun/install/cache is a network drive, consider setting $BUN_INSTALL_CACHE_DIR to a local folder.
+warn: @prisma/client's postinstall cost you 31.9s
+
++ bun-types@1.4.3
++ prisma@6.19.3
++ @erp/shared@../shared
++ @prisma/client@6.19.3
++ reflect-metadata@0.2.2
+
+152 packages installed [121.87s]
+[setup-service] Running bun run dev...
+$ bun --hot src/main.ts
+error: Cannot find module '@nestjs/core' from '/home/z/my-project/mini-services/shared/src/index.ts'
+ this))
+
+----- Native stack trace -----
+
+ 1: 0x942e80  [node]
+ 2: 0x943568 node::Assert(node::AssertionInfo const&) [node]
+ 3: 0x9f18d0 node::WorkerThreadsTaskRunner::WorkerThreadsTaskRunner(int, node::PlatformDebugLogLevel) [node]
+ 4: 0x9f2062 node::NodePlatform::NodePlatform(int, v8::TracingController*, v8::PageAllocator*) [node]
+ 5: 0x8e21ce  [node]
+ 6: 0x8e253c node::Start(int, char**) [node]
+ 7: 0x7ff1b18c7ca8  [/lib/x86_64-linux-gnu/libc.so.6]
+ 8: 0x7ff1b18c7d65 __libc_start_main [/lib/x86_64-linux-gnu/libc.so.6]
+ 9: 0x7f66be _start [node]
+
+error: postinstall script from "@prisma/client" terminated by SIGABRT (Abort)
+/home/z/my-project/.zscripts/dev.sh: line 77:  1430 Aborted                 bun install
+[setup-service] Running bun run dev...
+$ bun --hot src/main.ts
+error: Cannot find module '@nestjs/core' from '/home/z/my-project/mini-services/shared/src/index.ts'
