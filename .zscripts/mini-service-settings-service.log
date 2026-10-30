@@ -2,4 +2,21 @@
 [0.03ms] ".env"
 bun install v1.3.14 (0d9b296a)
 error: Fail extracting tarball for "@prisma/client"
-or: Cannot find module 'rxjs/operators' from '/home/z/my-project/mini-services/settings-service/node_modules/@nestjs/common/serializer/class-serializer.interceptor.js'
+error: Fail extracting tarball from @prisma/client
+[settings-service] Running bun run dev...
+$ NODE_PATH=./node_modules bun --hot src/main.ts
+error: Cannot find module '@prisma/client' from '/home/z/my-project/mini-services/settings-service/src/prisma/prisma.service.ts'
+$ NODE_PATH=./node_modules bun --hot src/main.ts
+error: Cannot find module '@prisma/client' from '/home/z/my-project/mini-services/settings-service/src/prisma/prisma.service.ts'
+$ NODE_PATH=./node_modules bun --hot src/main.ts
+error: Cannot find module '@prisma/client' from '/home/z/my-project/mini-services/settings-service/src/business-structure/business-structure.service.ts'
+$ NODE_PATH=./node_modules bun --hot src/main.ts
+error: Cannot find module '@prisma/client' from '/home/z/my-project/mini-services/settings-service/src/prisma/prisma.service.ts'
+$ NODE_PATH=./node_modules bun --hot src/main.ts
+error: Cannot find module '@prisma/client' from '/home/z/my-project/mini-services/settings-service/src/prisma/prisma.service.ts'
+$ NODE_PATH=./node_modules bun --hot src/main.ts
+error: Cannot find module '@prisma/client' from '/home/z/my-project/mini-services/settings-service/src/prisma/prisma.service.ts'
+$ NODE_PATH=./node_modules bun --hot src/main.ts
+error: Cannot find module '@prisma/client' from '/home/z/my-project/mini-services/settings-service/src/prisma/prisma.service.ts'
+$ NODE_PATH=./node_modules bun --hot src/main.ts
+error: Cannot find module '@prisma/client' from '/home/z/my-project/mini-services/settings-service/src/prisma/prisma.service.ts'
