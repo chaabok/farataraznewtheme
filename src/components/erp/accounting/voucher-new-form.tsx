@@ -39,6 +39,7 @@ import {
   applyDateMask,
   normalizeDigits,
 } from "@/components/forms/form-primitives";
+import { useAlignedLabels } from "@/components/forms/use-aligned-labels";
 import { displayToStoredDate, storedToDisplayDate } from "@/lib/calendar-date";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -236,6 +237,56 @@ function formatAmount(n: number, locale: string): string {
 
 /* ------------------------------- header field shell ------------------------------- */
 
+/* Task 164 (userformlabelalignment — فرمان مالک): واحد برچسب با قرارداد مارک‌آپ
+   useAlignedLabels (Task 25) — جعبهٔ متنِ برچسب عرض متغیر --label-w می‌گیرد (توسط
+   هوک در هر ناحیه تنظیم می‌شود) تا ابتدای همهٔ ورودی‌های همان ناحیه روی یک خط
+   عمودی بنشیند؛ جاخالی ستاره همیشه حاضر است (نامرئی وقتی اجباری نیست) تا
+   دونقطه‌ها و ورودی‌ها هم‌تراز بمانند. RTL/LTR امن — الگوی form-primitives. */
+function LabelUnit({
+  text,
+  required,
+  className,
+}: {
+  text: string;
+  required?: boolean;
+  className?: string;
+}) {
+  return (
+    <span
+      data-form-label
+      className={cn(
+        "flex shrink-0 items-center gap-0.5 whitespace-nowrap text-muted-foreground",
+        className ?? "text-xs",
+      )}
+    >
+      <span aria-hidden className={cn("text-rose-500", !required && "invisible")}>
+        *
+      </span>
+      <span className="w-[var(--label-w,auto)] shrink-0 text-end">
+        <span data-form-label-text className="inline-block whitespace-nowrap">
+          {text}
+        </span>
+      </span>
+      <span aria-hidden>:</span>
+    </span>
+  );
+}
+
+/* Task 164 (userformlabelalignment) — ناحیهٔ هم‌ترازی برچسب‌ها: هوک useAlignedLabels
+   را روی ظرف خودش سوار می‌کند (scope=container: یک عرض مشترک برچسب در کل ناحیه ⇒
+   ستون‌های عمودی صاف ورودی‌ها). به‌جای refهای پراکنده، هر ناحیهٔ فرم سند با همین
+   کامپوننت ساخته می‌شود تا افکت اندازه‌گیری با mount/unmount ناحیه‌های شرطی
+   (مثل گرید حالت فرمی) خودبه‌خود دوباره اجرا شود. */
+function AlignedZone({ className, children, ...rest }: React.HTMLAttributes<HTMLDivElement>) {
+  const zoneRef = React.useRef<HTMLDivElement | null>(null);
+  useAlignedLabels(zoneRef, { scope: "container" });
+  return (
+    <div ref={zoneRef} className={className} {...rest}>
+      {children}
+    </div>
+  );
+}
+
 function HeaderField({
   label,
   required,
@@ -250,16 +301,8 @@ function HeaderField({
   className?: string;
 }) {
   return (
-    <div className={cn("flex min-w-0 items-center gap-2", className)}>
-      <span className="flex shrink-0 items-center gap-0.5 whitespace-nowrap text-xs text-muted-foreground">
-        {required && (
-          <span aria-hidden className="text-rose-500">
-            *
-          </span>
-        )}
-        <span>{label}</span>
-        <span aria-hidden>:</span>
-      </span>
+    <div data-form-cell className={cn("flex min-w-0 items-center gap-2", className)}>
+      <LabelUnit text={label} required={required} />
       <div className={cn("min-w-0 flex-1", readOnly && "opacity-90")}>{children}</div>
     </div>
   );
@@ -602,21 +645,27 @@ function MoeinPickerCell({
 
 /* ---------------------------------- totals box ---------------------------------- */
 
+/* Task 164 (فرمان مالک): «جمع بدهکار» و «جمع بستانکار» +۷۰٪ عرض —
+   min-w-24 (۶rem = ۹۶px) × ۱٫۷ = ۱۰٫۲rem ≈ ۱۶۳px؛ سلول‌های «مانده» دست‌نخورده.
+   برچسب هم با قرارداد userformlabelalignment (LabelUnit) هم‌تراز می‌شود. */
 function TotalCell({
   label,
   value,
   tone,
+  wide,
 }: {
   label: string;
   value: string;
   tone: "debit" | "credit" | "neutral";
+  wide?: boolean;
 }) {
   return (
-    <div className="flex items-center gap-1.5">
-      <span className="shrink-0 whitespace-nowrap text-[11px] text-muted-foreground">{label}:</span>
+    <div data-form-cell className="flex min-w-0 items-center gap-1.5">
+      <LabelUnit text={label} className="text-[11px]" />
       <span
         className={cn(
-          "min-w-24 rounded-md border px-2 py-1 text-end text-xs font-bold tabular-nums",
+          wide ? "min-w-[10.2rem]" : "min-w-24",
+          "rounded-md border px-2 py-1 text-end text-xs font-bold tabular-nums",
           tone === "debit" && "border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
           tone === "credit" && "border-rose-500/40 bg-rose-500/10 text-rose-700 dark:text-rose-400",
           tone === "neutral" && "border-border bg-muted/50 text-foreground",
@@ -1259,7 +1308,8 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
               <FilePlus2 className="h-3.5 w-3.5 text-emerald-600" aria-hidden />
               <h3 className="text-xs font-bold text-foreground/90">{t("vc.header")}</h3>
             </div>
-            <div className="grid grid-cols-1 gap-x-5 gap-y-2 px-3 py-3 md:grid-cols-2 xl:grid-cols-4">
+            {/* Task 164 — ناحیهٔ هم‌ترازی userformlabelalignment برای فیلدهای هدر سند */}
+            <AlignedZone className="grid grid-cols-1 gap-x-5 gap-y-2 px-3 py-3 md:grid-cols-2 xl:grid-cols-4">
               <HeaderField label={t("vc.voucherNo")} required readOnly>
                 <Input
                   value={voucherNo}
@@ -1393,7 +1443,7 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                   className="min-h-7 resize-none py-1 text-xs"
                 />
               </HeaderField>
-            </div>
+            </AlignedZone>
           </div>
 
           {/* ---------- بخش اقلام سند ---------- */}
@@ -1658,7 +1708,8 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                     {/* Task 163: افزودن/حذف ردیف از این نوار به فوتربار مشترکِ پایین کارت منتقل شد */}
                   </div>
                 </div>
-                <div className="grid min-h-0 flex-1 grid-cols-1 gap-2 overflow-y-auto rounded-xl border border-border/60 bg-background/50 p-3 scrollbar-slim sm:grid-cols-2 lg:grid-cols-3">
+                {/* Task 164 — ناحیهٔ هم‌ترازی userformlabelalignment برای فیلدهای حالت فرمی */}
+                <AlignedZone className="grid min-h-0 flex-1 grid-cols-1 gap-2 overflow-y-auto rounded-xl border border-border/60 bg-background/50 p-3 scrollbar-slim sm:grid-cols-2 lg:grid-cols-3">
                   {/* Task 161 (فرمان مالک): در حالت فرمی عرض فیلدهای معین/تفصیلی‌ها/بدهکار/بستانکار/تاریخ و شماره پیگیری ۶۰٪ کم شده —
                       max-w-[40%] روی خودِ کنترل نسبت به پهنای فعلی (wrapper های flex-1)؛ شرح و ستون‌های ارز دست‌نخورده */}
                   <HeaderField label={t("vc.moeinCode")} required>
@@ -1824,7 +1875,7 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                       </HeaderField>
                     </>
                   )}
-                </div>
+                </AlignedZone>
               </div>
             )}
 
@@ -1863,7 +1914,8 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                 <h4 className="text-xs font-bold text-foreground/90">{t("vc.footerAccounts")}</h4>
               </div>
               {/* بیش از ۳ ردیف ⇒ اسکرول عمودی (max-h-24 = دقیقاً ۳ ردیف ۲۸px + ۲ فاصله ۶px) */}
-              <div
+              {/* Task 164 — ناحیهٔ هم‌ترازی userformlabelalignment برای حساب‌های فوتر سند */}
+              <AlignedZone
                 tabIndex={0}
                 aria-label={t("vc.footerAccounts")}
                 className="grid max-h-24 grid-cols-1 gap-x-4 gap-y-1.5 overflow-y-auto pe-1 scrollbar-slim sm:grid-cols-2"
@@ -1885,7 +1937,7 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                     />
                   );
                 })}
-              </div>
+              </AlignedZone>
             </div>
             {/* چپ فوتر — محاسبات خودکار */}
             <div className="p-3">
@@ -1902,12 +1954,13 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                   {totals.balanced ? t("vc.balanceOk") : t("vc.balanceDiff")}
                 </span>
               </div>
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                <TotalCell label={t("vc.totalDebit")} value={formatAmount(totals.totalDebit, locale)} tone="debit" />
-                <TotalCell label={t("vc.totalCredit")} value={formatAmount(totals.totalCredit, locale)} tone="credit" />
+              {/* Task 164 — ناحیهٔ هم‌ترازی userformlabelalignment + عرض +۷۰٪ برای سلول‌های مجموع بدهکار/بستانکار */}
+              <AlignedZone className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                <TotalCell label={t("vc.totalDebit")} value={formatAmount(totals.totalDebit, locale)} tone="debit" wide />
+                <TotalCell label={t("vc.totalCredit")} value={formatAmount(totals.totalCredit, locale)} tone="credit" wide />
                 <TotalCell label={t("vc.balanceDebit")} value={formatAmount(totals.balanceDebit, locale)} tone="debit" />
                 <TotalCell label={t("vc.balanceCredit")} value={formatAmount(totals.balanceCredit, locale)} tone="credit" />
-              </div>
+              </AlignedZone>
               {/* Task 163: دکمهٔ افزودن ردیف به فوتربار کارت اقلام منتقل شد */}
             </div>
           </div>
@@ -2023,9 +2076,10 @@ function NavGlyph({
 
 function FooterReadonly({ label, value }: { label: string; value: string }) {
   return (
-    /* h-7 ثابت ⇒ ارتفاع هر ردیف دقیقاً ۲۸px برای محاسبهٔ سقف ۳ ردیفی فوتر (Task 159) */
-    <div className="flex h-7 shrink-0 items-center gap-1.5">
-      <span className="shrink-0 whitespace-nowrap text-[11px] text-muted-foreground">{label}:</span>
+    /* h-7 ثابت ⇒ ارتفاع هر ردیف دقیقاً ۲۸px برای محاسبهٔ سقف ۳ ردیفی فوتر (Task 159)؛
+       Task 164 — برچسب با قرارداد userformlabelalignment (LabelUnit) */
+    <div data-form-cell className="flex h-7 shrink-0 items-center gap-1.5">
+      <LabelUnit text={label} className="text-[11px]" />
       <span className="min-w-0 flex-1 truncate rounded-md border border-border/70 bg-muted/40 px-2 py-1 text-[11px] text-foreground/80">
         {value || "—"}
       </span>
