@@ -1388,8 +1388,10 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
           </div>
 
           {/* ---------- بخش اقلام سند ---------- */}
-          {/* flex-1: تمام ارتفاع صرفه‌جویی‌شدهٔ فوتر (Task 159) به همین بخش اختصاص می‌یابد */}
-          <div className="mt-3 flex min-h-36 flex-1 flex-col rounded-2xl border border-border/70 bg-card shadow-sm">
+          {/* flex-1: تمام ارتفاع صرفه‌جویی‌شدهٔ فوتر (Task 159) به همین بخش اختصاص می‌یابد؛
+              Task 161: زیر lg کارت حداقلِ ارتفاع محتوا را دارد (اسکرول طبیعی بدنه) تا ویرایشگر فرمی
+              در موبایل به لبهٔ ۳۶ فشرده نشود؛ در lg+ قرارداد Task 159 (کف min-h-36 + اسکرول داخلی) */}
+          <div className="mt-3 flex min-h-36 max-lg:min-h-max flex-1 flex-col rounded-2xl border border-border/70 bg-card shadow-sm">
             <div className="flex flex-wrap items-center gap-2 border-b border-border/50 px-3 py-2">
               <Table2 className="h-3.5 w-3.5 text-teal-600" aria-hidden />
               <h3 className="text-xs font-bold text-foreground/90">{t("vc.items")}</h3>
@@ -1622,8 +1624,10 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
               </div>
             ) : (
               /* ----- مدل فرمی: کارت تک‌ردیف با ناوبری (مناسب موبایل) ----- */
-              <div className="p-3">
-                <div className="mb-2 flex flex-wrap items-center gap-1.5">
+              /* Task 161 (اصلاح E2E): wrapper فلکسی + اسکرول داخلی گرید — همان معماری گرید جدولی؛
+                 وگرنه در نماهای کم‌ارتفاع (موبایل) کارت اقلام با min-h-36 فشرده و محتوا روی فوتر می‌ریزد */
+              <div className="flex min-h-0 flex-1 flex-col p-3">
+                <div className="mb-2 flex shrink-0 flex-wrap items-center gap-1.5">
                   <span className="text-xs font-semibold text-foreground/80">
                     {t("vc.rowOf").replace("{i}", String(formIdx + 1)).replace("{n}", String(rows.length))}
                   </span>
@@ -1655,7 +1659,7 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                     <SmallTool label={t("vc.deleteRow")} onClick={() => deleteRow(formIdx)} Icon={X} danger />
                   </div>
                 </div>
-                <div className="grid grid-cols-1 gap-2 rounded-xl border border-border/60 bg-background/50 p-3 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="grid min-h-0 flex-1 grid-cols-1 gap-2 overflow-y-auto rounded-xl border border-border/60 bg-background/50 p-3 scrollbar-slim sm:grid-cols-2 lg:grid-cols-3">
                   {/* Task 161 (فرمان مالک): در حالت فرمی عرض فیلدهای معین/تفصیلی‌ها/بدهکار/بستانکار/تاریخ و شماره پیگیری ۶۰٪ کم شده —
                       max-w-[40%] روی خودِ کنترل نسبت به پهنای فعلی (wrapper های flex-1)؛ شرح و ستون‌های ارز دست‌نخورده */}
                   <HeaderField label={t("vc.moeinCode")} required>
@@ -1830,7 +1834,7 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                     setSelectedRow(rows.length);
                     markDirty();
                   }}
-                  className="mt-2 flex h-8 items-center gap-1.5 rounded-lg border border-dashed border-emerald-500/50 px-3 text-xs font-medium text-emerald-700 transition-colors hover:bg-emerald-500/10 dark:text-emerald-400 cursor-pointer"
+                  className="mt-2 flex h-8 shrink-0 items-center gap-1.5 self-start rounded-lg border border-dashed border-emerald-500/50 px-3 text-xs font-medium text-emerald-700 transition-colors hover:bg-emerald-500/10 dark:text-emerald-400 cursor-pointer"
                 >
                   <Plus className="h-3.5 w-3.5" aria-hidden />
                   {t("vc.addRow")}
