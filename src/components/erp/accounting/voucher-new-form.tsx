@@ -1022,6 +1022,7 @@ function AcctChainLine({
       aria-label={full || undefined}
       title={full || undefined}
       onClick={onSelect}
+      data-chain-row={idx}
       className={cn(
         "flex h-6 cursor-pointer items-center gap-1.5 overflow-x-auto rounded-md border px-2 text-[11px] scrollbar-slim",
         selected ? "border-primary/40 bg-primary/5" : "border-transparent hover:bg-foreground/[0.03]",
@@ -1448,6 +1449,24 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
       }),
     [rows, moeinById, detailById, detailLevelsCount, levelInfoOf, t],
   );
+
+  /* Task 172 (الزام ۳ فرمان مالک) — فوتر افقی همیشه «ردیفِ جاری» (ردیفی که کاربر
+     روی آن است) را نمایان نگه می‌دارد؛ viewport پیش‌فرض یک خط است ⇒ با تغییر
+     ردیفِ فعال، همان خط به لبهٔ نزدیکِ ناحیهٔ اسکرول می‌آید. scrollIntoView
+     والدین صفحه را هم تکان می‌دهد؛ محاسبهٔ دستی با offsetTop امن‌تر است. */
+  const footerChainListRef = React.useRef<HTMLDivElement | null>(null);
+  React.useEffect(() => {
+    const list = footerChainListRef.current;
+    if (!list || acctMode !== "h") return;
+    const line = list.querySelector<HTMLElement>(`[data-chain-row="${footerRowIdx}"]`);
+    if (!line) return;
+    const top = line.offsetTop - list.offsetTop;
+    if (top < list.scrollTop) {
+      list.scrollTop = top;
+    } else if (top + line.offsetHeight > list.scrollTop + list.clientHeight) {
+      list.scrollTop = top + line.offsetHeight - list.clientHeight;
+    }
+  }, [footerRowIdx, acctMode, rows.length, footerH]);
 
   /* Task 169 — نمایش هوشمند: بیشترین سطح تفصیلیِ موردنیاز در بین همهٔ ردیف‌ها؛
      ستون‌های تفصیلیِ نمای هوشمند = سطوح ۱..این‌مقدار (حفظ سلسله‌مراتب طبق
@@ -1921,6 +1940,25 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
     else void saveFrequentDesc(idx);
   };
 
+  /* Task 172 (الزام ۳ فرمان مالک) — فوترِ حساب‌ها همیشه «ردیفی» را نشان می‌دهد که
+     کاربر روی آن است: فوکوسِ هر سلول اقلام (جدولی یا فرمی، با کلیک یا ناوبری Enter)
+     ردیفِ فوتر را به همان ردیف می‌برد؛ خط ردیف در فوتر افقی خودکار اسکرول می‌شود. */
+  const onItemsFocusCapture = (e: React.FocusEvent<HTMLDivElement>) => {
+    const holder = (e.target as HTMLElement).closest?.("[data-cell]") as HTMLElement | null;
+    const raw = holder?.getAttribute("data-row") ?? "";
+    if (raw === "") return;
+    const idx = raw === "form" ? formIdx : Number(raw);
+    if (!Number.isFinite(idx) || idx < 0 || idx >= rows.length) return;
+    if (idx !== selectedRow) setSelectedRow(idx);
+  };
+
+  /* Task 172 — ناوبری فرمی (اولین/قبلی/بعدی/آخرین): ردیفِ فوتر هم همراه ردیفِ
+     فعالِ فرم حرکت می‌کند تا «اطلاعات ردیفی که کاربر روی آن است» نمایش داده شود. */
+  const gotoFormRow = (idx: number) => {
+    setFormRow(idx);
+    setSelectedRow(idx);
+  };
+
   /* ---------------- Task 170 — درگ ارتفاع بخش‌ها (الزام ۱) ---------------- */
   const beginSectionResize = (e: React.PointerEvent<HTMLDivElement>, kind: "header" | "footer") => {
     if (e.button !== 0) return;
@@ -2271,6 +2309,7 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
               در موبایل به لبهٔ ۳۶ فشرده نشود؛ در lg+ قرارداد Task 159 (کف min-h-36 + اسکرول داخلی) */}
           <div
             onKeyDown={onItemsKeyDown}
+            onFocusCapture={onItemsFocusCapture}
             className="mt-3 flex min-h-36 max-lg:min-h-max flex-1 flex-col rounded-2xl border border-border/70 bg-card shadow-sm"
           >
             {/* Task 166 (فرمان مالک): تاگل «جدولی/فرمی» به فوتربار اقلام (کنار «افزودن ردیف») منتقل شد؛
@@ -2574,20 +2613,20 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                     {t("vc.rowOf").replace("{i}", String(formIdx + 1)).replace("{n}", String(rows.length))}
                   </span>
                   <div className="ms-auto flex items-center gap-1">
-                    <SmallTool label={t("sft.first")} onClick={() => setFormRow(0)} Icon={ChevronFirst} disabled={formIdx === 0} />
+                    <SmallTool label={t("sft.first")} onClick={() => gotoFormRow(0)} Icon={ChevronFirst} disabled={formIdx === 0} />
                     <SmallTool
                       label={t("vc.prevRow")}
-                      onClick={() => setFormRow(Math.max(0, formIdx - 1))}
+                      onClick={() => gotoFormRow(Math.max(0, formIdx - 1))}
                       Icon={ChevronUp}
                       disabled={formIdx === 0}
                     />
                     <SmallTool
                       label={t("vc.nextRow")}
-                      onClick={() => setFormRow(Math.min(rows.length - 1, formIdx + 1))}
+                      onClick={() => gotoFormRow(Math.min(rows.length - 1, formIdx + 1))}
                       Icon={ChevronDown}
                       disabled={formIdx >= rows.length - 1}
                     />
-                    <SmallTool label={t("sft.last")} onClick={() => setFormRow(rows.length - 1)} Icon={ChevronLast} disabled={formIdx >= rows.length - 1} />
+                    <SmallTool label={t("sft.last")} onClick={() => gotoFormRow(rows.length - 1)} Icon={ChevronLast} disabled={formIdx >= rows.length - 1} />
                     {/* Task 171 — الزام ۵: درج ردیف خالی بین ردیف‌ها در حالت فرمی (پس از ردیف فعال) */}
                     <SmallTool label={t("vc.insertRowHere")} onClick={() => insertRowBelow(formIdx)} Icon={ListPlus} />
                     {/* Task 163: افزودن/حذف ردیف از این نوار به فوتربار مشترکِ پایین کارت منتقل شد */}
@@ -2875,10 +2914,18 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
             >
             {/* راست فوتر — فقط نمایش؛ دو مدل نمایش (Task 165 فرمان مالک):
                 عمودی = زنجیرهٔ حساب ردیف انتخاب‌شده (گرید دوستونه)؛
-                افقی (پیش‌فرض) = هر ردیف سند یک خط: «گروه حساب: … / حساب کل: … / …» با حذف جفت‌های خالی؛
-                در حالت افقی هر دو باکس فشرده می‌شوند و ارتفاع فوتر ~۵۰٪ کم می‌شود */}
-            <div className={cn("min-h-0 border-border/50 lg:border-e", acctMode === "v" ? "p-3" : "px-3 py-2", footerH != null && "overflow-y-auto scrollbar-slim")}>
-              <div className={cn("flex items-center gap-2", acctMode === "v" ? "mb-2" : "mb-1")}>
+                افقی (پیش‌فرض) = هر ردیف سند یک خط: «گروه حساب: … / حساب کل: …» با حذف جفت‌های خالی؛
+                در حالت افقی هر دو باکس فشرده می‌شوند و ارتفاع فوتر ~۵۰٪ کم می‌شود.
+                Task 172 (فرمان مالک): ناحیهٔ خالی زیر خط اطلاعات حساب‌ها حذف شد — پنل افقی ستونی شد و
+                ناحیهٔ اسکرول تا ۳ پیکسلِ لبهٔ پایین می‌آید (footerH=null ⇒ ارتفاع پیش‌فرض = یک خط + ۳px لبه) */}
+            <div
+              className={cn(
+                "min-h-0 border-border/50 lg:border-e",
+                acctMode === "v" ? "p-3" : "flex flex-col px-3 pb-[3px] pt-2",
+                footerH != null && (acctMode === "v" ? "overflow-y-auto scrollbar-slim" : "min-h-0 overflow-hidden"),
+              )}
+            >
+              <div className={cn("flex shrink-0 items-center gap-2", acctMode === "v" ? "mb-2" : "mb-1")}>
                 <Inbox className="h-3.5 w-3.5 text-muted-foreground" aria-hidden />
                 <h4 className="text-xs font-bold text-foreground/90">
                   {acctMode === "v" ? t("vc.footerAccounts") : t("vc.footerAccountsAll")}
@@ -2923,13 +2970,21 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                   })}
                 </AlignedZone>
               ) : (
-                /* افقی — یک خط به‌ازای هر ردیف سند؛ نوار ۳۲px (یک خط کامل + ۸px پیش‌نمای اسکرول)؛
-                   کلیک روی هر خط همان ردیف را انتخاب می‌کند (هم‌گام با ناوبری جدولی/فرمی) */
+                /* افقی — Task 172 (فرمان مالک): پیش‌فرض فقط «یک ردیف» دیده می‌شود
+                   (۲۴px خط + ۳px لبه = max-h-[27px]) و اسکرول فقط وقتی ساخته می‌شود که
+                   اطلاعات (تعداد ردیف‌ها) از یک خط بیشتر باشد؛ با فوترِ بلندشدهٔ Task 170
+                   ناحیهٔ اسکرول flex-1 می‌شود تا تا ۳ پیکسلِ لبهٔ پایین پر شود (بدون فضای مرده)؛
+                   ردیفِ جاری (فوکوس/کلیک در گرید یا ناوبری فرمی) همیشه با اسکرول در دید می‌ماند */
                 <div
+                  ref={footerChainListRef}
                   tabIndex={0}
                   role="list"
                   aria-label={t("vc.footerAccountsAll")}
-                  className="max-h-8 overflow-y-auto rounded-md pe-1 scrollbar-slim"
+                  data-footer-chain-list
+                  className={cn(
+                    "min-h-0 overflow-y-auto rounded-md pe-1 scrollbar-slim",
+                    footerH != null ? "flex-1" : "max-h-[27px]",
+                  )}
                 >
                   {rows.map((row, idx) => (
                     <AcctChainLine
