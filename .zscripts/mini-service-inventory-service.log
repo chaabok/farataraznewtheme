@@ -1,9 +1,2 @@
 [inventory-service] Installing dependencies...
 bun install v1.3.14 (0d9b296a)
-
-+ @erp/shared@../shared
-
-1 package installed [35.00ms]
-[inventory-service] Running bun run dev...
-$ bun --hot src/main.ts
-error: Cannot find module '@nestjs/core' from '/home/z/my-project/mini-services/shared/src/index.ts'
