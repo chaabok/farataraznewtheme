@@ -1,15 +1,15 @@
 $ bun --hot src/main.ts
-[Nest] 10647  - 10/30/2026, 9:03:26 AM     LOG [NestFactory] Starting Nest application...
-[Nest] 10647  - 10/30/2026, 9:03:26 AM     LOG [InstanceLoader] AppModule dependencies initialized +220ms
-[Nest] 10647  - 10/30/2026, 9:03:26 AM     LOG [InstanceLoader] PrismaModule dependencies initialized +6ms
-[Nest] 10647  - 10/30/2026, 9:03:26 AM     LOG [InstanceLoader] DataModule dependencies initialized +0ms
-[Nest] 10647  - 10/30/2026, 9:03:26 AM     LOG [InstanceLoader] SetupModule dependencies initialized +5ms
-[Nest] 10647  - 10/30/2026, 9:03:26 AM     LOG [RoutesResolver] SetupController {/api/setup}: +210ms
-[Nest] 10647  - 10/30/2026, 9:03:26 AM     LOG [RouterExplorer] Mapped {/api/setup/health, GET} route +46ms
-[Nest] 10647  - 10/30/2026, 9:03:26 AM     LOG [RouterExplorer] Mapped {/api/setup/overview, GET} route +28ms
-[Nest] 10647  - 10/30/2026, 9:03:26 AM     LOG [RouterExplorer] Mapped {/api/setup/services/:moduleKey, PUT} route +1ms
-[Nest] 10647  - 10/30/2026, 9:03:26 AM     LOG [RouterExplorer] Mapped {/api/setup/services/:moduleKey/records, GET} route +11ms
-[Nest] 10647  - 10/30/2026, 9:03:26 AM     LOG [RouterExplorer] Mapped {/api/setup/services/:moduleKey/records, POST} route +1ms
-[Nest] 10647  - 10/30/2026, 9:03:26 AM     LOG [RouterExplorer] Mapped {/api/setup/exchange, POST} route +0ms
-[Nest] 10647  - 10/30/2026, 9:03:27 AM     LOG [NestApplication] Nest application successfully started +195ms
-[Nest] 10647  - 10/30/2026, 9:03:27 AM     LOG [Bootstrap] setup-service listening on http://127.0.0.1:3013/api
+[Nest] 12626  - 10/30/2026, 9:19:15 AM     LOG [NestFactory] Starting Nest application...
+[Nest] 12626  - 10/30/2026, 9:19:15 AM     LOG [InstanceLoader] AppModule dependencies initialized +15ms
+[Nest] 12626  - 10/30/2026, 9:19:15 AM     LOG [InstanceLoader] PrismaModule dependencies initialized +0ms
+[Nest] 12626  - 10/30/2026, 9:19:15 AM     LOG [InstanceLoader] DataModule dependencies initialized +0ms
+[Nest] 12626  - 10/30/2026, 9:19:15 AM     LOG [InstanceLoader] SetupModule dependencies initialized +22ms
+[Nest] 12626  - 10/30/2026, 9:19:15 AM     LOG [RoutesResolver] SetupController {/api/setup}: +10ms
+[Nest] 12626  - 10/30/2026, 9:19:15 AM     LOG [RouterExplorer] Mapped {/api/setup/health, GET} route +2ms
+[Nest] 12626  - 10/30/2026, 9:19:15 AM     LOG [RouterExplorer] Mapped {/api/setup/overview, GET} route +0ms
+[Nest] 12626  - 10/30/2026, 9:19:15 AM     LOG [RouterExplorer] Mapped {/api/setup/services/:moduleKey, PUT} route +1ms
+[Nest] 12626  - 10/30/2026, 9:19:15 AM     LOG [RouterExplorer] Mapped {/api/setup/services/:moduleKey/records, GET} route +1ms
+[Nest] 12626  - 10/30/2026, 9:19:15 AM     LOG [RouterExplorer] Mapped {/api/setup/services/:moduleKey/records, POST} route +0ms
+[Nest] 12626  - 10/30/2026, 9:19:15 AM     LOG [RouterExplorer] Mapped {/api/setup/exchange, POST} route +0ms
+[Nest] 12626  - 10/30/2026, 9:19:15 AM     LOG [NestApplication] Nest application successfully started +33ms
+[Nest] 12626  - 10/30/2026, 9:19:15 AM     LOG [Bootstrap] setup-service listening on http://127.0.0.1:3013/api

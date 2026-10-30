@@ -1,11 +1,11 @@
 $ bun --hot src/main.ts
-[Nest] 10594  - 10/30/2026, 9:03:26 AM     LOG [NestFactory] Starting Nest application...
-[Nest] 10594  - 10/30/2026, 9:03:26 AM     LOG [InstanceLoader] AppModule dependencies initialized +193ms
-[Nest] 10594  - 10/30/2026, 9:03:26 AM     LOG [InstanceLoader] PrismaModule dependencies initialized +0ms
-[Nest] 10594  - 10/30/2026, 9:03:26 AM     LOG [InstanceLoader] ItemsModule dependencies initialized +12ms
-[Nest] 10594  - 10/30/2026, 9:03:26 AM     LOG [RoutesResolver] ItemsController {/api/items}: +122ms
-[Nest] 10594  - 10/30/2026, 9:03:26 AM     LOG [RouterExplorer] Mapped {/api/items, GET} route +14ms
-[Nest] 10594  - 10/30/2026, 9:03:26 AM     LOG [RouterExplorer] Mapped {/api/items/stats, GET} route +46ms
-[Nest] 10594  - 10/30/2026, 9:03:26 AM     LOG [RouterExplorer] Mapped {/api/items, POST} route +5ms
-[Nest] 10594  - 10/30/2026, 9:03:26 AM     LOG [NestApplication] Nest application successfully started +318ms
-[Nest] 10594  - 10/30/2026, 9:03:26 AM     LOG [Bootstrap] costing-service listening on http://127.0.0.1:3011/api
+[Nest] 12611  - 10/30/2026, 9:19:14 AM     LOG [NestFactory] Starting Nest application...
+[Nest] 12611  - 10/30/2026, 9:19:14 AM     LOG [InstanceLoader] AppModule dependencies initialized +88ms
+[Nest] 12611  - 10/30/2026, 9:19:14 AM     LOG [InstanceLoader] PrismaModule dependencies initialized +0ms
+[Nest] 12611  - 10/30/2026, 9:19:14 AM     LOG [InstanceLoader] ItemsModule dependencies initialized +4ms
+[Nest] 12611  - 10/30/2026, 9:19:15 AM     LOG [RoutesResolver] ItemsController {/api/items}: +76ms
+[Nest] 12611  - 10/30/2026, 9:19:15 AM     LOG [RouterExplorer] Mapped {/api/items, GET} route +12ms
+[Nest] 12611  - 10/30/2026, 9:19:15 AM     LOG [RouterExplorer] Mapped {/api/items/stats, GET} route +5ms
+[Nest] 12611  - 10/30/2026, 9:19:15 AM     LOG [RouterExplorer] Mapped {/api/items, POST} route +1ms
+[Nest] 12611  - 10/30/2026, 9:19:15 AM     LOG [NestApplication] Nest application successfully started +101ms
+[Nest] 12611  - 10/30/2026, 9:19:15 AM     LOG [Bootstrap] costing-service listening on http://127.0.0.1:3011/api

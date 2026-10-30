@@ -1,11 +1,11 @@
 $ bun --hot src/main.ts
-[Nest] 10610  - 10/30/2026, 9:03:26 AM     LOG [NestFactory] Starting Nest application...
-[Nest] 10610  - 10/30/2026, 9:03:26 AM     LOG [InstanceLoader] AppModule dependencies initialized +189ms
-[Nest] 10610  - 10/30/2026, 9:03:26 AM     LOG [InstanceLoader] PrismaModule dependencies initialized +0ms
-[Nest] 10610  - 10/30/2026, 9:03:26 AM     LOG [InstanceLoader] ItemsModule dependencies initialized +14ms
-[Nest] 10610  - 10/30/2026, 9:03:26 AM     LOG [RoutesResolver] ItemsController {/api/items}: +115ms
-[Nest] 10610  - 10/30/2026, 9:03:26 AM     LOG [RouterExplorer] Mapped {/api/items, GET} route +55ms
-[Nest] 10610  - 10/30/2026, 9:03:26 AM     LOG [RouterExplorer] Mapped {/api/items/stats, GET} route +6ms
-[Nest] 10610  - 10/30/2026, 9:03:26 AM     LOG [RouterExplorer] Mapped {/api/items, POST} route +3ms
-[Nest] 10610  - 10/30/2026, 9:03:26 AM     LOG [NestApplication] Nest application successfully started +326ms
-[Nest] 10610  - 10/30/2026, 9:03:26 AM     LOG [Bootstrap] financial-statement-service listening on http://127.0.0.1:3012/api
+[Nest] 12621  - 10/30/2026, 9:19:14 AM     LOG [NestFactory] Starting Nest application...
+[Nest] 12621  - 10/30/2026, 9:19:14 AM     LOG [InstanceLoader] AppModule dependencies initialized +95ms
+[Nest] 12621  - 10/30/2026, 9:19:14 AM     LOG [InstanceLoader] PrismaModule dependencies initialized +0ms
+[Nest] 12621  - 10/30/2026, 9:19:14 AM     LOG [InstanceLoader] ItemsModule dependencies initialized +4ms
+[Nest] 12621  - 10/30/2026, 9:19:14 AM     LOG [RoutesResolver] ItemsController {/api/items}: +47ms
+[Nest] 12621  - 10/30/2026, 9:19:14 AM     LOG [RouterExplorer] Mapped {/api/items, GET} route +13ms
+[Nest] 12621  - 10/30/2026, 9:19:14 AM     LOG [RouterExplorer] Mapped {/api/items/stats, GET} route +2ms
+[Nest] 12621  - 10/30/2026, 9:19:14 AM     LOG [RouterExplorer] Mapped {/api/items, POST} route +28ms
+[Nest] 12621  - 10/30/2026, 9:19:14 AM     LOG [NestApplication] Nest application successfully started +138ms
+[Nest] 12621  - 10/30/2026, 9:19:14 AM     LOG [Bootstrap] financial-statement-service listening on http://127.0.0.1:3012/api

@@ -169,3 +169,20 @@ $ bun --hot index.ts
 [auto-push 2026-10-30 12:39:44] نگهبان: settings-service spawn شد (pid=11393)
 [auto-push 2026-10-30 12:41:04] تغییر شناسایی شد (timer): 15 مسیر سورس، دیتابیس بدون تغییر → بک‌آپ §0.9 → کامیت → پوش
 [auto-push 2026-10-30 12:41:04] بک‌آپ §0.9: 17 فایل (2026-10-30_1241))
+[auto-push 2026-10-30 12:41:04] کامیت شد: Auto-sync (پوش خودکار): 2026-10-30 12:41:04 تهران — سورس: 15 فایل، دیتابیس: بدون تغییر — بک‌آپ §0.9 ضمیمه شد
+[auto-push 2026-10-30 12:41:05] ریموت 1 کامیت جلوتر است — rebase
+[auto-push 2026-10-30 12:41:05] rebase conflict — لغو شد، تیک بعدی دوباره تلاش می‌کند
+[auto-push 2026-10-30 12:41:14] نگهبان: settings-service پاسخ نمی‌دهد — اجرا…
+[auto-push 2026-10-30 12:41:14] نگهبان: settings-service spawn شد (pid=11575)
+[auto-push 2026-10-30 12:42:44] نگهبان: settings-service پاسخ نمی‌دهد — اجرا…
+[auto-push 2026-10-30 12:42:44] نگهبان: settings-service spawn شد (pid=11758)
+[auto-push 2026-10-30 12:44:14] نگهبان: settings-service پاسخ نمی‌دهد — اجرا…
+[auto-push 2026-10-30 12:44:14] نگهبان: settings-service spawn شد (pid=11939)
+[auto-push 2026-10-30 12:45:44] نگهبان: settings-service پاسخ نمی‌دهد — اجرا…
+[auto-push 2026-10-30 12:45:44] نگهبان: settings-service spawn شد (pid=12091)
+[auto-push 2026-10-30 12:46:44] نگهبان: settings-service پاسخ نمی‌دهد — اجرا…
+[auto-push 2026-10-30 12:46:44] نگهبان: settings-service spawn شد (pid=12190)
+[auto-push 2026-10-30 12:48:14] نگهبان: settings-service پاسخ نمی‌دهد — اجرا…
+[auto-push 2026-10-30 12:48:14] نگهبان: settings-service spawn شد (pid=12392)
+[auto-push 2026-10-30 12:51:04] تغییر شناسایی شد (timer): 14 مسیر سورس، دیتابیس بدون تغییر → بک‌آپ §0.9 → کامیت → پوش
+[auto-push 2026-10-30 12:51:04] بک‌آپ §0.9: 17 فایل (2026-10-30_1251))

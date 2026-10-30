@@ -1,11 +1,11 @@
 $ bun --hot src/main.ts
-[Nest] 10643  - 10/30/2026, 9:03:26 AM     LOG [NestFactory] Starting Nest application...
-[Nest] 10643  - 10/30/2026, 9:03:26 AM     LOG [InstanceLoader] AppModule dependencies initialized +144ms
-[Nest] 10643  - 10/30/2026, 9:03:26 AM     LOG [InstanceLoader] PrismaModule dependencies initialized +0ms
-[Nest] 10643  - 10/30/2026, 9:03:26 AM     LOG [InstanceLoader] ItemsModule dependencies initialized +10ms
-[Nest] 10643  - 10/30/2026, 9:03:26 AM     LOG [RoutesResolver] ItemsController {/api/items}: +179ms
-[Nest] 10643  - 10/30/2026, 9:03:26 AM     LOG [RouterExplorer] Mapped {/api/items, GET} route +12ms
-[Nest] 10643  - 10/30/2026, 9:03:26 AM     LOG [RouterExplorer] Mapped {/api/items/stats, GET} route +1ms
-[Nest] 10643  - 10/30/2026, 9:03:26 AM     LOG [RouterExplorer] Mapped {/api/items, POST} route +0ms
-[Nest] 10643  - 10/30/2026, 9:03:26 AM     LOG [NestApplication] Nest application successfully started +299ms
-[Nest] 10643  - 10/30/2026, 9:03:27 AM     LOG [Bootstrap] sales-service listening on http://127.0.0.1:3007/api
+[Nest] 12601  - 10/30/2026, 9:19:14 AM     LOG [NestFactory] Starting Nest application...
+[Nest] 12601  - 10/30/2026, 9:19:14 AM     LOG [InstanceLoader] AppModule dependencies initialized +113ms
+[Nest] 12601  - 10/30/2026, 9:19:14 AM     LOG [InstanceLoader] PrismaModule dependencies initialized +0ms
+[Nest] 12601  - 10/30/2026, 9:19:14 AM     LOG [InstanceLoader] ItemsModule dependencies initialized +5ms
+[Nest] 12601  - 10/30/2026, 9:19:14 AM     LOG [RoutesResolver] ItemsController {/api/items}: +83ms
+[Nest] 12601  - 10/30/2026, 9:19:14 AM     LOG [RouterExplorer] Mapped {/api/items, GET} route +17ms
+[Nest] 12601  - 10/30/2026, 9:19:15 AM     LOG [RouterExplorer] Mapped {/api/items/stats, GET} route +35ms
+[Nest] 12601  - 10/30/2026, 9:19:15 AM     LOG [RouterExplorer] Mapped {/api/items, POST} route +0ms
+[Nest] 12601  - 10/30/2026, 9:19:15 AM     LOG [NestApplication] Nest application successfully started +144ms
+[Nest] 12601  - 10/30/2026, 9:19:15 AM     LOG [Bootstrap] sales-service listening on http://127.0.0.1:3007/api
