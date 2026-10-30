@@ -507,25 +507,28 @@ function CellPicker({
       </div>
     </PopoverAnchor>
   ) : (
-    <button
-      type="button"
-      aria-label={ariaLabel}
-      disabled={disabled}
-      onClick={() => !disabled && setOpen((v) => !v)}
-      /* Task 171 — data-cell/data-row روی شاخهٔ غیرتایپ‌پذیر هم می‌نشیند تا
-         ستون‌های ارز (پیکر ساده) در عملیات صفحه‌کلید ردیف (F3/F4/F5) شرکت کنند */
-      data-cell={dataCell}
-      data-row={dataRow}
-      className={cn(
-        "flex h-7 w-full min-w-0 items-center gap-1 rounded-md border border-input bg-background/70 px-2 text-xs transition-colors hover:border-ring/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer disabled:cursor-not-allowed disabled:opacity-50",
-        className,
-      )}
-    >
-      <span className={cn("min-w-0 flex-1 truncate text-start", display ? "text-foreground" : "text-muted-foreground/70")}>
-        {display || placeholder}
-      </span>
-      <ChevronDown className="h-3 w-3 shrink-0 text-muted-foreground/70" aria-hidden />
-    </button>
+    /* Task 173 — ریشهٔ باگ «دراپ‌داون نوع سند هیچ اکشنی ندارد»: شاخهٔ غیرتایپ‌پذیر
+       (نوع سند هدر + ستون‌های ارز) دکمهٔ لختِ خارج از Popover بود؛ پاپ‌آور
+       بدون anchor (PopoverTrigger) هیچ‌گاه رندر نمی‌شد. اکنون تریگرِ واقعی است. */
+    <PopoverTrigger asChild disabled={disabled}>
+      <button
+        type="button"
+        aria-label={ariaLabel}
+        /* Task 171 — data-cell/data-row روی شاخهٔ غیرتایپ‌پذیر هم می‌نشیند تا
+           ستون‌های ارز (پیکر ساده) در عملیات صفحه‌کلید ردیف (F3/F4/F5) شرکت کنند */
+        data-cell={dataCell}
+        data-row={dataRow}
+        className={cn(
+          "flex h-7 w-full min-w-0 items-center gap-1 rounded-md border border-input bg-background/70 px-2 text-xs transition-colors hover:border-ring/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer disabled:cursor-not-allowed disabled:opacity-50",
+          className,
+        )}
+      >
+        <span className={cn("min-w-0 flex-1 truncate text-start", display ? "text-foreground" : "text-muted-foreground/70")}>
+          {display || placeholder}
+        </span>
+        <ChevronDown className="h-3 w-3 shrink-0 text-muted-foreground/70" aria-hidden />
+      </button>
+    </PopoverTrigger>
   );
 
   return (
@@ -1000,19 +1003,17 @@ function TotalInline({
   );
 }
 
-/* Task 165 — یک خط افقی از زنجیرهٔ حساب یک ردیف سند:
+/* Task 165 — یک خط افقی از زنجیرهٔ حساب ردیف سند:
    «گروه حساب: … / حساب کل: … / حساب معین: … / تفصیلی ۱: … / …»
-   جفت‌های خالی از قبل حذف شده‌اند (فرمان مالک)؛ کلیک = انتخاب همان ردیف؛
-   طول زیاد ⇒ اسکرول افقی نازک درون همان خط (ارتفاع خط ثابت h-6 می‌ماند) */
+   Task 173 (فرمان مالک): در حالت افقی فقط «یک خط» — زنجیرهٔ حسابِ همان ردیفی
+   که کاربر روی آن است — نمایش داده می‌شود؛ نه شمارهٔ ردیف و نه خطِ ردیف‌های
+   دیگر (عین حالت عمودی)؛ ردیف تازهٔ بدون حساب ⇒ خط خالی (—)؛ طول زیاد ⇒
+   اسکرول افقی نازک درون همان خط (ارتفاع خط ثابت h-6 می‌ماند) */
 function AcctChainLine({
-  idx,
   pairs,
-  selected,
   onSelect,
 }: {
-  idx: number;
   pairs: { label: string; value: string }[];
-  selected: boolean;
   onSelect: () => void;
 }) {
   const full = pairs.map((p) => `${p.label}: ${p.value}`).join(" / ");
@@ -1022,15 +1023,9 @@ function AcctChainLine({
       aria-label={full || undefined}
       title={full || undefined}
       onClick={onSelect}
-      data-chain-row={idx}
-      className={cn(
-        "flex h-6 cursor-pointer items-center gap-1.5 overflow-x-auto rounded-md border px-2 text-[11px] scrollbar-slim",
-        selected ? "border-primary/40 bg-primary/5" : "border-transparent hover:bg-foreground/[0.03]",
-      )}
+      data-chain-row
+      className="flex h-6 cursor-pointer items-center gap-1.5 overflow-x-auto rounded-md border border-transparent px-2 text-[11px] scrollbar-slim hover:bg-foreground/[0.03]"
     >
-      <span className="flex h-4.5 w-5 shrink-0 items-center justify-center rounded bg-muted/60 text-[10px] tabular-nums text-muted-foreground">
-        {idx + 1}
-      </span>
       {pairs.length === 0 ? (
         <span className="text-muted-foreground/60">—</span>
       ) : (
@@ -1450,23 +1445,10 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
     [rows, moeinById, detailById, detailLevelsCount, levelInfoOf, t],
   );
 
-  /* Task 172 (الزام ۳ فرمان مالک) — فوتر افقی همیشه «ردیفِ جاری» (ردیفی که کاربر
-     روی آن است) را نمایان نگه می‌دارد؛ viewport پیش‌فرض یک خط است ⇒ با تغییر
-     ردیفِ فعال، همان خط به لبهٔ نزدیکِ ناحیهٔ اسکرول می‌آید. scrollIntoView
-     والدین صفحه را هم تکان می‌دهد؛ محاسبهٔ دستی با offsetTop امن‌تر است. */
-  const footerChainListRef = React.useRef<HTMLDivElement | null>(null);
-  React.useEffect(() => {
-    const list = footerChainListRef.current;
-    if (!list || acctMode !== "h") return;
-    const line = list.querySelector<HTMLElement>(`[data-chain-row="${footerRowIdx}"]`);
-    if (!line) return;
-    const top = line.offsetTop - list.offsetTop;
-    if (top < list.scrollTop) {
-      list.scrollTop = top;
-    } else if (top + line.offsetHeight > list.scrollTop + list.clientHeight) {
-      list.scrollTop = top + line.offsetHeight - list.clientHeight;
-    }
-  }, [footerRowIdx, acctMode, rows.length, footerH]);
+  /* Task 173 (فرمان مالک) — فوتر افقی فقط زنجیرهٔ حسابِ «ردیفِ جاری» را نشان
+     می‌دهد (یک خط، بدون شمارهٔ ردیف و بدون خطوط ردیف‌های دیگر) ⇒ اسکرول عمودی
+     فهرست و اثر نگه‌دارندهٔ دیدِ Task 172 (footerChainListRef) دیگر موضوعیت
+     ندارد و حذف شد؛ اسکرولِ موردنیاز فقط اسکرولِ افقیِ درونِ خطِ طولانی است. */
 
   /* Task 169 — نمایش هوشمند: بیشترین سطح تفصیلیِ موردنیاز در بین همهٔ ردیف‌ها؛
      ستون‌های تفصیلیِ نمای هوشمند = سطوح ۱..این‌مقدار (حفظ سلسله‌مراتب طبق
@@ -2360,16 +2342,21 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                           )}
                         >
                           {/* Task 171 — الزام ۵: درج ردیف خالی بین ردیف‌ها — دکمهٔ + روی سلول شمارهٔ ردیف
-                              در hover/focus ظاهر می‌شود؛ ردیف خالی پس از این ردیف درج و شمارهٔ ردیف‌های بعدی یکی زیاد می‌شود */}
+                              در hover/focus ظاهر می‌شود؛ ردیف خالی پس از این ردیف درج و شمارهٔ ردیف‌های بعدی یکی زیاد می‌شود
+                              Task 173 (فرمان مالک): دابل‌کلیک = درج ردیف؛ کلیکِ تکی = فقط انتخابِ همان ردیف */}
                           <Td className="text-center">
                             <div className="group/rowno relative flex h-7 items-center justify-center">
                               <span className="tabular-nums text-muted-foreground">{idx + 1}</span>
                               <button
                                 type="button"
                                 data-insert-row={idx}
-                                aria-label={`${t("vc.insertRowHere")} — ${t("vc.row")} ${idx + 1}`}
-                                title={t("vc.insertRowHere")}
+                                aria-label={`${t("vc.insertRowDblHint")} — ${t("vc.row")} ${idx + 1}`}
+                                title={t("vc.insertRowDblHint")}
                                 onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedRow(idx);
+                                }}
+                                onDoubleClick={(e) => {
                                   e.stopPropagation();
                                   insertRowBelow(idx);
                                 }}
@@ -2917,7 +2904,10 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                 افقی (پیش‌فرض) = هر ردیف سند یک خط: «گروه حساب: … / حساب کل: …» با حذف جفت‌های خالی؛
                 در حالت افقی هر دو باکس فشرده می‌شوند و ارتفاع فوتر ~۵۰٪ کم می‌شود.
                 Task 172 (فرمان مالک): ناحیهٔ خالی زیر خط اطلاعات حساب‌ها حذف شد — پنل افقی ستونی شد و
-                ناحیهٔ اسکرول تا ۳ پیکسلِ لبهٔ پایین می‌آید (footerH=null ⇒ ارتفاع پیش‌فرض = یک خط + ۳px لبه) */}
+                ناحیهٔ اسکرول تا ۳ پیکسلِ لبهٔ پایین می‌آید (footerH=null ⇒ ارتفاع پیش‌فرض = یک خط + ۳px لبه)
+                Task 173 (فرمان مالک): افقی هم عین عمودی فقط اطلاعات «ردیفِ انتخاب‌شده» را
+                نشان می‌دهد — بدون شمارهٔ ردیف و بدون خطِ ردیف‌های دیگر؛ افزودن ردیف، خطی
+                به فوتر نمی‌افزاید و ردیف تازه خط خالی (—) دارد */}
             <div
               className={cn(
                 "min-h-0 border-border/50 lg:border-e",
@@ -2928,7 +2918,8 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
               <div className={cn("flex shrink-0 items-center gap-2", acctMode === "v" ? "mb-2" : "mb-1")}>
                 <Inbox className="h-3.5 w-3.5 text-muted-foreground" aria-hidden />
                 <h4 className="text-xs font-bold text-foreground/90">
-                  {acctMode === "v" ? t("vc.footerAccounts") : t("vc.footerAccountsAll")}
+                  {/* Task 173 — هر دو مدل فقط اطلاعات ردیفِ انتخاب‌شده را نشان می‌دهند ⇒ عنوان یکسان */}
+                  {t("vc.footerAccounts")}
                 </h4>
                 <div
                   role="group"
@@ -2970,31 +2961,26 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                   })}
                 </AlignedZone>
               ) : (
-                /* افقی — Task 172 (فرمان مالک): پیش‌فرض فقط «یک ردیف» دیده می‌شود
-                   (۲۴px خط + ۳px لبه = max-h-[27px]) و اسکرول فقط وقتی ساخته می‌شود که
-                   اطلاعات (تعداد ردیف‌ها) از یک خط بیشتر باشد؛ با فوترِ بلندشدهٔ Task 170
-                   ناحیهٔ اسکرول flex-1 می‌شود تا تا ۳ پیکسلِ لبهٔ پایین پر شود (بدون فضای مرده)؛
-                   ردیفِ جاری (فوکوس/کلیک در گرید یا ناوبری فرمی) همیشه با اسکرول در دید می‌ماند */
+                /* افقی — Task 173 (فرمان مالک): فقط «یک خط» = زنجیرهٔ حسابِ همان ردیفی که
+                   کاربر روی آن است (فوکوس/کلیک در گرید یا ناوبری فرمی)؛ بدون شمارهٔ ردیف و
+                   بدون خطوط ردیف‌های دیگر — عین حالت عمودی؛ ردیفِ تازه ⇒ خط خالی (—) و
+                   «افزودن ردیف» خطی به فوتر نمی‌افزاید؛ با فوترِ بلندشدهٔ Task 170 ناحیه
+                   flex-1 می‌شود تا تا ۳ پیکسلِ لبهٔ پایین پر شود (بدون فضای مرده)؛ اسکرول
+                   فقط وقتی پدیدار می‌شود که اطلاعاتِ واردشده طولانی باشد (درونِ خط، افقی) */
                 <div
-                  ref={footerChainListRef}
                   tabIndex={0}
                   role="list"
-                  aria-label={t("vc.footerAccountsAll")}
+                  aria-label={t("vc.footerAccounts")}
                   data-footer-chain-list
                   className={cn(
                     "min-h-0 overflow-y-auto rounded-md pe-1 scrollbar-slim",
                     footerH != null ? "flex-1" : "max-h-[27px]",
                   )}
                 >
-                  {rows.map((row, idx) => (
-                    <AcctChainLine
-                      key={row.key}
-                      idx={idx}
-                      pairs={acctChainPairs[idx] ?? []}
-                      selected={idx === footerRowIdx}
-                      onSelect={() => setSelectedRow(idx)}
-                    />
-                  ))}
+                  <AcctChainLine
+                    pairs={acctChainPairs[footerRowIdx] ?? []}
+                    onSelect={() => setSelectedRow(footerRowIdx)}
+                  />
                 </div>
               )}
             </div>
