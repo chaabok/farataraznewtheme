@@ -366,6 +366,11 @@ interface PickerRow {
  * Task 168 (فرمان مالک): دکمهٔ «+» = ایجاد موجودیتِ همان آیتم (نه انتخاب) —
  * با onCreate فرم مرجع (درختواره حسابها/ایجاد تفصیلی ها/نوع سند/نوع ارز)
  * به‌صورت مودال باز می‌شود.
+ * Task 170 (فرمان مالک): حالت typeable — سلول یک ورودی متنی دارد که کد «یا»
+ * عنوان را می‌پذیرد؛ Enter با تطابق دقیق ⇒ انتخاب + onEnterCommit (ادامهٔ
+ * ناوبری)، Enter با عبارتِ بی‌معنا ⇒ دراپ‌داون باز و عبارت در فیلتر فیلتر
+ * می‌نشیند؛ Enter روی خانهٔ خالی ⇒ onEnterAdvance (پرش به ستون بعدی).
+ * dataCell/dataRow برای هدف‌گیری فوکوس (ناوبری ستونی) روی ظرف سلول می‌نشیند.
  */
 function CellPicker({
   ariaLabel,
@@ -381,6 +386,11 @@ function CellPicker({
   createLabel,
   disabled,
   className,
+  typeable,
+  dataCell,
+  dataRow,
+  onEnterCommit,
+  onEnterAdvance,
 }: {
   ariaLabel: string;
   display: string;
@@ -396,10 +406,18 @@ function CellPicker({
   createLabel?: string;
   disabled?: boolean;
   className?: string;
+  /* Task 170 — سلول تایپ‌پذیر (کد/عنوان) با ناوبری Enter */
+  typeable?: boolean;
+  dataCell?: string;
+  dataRow?: string | number;
+  onEnterCommit?: (pickedId: number) => void;
+  onEnterAdvance?: () => void;
 }) {
   const dir = useSettings((s) => s.dir());
   const [open, setOpen] = React.useState(false);
   const [query, setQuery] = React.useState("");
+  /* Task 170 — پیش‌نویس تایپ کاربر (null = نمایش مقدار انتخاب‌شده) */
+  const [draft, setDraft] = React.useState<string | null>(null);
   const filterRef = React.useRef<HTMLInputElement | null>(null);
 
   const filtered = React.useMemo(() => {
@@ -408,25 +426,105 @@ function CellPicker({
     return rows.filter((r) => r.cells.some((c) => c.toLowerCase().includes(needle)));
   }, [rows, query]);
 
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <button
-          type="button"
+  /* Task 170 — دایره‌نوشتِ (code, title) برای تطابق دقیق Enter */
+  const entries = React.useMemo(
+    () => rows.map((r) => ({ id: r.id, code: r.cells[0] ?? "", title: r.cells[1] ?? "" })),
+    [rows],
+  );
+
+  /** Task 170 — بازکردن دراپ‌داون با عبارت از پیش تعیین‌شده در فیلتر */
+  const openWithQuery = React.useCallback((q: string) => {
+    setQuery(q);
+    setOpen(true);
+    window.setTimeout(() => filterRef.current?.focus(), 60);
+  }, []);
+
+  /** Task 170 — تعهد Enter: تطابق دقیق کد/عنوان ⇒ انتخاب + ناوبری؛ بی‌معنا ⇒ دراپ‌داون با فیلتر */
+  const commitDraft = () => {
+    const raw = (draft ?? "").trim();
+    setDraft(null);
+    if (raw === "") {
+      onEnterAdvance?.();
+      return;
+    }
+    const needle = normalizeDigits(raw).toLowerCase();
+    const hit = entries.find((en) => en.code.toLowerCase() === needle || en.title.toLowerCase() === needle);
+    if (hit) {
+      onPick(hit.id);
+      setOpen(false);
+      onEnterCommit?.(hit.id);
+    } else {
+      openWithQuery(normalizeDigits(raw));
+    }
+  };
+
+  const trigger = typeable ? (
+    <PopoverAnchor asChild>
+      <div
+        data-cell={dataCell}
+        data-row={dataRow}
+        className={cn(
+          "flex h-7 w-full min-w-0 items-center gap-0.5 rounded-md border border-input bg-background/70 ps-2 pe-0.5 text-xs transition-colors hover:border-ring/60 focus-within:border-ring focus-within:ring-2 focus-within:ring-ring",
+          className,
+        )}
+      >
+        <input
+          value={draft ?? display}
+          onChange={(e) => setDraft(e.target.value)}
+          onBlur={() => setDraft(null)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              e.stopPropagation();
+              commitDraft();
+            } else if (e.key === "Escape") {
+              e.preventDefault();
+              setDraft(null);
+            } else if (e.key === "ArrowDown") {
+              e.preventDefault();
+              if (!open) openWithQuery("");
+            }
+          }}
+          placeholder={display ? undefined : placeholder}
           aria-label={ariaLabel}
           disabled={disabled}
-          onClick={() => !disabled && setOpen((v) => !v)}
-          className={cn(
-            "flex h-7 w-full min-w-0 items-center gap-1 rounded-md border border-input bg-background/70 px-2 text-xs transition-colors hover:border-ring/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer disabled:cursor-not-allowed disabled:opacity-50",
-            className,
-          )}
-        >
-          <span className={cn("min-w-0 flex-1 truncate text-start", display ? "text-foreground" : "text-muted-foreground/70")}>
-            {display || placeholder}
-          </span>
-          <ChevronDown className="h-3 w-3 shrink-0 text-muted-foreground/70" aria-hidden />
-        </button>
-      </PopoverTrigger>
+          className="h-full min-w-0 flex-1 bg-transparent text-start outline-none placeholder:text-muted-foreground/70"
+        />
+        <PopoverTrigger asChild>
+          <button
+            type="button"
+            tabIndex={-1}
+            aria-label={ariaLabel}
+            disabled={disabled}
+            data-picker-open
+            className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-muted-foreground/70 transition-colors hover:bg-foreground/5 hover:text-foreground cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <ChevronDown className="h-3 w-3" aria-hidden />
+          </button>
+        </PopoverTrigger>
+      </div>
+    </PopoverAnchor>
+  ) : (
+    <button
+      type="button"
+      aria-label={ariaLabel}
+      disabled={disabled}
+      onClick={() => !disabled && setOpen((v) => !v)}
+      className={cn(
+        "flex h-7 w-full min-w-0 items-center gap-1 rounded-md border border-input bg-background/70 px-2 text-xs transition-colors hover:border-ring/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer disabled:cursor-not-allowed disabled:opacity-50",
+        className,
+      )}
+    >
+      <span className={cn("min-w-0 flex-1 truncate text-start", display ? "text-foreground" : "text-muted-foreground/70")}>
+        {display || placeholder}
+      </span>
+      <ChevronDown className="h-3 w-3 shrink-0 text-muted-foreground/70" aria-hidden />
+    </button>
+  );
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      {trigger}
       <PopoverContent
         dir={dir}
         align="start"
@@ -538,6 +636,10 @@ function CellPicker({
  * Task 168 (فرمان مالک): دکمهٔ «+» دیگر «افزودن انتخاب‌ها» نیست — ایجاد
  * موجودیت است: فرم «درختواره حسابها» مودال باز می‌شود تا معین جدید تعریف شود؛
  * اعمالِ چندانتخاب به چیپ متنی «افزودن (n)» که فقط با تیک ظاهر می‌شود منتقل شد.
+ * Task 170 (فرمان مالک): سلول تایپ‌پذیر است (کد «یا» عنوان)؛ Enter با تطابق
+ * دقیق ⇒ انتخاب + onEnterCommit (پرش به تفصیلی/شرح — الزام ۳)، Enter با
+ * عبارتِ بی‌معنا ⇒ دراپ‌داون باز و عبارت در فیلتر فیلتر می‌نشیند (الزام ۵)؛
+ * Enter روی خانهٔ خالی ⇒ onEnterAdvance.
  */
 function MoeinPickerCell({
   meta,
@@ -557,6 +659,10 @@ function MoeinPickerCell({
   searchLabel,
   countLabel,
   clearCheckedLabel,
+  dataCell,
+  dataRow,
+  onEnterCommit,
+  onEnterAdvance,
 }: {
   meta: MoeinMeta[];
   value: number | null;
@@ -576,11 +682,19 @@ function MoeinPickerCell({
   searchLabel: string;
   countLabel: string;
   clearCheckedLabel: string;
+  /* Task 170 — ناوبری Enter روی سلول تایپ‌پذیر */
+  dataCell?: string;
+  dataRow?: string | number;
+  onEnterCommit?: (pickedId: number) => void;
+  onEnterAdvance?: () => void;
 }) {
   const dir = useSettings((s) => s.dir());
   const [open, setOpen] = React.useState(false);
   const [query, setQuery] = React.useState("");
   const [checked, setChecked] = React.useState<ReadonlySet<number>>(new Set());
+  /* Task 170 — پیش‌نویس تایپ کاربر + فیلترِ دراپ‌داون برای فوکوس برنامه‌ای */
+  const [draft, setDraft] = React.useState<string | null>(null);
+  const filterRef = React.useRef<HTMLInputElement | null>(null);
 
   const handleOpenChange = (next: boolean) => {
     setOpen(next);
@@ -596,8 +710,37 @@ function MoeinPickerCell({
     return meta.filter((m) => m.code.toLowerCase().includes(needle) || m.title.toLowerCase().includes(needle));
   }, [meta, query]);
 
+  /* Task 170 — دایره‌نوشتِ (code, title) برای تطابق دقیق Enter */
+  const entries = React.useMemo(() => meta.map((m) => ({ id: m.id, code: m.code, title: m.title })), [meta]);
+
   const selected = meta.find((m) => m.id === value) ?? null;
   const display = selected ? selected.code : "";
+
+  /** Task 170 — بازکردن دراپ‌داون با عبارت از پیش تعیین‌شده در فیلتر */
+  const openWithQuery = React.useCallback((q: string) => {
+    setOpen(true);
+    setQuery(q);
+    window.setTimeout(() => filterRef.current?.focus(), 60);
+  }, []);
+
+  /** Task 170 — تعهد Enter: تطابق دقیق کد/عنوان ⇒ انتخاب + ناوبری؛ بی‌معنا ⇒ دراپ‌داون با فیلتر */
+  const commitDraft = () => {
+    const raw = (draft ?? "").trim();
+    setDraft(null);
+    if (raw === "") {
+      onEnterAdvance?.();
+      return;
+    }
+    const needle = normalizeDigits(raw).toLowerCase();
+    const hit = entries.find((en) => en.code.toLowerCase() === needle || en.title.toLowerCase() === needle);
+    if (hit) {
+      onPick(hit.id);
+      setOpen(false);
+      onEnterCommit?.(hit.id);
+    } else {
+      openWithQuery(normalizeDigits(raw));
+    }
+  };
 
   const applyMany = () => {
     const ids = [...checked];
@@ -608,23 +751,51 @@ function MoeinPickerCell({
 
   return (
     <Popover open={open} onOpenChange={handleOpenChange}>
-      <PopoverTrigger asChild>
-        <button
-          type="button"
-          aria-label={searchLabel}
-          disabled={disabled}
-          onClick={() => !disabled && setOpen((v) => !v)}
+      <PopoverAnchor asChild>
+        <div
+          data-cell={dataCell}
+          data-row={dataRow}
           className={cn(
-            "flex h-7 w-full min-w-0 items-center gap-1 rounded-md border border-input bg-background/70 px-2 text-xs transition-colors hover:border-ring/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer disabled:cursor-not-allowed disabled:opacity-50",
+            "flex h-7 w-full min-w-0 items-center gap-0.5 rounded-md border border-input bg-background/70 ps-2 pe-0.5 text-xs transition-colors hover:border-ring/60 focus-within:border-ring focus-within:ring-2 focus-within:ring-ring",
             className,
           )}
         >
-          <span className={cn("min-w-0 flex-1 truncate text-start", display ? "text-foreground" : "text-muted-foreground/70")}>
-            {display || phLabel}
-          </span>
-          <ChevronDown className="h-3 w-3 shrink-0 text-muted-foreground/70" aria-hidden />
-        </button>
-      </PopoverTrigger>
+          <input
+            value={draft ?? display}
+            onChange={(e) => setDraft(e.target.value)}
+            onBlur={() => setDraft(null)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                e.stopPropagation();
+                commitDraft();
+              } else if (e.key === "Escape") {
+                e.preventDefault();
+                setDraft(null);
+              } else if (e.key === "ArrowDown") {
+                e.preventDefault();
+                if (!open) openWithQuery("");
+              }
+            }}
+            placeholder={display ? undefined : phLabel}
+            aria-label={searchLabel}
+            disabled={disabled}
+            className="h-full min-w-0 flex-1 bg-transparent text-start outline-none placeholder:text-muted-foreground/70"
+          />
+          <PopoverTrigger asChild>
+            <button
+              type="button"
+              tabIndex={-1}
+              aria-label={searchLabel}
+              disabled={disabled}
+              data-picker-open
+              className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-muted-foreground/70 transition-colors hover:bg-foreground/5 hover:text-foreground cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <ChevronDown className="h-3 w-3" aria-hidden />
+            </button>
+          </PopoverTrigger>
+        </div>
+      </PopoverAnchor>
       <PopoverContent
         dir={dir}
         align="start"
@@ -635,6 +806,7 @@ function MoeinPickerCell({
           <div className="relative">
             <Filter aria-hidden className="pointer-events-none absolute start-2 top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground/70" />
             <input
+              ref={filterRef}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={searchLabel}
@@ -923,6 +1095,77 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
 
   const markDirty = React.useCallback(() => setDirty(true), []);
 
+  /* ---------------- Task 170 — صف فوکوس برنامه‌ای (ناوبری ستونی اقلام) ----------------
+     الزامات ۳/۴/۵: پرش Enter از معین به تفصیلی/شرح، پرش «افزودن ردیف» به معین و
+     ادامهٔ ناوبری پس از تعهد تایپ — همه پس از رندرِ ناشی از تغییر rows اعمال
+     می‌شوند تا سلولِ هدف (مثلاً تفصیلی‌ای که با انتخاب معین از قفل درآمده) در DOM
+     حاضر باشد؛ به همین دلیل درخواست در صف می‌نشیند و در effect + rAF اجرا می‌شود. */
+  const [focusTick, setFocusTick] = React.useState(0);
+  const pendingFocusRef = React.useRef<{ cell: string; row: number | "form" } | null>(null);
+  const queueFocus = React.useCallback((cell: string, row: number | "form") => {
+    pendingFocusRef.current = { cell, row };
+    setFocusTick((v) => v + 1);
+  }, []);
+  React.useEffect(() => {
+    if (focusTick === 0) return;
+    const raf = requestAnimationFrame(() => {
+      const tgt = pendingFocusRef.current;
+      pendingFocusRef.current = null;
+      if (!tgt) return;
+      const scope = mode === "form" ? formWrapRef.current : gridScrollRef.current;
+      if (!scope) return;
+      const cellSel = `[data-cell="${tgt.cell}"][data-row="${String(tgt.row)}"]`;
+      const field = scope.querySelector<HTMLElement>(`${cellSel} input, ${cellSel} textarea`);
+      (field ?? scope.querySelector<HTMLElement>(cellSel))?.focus();
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [focusTick, mode]);
+
+  /* ---------------- Task 170 — ارتفاع‌دهی بخش‌ها با موس (الزام ۱) ----------------
+     دابل‌کلیک روی بوردرِ پایین هدر (یا بالای فوتر) ⇒ انتخاب بخش (حلقهٔ فیروزه‌ای)؛
+     کشیدن همان بوردر یا چرخ موس روی بخشِ انتخاب‌شده ⇒ ارتفاع کم/زیاد می‌شود.
+     ارتفاع‌ها به پیکسلِ محلی (پس از تقسیم بر زوم ۱۱۰٪) نگه‌داری می‌شوند؛
+     اقلام flex-1 می‌ماند و فضای باقیمانده را می‌گیرد. */
+  const [headerH, setHeaderH] = React.useState<number | null>(null);
+  const [footerH, setFooterH] = React.useState<number | null>(null);
+  const [selSection, setSelSection] = React.useState<"header" | "footer" | null>(null);
+  const bodyRef = React.useRef<HTMLDivElement | null>(null);
+  const headerCardRef = React.useRef<HTMLDivElement | null>(null);
+  const footerCardRef = React.useRef<HTMLDivElement | null>(null);
+  const gridScrollRef = React.useRef<HTMLDivElement | null>(null);
+  const formWrapRef = React.useRef<HTMLDivElement | null>(null);
+  const dragRef = React.useRef<{ kind: "header" | "footer"; startY: number; startH: number; max: number } | null>(null);
+  const lastDragMovedRef = React.useRef(false);
+
+  /** سقف/کف ارتفاع یک بخش: اقلام حداقل min-h-36 (۱۴۴px) + حاشیه‌ها باید بمانند */
+  const clampSectionH = React.useCallback((kind: "header" | "footer", next: number): number => {
+    const body = bodyRef.current;
+    const z = erpZoom();
+    if (!body || z <= 0) return Math.round(Math.max(56, next));
+    const bodyH = body.getBoundingClientRect().height / z;
+    const otherEl = kind === "header" ? footerCardRef.current : headerCardRef.current;
+    const otherH = otherEl ? otherEl.getBoundingClientRect().height / z : 0;
+    const max = Math.max(160, bodyH - 144 - otherH - 28);
+    return Math.round(Math.min(max, Math.max(kind === "header" ? 72 : 56, next)));
+  }, []);
+
+  /* چرخ موس روی بخشِ انتخاب‌شده = کم/زیاد کردن ارتفاع (listener غیر‌passive) */
+  React.useEffect(() => {
+    if (selSection == null) return;
+    const kind = selSection;
+    const card = kind === "header" ? headerCardRef.current : footerCardRef.current;
+    if (!card) return;
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const z = erpZoom();
+      const cur = card.getBoundingClientRect().height / z;
+      const step = e.deltaY < 0 ? 18 : -18;
+      (kind === "header" ? setHeaderH : setFooterH)(clampSectionH(kind, cur + step));
+    };
+    card.addEventListener("wheel", onWheel, { passive: false });
+    return () => card.removeEventListener("wheel", onWheel);
+  }, [selSection, clampSectionH]);
+
   const moeinById = React.useMemo(() => new Map((meta?.moeinAccounts ?? []).map((m) => [m.id, m])), [meta]);
   const detailById = React.useMemo(() => new Map((meta?.detailItems ?? []).map((d) => [d.id, d])), [meta]);
   const currencyById = React.useMemo(() => new Map((meta?.currencies ?? []).map((c) => [c.id, c])), [meta]);
@@ -1071,13 +1314,15 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
   );
 
   /** افزودن ردیف تازه — فوتربار مشترک هر دو مدل (Task 163): ردیف appended و
-   *  انتخابِ جدولی و ناوبریِ فرمی هر دو به ردیف تازه می‌روند. */
+   *  انتخابِ جدولی و ناوبریِ فرمی هر دو به ردیف تازه می‌روند.
+   *  Task 170 (الزام ۴ فرمان مالک): فوراً فوکوس به ستون معینِ ردیف تازه پرش می‌کند. */
   const addRow = React.useCallback(() => {
     setRows((prev) => [...prev, blankRow()]);
     setSelectedRow(rows.length);
     setFormRow(rows.length);
     markDirty();
-  }, [rows.length, markDirty]);
+    queueFocus("moein", mode === "form" ? "form" : rows.length);
+  }, [rows.length, markDirty, mode, queueFocus]);
 
   /** انتخاب معین برای ردیف — تفصیلی‌های ستون‌های قفل‌شده پاک می‌شوند. */
   const pickMoein = React.useCallback(
@@ -1436,6 +1681,64 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
   const gridLevelColumns =
     mode === "smart" ? Array.from({ length: smartMaxLevel }, (_, i) => i + 1) : levelColumns;
 
+  /* ---------------- Task 170 — ناوبری ستونی اقلام (الزام‌های ۳ و ۵) ----------------
+     هدف بعدی پس از معین: اولین سطح تفصیلیِ آزادِ همان معین؛ اگر معین هیچ سطح
+     متصلی ندارد ⇒ ستون شرح. هدف بعدی پس از تفصیلیِ سطح n: اولین سطحِ آزادِ بعدی؛
+     در غیر این صورت شرح. (سلول‌های قفل از مسیر ناوبری حذف می‌شوند.) */
+  const navTargetCell = (moeinRef: number | null, fromLevel?: number): string => {
+    for (const li of gridLevelColumns) {
+      if (fromLevel != null && li <= fromLevel) continue;
+      if (!levelInfoOf(moeinRef, li).locked) return `detail-${li}`;
+    }
+    return "desc";
+  };
+  const focusRowOf = (idx: number): number | "form" => (mode === "form" ? "form" : idx);
+
+  /* ---------------- Task 170 — درگ ارتفاع بخش‌ها (الزام ۱) ---------------- */
+  const beginSectionResize = (e: React.PointerEvent<HTMLDivElement>, kind: "header" | "footer") => {
+    if (e.button !== 0) return;
+    const card = kind === "header" ? headerCardRef.current : footerCardRef.current;
+    if (!card) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const z = erpZoom();
+    const startH = card.getBoundingClientRect().height / z;
+    const body = bodyRef.current;
+    const bodyH = body ? body.getBoundingClientRect().height / z : 0;
+    const otherEl = kind === "header" ? footerCardRef.current : headerCardRef.current;
+    const otherH = otherEl ? otherEl.getBoundingClientRect().height / z : 0;
+    const max = Math.max(160, bodyH - 144 - otherH - 28);
+    dragRef.current = { kind, startY: e.clientY, startH, max };
+    lastDragMovedRef.current = false;
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+  };
+  const moveSectionResize = (e: React.PointerEvent<HTMLDivElement>, kind: "header" | "footer") => {
+    const d = dragRef.current;
+    if (!d || d.kind !== kind) return;
+    const dy = (e.clientY - d.startY) / erpZoom();
+    if (Math.abs(e.clientY - d.startY) > 3) lastDragMovedRef.current = true;
+    const next = kind === "header" ? d.startH + dy : d.startH - dy;
+    const clamped = Math.round(Math.min(d.max, Math.max(kind === "header" ? 72 : 56, next)));
+    if (kind === "header") setHeaderH(clamped);
+    else setFooterH(clamped);
+  };
+  const endSectionResize = () => {
+    dragRef.current = null;
+  };
+  /** دابل‌کلیک روی بوردر = انتخاب/لغو انتخاب بخش (درگِ تازه‌انجام‌شده انتخاب نمی‌کند) */
+  const toggleSectionSelect = (kind: "header" | "footer") => {
+    if (lastDragMovedRef.current) {
+      lastDragMovedRef.current = false;
+      return;
+    }
+    setSelSection((s) => (s === kind ? null : kind));
+  };
+  const nudgeSection = (kind: "header" | "footer", dir: 1 | -1) => {
+    const card = kind === "header" ? headerCardRef.current : footerCardRef.current;
+    const cur = card ? card.getBoundingClientRect().height / erpZoom() : 0;
+    (kind === "header" ? setHeaderH : setFooterH)(clampSectionH(kind, cur + dir * 16));
+  };
+
   /* ------------------------------ حالت فرمی ------------------------------ */
   const formIdx = Math.min(formRow, rows.length - 1);
   const formRowData = rows[formIdx];
@@ -1553,16 +1856,41 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
           </div>
         </div>
 
-        {/* ۳) بدنه — سه بخش هدر / اقلام / فوتر (ستون فلکس با ارتفاع قطعی: اقلام flex-1 می‌گیرد و فوتر فشرده می‌ماند — Task 159) */}
-        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-3 scrollbar-slim">
+        {/* ۳) بدنه — سه بخش هدر / اقلام / فوتر (ستون فلکس با ارتفاع قطعی: اقلام flex-1 می‌گیرد و فوتر فشرده می‌ماند — Task 159)
+            Task 170 (الزام ۱): ارتفاع هدر و فوتر با موس تنظیم‌پذیر است — دابل‌کلیک روی بوردر هر بخش آن را
+            «انتخاب» می‌کند و سپس کشیدن بوردر یا چرخ موس ارتفاع را کم/زیاد می‌کند؛ کلیک بیرون از دستگیره‌ها
+            انتخاب را پاک می‌کند. */}
+        <div
+          ref={bodyRef}
+          onPointerDown={(e) => {
+            if (!(e.target as HTMLElement).closest("[data-resize-handle]")) setSelSection(null);
+          }}
+          className="flex min-h-0 flex-1 flex-col overflow-y-auto p-3 scrollbar-slim"
+        >
           {/* ---------- بخش هدر ---------- */}
-          <div className="shrink-0 rounded-2xl border border-border/70 bg-card shadow-sm">
-            <div className="flex items-center gap-2 border-b border-border/50 px-3 py-2">
-              <FilePlus2 className="h-3.5 w-3.5 text-emerald-600" aria-hidden />
-              <h3 className="text-xs font-bold text-foreground/90">{t("vc.header")}</h3>
-            </div>
-            {/* Task 164 — ناحیهٔ هم‌ترازی userformlabelalignment برای فیلدهای هدر سند */}
-            <AlignedZone className="grid grid-cols-1 gap-x-5 gap-y-2 px-3 py-3 md:grid-cols-2 xl:grid-cols-4">
+          <div className="relative shrink-0 group/resize">
+            <div
+              ref={headerCardRef}
+              data-section-card="header"
+              data-section-selected={selSection === "header" || undefined}
+              style={headerH != null ? { height: headerH } : undefined}
+              className={cn(
+                "flex shrink-0 flex-col rounded-2xl border border-border/70 bg-card shadow-sm",
+                headerH != null && "overflow-hidden",
+                selSection === "header" && "ring-2 ring-teal-500/40",
+              )}
+            >
+              <div className="flex shrink-0 items-center gap-2 border-b border-border/50 px-3 py-2">
+                <FilePlus2 className="h-3.5 w-3.5 text-emerald-600" aria-hidden />
+                <h3 className="text-xs font-bold text-foreground/90">{t("vc.header")}</h3>
+              </div>
+              {/* Task 164 — ناحیهٔ هم‌ترازی userformlabelalignment برای فیلدهای هدر سند */}
+              <AlignedZone
+                className={cn(
+                  "grid min-h-0 flex-1 grid-cols-1 gap-x-5 gap-y-2 px-3 py-3 md:grid-cols-2 xl:grid-cols-4",
+                  headerH != null && "overflow-y-auto scrollbar-slim",
+                )}
+              >
               <HeaderField label={t("vc.voucherNo")} required readOnly>
                 <Input
                   value={voucherNo}
@@ -1697,6 +2025,18 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
               </HeaderField>
             </AlignedZone>
           </div>
+            {/* Task 170 — دستگیرهٔ ارتفاع هدر: بوردر پایین هدر سند */}
+            <SectionResizeHandle
+              which="header"
+              hint={t("vc.resizeHeaderHint")}
+              selected={selSection === "header"}
+              onToggleSelect={() => toggleSectionSelect("header")}
+              onResizeStart={(e) => beginSectionResize(e, "header")}
+              onResizeMove={(e) => moveSectionResize(e, "header")}
+              onResizeEnd={endSectionResize}
+              onNudge={(dir) => nudgeSection("header", dir)}
+            />
+          </div>
 
           {/* ---------- بخش اقلام سند ---------- */}
           {/* flex-1: تمام ارتفاع صرفه‌جویی‌شدهٔ فوتر (Task 159) به همین بخش اختصاص می‌یابد؛
@@ -1713,7 +2053,7 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
             {mode !== "form" ? (
               /* ----- مدل جدولی / هوشمند: گرید شیت‌مانند — Task 169: در «هوشمند»
                  ستون‌های تفصیلی فقط تا سطحِ موردنیاز ردیف‌ها رندر می‌شوند ----- */
-              <div className="min-h-0 flex-1 overflow-auto scrollbar-slim" data-items-grid data-items-mode={mode}>
+              <div ref={gridScrollRef} className="min-h-0 flex-1 overflow-auto scrollbar-slim" data-items-grid data-items-mode={mode}>
                 <table className="w-full min-w-max border-separate border-spacing-0 text-xs">
                   <thead>
                     <tr>
@@ -1747,6 +2087,10 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                           <Td className="text-center tabular-nums text-muted-foreground">{idx + 1}</Td>
                           <Td>
                             <MoeinPickerCell
+                              dataCell="moein"
+                              dataRow={idx}
+                              onEnterCommit={(id) => queueFocus(navTargetCell(id), focusRowOf(idx))}
+                              onEnterAdvance={() => queueFocus(navTargetCell(row.moeinRef), focusRowOf(idx))}
                               meta={meta.moeinAccounts}
                               value={row.moeinRef}
                               onPick={(id) => pickMoein(idx, id)}
@@ -1769,13 +2113,16 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                             const selId = row.details[li] ?? null;
                             const selDetail = selId != null ? detailById.get(selId) : undefined;
                             if (info.locked) {
+                              /* Task 170 (الزام ۲ فرمان مالک): سلول قفل مثل بقیه سلول‌ها قاب (بوردر) دارد —
+                                 جعبهٔ غیرفعال هم‌اندازهٔ ورودی‌ها به‌جای آیکون لخت */
                               return (
-                                <Td key={li} className="bg-muted/30 text-center">
+                                <Td key={li} className="text-center">
                                   <span
                                     role="img"
                                     aria-label={t("vc.colLocked")}
                                     title={t("vc.colLocked")}
-                                    className="inline-flex text-muted-foreground/50"
+                                    data-cell-locked
+                                    className="flex h-7 w-full items-center justify-center rounded-md border border-input bg-muted/40 text-muted-foreground/50"
                                   >
                                     <Lock className="h-3.5 w-3.5" aria-hidden />
                                   </span>
@@ -1785,6 +2132,11 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                             return (
                               <Td key={li}>
                                 <CellPicker
+                                  typeable
+                                  dataCell={`detail-${li}`}
+                                  dataRow={idx}
+                                  onEnterCommit={() => queueFocus(navTargetCell(row.moeinRef, li), focusRowOf(idx))}
+                                  onEnterAdvance={() => queueFocus(navTargetCell(row.moeinRef, li), focusRowOf(idx))}
                                   ariaLabel={`${t("vc.detailCol").replace("{n}", String(li))} — ${t("vc.row")} ${idx + 1}`}
                                   display={selDetail ? selDetail.code : ""}
                                   placeholder={t("vc.selectPlaceholder")}
@@ -1806,6 +2158,8 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                             <Input
                               value={row.description}
                               onChange={(e) => setRow(idx, { description: e.target.value })}
+                              data-cell="desc"
+                              data-row={idx}
                               aria-label={`${t("vc.description")} — ${t("vc.row")} ${idx + 1}`}
                               className="h-7 border-input/70 bg-background/70 text-xs"
                             />
@@ -1929,7 +2283,7 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
               /* ----- مدل فرمی: کارت تک‌ردیف با ناوبری (مناسب موبایل) ----- */
               /* Task 161 (اصلاح E2E): wrapper فلکسی + اسکرول داخلی گرید — همان معماری گرید جدولی؛
                  وگرنه در نماهای کم‌ارتفاع (موبایل) کارت اقلام با min-h-36 فشرده و محتوا روی فوتر می‌ریزد */
-              <div className="flex min-h-0 flex-1 flex-col p-3">
+              <div ref={formWrapRef} className="flex min-h-0 flex-1 flex-col p-3">
                 <div className="mb-2 flex shrink-0 flex-wrap items-center gap-1.5">
                   <span className="text-xs font-semibold text-foreground/80">
                     {t("vc.rowOf").replace("{i}", String(formIdx + 1)).replace("{n}", String(rows.length))}
@@ -1959,6 +2313,10 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                   <HeaderField label={t("vc.moeinCode")} required>
                     <MoeinPickerCell
                       className="max-w-[40%]"
+                      dataCell="moein"
+                      dataRow="form"
+                      onEnterCommit={(id) => queueFocus(navTargetCell(id), "form")}
+                      onEnterAdvance={() => queueFocus(navTargetCell(formRowData?.moeinRef ?? null), "form")}
                       meta={meta.moeinAccounts}
                       value={formRowData?.moeinRef ?? null}
                       onPick={(id) => {
@@ -1997,7 +2355,12 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                     ) : (
                       <HeaderField key={li} label={t("vc.detailCol").replace("{n}", String(li))}>
                         <CellPicker
+                          typeable
                           className="max-w-[40%]"
+                          dataCell={`detail-${li}`}
+                          dataRow="form"
+                          onEnterCommit={() => queueFocus(navTargetCell(formRowData?.moeinRef ?? null, li), "form")}
+                          onEnterAdvance={() => queueFocus(navTargetCell(formRowData?.moeinRef ?? null, li), "form")}
                           ariaLabel={`${t("vc.detailCol").replace("{n}", String(li))} — ${t("vc.row")} ${formIdx + 1}`}
                           display={selDetail ? `${selDetail.code} - ${selDetail.title}` : ""}
                           placeholder={t("vc.selectPlaceholder")}
@@ -2022,6 +2385,8 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                     <Textarea
                       value={formRowData?.description ?? ""}
                       onChange={(e) => setRow(formIdx, { description: e.target.value })}
+                      data-cell="desc"
+                      data-row="form"
                       aria-label={`${t("vc.description")} — ${t("vc.row")} ${formIdx + 1}`}
                       rows={2}
                       className="resize-none text-xs"
@@ -2181,13 +2546,25 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
           </div>
 
           {/* ---------- بخش فوتر سند ---------- */}
-          {/* Task 159: فوتر فشرده — راست حداکثر ۳ ردیف با اسکرول عمودی، بقیهٔ ارتفاع به اقلام می‌رسد */}
-          <div className="mt-3 grid shrink-0 grid-cols-1 gap-3 rounded-2xl border border-border/70 bg-card shadow-sm lg:grid-cols-2">
+          {/* Task 159: فوتر فشرده — راست حداکثر ۳ ردیف با اسکرول عمودی، بقیهٔ ارتفاع به اقلام می‌رسد
+              Task 170: ارتفاع فوتر با موس تنظیم‌پذیر است (دسته‌گيره روی بوردر بالای فوتر) */}
+          <div className="relative mt-3 shrink-0 group/resize">
+            <div
+              ref={footerCardRef}
+              data-section-card="footer"
+              data-section-selected={selSection === "footer" || undefined}
+              style={footerH != null ? { height: footerH } : undefined}
+              className={cn(
+                "grid shrink-0 grid-cols-1 gap-3 rounded-2xl border border-border/70 bg-card shadow-sm lg:grid-cols-2",
+                footerH != null && "overflow-hidden",
+                selSection === "footer" && "ring-2 ring-teal-500/40",
+              )}
+            >
             {/* راست فوتر — فقط نمایش؛ دو مدل نمایش (Task 165 فرمان مالک):
                 عمودی = زنجیرهٔ حساب ردیف انتخاب‌شده (گرید دوستونه)؛
                 افقی (پیش‌فرض) = هر ردیف سند یک خط: «گروه حساب: … / حساب کل: … / …» با حذف جفت‌های خالی؛
                 در حالت افقی هر دو باکس فشرده می‌شوند و ارتفاع فوتر ~۵۰٪ کم می‌شود */}
-            <div className={cn("border-border/50 lg:border-e", acctMode === "v" ? "p-3" : "px-3 py-2")}>
+            <div className={cn("min-h-0 border-border/50 lg:border-e", acctMode === "v" ? "p-3" : "px-3 py-2", footerH != null && "overflow-y-auto scrollbar-slim")}>
               <div className={cn("flex items-center gap-2", acctMode === "v" ? "mb-2" : "mb-1")}>
                 <Inbox className="h-3.5 w-3.5 text-muted-foreground" aria-hidden />
                 <h4 className="text-xs font-bold text-foreground/90">
@@ -2254,7 +2631,7 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
               )}
             </div>
             {/* چپ فوتر — محاسبات خودکار (مدل افقی: فشرده — هر ۴ محاسبه در یک خط) */}
-            <div className={acctMode === "v" ? "p-3" : "px-3 py-2"}>
+            <div className={cn(acctMode === "v" ? "p-3" : "px-3 py-2", footerH != null && "min-h-0 overflow-y-auto scrollbar-slim")}>
               <div className={cn("flex items-center gap-2", acctMode === "v" ? "mb-2" : "mb-1")}>
                 <CalculatorIcon />
                 <h4 className="text-xs font-bold text-foreground/90">{t("vc.footerTotals")}</h4>
@@ -2293,6 +2670,18 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
               )}
               {/* Task 163: دکمهٔ افزودن ردیف به فوتربار کارت اقلام منتقل شد */}
             </div>
+            </div>
+            {/* Task 170 — دستگیرهٔ ارتفاع فوتر: بوردر بالای فوتر سند */}
+            <SectionResizeHandle
+              which="footer"
+              hint={t("vc.resizeFooterHint")}
+              selected={selSection === "footer"}
+              onToggleSelect={() => toggleSectionSelect("footer")}
+              onResizeStart={(e) => beginSectionResize(e, "footer")}
+              onResizeMove={(e) => moveSectionResize(e, "footer")}
+              onResizeEnd={endSectionResize}
+              onNudge={(dir) => nudgeSection("footer", dir)}
+            />
           </div>
         </div>
       </section>
@@ -2388,6 +2777,79 @@ function ModeButton({
       {icon}
       {!iconOnly && children}
     </button>
+  );
+}
+
+/* ------------------------------- section resize handle ------------------------------- */
+
+/**
+ * SectionResizeHandle (Task 170 — الزام ۱ فرمان مالک): دستگیرهٔ بوردرِ هر بخش
+ * برای ارتفاع‌دهی با موس. دابل‌کلیک = انتخاب/لغوِ آن بخش (حلقهٔ فیروزه‌ای روی کارت
+ * از طریق data-section-selected)؛ کشیدن = تغییر ارتفاع (در هدر: پایین‌کشیدن بلندتر
+ * می‌کند؛ در فوتر: بالاکشیدن بلندتر می‌کند)؛ ArrowUp/Down = نیمهٔ دقیق ±۱۶px و
+ * Escape = لغو انتخاب. فقط در lg+ نمایش داده می‌شود (زیر lg اسکرول طبیعی بدنه —
+ * قرارداد Task 161). موقعیت: هدر ⇒ لبهٔ پایین کارت؛ فوتر ⇒ لبهٔ بالای کارت.
+ */
+function SectionResizeHandle({
+  which,
+  hint,
+  selected,
+  onToggleSelect,
+  onResizeStart,
+  onResizeMove,
+  onResizeEnd,
+  onNudge,
+}: {
+  which: "header" | "footer";
+  hint: string;
+  selected: boolean;
+  onToggleSelect: () => void;
+  onResizeStart: (e: React.PointerEvent<HTMLDivElement>) => void;
+  onResizeMove: (e: React.PointerEvent<HTMLDivElement>) => void;
+  onResizeEnd: () => void;
+  onNudge: (dir: 1 | -1) => void;
+}) {
+  return (
+    <div
+      role="separator"
+      aria-orientation="horizontal"
+      tabIndex={0}
+      data-resize-handle={which}
+      data-section-selected={selected || undefined}
+      aria-label={hint}
+      title={hint}
+      onDoubleClick={onToggleSelect}
+      onPointerDown={onResizeStart}
+      onPointerMove={onResizeMove}
+      onPointerUp={onResizeEnd}
+      onPointerCancel={onResizeEnd}
+      onKeyDown={(e) => {
+        if (e.key === "Escape" && selected) {
+          e.preventDefault();
+          onToggleSelect();
+        } else if (e.key === "ArrowUp") {
+          e.preventDefault();
+          onNudge(1);
+        } else if (e.key === "ArrowDown") {
+          e.preventDefault();
+          onNudge(-1);
+        }
+      }}
+      className={cn(
+        "absolute inset-x-3 z-20 hidden h-3 cursor-row-resize items-center justify-center rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:flex",
+        which === "header" ? "-bottom-1.5" : "-top-1.5",
+      )}
+    >
+      <span
+        aria-hidden
+        className={cn(
+          "h-1 rounded-full transition-all",
+          selected
+            ? "w-16 bg-teal-500 shadow-sm ring-2 ring-teal-500/25"
+            : "w-10 bg-border/60 opacity-0 group-hover/resize:opacity-100",
+        )}
+      />
+    </div>
   );
 }
 
