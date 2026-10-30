@@ -1234,10 +1234,10 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
           </div>
         </div>
 
-        {/* ۳) بدنه — سه بخش هدر / اقلام / فوتر */}
-        <div className="min-h-0 flex-1 overflow-y-auto p-3 scrollbar-slim">
+        {/* ۳) بدنه — سه بخش هدر / اقلام / فوتر (ستون فلکس با ارتفاع قطعی: اقلام flex-1 می‌گیرد و فوتر فشرده می‌ماند — Task 159) */}
+        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-3 scrollbar-slim">
           {/* ---------- بخش هدر ---------- */}
-          <div className="rounded-2xl border border-border/70 bg-card shadow-sm">
+          <div className="shrink-0 rounded-2xl border border-border/70 bg-card shadow-sm">
             <div className="flex items-center gap-2 border-b border-border/50 px-3 py-2">
               <FilePlus2 className="h-3.5 w-3.5 text-emerald-600" aria-hidden />
               <h3 className="text-xs font-bold text-foreground/90">{t("vc.header")}</h3>
@@ -1380,7 +1380,8 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
           </div>
 
           {/* ---------- بخش اقلام سند ---------- */}
-          <div className="mt-3 flex min-h-0 flex-col rounded-2xl border border-border/70 bg-card shadow-sm">
+          {/* flex-1: تمام ارتفاع صرفه‌جویی‌شدهٔ فوتر (Task 159) به همین بخش اختصاص می‌یابد */}
+          <div className="mt-3 flex min-h-36 flex-1 flex-col rounded-2xl border border-border/70 bg-card shadow-sm">
             <div className="flex flex-wrap items-center gap-2 border-b border-border/50 px-3 py-2">
               <Table2 className="h-3.5 w-3.5 text-teal-600" aria-hidden />
               <h3 className="text-xs font-bold text-foreground/90">{t("vc.items")}</h3>
@@ -1401,7 +1402,7 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
 
             {mode === "grid" ? (
               /* ----- مدل جدولی: گرید شیت‌مانند با همهٔ ستون‌ها ----- */
-              <div className="min-h-0 overflow-auto scrollbar-slim" data-items-grid>
+              <div className="min-h-0 flex-1 overflow-auto scrollbar-slim" data-items-grid>
                 <table className="w-full min-w-max border-separate border-spacing-0 text-xs">
                   <thead>
                     <tr>
@@ -1827,14 +1828,20 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
           </div>
 
           {/* ---------- بخش فوتر سند ---------- */}
-          <div className="mt-3 grid grid-cols-1 gap-3 rounded-2xl border border-border/70 bg-card shadow-sm lg:grid-cols-2">
+          {/* Task 159: فوتر فشرده — راست حداکثر ۳ ردیف با اسکرول عمودی، بقیهٔ ارتفاع به اقلام می‌رسد */}
+          <div className="mt-3 grid shrink-0 grid-cols-1 gap-3 rounded-2xl border border-border/70 bg-card shadow-sm lg:grid-cols-2">
             {/* راست فوتر — فقط نمایش (زنجیرهٔ حساب ردیف انتخاب‌شده) */}
             <div className="border-border/50 p-3 lg:border-e">
               <div className="mb-2 flex items-center gap-2">
                 <Inbox className="h-3.5 w-3.5 text-muted-foreground" aria-hidden />
                 <h4 className="text-xs font-bold text-foreground/90">{t("vc.footerAccounts")}</h4>
               </div>
-              <div className="grid grid-cols-1 gap-x-4 gap-y-1.5 sm:grid-cols-2">
+              {/* بیش از ۳ ردیف ⇒ اسکرول عمودی (max-h-24 = دقیقاً ۳ ردیف ۲۸px + ۲ فاصله ۶px) */}
+              <div
+                tabIndex={0}
+                aria-label={t("vc.footerAccounts")}
+                className="grid max-h-24 grid-cols-1 gap-x-4 gap-y-1.5 overflow-y-auto pe-1 scrollbar-slim sm:grid-cols-2"
+              >
                 <FooterReadonly label={t("vc.footerGroup")} value={footerMoein ? `${footerMoein.groupCode} - ${footerMoein.groupTitle}` : ""} />
                 <FooterReadonly label={t("vc.footerLedger")} value={footerMoein ? `${footerMoein.ledgerCode} - ${footerMoein.ledgerTitle}` : ""} />
                 <FooterReadonly
@@ -2001,7 +2008,8 @@ function NavGlyph({
 
 function FooterReadonly({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center gap-1.5">
+    /* h-7 ثابت ⇒ ارتفاع هر ردیف دقیقاً ۲۸px برای محاسبهٔ سقف ۳ ردیفی فوتر (Task 159) */
+    <div className="flex h-7 shrink-0 items-center gap-1.5">
       <span className="shrink-0 whitespace-nowrap text-[11px] text-muted-foreground">{label}:</span>
       <span className="min-w-0 flex-1 truncate rounded-md border border-border/70 bg-muted/40 px-2 py-1 text-[11px] text-foreground/80">
         {value || "—"}
