@@ -17,6 +17,7 @@ import {
   Loader2,
   Lock,
   Minus,
+  MoveHorizontal,
   Plus,
   Square,
   SquarePen,
@@ -678,6 +679,90 @@ function TotalCell({
   );
 }
 
+/* Task 165 — جداکنندهٔ «/» بین جفت‌های خطوط افقی (زنجیرهٔ حساب و محاسبات) */
+function ChainSep() {
+  return (
+    <span aria-hidden className="shrink-0 text-border/80">
+      /
+    </span>
+  );
+}
+
+/* Task 165 — یک جفت «برچسب: مقدار» فشردهٔ خط محاسبات افقی (بدون جعبه) */
+function TotalInline({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: string;
+  tone: "debit" | "credit" | "neutral";
+}) {
+  return (
+    <span className="flex shrink-0 items-center gap-1">
+      <span className="text-muted-foreground">{label}:</span>
+      <span
+        className={cn(
+          "font-bold tabular-nums",
+          tone === "debit" && "text-emerald-700 dark:text-emerald-400",
+          tone === "credit" && "text-rose-700 dark:text-rose-400",
+          tone === "neutral" && "text-foreground",
+        )}
+        dir="ltr"
+      >
+        {value}
+      </span>
+    </span>
+  );
+}
+
+/* Task 165 — یک خط افقی از زنجیرهٔ حساب یک ردیف سند:
+   «گروه حساب: … / حساب کل: … / حساب معین: … / تفصیلی ۱: … / …»
+   جفت‌های خالی از قبل حذف شده‌اند (فرمان مالک)؛ کلیک = انتخاب همان ردیف؛
+   طول زیاد ⇒ اسکرول افقی نازک درون همان خط (ارتفاع خط ثابت h-6 می‌ماند) */
+function AcctChainLine({
+  idx,
+  pairs,
+  selected,
+  onSelect,
+}: {
+  idx: number;
+  pairs: { label: string; value: string }[];
+  selected: boolean;
+  onSelect: () => void;
+}) {
+  const full = pairs.map((p) => `${p.label}: ${p.value}`).join(" / ");
+  return (
+    <div
+      role="listitem"
+      aria-label={full || undefined}
+      title={full || undefined}
+      onClick={onSelect}
+      className={cn(
+        "flex h-6 cursor-pointer items-center gap-1.5 overflow-x-auto rounded-md border px-2 text-[11px] scrollbar-slim",
+        selected ? "border-primary/40 bg-primary/5" : "border-transparent hover:bg-foreground/[0.03]",
+      )}
+    >
+      <span className="flex h-4.5 w-5 shrink-0 items-center justify-center rounded bg-muted/60 text-[10px] tabular-nums text-muted-foreground">
+        {idx + 1}
+      </span>
+      {pairs.length === 0 ? (
+        <span className="text-muted-foreground/60">—</span>
+      ) : (
+        pairs.map((p, i) => (
+          <React.Fragment key={`${p.label}-${i}`}>
+            {i > 0 && <ChainSep />}
+            <span className="flex shrink-0 items-center gap-1 whitespace-nowrap">
+              <span className="text-muted-foreground">{p.label}:</span>
+              <span className="font-medium text-foreground/90">{p.value}</span>
+            </span>
+          </React.Fragment>
+        ))
+      )}
+    </div>
+  );
+}
+
 /* ---------------------------------- main form ---------------------------------- */
 
 export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
@@ -713,6 +798,8 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
   const [selectedRow, setSelectedRow] = React.useState(0);
   const [mode, setMode] = React.useState<"grid" | "form">("grid");
   const [formRow, setFormRow] = React.useState(0); // ردیف فعال حالت فرمی
+  /* Task 165 (فرمان مالک): مدل نمایش حساب‌های فوتر — «افقی» پیش‌فرض است */
+  const [acctMode, setAcctMode] = React.useState<"h" | "v">("h");
 
   /* ------------------------------ لیست/ناوبری ------------------------------ */
   const [records, setRecords] = React.useState<VoucherListItem[]>([]);
@@ -956,6 +1043,30 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
   const footerRowIdx = Math.min(selectedRow, rows.length - 1);
   const footerRow = rows[footerRowIdx];
   const footerMoein = footerRow?.moeinRef != null ? moeinById.get(footerRow.moeinRef) : undefined;
+
+  /* Task 165 (مدل افقی): زنجیرهٔ حساب «هر» ردیف سند به‌صورت جفت‌های label/value —
+     گروه حساب / حساب کل / حساب معین از معینِ همان ردیف و تفصیلی‌ها فقط وقتی انتخاب
+     شده‌اند (فرمان مالک: سطح تفصیلی خالی نمایش داده نمی‌شود)؛ ردیف بدون حساب ⇒ «—» */
+  const acctChainPairs = React.useMemo(
+    () =>
+      rows.map((row) => {
+        const pairs: { label: string; value: string }[] = [];
+        const m = row.moeinRef != null ? moeinById.get(row.moeinRef) : undefined;
+        if (m) {
+          pairs.push({ label: t("vc.footerGroup"), value: m.groupTitle });
+          pairs.push({ label: t("vc.footerLedger"), value: m.ledgerTitle });
+          pairs.push({ label: t("vc.footerMoein"), value: m.title });
+        }
+        for (const li of levelColumns) {
+          if (levelInfoOf(row.moeinRef ?? null, li).locked) continue;
+          const selId = row.details[li] ?? null;
+          const d = selId != null ? detailById.get(selId) : undefined;
+          if (d) pairs.push({ label: t("vc.detailCol").replace("{n}", String(li)), value: d.title });
+        }
+        return pairs;
+      }),
+    [rows, moeinById, detailById, levelColumns, levelInfoOf, t],
+  );
 
   /* ------------------------------ بازکردن سند ------------------------------ */
   const applyDetail = React.useCallback(
@@ -1907,41 +2018,79 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
           {/* ---------- بخش فوتر سند ---------- */}
           {/* Task 159: فوتر فشرده — راست حداکثر ۳ ردیف با اسکرول عمودی، بقیهٔ ارتفاع به اقلام می‌رسد */}
           <div className="mt-3 grid shrink-0 grid-cols-1 gap-3 rounded-2xl border border-border/70 bg-card shadow-sm lg:grid-cols-2">
-            {/* راست فوتر — فقط نمایش (زنجیرهٔ حساب ردیف انتخاب‌شده) */}
-            <div className="border-border/50 p-3 lg:border-e">
-              <div className="mb-2 flex items-center gap-2">
+            {/* راست فوتر — فقط نمایش؛ دو مدل نمایش (Task 165 فرمان مالک):
+                عمودی = زنجیرهٔ حساب ردیف انتخاب‌شده (گرید دوستونه)؛
+                افقی (پیش‌فرض) = هر ردیف سند یک خط: «گروه حساب: … / حساب کل: … / …» با حذف جفت‌های خالی؛
+                در حالت افقی هر دو باکس فشرده می‌شوند و ارتفاع فوتر ~۵۰٪ کم می‌شود */}
+            <div className={cn("border-border/50 lg:border-e", acctMode === "v" ? "p-3" : "px-3 py-2")}>
+              <div className={cn("flex items-center gap-2", acctMode === "v" ? "mb-2" : "mb-1")}>
                 <Inbox className="h-3.5 w-3.5 text-muted-foreground" aria-hidden />
-                <h4 className="text-xs font-bold text-foreground/90">{t("vc.footerAccounts")}</h4>
+                <h4 className="text-xs font-bold text-foreground/90">
+                  {acctMode === "v" ? t("vc.footerAccounts") : t("vc.footerAccountsAll")}
+                </h4>
+                <div
+                  role="group"
+                  aria-label={t("vc.acctViewLabel")}
+                  className="ms-auto flex items-center gap-0.5 rounded-lg border bg-background/60 p-0.5"
+                >
+                  <ModeButton active={acctMode === "v"} onClick={() => setAcctMode("v")} icon={<Inbox className="h-3 w-3" aria-hidden />}>
+                    {t("vc.acctViewVertical")}
+                  </ModeButton>
+                  <ModeButton active={acctMode === "h"} onClick={() => setAcctMode("h")} icon={<MoveHorizontal className="h-3 w-3" aria-hidden />}>
+                    {t("vc.acctViewHorizontal")}
+                  </ModeButton>
+                </div>
               </div>
-              {/* بیش از ۳ ردیف ⇒ اسکرول عمودی (max-h-24 = دقیقاً ۳ ردیف ۲۸px + ۲ فاصله ۶px) */}
-              {/* Task 164 — ناحیهٔ هم‌ترازی userformlabelalignment برای حساب‌های فوتر سند */}
-              <AlignedZone
-                tabIndex={0}
-                aria-label={t("vc.footerAccounts")}
-                className="grid max-h-24 grid-cols-1 gap-x-4 gap-y-1.5 overflow-y-auto pe-1 scrollbar-slim sm:grid-cols-2"
-              >
-                <FooterReadonly label={t("vc.footerGroup")} value={footerMoein ? `${footerMoein.groupCode} - ${footerMoein.groupTitle}` : ""} />
-                <FooterReadonly label={t("vc.footerLedger")} value={footerMoein ? `${footerMoein.ledgerCode} - ${footerMoein.ledgerTitle}` : ""} />
-                <FooterReadonly
-                  label={t("vc.footerMoein")}
-                  value={footerMoein ? `${footerMoein.code} - ${footerMoein.title}` : ""}
-                />
-                {levelColumns.map((li) => {
-                  const selId = footerRow?.details[li] ?? null;
-                  const d = selId != null ? detailById.get(selId) : undefined;
-                  return (
-                    <FooterReadonly
-                      key={li}
-                      label={t("vc.footerDetailTitle").replace("{n}", String(li))}
-                      value={d ? `${d.code} - ${d.title}` : ""}
+              {acctMode === "v" ? (
+                /* عمودی — بیش از ۳ ردیف ⇒ اسکرول عمودی (max-h-24 = دقیقاً ۳ ردیف ۲۸px + ۲ فاصله ۶px) */
+                /* Task 164 — ناحیهٔ هم‌ترازی userformlabelalignment برای حساب‌های فوتر سند */
+                <AlignedZone
+                  tabIndex={0}
+                  aria-label={t("vc.footerAccounts")}
+                  className="grid max-h-24 grid-cols-1 gap-x-4 gap-y-1.5 overflow-y-auto pe-1 scrollbar-slim sm:grid-cols-2"
+                >
+                  <FooterReadonly label={t("vc.footerGroup")} value={footerMoein ? `${footerMoein.groupCode} - ${footerMoein.groupTitle}` : ""} />
+                  <FooterReadonly label={t("vc.footerLedger")} value={footerMoein ? `${footerMoein.ledgerCode} - ${footerMoein.ledgerTitle}` : ""} />
+                  <FooterReadonly
+                    label={t("vc.footerMoein")}
+                    value={footerMoein ? `${footerMoein.code} - ${footerMoein.title}` : ""}
+                  />
+                  {levelColumns.map((li) => {
+                    const selId = footerRow?.details[li] ?? null;
+                    const d = selId != null ? detailById.get(selId) : undefined;
+                    return (
+                      <FooterReadonly
+                        key={li}
+                        label={t("vc.footerDetailTitle").replace("{n}", String(li))}
+                        value={d ? `${d.code} - ${d.title}` : ""}
+                      />
+                    );
+                  })}
+                </AlignedZone>
+              ) : (
+                /* افقی — یک خط به‌ازای هر ردیف سند؛ نوار ۳۲px (یک خط کامل + ۸px پیش‌نمای اسکرول)؛
+                   کلیک روی هر خط همان ردیف را انتخاب می‌کند (هم‌گام با ناوبری جدولی/فرمی) */
+                <div
+                  tabIndex={0}
+                  role="list"
+                  aria-label={t("vc.footerAccountsAll")}
+                  className="max-h-8 overflow-y-auto rounded-md pe-1 scrollbar-slim"
+                >
+                  {rows.map((row, idx) => (
+                    <AcctChainLine
+                      key={row.key}
+                      idx={idx}
+                      pairs={acctChainPairs[idx] ?? []}
+                      selected={idx === footerRowIdx}
+                      onSelect={() => setSelectedRow(idx)}
                     />
-                  );
-                })}
-              </AlignedZone>
+                  ))}
+                </div>
+              )}
             </div>
-            {/* چپ فوتر — محاسبات خودکار */}
-            <div className="p-3">
-              <div className="mb-2 flex items-center gap-2">
+            {/* چپ فوتر — محاسبات خودکار (مدل افقی: فشرده — هر ۴ محاسبه در یک خط) */}
+            <div className={acctMode === "v" ? "p-3" : "px-3 py-2"}>
+              <div className={cn("flex items-center gap-2", acctMode === "v" ? "mb-2" : "mb-1")}>
                 <CalculatorIcon />
                 <h4 className="text-xs font-bold text-foreground/90">{t("vc.footerTotals")}</h4>
                 <span
@@ -1954,13 +2103,29 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                   {totals.balanced ? t("vc.balanceOk") : t("vc.balanceDiff")}
                 </span>
               </div>
-              {/* Task 164 — ناحیهٔ هم‌ترازی userformlabelalignment + عرض +۷۰٪ برای سلول‌های مجموع بدهکار/بستانکار */}
-              <AlignedZone className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                <TotalCell label={t("vc.totalDebit")} value={formatAmount(totals.totalDebit, locale)} tone="debit" wide />
-                <TotalCell label={t("vc.totalCredit")} value={formatAmount(totals.totalCredit, locale)} tone="credit" wide />
-                <TotalCell label={t("vc.balanceDebit")} value={formatAmount(totals.balanceDebit, locale)} tone="debit" />
-                <TotalCell label={t("vc.balanceCredit")} value={formatAmount(totals.balanceCredit, locale)} tone="credit" />
-              </AlignedZone>
+              {acctMode === "v" ? (
+                /* عمودی — Task 164: ناحیهٔ هم‌ترازی userformlabelalignment + عرض +۷۰٪ سلول‌های مجموع */
+                <AlignedZone className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  <TotalCell label={t("vc.totalDebit")} value={formatAmount(totals.totalDebit, locale)} tone="debit" wide />
+                  <TotalCell label={t("vc.totalCredit")} value={formatAmount(totals.totalCredit, locale)} tone="credit" wide />
+                  <TotalCell label={t("vc.balanceDebit")} value={formatAmount(totals.balanceDebit, locale)} tone="debit" />
+                  <TotalCell label={t("vc.balanceCredit")} value={formatAmount(totals.balanceCredit, locale)} tone="credit" />
+                </AlignedZone>
+              ) : (
+                /* افقی — یک خط فشرده از هر ۴ محاسبه (کاهش ۵۰٪ ارتفاع فوتر — فرمان مالک) */
+                <div
+                  aria-label={t("vc.footerTotals")}
+                  className="flex h-6 items-center gap-2 overflow-x-auto whitespace-nowrap rounded-md bg-muted/30 px-2 text-[11px] scrollbar-slim"
+                >
+                  <TotalInline label={t("vc.totalDebit")} value={formatAmount(totals.totalDebit, locale)} tone="debit" />
+                  <ChainSep />
+                  <TotalInline label={t("vc.totalCredit")} value={formatAmount(totals.totalCredit, locale)} tone="credit" />
+                  <ChainSep />
+                  <TotalInline label={t("vc.balanceDebit")} value={formatAmount(totals.balanceDebit, locale)} tone="debit" />
+                  <ChainSep />
+                  <TotalInline label={t("vc.balanceCredit")} value={formatAmount(totals.balanceCredit, locale)} tone="credit" />
+                </div>
+              )}
               {/* Task 163: دکمهٔ افزودن ردیف به فوتربار کارت اقلام منتقل شد */}
             </div>
           </div>
