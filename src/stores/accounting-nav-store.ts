@@ -19,9 +19,8 @@ import { create } from "zustand";
 /** زیرصفحه‌های پنجرهٔ «حسابداری» — هم‌نوع AccountingPage در accounting-window */
 export type AccountingSubPage =
   | "home"
-  | "detail-type" // Task 120 — نوع تفصیل جدید (اطلاعات پایهٔ حسابداری)
-  | "detail-type-numbering" // Task 131 — شماره گذاری تفصیلی ها (اطلاعات پایهٔ حسابداری)
-  | "detail-items" // Task 144 — ایجاد تفصیلی ها (زیرمنوی «اطلاعات تفصیلی ها» — Task 145)
+  | "detail-type" // Task 120 — نوع تفصیل جدید (زیرمنوی «اطلاعات تفصیلی ها» از Task 174)
+  | "detail-type-numbering" // Task 131 — شماره گذاری تفصیلی ها (زیرمنوی «اطلاعات تفصیلی ها» از Task 174)
   | "cost-center" // Task 146 — مرکز هزینه جدید (زیرمنوی «اطلاعات تفصیلی ها»)
   | "project" // Task 147 — تعریف پروژه (زیرمنوی «اطلاعات تفصیلی ها»)
   | "contract" // Task 148 — قرارداد جدید (زیرمنوی «اطلاعات تفصیلی ها»)
@@ -29,6 +28,7 @@ export type AccountingSubPage =
   | "voucher-type" // Task 153 — نوع سند جدید (زیرمنوی «سند حسابداری»)
   | "voucher-new" // Task 158 — سند حسابداری جدید (زیرمنوی «سند حسابداری»)
   | "detail-other"; // Task 154 — تفصیلی سایر (زیرمنوی «اطلاعات تفصیلی ها»)
+  // Task 174 — فرم عمومی «ایجاد تفصیلی ها» (Task 144) بطور کامل حذف شد
 
 interface AccountingNavState {
   /** درخواست در انتظار (null = هیچ) */

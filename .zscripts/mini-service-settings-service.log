@@ -592,3 +592,291 @@ $ NODE_PATH=./node_modules bun --hot src/main.ts
 [Nest] 3069  - 10/30/2026, 9:11:49 PM     LOG [SystemsService] Systems synced from APP_CATALOG (total 28, created 0, updated 0)
 [Nest] 3069  - 10/30/2026, 9:11:49 PM     LOG [NestApplication] Nest application successfully started +56ms
 [Nest] 3069  - 10/30/2026, 9:11:49 PM     LOG [Bootstrap] settings-service listening on http://127.0.0.1:3001
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [NestFactory] Starting Nest application...
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [InstanceLoader] PrismaModule dependencies initialized +11ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [InstanceLoader] IdGenerationModule dependencies initialized +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [InstanceLoader] SeedModule dependencies initialized +1ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [InstanceLoader] AppRegistryModule dependencies initialized +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [InstanceLoader] DataTranslationsModule dependencies initialized +1ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [InstanceLoader] DetailCodeAssignmentModule dependencies initialized +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [InstanceLoader] SystemsModule dependencies initialized +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [InstanceLoader] SoftwareConfigModule dependencies initialized +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [InstanceLoader] AppModule dependencies initialized +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [InstanceLoader] VoucherModule dependencies initialized +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [InstanceLoader] UsersModule dependencies initialized +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [InstanceLoader] DetailTypeModule dependencies initialized +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [InstanceLoader] FiscalYearModule dependencies initialized +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [InstanceLoader] PartyModule dependencies initialized +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [InstanceLoader] UserRolesModule dependencies initialized +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [InstanceLoader] GeoLocationModule dependencies initialized +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [InstanceLoader] CurrencyTypeModule dependencies initialized +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [InstanceLoader] ExchangeRateModule dependencies initialized +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [InstanceLoader] DetailTypeNumberingModule dependencies initialized +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [InstanceLoader] DetailItemModule dependencies initialized +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [InstanceLoader] VoucherTypeModule dependencies initialized +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [InstanceLoader] AccountTreeModule dependencies initialized +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [InstanceLoader] CostCenterModule dependencies initialized +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [InstanceLoader] ProjectModule dependencies initialized +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [InstanceLoader] ContractModule dependencies initialized +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [InstanceLoader] BusinessStructureModule dependencies initialized +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RoutesResolver] HealthController {/}: +2ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/health, GET} route +1ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RoutesResolver] BusinessStructureController {/business-structure}: +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/business-structure, GET} route +1ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/business-structure, POST} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/business-structure/:id, PUT} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/business-structure/:id, DELETE} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RoutesResolver] DetailTypeController {/detail-type}: +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/detail-type, GET} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/detail-type, POST} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/detail-type/:id, PUT} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/detail-type/:id, DELETE} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RoutesResolver] AppRegistryController {/app-registry}: +1ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/app-registry, GET} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RoutesResolver] SystemsController {/systems}: +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/systems, GET} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/systems/:code, GET} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RoutesResolver] SoftwareConfigController {/software-config}: +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/software-config, GET} route +1ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/software-config/:appKey, GET} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/software-config/:appKey, PUT} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RoutesResolver] FiscalYearController {/fiscal-year}: +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/fiscal-year, GET} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/fiscal-year, POST} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/fiscal-year/:id, PUT} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/fiscal-year/:id, DELETE} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RoutesResolver] PartyController {/party}: +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/party, GET} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/party/next-tafsili, GET} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/party/cities, GET} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/party, POST} route +5ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/party/:id, PUT} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/party/:id, DELETE} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RoutesResolver] DataTranslationsController {/data-translations}: +1ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/data-translations, GET} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/data-translations/save, POST} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/data-translations/save-many, POST} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RoutesResolver] UserRolesController {/user-role}: +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/user-role, GET} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/user-role, POST} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/user-role/:id, PUT} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/user-role/:id, DELETE} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RoutesResolver] GeoLocationController {/geo-location}: +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/geo-location, GET} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/geo-location, POST} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/geo-location/:id, PUT} route +1ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/geo-location/:id, DELETE} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RoutesResolver] CurrencyTypeController {/currency-type}: +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/currency-type, GET} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/currency-type, POST} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/currency-type/:id, PUT} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/currency-type/:id, DELETE} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RoutesResolver] ExchangeRateController {/exchange-rate}: +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/exchange-rate, GET} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/exchange-rate, POST} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/exchange-rate/:id, PUT} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/exchange-rate/:id, DELETE} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RoutesResolver] DetailTypeNumberingController {/detail-type-numbering}: +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/detail-type-numbering, GET} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/detail-type-numbering/:id, PUT} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RoutesResolver] DetailItemController {/detail-items}: +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/detail-items, GET} route +1ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/detail-items/next-code, GET} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/detail-items/other-category, GET} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/detail-items, POST} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/detail-items/:id, PUT} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/detail-items/:id, DELETE} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RoutesResolver] DetailCodeAssignmentController {/detail-code}: +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/detail-code/allocate, GET} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RoutesResolver] CostCenterController {/cost-centers}: +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/cost-centers, GET} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/cost-centers, POST} route +5ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/cost-centers/:id, PUT} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/cost-centers/:id, DELETE} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RoutesResolver] ProjectController {/projects}: +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/projects, GET} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/projects/next-code, GET} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/projects, POST} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/projects/:id, PUT} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/projects/:id, DELETE} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RoutesResolver] ContractController {/contracts}: +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/contracts, GET} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/contracts, POST} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/contracts/:id, PUT} route +1ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/contracts/:id, DELETE} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RoutesResolver] VoucherTypeController {/voucher-type}: +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/voucher-type, GET} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/voucher-type, POST} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/voucher-type/:id, PUT} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/voucher-type/:id, DELETE} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RoutesResolver] VoucherController {/vouchers}: +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/vouchers/meta, GET} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/vouchers/next-number, GET} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/vouchers, GET} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/vouchers/:id, GET} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/vouchers, POST} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/vouchers/:id, PUT} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/vouchers/:id, DELETE} route +1ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RoutesResolver] UsersController {/user}: +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/user, GET} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/user, POST} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/user/:id, PUT} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/user/:id, DELETE} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RoutesResolver] AccountTreeController {/account-tree}: +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/account-tree, GET} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/account-tree/:id, GET} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/account-tree, POST} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/account-tree/:id, PUT} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/account-tree/:id, DELETE} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/account-tree/:id/detail-types, POST} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/account-tree/:id/detail-types/:assignmentId, DELETE} route +1ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/account-tree/:id/recurring-descriptions, POST} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [PrismaService] Prisma connected — §2.5 auto-rowversion active on: IDGeneration, Setting, BusinessStructure, BusinessStructureUser, AppRegistry, Systems, SoftwareConfig, FiscalYear, City, Party, PartyPerson, PartyAddress, PartyPhone, DataTranslation, UserRole, UserRoleScope, GeoLocation, CurrencyType, ExchangeRate, DetailType, DetailTypeNumbering, DetailItem, CostCenter, Project, Contract, VoucherType, Voucher, VoucherItem, VoucherItemDetail, User, UserAccess, AccountNode, AccountDetailLevel, AccountDetailLevelType, AccountNatureAdjust, AccountRecurringDesc, AccountAllowedUser
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [NestFactory] Starting Nest application...
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [InstanceLoader] PrismaModule dependencies initialized +15ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [InstanceLoader] IdGenerationModule dependencies initialized +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [InstanceLoader] SeedModule dependencies initialized +1ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [InstanceLoader] AppRegistryModule dependencies initialized +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [InstanceLoader] DataTranslationsModule dependencies initialized +1ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [InstanceLoader] DetailCodeAssignmentModule dependencies initialized +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [InstanceLoader] SystemsModule dependencies initialized +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [InstanceLoader] SoftwareConfigModule dependencies initialized +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [InstanceLoader] AppModule dependencies initialized +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [InstanceLoader] VoucherModule dependencies initialized +1ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [InstanceLoader] UsersModule dependencies initialized +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [InstanceLoader] DetailTypeModule dependencies initialized +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [InstanceLoader] FiscalYearModule dependencies initialized +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [InstanceLoader] PartyModule dependencies initialized +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [InstanceLoader] UserRolesModule dependencies initialized +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [InstanceLoader] GeoLocationModule dependencies initialized +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [InstanceLoader] CurrencyTypeModule dependencies initialized +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [InstanceLoader] ExchangeRateModule dependencies initialized +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [InstanceLoader] DetailTypeNumberingModule dependencies initialized +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [InstanceLoader] DetailItemModule dependencies initialized +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [InstanceLoader] VoucherTypeModule dependencies initialized +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [InstanceLoader] AccountTreeModule dependencies initialized +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [InstanceLoader] CostCenterModule dependencies initialized +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [InstanceLoader] ProjectModule dependencies initialized +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [InstanceLoader] ContractModule dependencies initialized +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [InstanceLoader] BusinessStructureModule dependencies initialized +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RoutesResolver] HealthController {/}: +1ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/health, GET} route +1ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RoutesResolver] BusinessStructureController {/business-structure}: +1ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/business-structure, GET} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/business-structure, POST} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/business-structure/:id, PUT} route +1ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/business-structure/:id, DELETE} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RoutesResolver] DetailTypeController {/detail-type}: +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/detail-type, GET} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/detail-type, POST} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/detail-type/:id, PUT} route +1ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/detail-type/:id, DELETE} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RoutesResolver] AppRegistryController {/app-registry}: +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/app-registry, GET} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RoutesResolver] SystemsController {/systems}: +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/systems, GET} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/systems/:code, GET} route +1ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RoutesResolver] SoftwareConfigController {/software-config}: +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/software-config, GET} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/software-config/:appKey, GET} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/software-config/:appKey, PUT} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RoutesResolver] FiscalYearController {/fiscal-year}: +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/fiscal-year, GET} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/fiscal-year, POST} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/fiscal-year/:id, PUT} route +1ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/fiscal-year/:id, DELETE} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RoutesResolver] PartyController {/party}: +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/party, GET} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/party/next-tafsili, GET} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/party/cities, GET} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/party, POST} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/party/:id, PUT} route +1ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/party/:id, DELETE} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RoutesResolver] DataTranslationsController {/data-translations}: +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/data-translations, GET} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/data-translations/save, POST} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/data-translations/save-many, POST} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RoutesResolver] UserRolesController {/user-role}: +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/user-role, GET} route +1ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/user-role, POST} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/user-role/:id, PUT} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/user-role/:id, DELETE} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RoutesResolver] GeoLocationController {/geo-location}: +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/geo-location, GET} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/geo-location, POST} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/geo-location/:id, PUT} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/geo-location/:id, DELETE} route +1ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RoutesResolver] CurrencyTypeController {/currency-type}: +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/currency-type, GET} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/currency-type, POST} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/currency-type/:id, PUT} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/currency-type/:id, DELETE} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RoutesResolver] ExchangeRateController {/exchange-rate}: +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/exchange-rate, GET} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/exchange-rate, POST} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/exchange-rate/:id, PUT} route +1ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/exchange-rate/:id, DELETE} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RoutesResolver] DetailTypeNumberingController {/detail-type-numbering}: +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/detail-type-numbering, GET} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/detail-type-numbering/:id, PUT} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RoutesResolver] DetailItemController {/detail-items}: +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/detail-items, GET} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/detail-items/next-code, GET} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/detail-items/other-category, GET} route +1ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/detail-items, POST} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/detail-items/:id, PUT} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/detail-items/:id, DELETE} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RoutesResolver] DetailCodeAssignmentController {/detail-code}: +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/detail-code/allocate, GET} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RoutesResolver] CostCenterController {/cost-centers}: +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/cost-centers, GET} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/cost-centers, POST} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/cost-centers/:id, PUT} route +1ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/cost-centers/:id, DELETE} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RoutesResolver] ProjectController {/projects}: +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/projects, GET} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/projects/next-code, GET} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/projects, POST} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/projects/:id, PUT} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/projects/:id, DELETE} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RoutesResolver] ContractController {/contracts}: +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/contracts, GET} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/contracts, POST} route +1ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/contracts/:id, PUT} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/contracts/:id, DELETE} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RoutesResolver] VoucherTypeController {/voucher-type}: +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/voucher-type, GET} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/voucher-type, POST} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/voucher-type/:id, PUT} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/voucher-type/:id, DELETE} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RoutesResolver] VoucherController {/vouchers}: +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/vouchers/meta, GET} route +1ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/vouchers/next-number, GET} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/vouchers, GET} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/vouchers/:id, GET} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/vouchers, POST} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/vouchers/:id, PUT} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/vouchers/:id, DELETE} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RoutesResolver] UsersController {/user}: +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/user, GET} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/user, POST} route +1ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/user/:id, PUT} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/user/:id, DELETE} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RoutesResolver] AccountTreeController {/account-tree}: +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/account-tree, GET} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/account-tree/:id, GET} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/account-tree, POST} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/account-tree/:id, PUT} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/account-tree/:id, DELETE} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/account-tree/:id/detail-types, POST} route +1ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/account-tree/:id/detail-types/:assignmentId, DELETE} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [RouterExplorer] Mapped {/account-tree/:id/recurring-descriptions, POST} route +0ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [PrismaService] Prisma connected — §2.5 auto-rowversion active on: IDGeneration, Setting, BusinessStructure, BusinessStructureUser, AppRegistry, Systems, SoftwareConfig, FiscalYear, City, Party, PartyPerson, PartyAddress, PartyPhone, DataTranslation, UserRole, UserRoleScope, GeoLocation, CurrencyType, ExchangeRate, DetailType, DetailTypeNumbering, DetailItem, CostCenter, Project, Contract, VoucherType, Voucher, VoucherItem, VoucherItemDetail, User, UserAccess, AccountNode, AccountDetailLevel, AccountDetailLevelType, AccountNatureAdjust, AccountRecurringDesc, AccountAllowedUser
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [AppRegistryService] AppRegistry synced (28 apps, 0 changed)
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [SystemsService] Systems synced from APP_CATALOG (total 28, created 0, updated 0)
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [AppRegistryService] AppRegistry synced (28 apps, 0 changed)
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [SystemsService] Systems synced from APP_CATALOG (total 28, created 0, updated 0)
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [NestApplication] Nest application successfully started +70ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [Bootstrap] settings-service listening on http://127.0.0.1:3001
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [NestApplication] Nest application successfully started +91ms
+[Nest] 3069  - 10/30/2026, 10:53:48 PM     LOG [Bootstrap] settings-service listening on http://127.0.0.1:3001

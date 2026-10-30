@@ -56,7 +56,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { AccountTreeForm } from "./account-tree-form";
-import { DetailItemsForm } from "./detail-items-form";
 import { VoucherTypeForm } from "./voucher-type-form";
 import { CurrencyTypeForm } from "@/components/erp/general/currency-type-form";
 
@@ -95,9 +94,11 @@ import { CurrencyTypeForm } from "@/components/erp/general/currency-type-form";
  *
  * Task 168 (فرمان مالک): دکمهٔ «+» در فوتر دراپ‌داون‌ها «ایجاد موجودیت» است
  * نه انتخاب — کلیک روی آن فرم مرجع همان آیتم را به‌صورت مودال داخل همین فرم
- * باز می‌کند (معین ⇒ درختواره حسابها، تفصیلی ⇒ ایجاد تفصیلی ها، نوع سند ⇒
+ * باز می‌کند (معین ⇒ درختواره حسابها، نوع سند ⇒
  * نوع سند جدید، ارز ⇒ نوع ارز) تا کاربر رکورد جدید را بسازد؛ پس از بستن،
  * منابع با GET /vouchers/meta تازه می‌شوند تا رکورد تازه در لیست دیده شود.
+ * Task 174: فرم مرجع «ایجاد تفصیلی ها» حذف شد ⇒ ستون‌های تفصیلی دیگر دکمهٔ
+ * «+» ندارند (رکورد تفصیلی از فرم‌های تخصصی ساخته می‌شود).
  * حالت دراپ‌داونِ انتخاب‌ها دست‌نخورده است؛ چندانتخاب معین (t158) با چیپ
  * «افزودن (n)» که فقط وقتی تیک‌خورده‌ای هست ظاهر می‌شود، زنده می‌ماند.
  *
@@ -366,8 +367,9 @@ interface PickerRow {
  * «بدون سرستون» (عنوان در ابتدای ردیف، کد در انتهای کم‌رنگ، سلول سوم =
  * توضیح جانبی) + نوار پایین با تولبار آیکونی و شمارندهٔ «{n} مورد».
  * Task 168 (فرمان مالک): دکمهٔ «+» = ایجاد موجودیتِ همان آیتم (نه انتخاب) —
- * با onCreate فرم مرجع (درختواره حسابها/ایجاد تفصیلی ها/نوع سند/نوع ارز)
- * به‌صورت مودال باز می‌شود.
+ * با onCreate فرم مرجع (درختواره حسابها/نوع سند/نوع ارز)
+ * به‌صورت مودال باز می‌شود. Task 174: تفصیلی‌ها onCreate ندارند (فرم عمومی
+ * ایجاد تفصیلی ها حذف شد).
  * Task 170 (فرمان مالک): حالت typeable — سلول یک ورودی متنی دارد که کد «یا»
  * عنوان را می‌پذیرد؛ Enter با تطابق دقیق ⇒ انتخاب + onEnterCommit (ادامهٔ
  * ناوبری)، Enter با عبارتِ بی‌معنا ⇒ دراپ‌داون باز و عبارت در فیلتر فیلتر
@@ -1085,7 +1087,7 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
   /* ---------------- Task 168 — فرم مرجع «+ ایجاد» دراپ‌داون‌ها ----------------
      فرمان مالک: دکمهٔ + فوتر دراپ‌داون فرم مرجع همان موجودیت را باز می‌کند
      (نه انتخاب) تا کاربر رکورد جدید بسازد؛ پس از بستن، meta تازه واکشی می‌شود. */
-  type RefFormKind = "account-tree" | "detail-items" | "voucher-type" | "currency-type";
+  type RefFormKind = "account-tree" | "voucher-type" | "currency-type";
   const [refForm, setRefForm] = React.useState<RefFormKind | null>(null);
   const openRefForm = React.useCallback((kind: RefFormKind) => setRefForm(kind), []);
 
@@ -2425,8 +2427,6 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                                   emptyLabel={t("vc.detailEmpty")}
                                   countLabel={t("vc.pickerCount")}
                                   clearFilterLabel={t("vc.pickerClearFilter")}
-                                  onCreate={() => openRefForm("detail-items")}
-                                  createLabel={t("vc.pickerCreate")}
                                   rows={meta.detailItems
                                     .filter((d) => info.typeRefs.includes(d.detailTypeRef))
                                     .map((d) => ({ id: d.id, cells: [d.code, d.title, d.typeTitle] }))}
@@ -2681,8 +2681,6 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                           emptyLabel={t("vc.detailEmpty")}
                           countLabel={t("vc.pickerCount")}
                           clearFilterLabel={t("vc.pickerClearFilter")}
-                          onCreate={() => openRefForm("detail-items")}
-                          createLabel={t("vc.pickerCreate")}
                           rows={meta.detailItems
                             .filter((d) => info.typeRefs.includes(d.detailTypeRef))
                             .map((d) => ({ id: d.id, cells: [d.code, d.title, d.typeTitle] }))}
@@ -3057,15 +3055,12 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
           <DialogTitle className="sr-only">
             {refForm === "account-tree"
               ? t("atr.formTitle")
-              : refForm === "detail-items"
-                ? t("di.formTitle")
-                : refForm === "voucher-type"
-                  ? t("vt.formTitle")
-                  : t("currency.formTitle")}
+              : refForm === "voucher-type"
+                ? t("vt.formTitle")
+                : t("currency.formTitle")}
           </DialogTitle>
           <DialogDescription className="sr-only">{t("vc.pickerCreate")}</DialogDescription>
           {refForm === "account-tree" && <AccountTreeForm onBack={closeRefForm} />}
-          {refForm === "detail-items" && <DetailItemsForm onBack={closeRefForm} />}
           {refForm === "voucher-type" && <VoucherTypeForm onBack={closeRefForm} />}
           {refForm === "currency-type" && <CurrencyTypeForm onBack={closeRefForm} />}
         </DialogContent>

@@ -45,7 +45,7 @@ import { SeedModule } from "./seed/seed.module";
     ExchangeRateModule, // Task 116 — نرخ برابری ارز (عملیات)
     DetailTypeModule, // Task 120 — نوع تفصیل جدید (اطلاعات پایهٔ حسابداری)
     DetailTypeNumberingModule, // Task 131 — شماره گذاری تفصیلی ها (اطلاعات پایهٔ حسابداری)
-    DetailItemModule, // Task 144 — ایجاد تفصیلی ها (اطلاعات پایهٔ حسابداری)
+    DetailItemModule, // سرویس مشترک تفصیلی — Task 174: فرم عمومی «ایجاد تفصیلی ها» حذف شد؛ endpointها برای تفصیلی سایر (Task 154) و متای سند باقی‌اند
     DetailCodeAssignmentModule, // Task 146 — متد اختصاصی تخصیص کد تفصیل (لایو ایجکس)
     CostCenterModule, // Task 146 — مرکز هزینه جدید (اطلاعات تفصیلی ها)
     ProjectModule, // Task 147 — تعریف پروژه (اطلاعات تفصیلی ها)

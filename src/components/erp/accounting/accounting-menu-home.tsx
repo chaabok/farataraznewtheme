@@ -1,6 +1,6 @@
 "use client";
 
-import { Briefcase, Boxes, Building2, Calculator, Database, FileSignature, FileText, FilePlus2, FolderPlus, Layers, ListOrdered, ListTree, ScrollText, Tags } from "lucide-react";
+import { Briefcase, Boxes, Building2, Calculator, Database, FileSignature, FileText, FilePlus2, Layers, ListOrdered, ListTree, ScrollText, Tags } from "lucide-react";
 import { AppMenuHome, type AppMenuGroupDef } from "@/components/erp/shared/app-menu-home";
 
 /**
@@ -13,22 +13,21 @@ import { AppMenuHome, type AppMenuGroupDef } from "@/components/erp/shared/app-m
  * کنار منو + ماندگاری انتخاب کاربر (کلید مستقل accounting.menuView).
  *
  * زیرمنوی «اطلاعات پایه» — فرم‌های اعلامی:
- *   · Task 120: «نوع تفصیل جدید» (بدنهٔ واقعی detail-type-form؛ بدون عنوان
- *     لاتین به فرمان مالک). فرم‌های بعدی (حساب‌ها، دفاتر، اسناد و …) فقط یک
- *     مدخل در همین آرایه + یک زیرصفحه در accounting-window می‌گیرند.
- *   · Task 131: «شماره گذاری تفصیلی ها» (بدنهٔ واقعی detail-type-numbering-form
- *     با کامپوننت MainDataGrid — بازهٔ خودکار هر تفصیل).
+ *   · Task 140: «درختواره حسابها» (SimpleTreeForm) — تنها فرم این گروه پس از
+ *     Task 174 (فرمان مالک: نوع تفصیل جدید و شماره گذاری تفصیلی ها به
+ *     «اطلاعات تفصیلی ها» منتقل شدند). فرم‌های بعدی فقط یک مدخل در همین
+ *     آرایه + یک زیرصفحه در accounting-window می‌گیرند.
  *   · همان زیرمنو در درختوارهٔ فرمساز هم ثبت است (SYSTEM_SUBMENUS — dfb seed،
- *     کد "accBasicInfo"؛ SYSTEM_FORMS با anchorSubmenuCode همان) تا قرارداد
- *     Task 112 در هر دو منو برقرار بماند.
+ *     کد "accBasicInfo") تا قرارداد Task 112 در هر دو منو برقرار بماند.
  *
  * زیرمنوی «اطلاعات تفصیلی ها» — Task 145 (درخواست مالک: «ایجاد تفصیلی ها
  * باید یک زیرمنو باشد چون دارای فرم های متعددی است و نباید یک فرم باشد؛
  * همانند اطلاعات پایه یک زیرمنو بنام اطلاعات تفصیلی ها ایجاد کنید و فرم های
  * آن به مرور تکمیل خواهد شد»):
- *   · Task 144: «ایجاد تفصیلی ها» — از زیرمنوی اطلاعات پایه به همین زیرمنو
- *     منتقل شد؛ فرم‌های بعدی تفصیلی نیز به‌مرور فقط یک مدخل در همین گروه
- *     + یک زیرصفحه در accounting-window می‌گیرند.
+ *   · Task 174 (فرمان مالک): «نوع تفصیل جدید» (Task 120) و «شماره گذاری
+ *     تفصیلی ها» (Task 131) از «اطلاعات پایه» به این زیرمنو منتقل شدند؛
+ *     فرم عمومی «ایجاد تفصیلی ها» (Task 144) بطور کامل حذف شد — رکورد
+ *     تفصیلی از فرم‌های تخصصی (مرکز هزینه/پروژه/قرارداد/سایر) ساخته می‌شود.
  *   · Task 146: «مرکز هزینه جدید» — با کد تفصیل لایو (متد اختصاصی تخصیص کد
  *     تفصیل) و Enum نوع مرکز هزینه.
  *   · Task 147: «تعریف پروژه» — کد سریالی لایو (پشت سرهم) + کد تفصیل لایو
@@ -58,23 +57,7 @@ const ACCOUNTING_MENU_GROUPS: AppMenuGroupDef[] = [
     gradient: "from-violet-500 to-purple-600",
     items: [
       {
-        /* Task 120 — نخستین فرم سیستمیِ زیرمنوی اطلاعات پایهٔ حسابداری */
-        page: "detail-type",
-        titleKey: "dt.formTitle",
-        descKey: "dt.formDesc",
-        icon: Tags,
-        gradient: "from-teal-500 to-emerald-600",
-      },
-      {
-        /* Task 131 — شماره گذاری تفصیلی ها (MainDataGrid) */
-        page: "detail-type-numbering",
-        titleKey: "dtn.formTitle",
-        descKey: "dtn.formDesc",
-        icon: ListOrdered,
-        gradient: "from-amber-500 to-orange-600",
-      },
-      {
-        /* Task 140 — درختواره حسابها (SimpleTreeForm) */
+        /* Task 140 — درختواره حسابها (SimpleTreeForm) — تنها فرم این گروه پس از Task 174 */
         page: "account-tree",
         titleKey: "atr.formTitle",
         descKey: "atr.formDesc",
@@ -93,12 +76,20 @@ const ACCOUNTING_MENU_GROUPS: AppMenuGroupDef[] = [
     gradient: "from-fuchsia-500 to-pink-600",
     items: [
       {
-        /* Task 144 — ایجاد تفصیلی ها (رکورد تفصیلی با کد خودکار از شماره‌گذاری) */
-        page: "detail-items",
-        titleKey: "di.formTitle",
-        descKey: "di.formDesc",
-        icon: FolderPlus,
-        gradient: "from-rose-500 to-pink-600",
+        /* Task 174 (فرمان مالک) — «نوع تفصیل جدید» (Task 120) از اطلاعات پایه به این زیرمنو منتقل شد */
+        page: "detail-type",
+        titleKey: "dt.formTitle",
+        descKey: "dt.formDesc",
+        icon: Tags,
+        gradient: "from-teal-500 to-emerald-600",
+      },
+      {
+        /* Task 174 (فرمان مالک) — «شماره گذاری تفصیلی ها» (Task 131) از اطلاعات پایه به این زیرمنو منتقل شد */
+        page: "detail-type-numbering",
+        titleKey: "dtn.formTitle",
+        descKey: "dtn.formDesc",
+        icon: ListOrdered,
+        gradient: "from-amber-500 to-orange-600",
       },
       {
         /* Task 146 — مرکز هزینه جدید (کد تفصیل لایو از متد اختصاصی + Enum نوع) */
@@ -166,7 +157,7 @@ const ACCOUNTING_MENU_GROUPS: AppMenuGroupDef[] = [
 export function AccountingMenuHome({
   go,
 }: {
-  go: (page: "detail-type" | "detail-type-numbering" | "detail-items" | "cost-center" | "project" | "contract" | "account-tree" | "voucher-type" | "voucher-new" | "detail-other") => void;
+  go: (page: "detail-type" | "detail-type-numbering" | "cost-center" | "project" | "contract" | "account-tree" | "voucher-type" | "voucher-new" | "detail-other") => void;
 }) {
   return (
     <AppMenuHome
@@ -176,7 +167,7 @@ export function AccountingMenuHome({
       headerGradient="from-violet-500 to-violet-700"
       storageKey="accounting.menuView"
       groups={ACCOUNTING_MENU_GROUPS}
-      go={(page) => go(page as "detail-type" | "detail-type-numbering" | "detail-items" | "cost-center" | "project" | "contract" | "account-tree" | "voucher-type" | "voucher-new" | "detail-other")}
+      go={(page) => go(page as "detail-type" | "detail-type-numbering" | "cost-center" | "project" | "contract" | "account-tree" | "voucher-type" | "voucher-new" | "detail-other")}
     />
   );
 }

@@ -9,7 +9,6 @@ import { useWindowChrome } from "@/components/desktop/app-window";
 import { AccountingMenuHome } from "./accounting-menu-home";
 import { DetailTypeForm } from "./detail-type-form";
 import { DetailTypeNumberingForm } from "./detail-type-numbering-form";
-import { DetailItemsForm } from "./detail-items-form";
 import { CostCenterForm } from "./cost-center-form";
 import { ProjectForm } from "./project-form";
 import { ContractForm } from "./contract-form";
@@ -27,18 +26,20 @@ import { DetailOtherForm } from "./detail-other-form";
  * نمایش؛ فرم‌های اعلامی به‌صورت زیرصفحهٔ نوار-باریک (بازگشت + breadcrumb)
  * در همین پنجره باز می‌شوند — هر فرم اعلامی یک زیرصفحه به این switch اضافه
  * می‌کند. فرم‌ها: «نوع تفصیل جدید» (Task 120)، «شماره گذاری تفصیلی ها»
- * (Task 131)، «ایجاد تفصیلی ها» (Task 144)، «مرکز هزینه جدید» (Task 146)
+ * (Task 131)، «مرکز هزینه جدید» (Task 146)
  * «تعریف پروژه» (Task 147) و «قرارداد جدید» (Task 148)
  * — چهار فرم آخر زیر زیرمنوی «اطلاعات تفصیلی ها» (Task 145)؛
  * «نوع سند جدید» (Task 153) زیر زیرمنوی «سند حسابداری» (Task 150)؛
  * «تفصیلی سایر» (Task 154) زیر زیرمنوی «اطلاعات تفصیلی ها».
+ * Task 174 (فرمان مالک): «نوع تفصیل جدید» و «شماره گذاری تفصیلی ها» از
+ * «اطلاعات پایه» به «اطلاعات تفصیلی ها» منتقل شدند (breadcrumb هم) و فرم
+ * عمومی «ایجاد تفصیلی ها» (Task 144) بطور کامل حذف شد.
  */
 
 /** عنوان زندهٔ برگه به ازای هر زیرصفحهٔ فرم (Task 82 — الگوی عمومی) */
 const PAGE_TITLE_KEY: Partial<Record<AccountingSubPage, string>> = {
   "detail-type": "dt.formTitle",
   "detail-type-numbering": "dtn.formTitle",
-  "detail-items": "di.formTitle",
   "cost-center": "cc.formTitle",
   "project": "pj.formTitle",
   "contract": "ct.formTitle",
@@ -48,12 +49,12 @@ const PAGE_TITLE_KEY: Partial<Record<AccountingSubPage, string>> = {
   "detail-other": "do.formTitle",
 };
 
-/** زیرمنوی مادر هر زیرصفحه برای breadcrumb — Task 145: تفصیلی ها زیرمنوی
- *  مستقل خودش را دارد و دیگر زیر «اطلاعات پایه» نیست */
+/** زیرمنوی مادر هر زیرصفحه برای breadcrumb — Task 174: نوع تفصیل جدید و
+ *  شماره گذاری تفصیلی ها زیر «اطلاعات تفصیلی ها» رفتند؛ فرم عمومی «ایجاد
+ *  تفصیلی ها» حذف شد */
 const PAGE_GROUP_KEY: Partial<Record<AccountingSubPage, string>> = {
-  "detail-type": "acc.menuBasicInfo",
-  "detail-type-numbering": "acc.menuBasicInfo",
-  "detail-items": "acc.menuDetailInfo",
+  "detail-type": "acc.menuDetailInfo",
+  "detail-type-numbering": "acc.menuDetailInfo",
   "cost-center": "acc.menuDetailInfo",
   "project": "acc.menuDetailInfo",
   "contract": "acc.menuDetailInfo",
@@ -125,7 +126,6 @@ export function AccountingWindow() {
         <div className="min-h-0 flex-1 overflow-y-auto p-3 scrollbar-slim">
           {page === "detail-type" && <DetailTypeForm onBack={() => go("home")} />}
           {page === "detail-type-numbering" && <DetailTypeNumberingForm />}
-          {page === "detail-items" && <DetailItemsForm onBack={() => go("home")} />}
           {page === "cost-center" && <CostCenterForm onBack={() => go("home")} />}
           {page === "project" && <ProjectForm onBack={() => go("home")} />}
           {page === "contract" && <ContractForm onBack={() => go("home")} />}

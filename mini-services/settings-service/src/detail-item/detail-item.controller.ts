@@ -3,8 +3,9 @@ import { DetailItemService } from "./detail-item.service";
 import { UpsertDetailItemDto } from "./detail-item.dto";
 
 /**
- * DetailItem — Task 144 (درخواست مالک): فرم «ایجاد تفصیلی ها»
- * (نرم‌افزار «حسابداری» ← زیرمنوی «اطلاعات پایه»).
+ * DetailItem — سرویس مشترک رکورد تفصیلی (Task 144؛ از Task 174 فرم عمومی
+ * «ایجاد تفصیلی ها» حذف شد و این endpointها عمدتاً توسط فرم «تفصیلی سایر»
+ * (Task 154) مصرف می‌شوند — نرم‌افزار «حسابداری» ← «اطلاعات تفصیلی ها»).
  * GET    /detail-items            — فهرست تفصیلی‌ها (+ join نوع تفصیل)
  * GET    /detail-items/next-code  — پیشنهاد کد خودکار از بازهٔ شماره‌گذاری نوع
  * GET    /detail-items/other-category — تضمین نوع «سایر» (Task 154 — تفصیلی سایر)

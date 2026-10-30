@@ -85,6 +85,20 @@ const SYSTEM_SUBMENUS: SystemSubmenuSeed[] = [
     sortOrder: 1,
     dictKey: "acc.menuBasicInfo",
   },
+  {
+    /* Task 174 (درخواست مالک) — زیرمنوی «اطلاعات تفصیلی ها»ٔ حسابداری در
+       درختوارهٔ فرمساز: با انتقال «نوع تفصیل جدید» و «شماره گذاری تفصیلی ها»
+       از «اطلاعات پایه» به «اطلاعات تفصیلی ها» (فرمان مالک — هم‌سو با منوی
+       پنجرهٔ حسابداری)، این زیرمنو در dfb هم ثبت شد تا قرارداد Task 112
+       (پاریتی منوی پنجره ↔ درختوارهٔ فرمساز) برقرار بماند. */
+    anchorAppKey: "accounting",
+    code: "accDetailInfo",
+    titleFa: "اطلاعات تفصیلی ها",
+    titleEn: "Detail Information",
+    iconKey: "folder",
+    sortOrder: 2,
+    dictKey: "acc.menuDetailInfo",
+  },
 ];
 
 const SYSTEM_FORMS: SystemFormSeed[] = [
@@ -172,14 +186,14 @@ const SYSTEM_FORMS: SystemFormSeed[] = [
     dictKey: "rate.formTitle",
   },
   {
-    /* Task 120 (درخواست مالک) — فرم «نوع تفصیل جدید»: نخستین فرم سیستمیِ
-       زیرمنوی «اطلاعات پایه»ٔ حسابداری (Task 119 — accBasicInfo)؛ فیلدها عین
-       تصویر مالک و بدون عنوان لاتین (فرمان صریح مالک)؛ بدنهٔ واقعی React
-       (detail-type-form) با seed تفصیل‌های رایج در سرویس تنظیمات؛ راه‌انداز
-       واقعی = زیرصفحهٔ detail-type پنجرهٔ حسابداری (قرارداد acc.*). */
+    /* Task 120 (درخواست مالک) — فرم «نوع تفصیل جدید»: زیرمنوی «اطلاعات تفصیلی ها»ٔ
+       حسابداری (از Task 174 به فرمان مالک از accBasicInfo به accDetailInfo
+       منتقل شد)؛ فیلدها عین تصویر مالک و بدون عنوان لاتین (فرمان صریح مالک)؛
+       بدنهٔ واقعی React (detail-type-form) با seed تفصیل‌های رایج در سرویس
+       تنظیمات؛ راه‌انداز واقعی = زیرصفحهٔ detail-type پنجرهٔ حسابداری (قرارداد acc.*). */
     systemKey: "acc.detailType",
     anchorAppKey: "accounting",
-    anchorSubmenuCode: "accBasicInfo",
+    anchorSubmenuCode: "accDetailInfo",
     code: "DTL",
     titleFa: "نوع تفصیل جدید",
     titleEn: "New Detail Type",
@@ -187,14 +201,14 @@ const SYSTEM_FORMS: SystemFormSeed[] = [
     dictKey: "dt.formTitle",
   },
   {
-    /* Task 131 (درخواست مالک) — فرم «شماره گذاری تفصیلی ها»: دومین فرم
-       سیستمیِ زیرمنوی «اطلاعات پایه»ٔ حسابداری؛ بدنهٔ واقعی React
+    /* Task 131 (درخواست مالک) — فرم «شماره گذاری تفصیلی ها»: بدنهٔ واقعی React
        (detail-type-numbering-form) با کامپوننت MainDataGrid و ویرایش
        درجریانِ بازهٔ خودکار هر تفصیل (کنترل تداخل ۴۰۹)؛ راه‌انداز واقعی =
-       زیرصفحهٔ detail-type-numbering پنجرهٔ حسابداری (قرارداد acc.*). */
+       زیرصفحهٔ detail-type-numbering پنجرهٔ حسابداری (قرارداد acc.*)؛
+       از Task 174 زیر «اطلاعات تفصیلی ها» (accDetailInfo) ثبت می‌شود. */
     systemKey: "acc.detailTypeNumbering",
     anchorAppKey: "accounting",
-    anchorSubmenuCode: "accBasicInfo",
+    anchorSubmenuCode: "accDetailInfo",
     code: "DTN",
     titleFa: "شماره گذاری تفصیلی ها",
     titleEn: "Detail Type Numbering",
