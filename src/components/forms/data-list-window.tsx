@@ -58,6 +58,7 @@ import type {
   LookupOption,
 } from '@/types/forms';
 import { cn } from '@/lib/utils';
+import { erpZoom } from '@/lib/erp-zoom';
 import { FormShell } from './form-shell';
 import {
   fieldLabel,
@@ -702,8 +703,9 @@ export function DataListWindow({ moduleId, list, onClose }: DataListWindowProps)
       const resizeDir = direction === 'rtl' ? -1 : 1;
       const startX = event.clientX;
       const onMove = (moveEvent: MouseEvent) => {
+        /* Task 160 — دلتای clientX برحسب visual است؛ عرض ستون محلی است ⇒ ×زوم */
         const next = Math.round(
-          startWidth + (moveEvent.clientX - startX) * resizeDir,
+          startWidth + (moveEvent.clientX - startX) * resizeDir * erpZoom(),
         );
         const clamped = Math.min(
           MAX_COLUMN_WIDTH,

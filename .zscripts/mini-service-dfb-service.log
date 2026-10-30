@@ -59,4 +59,87 @@ $ DATABASE_URL="file:/home/z/my-project/db/dfb.db" NODE_PATH=./node_modules bun 
 [32m[Nest] 2400  - [39m10/30/2026, 7:52:02 AM [32m    LOG[39m [38;5;3m[PrismaService] [39m[32mPrisma connected (dfb.db) — §2.5 auto-rowversion active on: IDGeneration, DfbMenu, DfbForm, DfbFormTab, DfbFormField, DfbQuery, DfbQueryField, DfbFormData, DfbFormDataValue, DfbTranslation[39m
 [32m[Nest] 2400  - [39m10/30/2026, 7:52:02 AM [32m    LOG[39m [38;5;3m[NestApplication] [39m[32mNest application successfully started[39m[38;5;3m +205ms[39m
 [32m[Nest] 2400  - [39m10/30/2026, 7:52:02 AM [32m    LOG[39m [38;5;3m[Bootstrap] [39m[32mdfb-service listening on http://127.0.0.1:3003[39m
-error: script "dev" was terminated by signal SIGKILL (Forced quit)
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[NestFactory] [39m[32mStarting Nest application...[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPrismaModule dependencies initialized[39m[38;5;3m +16ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mIdGenerationModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mSeedModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAppModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mTranslationsModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mMenusModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mFormsModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mQueriesModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mHealthController {/}:[39m[38;5;3m +4ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/health, GET} route[39m[38;5;3m +2ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mMenusController {/advancedTools/menus}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/advancedTools/menus/tree, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/advancedTools/menus/icons, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/advancedTools/menus, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/advancedTools/menus/:id, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/advancedTools/menus/:id, DELETE} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mFormsController {/advancedTools/forms}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/advancedTools/forms/schema/tree, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/advancedTools/forms/script/execute, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/advancedTools/forms/:id, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/advancedTools/forms, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/advancedTools/forms/:id, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/advancedTools/forms/:id/fields, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/advancedTools/forms/fields/:fieldId, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/advancedTools/forms/:id/data, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/advancedTools/forms/:id/data, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/advancedTools/forms/:id/data/:dataId, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/advancedTools/forms/:id, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mQueriesController {/advancedTools/queries}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/advancedTools/queries/tables, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/advancedTools/queries, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/advancedTools/queries, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/advancedTools/queries/:id/execute, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/advancedTools/queries/:id, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mTranslationsController {/advancedTools/translations}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/advancedTools/translations, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/advancedTools/translations, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/advancedTools/translations/langs, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[PrismaService] [39m[32mPrisma connected (dfb.db) — §2.5 auto-rowversion active on: IDGeneration, DfbMenu, DfbForm, DfbFormTab, DfbFormField, DfbQuery, DfbQueryField, DfbFormData, DfbFormDataValue, DfbTranslation[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[NestFactory] [39m[32mStarting Nest application...[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPrismaModule dependencies initialized[39m[38;5;3m +7ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mIdGenerationModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mSeedModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAppModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mTranslationsModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mMenusModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mFormsModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mQueriesModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mHealthController {/}:[39m[38;5;3m +2ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/health, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mMenusController {/advancedTools/menus}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/advancedTools/menus/tree, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/advancedTools/menus/icons, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/advancedTools/menus, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/advancedTools/menus/:id, PUT} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/advancedTools/menus/:id, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mFormsController {/advancedTools/forms}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/advancedTools/forms/schema/tree, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/advancedTools/forms/script/execute, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/advancedTools/forms/:id, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/advancedTools/forms, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/advancedTools/forms/:id, PUT} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/advancedTools/forms/:id/fields, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/advancedTools/forms/fields/:fieldId, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/advancedTools/forms/:id/data, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/advancedTools/forms/:id/data, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/advancedTools/forms/:id/data/:dataId, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/advancedTools/forms/:id, DELETE} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mQueriesController {/advancedTools/queries}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/advancedTools/queries/tables, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/advancedTools/queries, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/advancedTools/queries, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/advancedTools/queries/:id/execute, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/advancedTools/queries/:id, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mTranslationsController {/advancedTools/translations}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/advancedTools/translations, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/advancedTools/translations, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/advancedTools/translations/langs, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[PrismaService] [39m[32mPrisma connected (dfb.db) — §2.5 auto-rowversion active on: IDGeneration, DfbMenu, DfbForm, DfbFormTab, DfbFormField, DfbQuery, DfbQueryField, DfbFormData, DfbFormDataValue, DfbTranslation[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[NestApplication] [39m[32mNest application successfully started[39m[38;5;3m +342ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[Bootstrap] [39m[32mdfb-service listening on http://127.0.0.1:3003[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[NestApplication] [39m[32mNest application successfully started[39m[38;5;3m +224ms[39m
+[32m[Nest] 2400  - [39m10/30/2026, 11:38:52 AM [32m    LOG[39m [38;5;3m[Bootstrap] [39m[32mdfb-service listening on http://127.0.0.1:3003[39m

@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { erpZoom } from "@/lib/erp-zoom";
 
 export interface MenuItem {
   label: string;
@@ -26,14 +27,16 @@ export function FloatingMenu({
   const ref = React.useRef<HTMLDivElement>(null);
   const [pos, setPos] = React.useState({ x, y });
 
-  /* keep the menu inside the viewport */
+  /* keep the menu inside the viewport — Task 160: clientX/Y برحسب visual است و
+     چون <html> زوم داخلی دارد، left/top باید به فضای محلی (تقسیم بر زوم) برود */
   React.useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return;
+    const z = erpZoom();
     const r = el.getBoundingClientRect();
     setPos({
-      x: Math.max(8, Math.min(x, window.innerWidth - r.width - 8)),
-      y: Math.max(8, Math.min(y, window.innerHeight - r.height - 8)),
+      x: Math.max(8 / z, Math.min(x / z, (window.innerWidth - r.width - 8) / z)),
+      y: Math.max(8 / z, Math.min(y / z, (window.innerHeight - r.height - 8) / z)),
     });
   }, [x, y]);
 

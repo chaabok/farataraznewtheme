@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { useSettings, useT } from "@/stores/settings-store";
 import { useDesktop, type HeaderDock } from "@/stores/desktop-store";
 import { FloatingMenu } from "./floating-menu";
+import { erpZoom } from "@/lib/erp-zoom";
 import { OrgSelectors } from "./org-selectors";
 import { useChromeMetrics } from "./chrome-metrics";
 
@@ -312,7 +313,8 @@ export function DashboardHeader() {
             </div>
           </div>
 
-          <div aria-hidden className="pointer-events-none fixed z-[9600]" style={{ left: drag.x, top: drag.y }}>
+          {/* Task 160 — مختصات visual ⇒ ÷زوم برای فضای محلی fixed */}
+          <div aria-hidden className="pointer-events-none fixed z-[9600]" style={{ left: drag.x / erpZoom(), top: drag.y / erpZoom() }}>
             <div
               style={
                 vertical

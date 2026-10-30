@@ -41,6 +41,8 @@ import {
   dfbNodeTitle,
 } from "@/stores/dfb-store";
 import { ensureDfbTranslations, useDfbTrMap, useDfbTranslations } from "@/stores/dfb-translations";
+import { LoupeLayer } from "./loupe-layer";
+import { erpZoom } from "@/lib/erp-zoom";
 import { useOrgContext } from "@/stores/org-context-store";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -288,11 +290,12 @@ function DesktopIcons() {
       }
       const layer = layerRef.current?.getBoundingClientRect();
       if (!layer) return;
+      /* Task 160 — clientX/layer.left برحسب visual؛ موقعیت ذخیره‌شدهٔ آیکون باید محلی (÷زوم) باشد */
       setIconPos(
         entry.id,
         clampPos({
-          x: ev.clientX - grab.x - layer.left,
-          y: ev.clientY - grab.y - layer.top,
+          x: (ev.clientX - grab.x - layer.left) / erpZoom(),
+          y: (ev.clientY - grab.y - layer.top) / erpZoom(),
         }),
       );
     };
@@ -426,7 +429,7 @@ function DesktopIcons() {
 
       {/* drag ghost following the pointer (fixed overlay, never intercepts events) */}
       {ghost && (
-        <div aria-hidden className="pointer-events-none fixed z-[9600] w-[84px]" style={{ left: ghost.x, top: ghost.y }}>
+        <div aria-hidden className="pointer-events-none fixed z-[9600] w-[84px]" style={{ left: ghost.x / erpZoom(), top: ghost.y / erpZoom() }}>
           <div
             className={cn(
               "flex flex-col items-center gap-1.5 rounded-xl p-2 transition-transform duration-100",
@@ -731,6 +734,9 @@ export function Desktop() {
 
         {startOpen && <StartMenu />}
         <Taskbar />
+
+        {/* Task 160 — لایهٔ ذره‌بین (روی همهٔ پنجره‌ها و نوار وضعیت) */}
+        <LoupeLayer />
 
         <Toaster
           position={dir === "rtl" ? "bottom-left" : "bottom-right"}

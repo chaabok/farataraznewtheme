@@ -19,6 +19,7 @@ import {
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { erpZoom } from "@/lib/erp-zoom";
 import { useT } from "@/stores/settings-store";
 import {
   FormActionBar,
@@ -421,10 +422,11 @@ export function SimpleTreeForm({
   React.useLayoutEffect(() => {
     const el = menuRef.current;
     if (!el || !menu) return;
+    const z = erpZoom(); /* Task 160 — visual ⇒ محلی (÷زوم) */
     const r = el.getBoundingClientRect();
     setMenuPos({
-      x: Math.max(8, Math.min(menu.x, window.innerWidth - r.width - 8)),
-      y: Math.max(8, Math.min(menu.y, window.innerHeight - r.height - 8)),
+      x: Math.max(8 / z, Math.min(menu.x / z, (window.innerWidth - r.width - 8) / z)),
+      y: Math.max(8 / z, Math.min(menu.y / z, (window.innerHeight - r.height - 8) / z)),
     });
   }, [menu]);
 

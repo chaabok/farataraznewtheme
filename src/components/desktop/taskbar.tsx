@@ -12,6 +12,8 @@ import { FloatingMenu } from "./floating-menu";
 import { useChromeMetrics } from "./chrome-metrics";
 import { FiscalYearFooter } from "./fiscal-year-footer";
 import { FiscalYearMissingPrompt } from "./fiscal-year-missing-prompt";
+import { ZoomControl } from "./taskbar/zoom-control";
+import { LoupeToggle } from "./taskbar/loupe-toggle";
 import { useDfb, findMenuNode } from "@/stores/dfb-store";
 import { DfbGlyph } from "@/components/erp/form-builder/dfb-dialogs";
 import {
@@ -244,6 +246,10 @@ export function Taskbar() {
 
       {/* tray */}
       <div className="flex shrink-0 items-center gap-2">
+        {/* Task 160 — زوم داخلی + ذره‌بین (دکمه‌های خاص نوار وضعیت) */}
+        <ZoomControl />
+        <LoupeToggle />
+
         {/* Task 82 — fiscal-year selector of the dashboard footer:
             changing it closes every open form tab (unsaved-data alarm first) */}
         <FiscalYearFooter />

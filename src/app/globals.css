@@ -218,3 +218,21 @@
 .tab-in {
   animation: tab-in 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
+
+/* ---------- Task 160 — زوم داخلی نرم‌افزار ---------- */
+/* رادیکس پاپ‌آورها (dropdown/select/popover/tooltip) مختصات visual می‌دهند ولی
+   transform داخل زیردرخت زوم‌شده دوباره در z ضرب می‌شود؛ wrapper با 1/z خنثی
+   می‌شود و محتوا دوباره z می‌گیرد ⇒ هم موقعیت درست هم مقیاس هم‌اهنگ. قواعد
+   تخت برای تودرتویی عمیق هم درست است (اثر بخشی هر لایه = ۱ و z). */
+[data-radix-popper-content-wrapper] {
+  zoom: var(--erp-zoom-inv, 1);
+}
+[data-radix-popper-content-wrapper] > * {
+  zoom: var(--erp-zoom, 1);
+}
+
+/* حالت فعال ذره‌بین: نشانگر به شکل ذره‌بین */
+html.loupe-active,
+html.loupe-active * {
+  cursor: zoom-in !important;
+}

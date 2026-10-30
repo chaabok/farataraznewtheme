@@ -17,6 +17,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="fa" dir="rtl" suppressHydrationWarning>
       <body className="antialiased">
+        {/* Task 160 — زوم داخلی: پیش از نخستین رنگ‌آمیزی اعمال می‌شود تا پرش ۱۰۰٪→۷۵٪ دیده نشود (پیش‌فرض ۷۵٪ طبق فرمان مالک) */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{var z=parseFloat(localStorage.getItem("erp-internal-zoom")||"");if(!(z>=0.5&&z<=1.5))z=0.75;var d=document.documentElement;d.style.zoom=String(z);d.style.setProperty("--erp-zoom",String(z));d.style.setProperty("--erp-zoom-inv",String(1/z));}catch(e){}`,
+          }}
+        />
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
           {children}
         </ThemeProvider>

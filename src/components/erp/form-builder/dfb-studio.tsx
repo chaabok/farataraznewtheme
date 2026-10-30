@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { ApiError } from "@/lib/api";
+import { erpZoom } from "@/lib/erp-zoom";
 import { useT, useSettings } from "@/stores/settings-store";
 import { useDesktop } from "@/stores/desktop-store";
 import { useWindowChrome, useTabDirty } from "@/components/desktop/app-window";
@@ -2648,7 +2649,8 @@ function FieldResizeHandle({
       onPointerMove={(e) => {
         const s = start.current;
         if (!s || s.rowW <= 0) return;
-        const dx = e.clientX - s.x;
+        /* Task 160 — دلتای clientX برحسب visual است؛ rowW محلی است ⇒ ×زوم */
+        const dx = (e.clientX - s.x) * erpZoom();
         const pct = snap(s.base + (dx * s.sign * 100) / s.rowW);
         if (pct !== lastPct.current) {
           lastPct.current = pct;

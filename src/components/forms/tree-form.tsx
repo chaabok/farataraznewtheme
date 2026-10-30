@@ -11,6 +11,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { erpZoom } from "@/lib/erp-zoom";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useT } from "@/stores/settings-store";
@@ -323,8 +324,9 @@ export function TreeForm({
         <div
           className="acrylic-strong fixed z-[13000] min-w-40 rounded-xl border p-1 shadow-lg win-shadow menu-in"
           style={{
-            left: Math.min(menu.x, window.innerWidth - 190),
-            top: Math.min(menu.y, window.innerHeight - 120),
+            /* Task 160 — visual ⇒ محلی (÷زوم) */
+            left: Math.min(menu.x, window.innerWidth - 190) / erpZoom(),
+            top: Math.min(menu.y, window.innerHeight - 120) / erpZoom(),
           }}
           onContextMenu={(e) => e.preventDefault()}
         >

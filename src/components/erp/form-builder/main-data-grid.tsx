@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { erpZoom } from "@/lib/erp-zoom";
 import { downloadExcel } from "@/lib/excel-export";
 import { useSettings, useT } from "@/stores/settings-store";
 import {
@@ -327,7 +328,8 @@ export function MainDataGrid({
     const r = resizeRef.current;
     if (!r) return;
     const factor = dir === "rtl" ? -1 : 1;
-    r.w = Math.max(MIN_COL_W, Math.round(r.startW + (e.clientX - r.startX) * factor));
+    /* Task 160 — دلتای clientX برحسب visual است؛ عرض ستون در فضای محلی است ⇒ ×زوم */
+    r.w = Math.max(MIN_COL_W, Math.round(r.startW + (e.clientX - r.startX) * factor * erpZoom()));
     /* حینِ درگ مستقیم روی <col> اعمال می‌شود (بدون رندر مجددِ هر فریم) */
     const col = colRefs.current.get(r.key);
     if (col) col.style.width = `${r.w}px`;
