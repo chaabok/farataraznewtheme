@@ -85,6 +85,10 @@ model WorkflowRoleAssignment {
 /// entityType؛ ThresholdAmount = آستانهٔ مبلغ per فرم (D-2) برای شرط موتور قواعد.
 /// t180 فاز ۴: Description — توضیح فرآیند؛ نسخه‌های «در استفاده» (با نمونهٔ
 /// گردش کار) قطعی‌اند — ویرایش دیاگرام فقط روی نسخهٔ بدون نمونه یا نسخهٔ جدید.
+/// t190 — خاتمهٔ فرآیند (فرمان مالک): «فرآیندها ممکن است خاتمه پیدا کنند و
+/// فرآیندهای فرم از یک بازه تاریخی تغییر پیدا کند» — نسخهٔ خاتمه‌یافته
+/// فقط-خواندنی است (فیلدها + دیاگرام)، از موتور خارج می‌شود (غیرفعال) و
+/// «برگشت خاتمه» آن را آزاد می‌کند. TerminationNote = توضیحاتِ مودال خاتمه.
 model WorkflowDefinition {
   workflowDefinitionId BigInt   @id @map("WorkflowDefinitionID")
   code                 String   @map("Code") // WF-VOUCHER
@@ -94,6 +98,9 @@ model WorkflowDefinition {
   processVersion       Int      @map("ProcessVersion")
   thresholdAmount      Float?   @map("ThresholdAmount") // D-2 — آستانهٔ per فرم
   isActive             Boolean  @default(true) @map("IsActive")
+  isTerminated         Boolean  @default(false) @map("IsTerminated") // t190
+  terminatedAt         DateTime? @map("TerminatedAt") // t190 — تاریخ خاتمه (میلادی)
+  terminationNote      String   @default("") @map("TerminationNote") // t190 — توضیحات خاتمه
   version              Int      @default(1) @map("Version")
   creator              String   @map("Creator")
   lastModifier         String?  @map("LastModifier")
