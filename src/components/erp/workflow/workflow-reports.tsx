@@ -14,6 +14,7 @@ import {
   RefreshCw,
   Timer,
   AlarmClockOff,
+  Undo2,
   XCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -40,7 +41,14 @@ import {
  */
 
 interface Overview {
-  counts: { total: number; running: number; approved: number; rejected: number; cancelled: number };
+  counts: {
+    total: number;
+    running: number;
+    approved: number;
+    rejected: number;
+    cancelled: number;
+    undone: number;
+  };
   avgCompletionHours: number | null;
   slaBreachedNow: number;
   activeDelegations: number;
@@ -52,6 +60,7 @@ interface Overview {
     approved: number;
     rejected: number;
     cancelled: number;
+    undone: number;
   }[];
 }
 
@@ -105,8 +114,6 @@ export function WorkflowReports() {
 
   const load = React.useCallback(
     async (status: string, entity: string) => {
-      setLoading(true);
-      setError(false);
       try {
         const q = new URLSearchParams();
         if (status !== "all") q.set("status", status);
@@ -124,6 +131,7 @@ export function WorkflowReports() {
         setBottlenecks(bn?.items ?? []);
         setInstances(inst?.items ?? []);
         setTotal(inst?.total ?? 0);
+        setError(false);
       } catch {
         setError(true);
       } finally {
@@ -134,7 +142,9 @@ export function WorkflowReports() {
   );
 
   React.useEffect(() => {
-    void load(statusFilter, entityFilter);
+    /* بارگیری در تک‌لیزر — setState پس از await خارج از بدنهٔ همگام effect */
+    const h = setTimeout(() => void load(statusFilter, entityFilter), 0);
+    return () => clearTimeout(h);
   }, [load, statusFilter, entityFilter]);
 
   const fmtNum = React.useCallback(
@@ -174,12 +184,14 @@ export function WorkflowReports() {
       approved: "border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
       rejected: "border-rose-500/40 bg-rose-500/10 text-rose-700 dark:text-rose-300",
       cancelled: "border-border/70 bg-muted/60 text-muted-foreground",
+      undone: "border-violet-500/40 bg-violet-500/10 text-violet-700 dark:text-violet-300",
     };
     const key: Record<string, string> = {
       running: "wf.stateRunning",
       approved: "wf.stateApproved",
       rejected: "wf.stateRejected",
       cancelled: "wf.stateCancelled",
+      undone: "wf.stateUndone",
     };
     return (
       <span
@@ -263,6 +275,13 @@ export function WorkflowReports() {
         ring: "from-rose-500 to-rose-700",
       },
       {
+        id: "undone",
+        label: t("wf.stateUndone"),
+        value: fmtNum(c.undone),
+        icon: <Undo2 className="h-4 w-4" aria-hidden />,
+        ring: "from-violet-500 to-violet-700",
+      },
+      {
         id: "cancelled",
         label: t("wf.rep.kpiCancelled"),
         value: fmtNum(c.cancelled),
@@ -317,7 +336,10 @@ export function WorkflowReports() {
             variant="outline"
             size="sm"
             data-testid="wf-reports-refresh"
-            onClick={() => void load(statusFilter, entityFilter)}
+            onClick={() => {
+              setLoading(true);
+              void load(statusFilter, entityFilter);
+            }}
             disabled={loading}
             className="shrink-0 cursor-pointer gap-1.5"
           >
@@ -343,7 +365,7 @@ export function WorkflowReports() {
 
         {/* کارت‌های KPI */}
         <section
-          className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4"
+          className="grid grid-cols-2 gap-3 sm:grid-cols-3"
           data-testid="wf-reports-kpis"
         >
           {kpis.map((k) => (
@@ -476,7 +498,7 @@ export function WorkflowReports() {
               </span>
             </h3>
             <div className="ms-auto flex flex-wrap items-center gap-2">
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <Select value={statusFilter} onValueChange={(v) => { setLoading(true); setStatusFilter(v); }}>
                 <SelectTrigger size="sm" className="h-8 w-36 text-xs" data-testid="wf-reports-status-filter" aria-label={t("wf.rep.filterStatus")}>
                   <SelectValue />
                 </SelectTrigger>
@@ -486,9 +508,10 @@ export function WorkflowReports() {
                   <SelectItem value="approved">{t("wf.stateApproved")}</SelectItem>
                   <SelectItem value="rejected">{t("wf.stateRejected")}</SelectItem>
                   <SelectItem value="cancelled">{t("wf.stateCancelled")}</SelectItem>
+                  <SelectItem value="undone">{t("wf.stateUndone")}</SelectItem>
                 </SelectContent>
               </Select>
-              <Select value={entityFilter} onValueChange={setEntityFilter}>
+              <Select value={entityFilter} onValueChange={(v) => { setLoading(true); setEntityFilter(v); }}>
                 <SelectTrigger size="sm" className="h-8 w-40 text-xs" data-testid="wf-reports-entity-filter" aria-label={t("wf.rep.filterEntity")}>
                   <SelectValue />
                 </SelectTrigger>

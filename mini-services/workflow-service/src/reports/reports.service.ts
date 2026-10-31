@@ -69,7 +69,7 @@ export class ReportsService {
         }),
       ]);
 
-    const counts = { total: 0, running: 0, approved: 0, rejected: 0, cancelled: 0 };
+    const counts = { total: 0, running: 0, approved: 0, rejected: 0, cancelled: 0, undone: 0 };
     for (const g of byState) {
       const n = g._count._all;
       counts.total += n;
@@ -77,6 +77,7 @@ export class ReportsService {
       else if (g.currentState === "approved") counts.approved += n;
       else if (g.currentState === "rejected") counts.rejected += n;
       else if (g.currentState === "cancelled") counts.cancelled += n;
+      else if (g.currentState === "undone") counts.undone += n;
     }
 
     /* میانگین زمان طی‌شدن (نمونه‌های خاتمه‌یافته) — ساعت با یک رقم اعشار */
@@ -107,7 +108,14 @@ export class ReportsService {
     /* تفکیک per فرم (entityType) */
     const perEntityMap = new Map<
       string,
-      { total: number; running: number; approved: number; rejected: number; cancelled: number }
+      {
+        total: number;
+        running: number;
+        approved: number;
+        rejected: number;
+        cancelled: number;
+        undone: number;
+      }
     >();
     const emptyEntity = () => ({
       total: 0,
@@ -115,6 +123,7 @@ export class ReportsService {
       approved: 0,
       rejected: 0,
       cancelled: 0,
+      undone: 0,
     });
     for (const g of byEntityState) {
       const row = perEntityMap.get(g.entityType) ?? emptyEntity();
@@ -224,10 +233,15 @@ export class ReportsService {
 
     for (const inst of instances) {
       const evts = logsByInstance.get(String(inst.workflowInstanceId)) ?? [];
-      let parkedAt: bigint | null = inst.currentNodeId; // گرهٔ پارک اولیه = گرهٔ شروع
+      /* گرهٔ پارک اولیه = گرهٔ شروع (fromNode اولین گذار) — currentNodeId
+         فقط برای نمونهٔ بدون رخداد (احتیاط)؛ والا گرهٔ پایان دوباره‌شماری می‌شد */
+      let parkedAt: bigint | null = evts.length > 0 ? evts[0].from : inst.currentNodeId;
       let parkedSince = inst.startedAt;
       for (const e of evts) {
-        if (parkedAt) closeDwell(parkedAt, parkedSince, e.at);
+        if (parkedAt && e.from === parkedAt) {
+          closeDwell(parkedAt, parkedSince, e.at);
+        }
+        /* ناسازگاری زنجیره (نادر) — بدون شمارش، فقط پرش به مقصد */
         parkedAt = e.to;
         parkedSince = e.at;
       }
@@ -278,6 +292,7 @@ export class ReportsService {
           roleTitle: node?.roleCode ? (roleTitle.get(node.roleCode) ?? "") : "",
           slaHours: node?.slaHours ?? null,
           entered: a.entered,
+          closedCount: a.closedCount,
           avgHours:
             a.closedCount > 0
               ? Math.round((a.closedMs / a.closedCount / 3_600_000) * 10) / 10
@@ -306,7 +321,7 @@ export class ReportsService {
     const entityType = (query.entityType ?? "").trim();
     const limit = Math.min(Math.max(Number(query.limit ?? 50) || 50, 1), 200);
     const where: Record<string, unknown> = {};
-    if (["running", "approved", "rejected", "cancelled"].includes(status)) {
+    if (["running", "approved", "rejected", "cancelled", "undone"].includes(status)) {
       where.currentState = status;
     }
     if (entityType) where.entityType = entityType;
