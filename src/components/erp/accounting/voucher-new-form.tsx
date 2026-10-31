@@ -58,6 +58,10 @@ import {
 import { AccountTreeForm } from "./account-tree-form";
 import { VoucherTypeForm } from "./voucher-type-form";
 import { CurrencyTypeForm } from "@/components/erp/general/currency-type-form";
+import {
+  WorkflowAdapter,
+  type WorkflowStateInfo,
+} from "@/components/erp/workflow/workflow-adapter";
 
 /**
  * VoucherNewForm — Task 158 (درخواست مالک): فرم «سند حسابداری جدید» در
@@ -1075,6 +1079,11 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
   const [description2, setDescription2] = React.useState("");
   const [creatorName, setCreatorName] = React.useState("");
 
+  /* t178 — گردش کار: نمونهٔ running این سند ⇒ قفل نرم ویرایش (FR-06)
+     وضعیت ۳/۴ هم فقط از مسیر موتور تنظیم می‌شود ⇒ سند قطعی است (D-4). */
+  const [wfRunning, setWfRunning] = React.useState(false);
+  const formLocked = wfRunning || status === 3 || status === 4;
+
   /* ------------------------------ اقلام سند ------------------------------ */
   const [rows, setRows] = React.useState<ItemRow[]>(() => [blankRow()]);
   const [selectedRow, setSelectedRow] = React.useState(0);
@@ -1584,6 +1593,11 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
   };
 
   const doSave = async (): Promise<boolean> => {
+    /* t178 — قفل نرم: سند در جریان رسیدگی/قطعی ویرایش نمی‌شود (سرور هم ۴۲۳ می‌دهد) */
+    if (formLocked) {
+      toast.error(t("wf.lockToast"));
+      return false;
+    }
     const err = validate();
     if (err) {
       toast.error(err);
@@ -1609,6 +1623,11 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
   const doDelete = async (): Promise<void> => {
     if (currentId == null) {
       toast.info(t("dfb.noRecordSelected"));
+      return;
+    }
+    /* t178 — قفل نرم: سند در جریان رسیدگی حذف نمی‌شود */
+    if (formLocked) {
+      toast.error(t("wf.lockToast"));
       return;
     }
     try {
@@ -1645,7 +1664,17 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
           {
             label: t("vc.status"),
             value:
-              r.status === 1 ? t("vc.statusInitial") : r.status === 2 ? t("vc.statusNote") : t("vc.statusApproved"),
+              r.status === 1
+                ? t("vc.statusInitial")
+                : r.status === 2
+                  ? t("vc.statusNote")
+                  : r.status === 3
+                    ? t("vc.statusApproved")
+                    : r.status === 4
+                      ? t("vc.statusPermanent")
+                      : r.status === 5
+                        ? t("vc.statusUserConfirmed")
+                        : t("vc.statusApproved"),
           },
           { label: t("vc.description"), value: r.description },
         ],
@@ -1685,10 +1714,12 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
   const docTypeRows: PickerRow[] = meta.docTypes.map((d) => ({ id: d.id, cells: [d.code, d.title, d.latinTitle] }));
   const currencyRows: PickerRow[] = meta.currencies.map((c) => ({ id: c.id, cells: [c.code, c.title, c.titleLatin] }));
   const selectedType = voucherTypeRef != null ? typeById.get(voucherTypeRef) : undefined;
-  /* گزینه‌های ماهیت/وضعیت — لیست ثابت داخلی فرم (فرمان مالک) */
+  /* گزینه‌های ماهیت/وضعیت — لیست ثابت داخلی فرم (فرمان مالک)؛
+     t178: ۵ = «تایید کاربر» گلوگاه ورود به گردش کار (D-3)؛ ۳/۴ فقط موتور. */
   const statusOptions = [
     { value: 1, label: t("vc.statusInitial"), enabled: true },
     { value: 2, label: t("vc.statusNote"), enabled: true },
+    { value: 5, label: t("vc.statusUserConfirmed"), enabled: true },
     { value: 3, label: t("vc.statusApproved"), enabled: false },
     { value: 4, label: t("vc.statusPermanent"), enabled: false },
   ];
@@ -2087,7 +2118,7 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
             onOpenListItem={(item) => {
               void openVoucher(Number(item.id));
             }}
-            canDelete={currentId != null}
+            canDelete={currentId != null && !formLocked}
           />
           <div
             role="group"
@@ -2140,6 +2171,8 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                   headerH != null && "overflow-y-auto scrollbar-slim",
                 )}
               >
+              {/* t178 — قفل نرم: در جریان رسیدگی/قطعی، فیلدهای هدر غیرفعال‌اند (fieldset.contents — چیدمان شبکه دست‌نخورده) */}
+              <fieldset disabled={formLocked} className="contents">
               <HeaderField label={t("vc.voucherNo")} required readOnly>
                 <Input
                   value={voucherNo}
@@ -2272,6 +2305,7 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                   className="min-h-7 resize-none py-1 text-xs"
                 />
               </HeaderField>
+              </fieldset>
             </AlignedZone>
           </div>
             {/* Task 170 — دستگیرهٔ ارتفاع هدر: بوردر پایین هدر سند */}
@@ -2287,6 +2321,34 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
             />
           </div>
 
+          {/* ---------- t178 — آداپتور مشترک گردش کار ----------
+             ورود فقط با وضعیت «تایید کاربر» (D-3)؛ قفل/اقدام/واگرد/تاریخچه در همان کارت؛
+             پیش از شروع، تغییرات ذخیره می‌شود (onBeforeStart) و پس از هر اقدام فرم وضعیت سند را دوباره می‌خواند. */}
+          <WorkflowAdapter
+            entityType="voucher"
+            entityId={currentId}
+            entityLabel={voucherNo ? `${t("vc.voucherNo")} ${voucherNo}` : undefined}
+            amount={totals.totalDebit}
+            canStart={status === 5 && currentId != null && !wfRunning}
+            onBeforeStart={async () => (dirty ? await doSave() : true)}
+            onStateChange={(info: WorkflowStateInfo) => setWfRunning(info.running)}
+            onAfterAction={() => {
+              if (currentId != null) void openVoucher(currentId);
+            }}
+            className="mt-3"
+          />
+
+          {/* t178 — بنر قفل نرم */}
+          {formLocked && (
+            <div
+              data-testid="wf-lock-banner"
+              className="mt-2 flex shrink-0 items-center gap-2 rounded-xl border border-amber-500/40 bg-amber-500/10 px-3 py-1.5 text-xs text-amber-700 dark:text-amber-300"
+            >
+              <Lock className="h-3.5 w-3.5" aria-hidden />
+              {wfRunning ? t("wf.lockRunning") : t("wf.lockFinal")}
+            </div>
+          )}
+
           {/* ---------- بخش اقلام سند ---------- */}
           {/* flex-1: تمام ارتفاع صرفه‌جویی‌شدهٔ فوتر (Task 159) به همین بخش اختصاص می‌یابد؛
               Task 161: زیر lg کارت حداقلِ ارتفاع محتوا را دارد (اسکرول طبیعی بدنه) تا ویرایشگر فرمی
@@ -2294,8 +2356,16 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
           <div
             onKeyDown={onItemsKeyDown}
             onFocusCapture={onItemsFocusCapture}
-            className="mt-3 flex min-h-36 max-lg:min-h-max flex-1 flex-col rounded-2xl border border-border/70 bg-card shadow-sm"
+            className="relative mt-3 flex min-h-36 max-lg:min-h-max flex-1 flex-col rounded-2xl border border-border/70 bg-card shadow-sm"
           >
+            {/* t178 — پوشش قفل نرم روی اقلام: سند در جریان/قطعی قابل ویرایش نیست */}
+            {formLocked && (
+              <div
+                data-testid="items-lock-overlay"
+                aria-hidden
+                className="absolute inset-0 z-20 cursor-not-allowed rounded-2xl"
+              />
+            )}
             {/* Task 166 (فرمان مالک): تاگل «جدولی/فرمی» به فوتربار اقلام (کنار «افزودن ردیف») منتقل شد؛
                 هدر اقلام فقط عنوان است و ارتفاعش دقیقاً هم‌اندازهٔ هدر سند (نوار عنوان پنجره، h-11) است */}
             <div className="flex h-11 shrink-0 items-center gap-2 border-b border-border/50 px-3">

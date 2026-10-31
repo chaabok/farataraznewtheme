@@ -2345,3 +2345,4 @@ $ NODE_PATH=./node_modules bun --hot src/main.ts
 [Nest] 11196  - 10/31/2026, 4:29:30 AM     LOG [SystemsService] Systems synced from APP_CATALOG (total 28, created 0, updated 0)
 [Nest] 11196  - 10/31/2026, 4:29:30 AM     LOG [NestApplication] Nest application successfully started +69ms
 [Nest] 11196  - 10/31/2026, 4:29:30 AM     LOG [Bootstrap] settings-service listening on http://127.0.0.1:3001
+error: script "dev" was terminated by signal SIGTERM (Polite quit request)
