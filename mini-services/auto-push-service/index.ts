@@ -330,6 +330,14 @@ const GUARDED_SERVICES = [
     dir: join(ROOT, "mini-services", "dfb-service"),
     log: join(ROOT, ".zscripts", "mini-service-dfb-service.log"),
   },
+  // t187 — زیرسیستم گردش کار هم همین سرنوشت را داشت: میانهٔ جلسه می‌میرد و
+  // تا بوت بعدی هیچ ناظری آن را بالا نمی‌آورد (خطای ۵۰۰/۵۰۲ در تب تخصیص کاربر).
+  {
+    name: "workflow-service",
+    base: "http://127.0.0.1:3004",
+    dir: join(ROOT, "mini-services", "workflow-service"),
+    log: join(ROOT, ".zscripts", "mini-service-workflow-service.log"),
+  },
 ] as const;
 
 const GUARD_INTERVAL_MS = 30_000;
