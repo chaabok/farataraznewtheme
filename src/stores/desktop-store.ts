@@ -146,6 +146,16 @@ export const useDesktop = create<DesktopState>()(
           kind = "dfb-menu";
           appKey = "app:advancedTools";
         }
+        /* t182 — تصمیم مالک: «فرم‌های گردش کار باید در آیکون گردش کار که در
+           صفحهٔ دسکتاپ وجود دارد هم نمایش داده شود». هر لانچرِ کاتالوگِ
+           "workflow" (آیکون دسکتاپ، کاشی منوی استارت، پین نوار وظیفه) به
+           پنجرهٔ واحد هاب زیرسیستم (kind "workflow" — کارتابل/سمت‌ها/طراح/
+           گزارش‌ها) ریدایرکت می‌شود، نه پلیس‌هولدر §4.6 «در انتظار سند
+           تحلیل»؛ همان نمونهٔ واحدِ زنگولهٔ نوار وظیفه (t181) اشتراک دارد. */
+        if (kind === "app" && appKey === "workflow") {
+          kind = "workflow";
+          appKey = undefined;
+        }
         /* Task 81 — tabs: an already-open form is re-activated in place
            (browser semantics) instead of stacking a second instance. */
         const existing = get().windows.find((w) => w.kind === kind && w.appKey === appKey);
