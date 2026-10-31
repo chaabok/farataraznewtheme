@@ -14,6 +14,10 @@ import {
   type SimpleFormFieldOption,
   type SimpleFormTab,
 } from "@/components/forms/simple-form-two-row-tabbed";
+import {
+  useRecordTranslation,
+  type DataTranslationField,
+} from "@/components/forms/common/use-record-translation";
 
 /**
  * WorkflowRoleForm — t177 (فاز ۱ زیرسیستم گردش کار): فرم مدیریتی «سمت‌های
@@ -61,6 +65,19 @@ import {
  * نداشتند) ⇒ گرید پس از هر ذخیره خالی می‌شد و تایپ کاربر از دست می‌رفت.
  * اصلاح: ذخیرهٔ اصلی، ردیف‌های گرید را هم در همان فراخوانی (REPLACE یک
  * تراکنش) ذخیره می‌کند؛ ویرایش ردیف‌ها هم رکورد را dirty می‌کند.
+ *
+ * t187 (فرمان مالک: «وقتی کاربر اضافه می شود و روی دکمه ذخیره کلیک می شود
+ * پیغام نمایش داده می شود / دکمه ذخیره و بستن غیرفعال می باشد / دکمه ترجمه
+ * آنلاین هم برای این فرم غیرفعال می باشد»): ① دکمهٔ «ذخیرهٔ» خودِ گرید در
+ * ثبتِ جدید دیگر پیامِ «ابتدا سمت را ذخیره کنید» نمی‌دهد — خودش سمت را
+ * ذخیره می‌کند و ردیف‌های تخصیص نیز با همان ذخیرهٔ اصلی ثبت می‌شوند.
+ * ② «ذخیره و بستن»/«حذف و بستن» فعال شدند — onClose وقتی onBack پاس نشده
+ * (رندر در پنجرهٔ مستقل workflow-roles) از chrome.onClose می‌آید (بستنِ
+ * تب میزبان). ③ «ترجمهٔ خودکار (آنلاین)» و «ورود دستی (آفلاین)» با قلاب
+ * عمومی useRecordTranslation سیم‌کشی شدند (Task 107/115 — entityType
+ * «WorkflowRole»؛ فیلدهای قابل ترجمه = عنوان + توضیحات؛ کد شناسهٔ ارجاع
+ * است و ترجمه نمی‌گیرد) — دیالوگ ورود دستی هم رندر می‌شود و پس از
+ * ترجمهٔ آنلاین، فهرست رکوردها تازه می‌شود.
  */
 
 const wf = appApi("workflow");
@@ -417,13 +434,16 @@ export function WorkflowRoleForm({ onBack }: { onBack?: () => void }) {
   };
 
   /* ذخیرهٔ تب «تخصیص کاربر» از دکمهٔ ذخیرهٔ خودِ گرید (t186 — منطق مشترک
-     با ذخیرهٔ اصلی در persistAssignments). */
+     با ذخیرهٔ اصلی در persistAssignments).
+     t187 — در ثبتِ جدید دیگر پیامِ «ابتدا سمت را ذخیره کنید» نمی‌دهیم؛
+     خودِ این دکمه سمت را ذخیره می‌کند (doSave ردیف‌های تخصیص را نیز با
+     ذخیرهٔ اصلی ثبت می‌کند) — یک کلیک، ذخیرهٔ کامل. */
   const saveAssignments = async (
     _tabId: string,
     rows: Record<string, string>[],
   ): Promise<void> => {
     if (currentId == null || !values.code.trim()) {
-      toast.info(t("wf.saveRoleFirst"));
+      await doSave(); // t187 — سمتِ جدید + ردیف‌های تخصیص با هم ذخیره می‌شوند
       return;
     }
     try {
@@ -459,6 +479,30 @@ export function WorkflowRoleForm({ onBack }: { onBack?: () => void }) {
     const r = records[i];
     if (r) applyRecord(r);
   };
+
+  /* t187 — قلاب عمومی ترجمهٔ رکورد (Task 107/115): فیلدهای قابل ترجمه =
+     عنوان سمت + توضیحات (کد، شناسهٔ ارجاع گره‌هاست و ترجمه نمی‌گیرد).
+     با رسیدن این دو handler، هر دو گزینهٔ منوی کاشی «ترجمه» فعال می‌شوند. */
+  const recordTr = useRecordTranslation({
+    entityType: "WorkflowRole",
+    entityId: currentId,
+    getFields: (): DataTranslationField[] => {
+      const out: DataTranslationField[] = [];
+      const push = (key: string, label: string, value: string) => {
+        const v = value.trim();
+        if (v) out.push({ key, label, value: v });
+      };
+      push("title", t("wf.roleTitle"), values.title);
+      push("description", t("common.description"), values.description);
+      return out;
+    },
+    onTranslated: () => {
+      /* فهرست رکوردها تازه شود */
+      void fetchRecords()
+        .then(applyRecords)
+        .catch(() => applyRecords([]));
+    },
+  });
 
   const fields = React.useMemo<SimpleFormField[]>(
     () => [
@@ -543,7 +587,9 @@ export function WorkflowRoleForm({ onBack }: { onBack?: () => void }) {
   const current = records.find((r) => r.id === currentId) ?? null;
 
   return (
-    <SimpleFormTwoRowTabbed
+    <>
+      {recordTr.dialog}
+      <SimpleFormTwoRowTabbed
       /* remount فقط هنگام باز شدن رکورد/ذخیرهٔ تخصیص‌ها — ردیف‌های گرید همیشه تازه */
       key={loadedKey}
       title={t("wf.formTitle")}
@@ -582,12 +628,14 @@ export function WorkflowRoleForm({ onBack }: { onBack?: () => void }) {
       onPrint={() => {
         toast.success(t("abar.printToast"));
       }}
-      onClose={onBack}
+      onClose={onBack ?? chrome?.onClose} // t187 — «ذخیره/حذف و بستن» فعال بماند
       onTabRowsChange={(tabId, rows) => {
         setAssignmentRows(rows);
         setDirty(true); // t186 — ویرایش ردیف‌های تخصیص = اطلاعات ذخیره‌نشده
       }}
       onSaveRows={saveAssignments}
+      onTranslateOnline={recordTr.translateOnline} // t187
+      onTranslateOffline={recordTr.openTranslateOffline} // t187
       listItems={records.map((r) => ({
         id: String(r.id),
         title: `${r.code} - ${r.title}`,
@@ -629,6 +677,7 @@ export function WorkflowRoleForm({ onBack }: { onBack?: () => void }) {
       onHeaderDragMove={chrome?.onDragMove}
       onHeaderDragEnd={chrome?.onDragEnd}
       onHeaderDoubleClick={chrome?.onDoubleClick}
-    />
+      />
+    </>
   );
 }
