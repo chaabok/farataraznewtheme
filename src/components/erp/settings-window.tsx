@@ -14,6 +14,7 @@ import {
   SlidersHorizontal,
   ShieldPlus,
   UserPlus,
+  Workflow,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useSettings, useT } from "@/stores/settings-store";
@@ -24,6 +25,7 @@ import { BusinessStructureWindow } from "@/components/erp/business-structure/bs-
 import { SoftwareConfigBody } from "@/components/erp/settings/software-config-window";
 import { UserRoleForm } from "@/components/erp/settings/user-role-form";
 import { UserNewForm } from "@/components/erp/settings/user-new-form";
+import { WorkflowRoleForm } from "@/components/erp/settings/workflow-role-form";
 import { AppTile } from "@/components/desktop/app-tile";
 
 /* Task 35 — the Settings window hosts the BusinessStructure form as a
@@ -50,7 +52,8 @@ type SettingsPage =
   | "user-management"
   | "user-role"
   | "user-new"
-  | "software-config";
+  | "software-config"
+  | "workflow-roles";
 
 export function SettingsWindow() {
   const t = useT();
@@ -171,6 +174,32 @@ export function SettingsWindow() {
         </div>
         <div className="min-h-0 flex-1">
           <UserNewForm onBack={() => setPage("user-management")} />
+        </div>
+      </div>
+    );
+  }
+
+  if (page === "workflow-roles") {
+    return (
+      <div className="flex h-full flex-col">
+        {/* slim sub-page bar: back to the settings home (Win-11 settings pattern) */}
+        <div className="flex h-10 shrink-0 items-center gap-1.5 border-b border-border/60 px-2">
+          <button
+            onClick={() => setPage("home")}
+            className="flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-xs font-medium text-foreground/80 transition-colors hover:bg-foreground/10 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
+          >
+            <BackIcon className="h-3.5 w-3.5" aria-hidden />
+            {t("settings.back")}
+          </button>
+          <span className="text-xs text-muted-foreground/50" aria-hidden>
+            /
+          </span>
+          <span className="truncate text-xs font-semibold text-foreground/90">
+            {t("wf.formTitle")}
+          </span>
+        </div>
+        <div className="min-h-0 flex-1">
+          <WorkflowRoleForm onBack={() => setPage("home")} />
         </div>
       </div>
     );
@@ -329,6 +358,22 @@ export function SettingsWindow() {
           <span className="min-w-0 flex-1">
             <span className="block text-sm font-semibold">{t("settings.swConfig")}</span>
             <span className="block text-xs text-muted-foreground">{t("settings.swConfigDesc")}</span>
+          </span>
+          <ForwardIcon className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+        </button>
+
+        {/* t177 — launcher of the workflow-roles admin form (فاز ۱ زیرسیستم
+            گردش کار): تعریف سمت‌های جدید (D-1) و تخصیص کاربر برای چرخهٔ رسیدگی. */}
+        <button
+          onClick={() => setPage("workflow-roles")}
+          className="flex w-full items-center gap-3 rounded-xl border border-border/70 bg-card/60 p-4 text-start transition-colors hover:bg-accent/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
+        >
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-600 to-teal-700 text-white shadow-md">
+            <Workflow className="h-5 w-5" aria-hidden />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-semibold">{t("wf.formTitle")}</span>
+            <span className="block text-xs text-muted-foreground">{t("settings.wfDesc")}</span>
           </span>
           <ForwardIcon className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
         </button>
