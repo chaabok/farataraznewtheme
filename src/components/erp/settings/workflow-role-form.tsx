@@ -88,6 +88,9 @@ interface WfUserDto {
 
 const BLANK: FormValues = { code: "", title: "", description: "", active: true };
 
+/** t185 — لیستِ خالیِ پایدار (هویت ثابت برای memoهای پایین‌دستی). */
+const EMPTY_USERS: WfUserDto[] = [];
+
 /** ISO → YYYY/MM/DD برای سلول date گرید (خالی = بدون بازه). */
 const isoToCell = (v: string) => (v ? v.replaceAll("-", "/") : "");
 /** YYYY/MM/DD → YYYY-MM-DD برای سرور (خالی = بدون بازه). */
@@ -111,8 +114,14 @@ export function WorkflowRoleForm({ onBack }: { onBack?: () => void }) {
      t185 — واکشی با قرارداد خواندن Task 122 (structureId + headOfficeShares از
      کسکاد سازمانی هدر) — دقیقاً همان لیستی که خودِ «فرم کاربران» برای ساختار
      جاری نشان می‌دهد؛ فهرستِ سراسریِ بدون پارامتر، ردیفِ هر گره را می‌آورد و
-     کاربر تکراری/خارج از ساختار می‌داد. با تغییر کسکاد، بازخوانی می‌شود. */
-  const [users, setUsers] = React.useState<WfUserDto[]>([]);
+     کاربر تکراری/خارج از ساختار می‌داد. با تغییر کسکاد، بازخوانی می‌شود.
+     کلیدِ scope همراه ردیف‌ها نگه داشته می‌شود و «users» مشتقِ تطابقِ کلید است
+     تا پس از تغییر ساختار، لیستِ کهنه هرگز نمایش داده نشود (بدون setState
+     همگام در افکت). */
+  const [usersState, setUsersState] = React.useState<{
+    key: string;
+    rows: WfUserDto[];
+  }>({ key: "", rows: [] });
   const { scope, scopeKey, loaded: orgLoaded } = useOrgScope();
 
   /* ردیف‌های تب تخصیص — آخرین نسخه از طریق onTabRowsChange نگه داشته می‌شود؛
@@ -145,15 +154,15 @@ export function WorkflowRoleForm({ onBack }: { onBack?: () => void }) {
   }, [fetchRecords, applyRecords]);
 
   /* t185 — واکشی کاربران «فرم کاربران» در محدودهٔ ساختار جاری (Task 122).
-     درخت سازمانی هنوز نیامده/شرکتی انتخاب نیست ⇒ لیست خالی (پیامِ داخل
-     دراپ‌دان)؛ پس از رسیدن درخت با ساختارِ انتخابی هدر واکشی می‌شود. */
+     درخت سازمانی هنوز نیامده/شرکتی انتخاب نیست ⇒ هیچ واکشی و لیستِ مشتق خالی
+     (پیامِ داخل دراپ‌دان)؛ پس از رسیدن درخت با ساختارِ انتخابی هدر واکشی می‌شود.
+     شمارهٔ ردِ درخواست: فقط پاسخِ آخرین واکشی نوشته می‌شود (پاسخِ دیرِ قدیمیِ
+     ساختارِ قبلی دور ریخته می‌شود — امن در برابر رقابتِ ترتیب پاسخ‌ها). */
+  const usersReq = React.useRef(0);
   React.useEffect(() => {
-    let alive = true;
-    if (!orgLoaded || scope.businessStructureRef == null) {
-      setUsers([]);
-      return;
-    }
-    setUsers([]); // ساختار عوض شد — لیست کهنه تا رسیدن لیست تازه پاک می‌شود
+    if (!orgLoaded || scope.businessStructureRef == null) return;
+    const seq = ++usersReq.current;
+    const key = scopeKey;
     const qs = new URLSearchParams({
       structureId: String(scope.businessStructureRef),
       headOfficeShares: scope.shared ? "true" : "false",
@@ -161,15 +170,20 @@ export function WorkflowRoleForm({ onBack }: { onBack?: () => void }) {
     settingsApi
       .get<{ items?: WfUserDto[] }>(`user?${qs.toString()}`)
       .then((res) => {
-        if (alive) setUsers(res.items ?? []);
+        if (seq === usersReq.current) setUsersState({ key, rows: res.items ?? [] });
       })
       .catch(() => {
-        if (alive) setUsers([]); // خطای واکشی = لیست خالی + پیامِ داخل دراپ‌دان
+        // خطای واکشی = لیست خالی + پیامِ داخل دراپ‌دان
+        if (seq === usersReq.current) setUsersState({ key, rows: [] });
       });
-    return () => {
-      alive = false;
-    };
   }, [orgLoaded, scopeKey, scope.businessStructureRef, scope.shared]);
+
+  /* لیستِ فعال فقط وقتی که کلیدِ ذخیره‌شده با کسکادِ جاری یکی است — تغییر
+     ساختار، بی‌درنگ لیستِ خالی می‌دهد تا ردیف‌های کهنهٔ ساختارِ قبلی نبینیم. */
+  const users = React.useMemo(
+    () => (usersState.key === scopeKey ? usersState.rows : EMPTY_USERS),
+    [usersState, scopeKey],
+  );
 
   /** t184 — برچسب نمایشی کاربر در دراپ‌دان و snapshot ذخیره‌شده:
       «نام و نام خانوادگی (نام کاربری)» — با fallback برای فیلدهای خالی. */
@@ -465,11 +479,14 @@ export function WorkflowRoleForm({ onBack }: { onBack?: () => void }) {
                 if (v !== "") taken.add(v);
               });
               const list = userOptions.filter((o) => !taken.has(o.value));
-              /* t185 — تخصیصِ قدیمی که شناسه‌اش در لیست یکتاسازی‌شده نیست
-                 (مثلاً ردیف دفتر مرکزی پیش از t185) هم برچسبش را می‌گیرد */
+              /* t185 — تخصیصِ قدیمی که شناسه‌اش در لیستِ محدودهٔ جاری نیست
+                 (مثلاً ردیفِ دفتر مرکزی/ساختارِ دیگر از پیش از t185) برچسبش
+                 را از نگارهٔ کامل و در نبودِ آن از snapshotِ نامِ ذخیره‌شده
+                 می‌گیرد تا سطر خالی/بی‌نام دیده نشود */
               const own = (rows[ri]?.userName ?? "").trim();
               if (own !== "" && !list.some((o) => o.value === own)) {
-                const lbl = labelById.get(own);
+                const lbl =
+                  labelById.get(own) ?? (rows[ri]?.userNameSnap ?? "").trim();
                 if (lbl) list.unshift({ value: own, label: lbl });
               }
               return list;
