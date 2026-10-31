@@ -83,10 +83,13 @@ model WorkflowRoleAssignment {
 
 /// WorkflowDefinition — تعریف فرآیند با نسخه (FR-01): فقط یک نسخهٔ فعال per
 /// entityType؛ ThresholdAmount = آستانهٔ مبلغ per فرم (D-2) برای شرط موتور قواعد.
+/// t180 فاز ۴: Description — توضیح فرآیند؛ نسخه‌های «در استفاده» (با نمونهٔ
+/// گردش کار) قطعی‌اند — ویرایش دیاگرام فقط روی نسخهٔ بدون نمونه یا نسخهٔ جدید.
 model WorkflowDefinition {
   workflowDefinitionId BigInt   @id @map("WorkflowDefinitionID")
   code                 String   @map("Code") // WF-VOUCHER
   name                 String   @map("Name")
+  description          String   @default("") @map("Description") // t180 فاز ۴
   entityType           String   @map("EntityType") // voucher / contract / ...
   processVersion       Int      @map("ProcessVersion")
   thresholdAmount      Float?   @map("ThresholdAmount") // D-2 — آستانهٔ per فرم
@@ -109,6 +112,8 @@ model WorkflowDefinition {
 /// WorkflowNode — گره‌ها (FR-02/03): nodeType = start | action | condition | end؛
 /// FinalStatus فقط روی گرهٔ پایان — وضعیت پایانی سند (D-4)؛ InstanceState روی
 /// گرهٔ پایان = سرنوشت نمونه (approved / rejected).
+/// t180 فاز ۴: PosX/PosY — مختصات بوم طراح بصری (جابجایی با درگ؛ ذخیره با
+/// endpoint layout حتی برای نسخه‌های در استفاده — صرفاً نمایشی و بی‌اثر بر موتور).
 model WorkflowNode {
   workflowNodeId BigInt  @id @map("WorkflowNodeID")
   definitionId   BigInt  @map("DefinitionID")
@@ -120,6 +125,8 @@ model WorkflowNode {
   orderIndex     Int     @default(0) @map("OrderIndex")
   finalStatus    Int?    @map("FinalStatus") // D-4 — فقط گرهٔ پایان
   instanceState  String  @default("") @map("InstanceState") // فقط گرهٔ پایان
+  posX           Int     @default(0) @map("PosX") // t180 فاز ۴ — بوم طراح
+  posY           Int     @default(0) @map("PosY") // t180 فاز ۴ — بوم طراح
 
   @@unique([definitionId, nodeCode])
   @@map("WorkflowNode")
@@ -269,6 +276,35 @@ model WorkflowStatusMap {
 
   @@unique([entityType, formStatus])
   @@map("WorkflowStatusMap")
+}
+
+/// WorkflowEntityCatalog — دفتر فرم‌های دارای فیلد وضعیت (t180 فاز ۴ — تصمیم
+/// مالک: «فرم‌هایی که قرار است در گردش کار شرکت داشته باشند باید توسط کاربر
+/// انتخاب شود»). اینجا کاتالوگ فرم‌های کاندید است؛ Participates = انتخاب
+/// کاربر برای مشارکت در چرخه. AdapterReady یعنی آداپتور مشترک روی آن فرم
+/// متصل شده (فعلاً فقط سند حسابداری — t178)؛ فرم بدون آداپتور انتخاب‌شدنی نیست.
+/// موتور شروع نمونه را برای فرمِ غیرمشارکت با خطای صریح می‌بندد.
+model WorkflowEntityCatalog {
+  workflowEntityCatalogId BigInt   @id @map("WorkflowEntityCatalogID")
+  entityType              String   @unique @map("EntityType")
+  formTitle               String   @map("FormTitle")
+  softwareName            String   @default("") @map("SoftwareName")
+  description             String   @default("") @map("Description")
+  hasStatusField          Boolean  @default(true) @map("HasStatusField")
+  adapterReady            Boolean  @default(false) @map("AdapterReady")
+  participates            Boolean  @default(false) @map("Participates")
+  version                 Int      @default(1) @map("Version")
+  creator                 String   @map("Creator")
+  lastModifier            String?  @map("LastModifier")
+  businessStructureRef    BigInt   @map("BusinessStructureRef")
+  companyRef              BigInt?  @map("CompanyRef")
+  branchRef               BigInt?  @map("BranchRef")
+  agencyRef               BigInt?  @map("AgencyRef")
+  shopRef                 BigInt?  @map("ShopRef")
+  createdAt               DateTime @default(now()) @map("CreatedAt")
+  updatedAt               DateTime @updatedAt @map("UpdatedAt")
+
+  @@map("WorkflowEntityCatalog")
 }
 
 /// WorkflowDependency — دفتر وابستگی واگرد (D-5 — t178 فاز ۲): هر فرم

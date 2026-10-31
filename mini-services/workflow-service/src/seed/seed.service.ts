@@ -27,6 +27,8 @@ export class SeedService implements OnModuleInit {
     await this.seedRoles();
     await this.seedVoucherDefinition();
     await this.seedStatusMap();
+    await this.seedEntityCatalog();
+    await this.repairVoucherLayout();
   }
 
   private async seedRoles() {
@@ -158,5 +160,108 @@ export class SeedService implements OnModuleInit {
       });
     }
     this.logger.log("Seeded voucher status map (۵ ردیف — FR-11 / D-3)");
+  }
+
+  /**
+   * t180 فاز ۴ — کاتالوگ فرم‌های دارای فیلد وضعیت (تصمیم مالک: انتخاب فرم‌ها
+   * با کاربر). فعلاً فقط «سند حسابداری» هم آداپتور متصل دارد (t178) و هم
+   * مشارکت فعال — بقیهٔ فرم‌ها کاندیدند و پس از اتصال آداپتور انتخاب‌شدنی
+   * می‌شوند (AdapterReady=false ⇒ انتخاب‌شدنی نیست).
+   */
+  private async seedEntityCatalog() {
+    const count = await this.prisma.workflowEntityCatalog.count();
+    if (count > 0) return;
+    const rows = [
+      {
+        entityType: "voucher",
+        formTitle: "سند حسابداری",
+        softwareName: "حسابداری",
+        description: "چرخهٔ رسیدگی سند: ارسال به رسیدگی پس از تایید کاربر (D-3) تا وضعیت پایانی گرهٔ پایان (D-4)",
+        adapterReady: true,
+        participates: true,
+      },
+      {
+        entityType: "contract",
+        formTitle: "قرارداد",
+        softwareName: "قراردادها",
+        description: "فرم دارای فیلد وضعیت — آداپتور مشترک هنوز متصل نشده است",
+        adapterReady: false,
+        participates: false,
+      },
+      {
+        entityType: "chart-account",
+        formTitle: "درختواره حساب‌ها",
+        softwareName: "حسابداری",
+        description: "فرم دارای فیلد وضعیت — آداپتور مشترک هنوز متصل نشده است",
+        adapterReady: false,
+        participates: false,
+      },
+      {
+        entityType: "user",
+        formTitle: "کاربر جدید",
+        softwareName: "تنظیمات",
+        description: "فرم دارای فیلد وضعیت — آداپتور مشترک هنوز متصل نشده است",
+        adapterReady: false,
+        participates: false,
+      },
+      {
+        entityType: "counterparty",
+        formTitle: "طرف حساب",
+        softwareName: "حسابداری",
+        description: "فرم دارای فیلد وضعیت — آداپتور مشترک هنوز متصل نشده است",
+        adapterReady: false,
+        participates: false,
+      },
+    ];
+    for (const r of rows) {
+      const id = await this.ids.generateNextId("WorkflowEntityCatalog");
+      await this.prisma.workflowEntityCatalog.create({
+        data: {
+          workflowEntityCatalogId: BigInt(id),
+          entityType: r.entityType,
+          formTitle: r.formTitle,
+          softwareName: r.softwareName,
+          description: r.description,
+          adapterReady: r.adapterReady,
+          participates: r.participates,
+          creator: "system",
+          businessStructureRef: HEAD_OFFICE_NODE_ID,
+        },
+      });
+    }
+    this.logger.log(
+      "Seeded workflow entity catalog (۵ فرم دارای وضعیت — مشارکت فعلاً فقط سند حسابداری)",
+    );
+  }
+
+  /**
+   * t180 فاز ۴ — ترمیم یک‌بارهٔ مختصات بوم طراح برای نسخه‌های قدیمی که گره‌هایشان
+   * همه روی ۰/۰ است (فارغ از حالت «در استفاده» — جابجایی صرفاً نمایشی است).
+   */
+  private async repairVoucherLayout() {
+    const defs = await this.prisma.workflowDefinition.findMany();
+    for (const d of defs) {
+      const nodes = await this.prisma.workflowNode.findMany({ where: { definitionId: d.workflowDefinitionId } });
+      if (nodes.length === 0 || nodes.some((n) => n.posX !== 0 || n.posY !== 0)) continue;
+      /* چیدمان پیش‌فرض بوم — عیناً ترتیب فلوچارت مصوب */
+      const layout: Record<string, { x: number; y: number }> = {
+        N1: { x: 340, y: 30 },
+        N2: { x: 340, y: 150 },
+        N3: { x: 340, y: 270 },
+        N4: { x: 340, y: 390 },
+        N5: { x: 620, y: 510 },
+        N6: { x: 340, y: 640 },
+        N7: { x: 60, y: 270 },
+      };
+      for (const n of nodes) {
+        const pos = layout[n.nodeCode];
+        if (!pos) continue;
+        await this.prisma.workflowNode.update({
+          where: { workflowNodeId: n.workflowNodeId },
+          data: { posX: pos.x, posY: pos.y },
+        });
+      }
+      this.logger.log(`Repaired designer layout for ${d.code} v${d.processVersion}`);
+    }
   }
 }

@@ -9,6 +9,7 @@ import { DefinitionsModule } from "./definitions/definitions.module";
 import { InstancesModule } from "./instances/instances.module";
 import { StatusMapModule } from "./status-map/status-map.module";
 import { CartableModule } from "./cartable/cartable.module"; // t179 فاز ۳ — کارتابل/ابلاغ/تفویض/SLA
+import { CatalogModule } from "./catalog/catalog.module"; // t180 فاز ۴ — کاتالوگ فرم‌های مشارکت‌کننده
 import { SeedModule } from "./seed/seed.module";
 import { HealthController } from "./health/health.controller";
 
@@ -22,6 +23,7 @@ import { HealthController } from "./health/health.controller";
     InstancesModule,
     StatusMapModule,
     CartableModule, // t179 — کارتابل، تفویض بازه‌دار و موتور SLA
+    CatalogModule, // t180 فاز ۴ — دفتر فرم‌های مشارکت‌کننده (انتخاب کاربر)
     SeedModule,
   ],
   controllers: [HealthController],

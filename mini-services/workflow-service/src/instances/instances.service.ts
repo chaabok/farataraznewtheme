@@ -62,6 +62,18 @@ export class InstancesService {
   /* ------------------------------ شروع (ارسال به رسیدگی) ------------------------------ */
 
   async start(dto: StartInstanceDto) {
+    /* مشارکت فرم (t180 فاز ۴ — تصمیم مالک): «فرم‌هایی که قرار است در گردش کار
+       شرکت داشته باشند باید توسط کاربر انتخاب شود» — شروع نمونه برای فرمِ
+       خارج‌شده از کاتالوگ یا هرگز انتخاب‌نشده با خطای صریح بسته است. */
+    const cat = await this.prisma.workflowEntityCatalog.findUnique({
+      where: { entityType: dto.entityType },
+    });
+    if (!cat || !cat.participates) {
+      throw new BadRequestException(
+        `فرم «${dto.entityType}» در گردش کار مشارکت داده نشده است — از «طراح فرآیند گردش کار» در تنظیمات فرم را وارد چرخه کنید`,
+      );
+    }
+
     const def = await this.defs.findActive(dto.entityType);
 
     /* منبع حقیقت گلوگاه ورود (D-3 — t178): وضعیت واقعی سند از سرویس مالک خوانده

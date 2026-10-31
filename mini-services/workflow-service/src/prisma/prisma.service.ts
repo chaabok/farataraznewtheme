@@ -14,6 +14,7 @@ const VERSIONED_MODELS: ReadonlySet<string> = new Set([
   "WorkflowDefinition",
   "WorkflowInstance",
   "WorkflowStatusMap",
+  "WorkflowEntityCatalog", // t180 فاز ۴ — دفتر فرم‌های مشارکت‌کننده
 ]);
 
 const VERSION_ACTIONS = new Set(["update", "updateMany", "upsert"]);
