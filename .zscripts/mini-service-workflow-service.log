@@ -1403,3 +1403,10 @@ $ DATABASE_URL="file:/home/z/my-project/db/workflow.db" NODE_PATH=./node_modules
 [Nest] 28722  - 10/31/2026, 8:28:39 PM     LOG [Bootstrap] workflow-service listening on http://127.0.0.1:3004
 [Nest] 28722  - 10/31/2026, 8:29:29 PM     LOG [DefinitionsService] Conditions saved for WF-VOUCHER v1 — 3 rows
 [Nest] 28722  - 10/31/2026, 8:29:41 PM     LOG [DefinitionsService] Conditions saved for WF-VOUCHER v1 — 0 rows
+[Nest] 28722  - 10/31/2026, 8:38:47 PM     LOG [DefinitionsService] Definition WF-T191TEST v1 created (starter graph) — entityType=voucher
+[Nest] 28722  - 10/31/2026, 8:40:33 PM     LOG [DefinitionsService] Conditions saved for WF-T191TEST v1 — 3 rows
+[Nest] 28722  - 10/31/2026, 8:40:54 PM     LOG [DefinitionsService] Terminated WF-T191TEST v1 at 2026-10-31 (entityType=voucher)
+[Nest] 28722  - 10/31/2026, 8:41:06 PM     LOG [DefinitionsService] Termination reverted for WF-T191TEST v1
+[Nest] 28722  - 10/31/2026, 8:41:22 PM     LOG [DefinitionsService] Conditions saved for WF-T191TEST v1 — 3 rows
+[Nest] 28722  - 10/31/2026, 8:46:33 PM     LOG [DefinitionsService] Definition WF-T191VRT v1 created (starter graph) — entityType=voucher
+[Nest] 28722  - 10/31/2026, 8:46:33 PM     LOG [DefinitionsService] New version WF-T191VRT v2 copied from v1

@@ -1501,7 +1501,7 @@ export function WorkflowDesignerForm() {
     if (c.field === "voucherNature") {
       return (
         <Select
-          value={c.value || undefined}
+          value={c.value}
           disabled={!metaEditable}
           onValueChange={(v) => updateCond(i, { value: v })}
         >
@@ -1520,7 +1520,7 @@ export function WorkflowDesignerForm() {
       const known = opts.some((o) => o.code === c.value);
       return (
         <Select
-          value={c.value || undefined}
+          value={c.value}
           disabled={!metaEditable}
           onValueChange={(v) => updateCond(i, { value: v })}
         >
