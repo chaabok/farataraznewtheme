@@ -1,6 +1,7 @@
 [apps-service] Installing dependencies...
-[96.11ms] ".env"
+[0.04ms] ".env"
 bun install v1.3.14 (0d9b296a)
+
 + @types/node@22.20.5
 + typescript@5.9.3
 + @nestjs/common@11.2.7
@@ -11,39 +12,17 @@ bun install v1.3.14 (0d9b296a)
 + reflect-metadata@0.2.2
 + rxjs@7.8.2
 
-103 packages installed [29.90s]
+103 packages installed [7.18s]
 [apps-service] Running bun run dev...
-$ NODE_PATH=./node_modules bun --hot src[32m[Nest] 1452  - [39m10/30/2026, 12:50:31 PM [32m    LOG[39m [38;5;3m[NestFactory] [39m[32mStarting Nest application...[39m
-[32m[Nest] 1452  - [39m10/30/2026, 12:50:32 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAppModule dependencies initialized[39m[38;5;3m +314ms[39m
-[32m[Nest] [Nest] 1471  - 10/30/2026, 12:50:34 PM     LOG [RoutesResolver] AppsController {/}: +3093ms
-[Nest] 1471  - 10/30/2026, 12:50:34 PM     LOG [RouterExplorer] Mapped {/health, GET} route +11ms
-[Nest] 1471  - 10/30/2026, 12:50:34 PM     LOG [RouterExplorer] Mapped {/apps, GET} route +6ms
-[Nest] 1471  - 10/30/2026, 12:50:34 PM     LOG [RouterExplorer] Mapped {/:appKey/meta, GET} route +5ms
-[Nest] 1471  - 10/30/2026, 12:50:34 PM     LOG [RouterExplorer] Mapped {/:appKey/health, GET} route +8ms
-[Nest] 1471  - 10/30/2026, 12:50:34 PM     LOG [RouterExplorer] Mapped {/:appKey/integrations/status, GET} route +6ms
-[Nest] 1471  - 10/30/2026, 12:50:35 PM     LOG [NestApplication] Nest application successfully started +96ms
-[Nest] 1471  - 10/30/2026, 12:50:35 PM     LOG [Bootstrap] apps-service listening on http://127.0.0.1:3002
-error: script "dev" was terminated by signal SIGTERM (Polite quit request)
-ET} route[39m[38;5;3m +1ms[39m
-[32m[Nest] 1452  - [39m10/30/2026, 12:50:34 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/:appKey/integrations/status, GET} route[39m[38;5;3m +0ms[39m
-[32m[Nest] 1452  - [39m10/30/2026, 12:50:35 PM [32m    LOG[39m [38;5;3m[NestApplication] [39m[32mNest application successfully started[39m[38;5;3m +79ms[39m
-[31m[Nest] 1452  - [39m10/30/2026, 12:50:35 PM [31m  ERROR[39m [38;5;3m[NestApplication] [39m[31mError: Failed to start server. Is port 3002 in use?[39m[38;5;3m +197ms[39m
-186 |             this.httpServer.once('error', errorHandler);
-187 |             const isCallbackInOriginalArgs = (0, shared_utils_1.isFunction)(args[args.length - 1]);
-188 |             const listenFnArgs = isCallbackInOriginalArgs
-189 |                 ? args.slice(0, args.length - 1)
-190 |                 : args;
-191 |             this.httpAdapter.listen(port, ...listenFnArgs, (...originalCallbackArgs) => {
-      ^
-error: Failed to start server. Is port 3002 in use?
- syscall: "listen",
-   errno: 0,
-    code: "EADDRINUSE"
-
-      at serve (unknown:1:1)
-      at node:_http_server:281:39
-      at node:_http_server:258:33
-      at /home/z/my-project/mini-services/apps-service/node_modules/@nestjs/core/nest-application.js:191:30
-      at Promise (unknown:1:11)
-      at listen (/home/z/my-project/mini-services/apps-service/node_modules/@nestjs/core/nest-application.js:203:21)
-error: script "dev" was terminated by signal SIGTERM (Polite quit request)
+$ NODE_PATH=./node_modules bun --hot src/main.ts
+[32m[Nest] 1266  - [39m10/31/2026, 1:02:03 PM [32m    LOG[39m [38;5;3m[NestFactory] [39m[32mStarting Nest application...[39m
+[32m[Nest] 1266  - [39m10/31/2026, 1:02:03 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAppModule dependencies initialized[39m[38;5;3m +141ms[39m
+[32m[Nest] 1266  - [39m10/31/2026, 1:02:03 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAppsModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 1266  - [39m10/31/2026, 1:02:05 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAppsController {/}:[39m[38;5;3m +1413ms[39m
+[32m[Nest] 1266  - [39m10/31/2026, 1:02:05 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/health, GET} route[39m[38;5;3m +23ms[39m
+[32m[Nest] 1266  - [39m10/31/2026, 1:02:05 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/apps, GET} route[39m[38;5;3m +4ms[39m
+[32m[Nest] 1266  - [39m10/31/2026, 1:02:05 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/:appKey/meta, GET} route[39m[38;5;3m +8ms[39m
+[32m[Nest] 1266  - [39m10/31/2026, 1:02:05 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/:appKey/health, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 1266  - [39m10/31/2026, 1:02:05 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/:appKey/integrations/status, GET} route[39m[38;5;3m +2ms[39m
+[32m[Nest] 1266  - [39m10/31/2026, 1:02:05 PM [32m    LOG[39m [38;5;3m[NestApplication] [39m[32mNest application successfully started[39m[38;5;3m +66ms[39m
+[32m[Nest] 1266  - [39m10/31/2026, 1:02:05 PM [32m    LOG[39m [38;5;3m[Bootstrap] [39m[32mapps-service listening on http://127.0.0.1:3002[39m

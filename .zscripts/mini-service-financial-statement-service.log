@@ -1,15 +1,2 @@
 [financial-statement-service] Installing dependencies...
 bun install v1.3.14 (0d9b296a)
-error: postinstall script from "@prisma/client" terminated by SIGABRT (Abort)
-/home/z/my-project/.zscripts/dev.sh: line 77:  1169 Aborted    
-+ bun-types@1.4.3
-+ prisma@6.19.3
-+ @erp/shared@../shared
-+ @prisma/client@6.19.3
-
-31 packages installed [121.80s]
-[financial-statement-service] Running bun run dev...
-$ bun --hot src/main.ts
-error: Canerror: script "dev" was terminated by signal SIGTERM (Polite quit request)
-d/src/index.ts'
-error: script "dev" was terminated by signal SIGTERM (Polite quit request)
