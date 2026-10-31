@@ -12,6 +12,7 @@ import { FloatingMenu } from "./floating-menu";
 import { useChromeMetrics } from "./chrome-metrics";
 import { FiscalYearFooter } from "./fiscal-year-footer";
 import { FiscalYearMissingPrompt } from "./fiscal-year-missing-prompt";
+import { CartableBell } from "./cartable-bell";
 import { ZoomControl } from "./taskbar/zoom-control";
 import { LoupeToggle } from "./taskbar/loupe-toggle";
 import { useDfb, findMenuNode } from "@/stores/dfb-store";
@@ -258,6 +259,10 @@ export function Taskbar() {
             app is installed but no fiscal year is defined; «بلی» opens the
             فرم تعریف سال مالی directly (portal — DOM position is irrelevant) */}
         <FiscalYearMissingPrompt />
+
+        {/* t179 — زنگولهٔ کارتابل گردش کار: بج گام‌های در انتظار + ابلاغ
+            خوانده‌نشده؛ کلیک = تب «کارتابل گردش کار» */}
+        <CartableBell />
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

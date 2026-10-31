@@ -510,7 +510,7 @@ export class CartableService {
         businessStructureRef: HEAD_OFFICE_NODE_ID,
       },
     });
-    return this.delegationDto(row, roleTitle);
+    return this.delegationDto(row, new Map([[roleCode, role.title]]));
   }
 
   /** ویرایش بازه/وضعیت/توضیح تفویض — کاربر فقط تفویض صادرهٔ خودش را ویرایش می‌کند. */

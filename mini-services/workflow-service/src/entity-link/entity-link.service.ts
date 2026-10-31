@@ -34,14 +34,16 @@ export class EntityLinkService {
    */
   async getVoucherAmount(entityId: string) {
     const r = await this.client.call<{
-      id: number;
+      id?: number;
+      item?: { items?: Array<{ debit?: string | number; credit?: string | number }> };
       items?: Array<{ debit?: string | number; credit?: string | number }>;
     }>(this.settingsBase, `/vouchers/${encodeURIComponent(entityId)}`, { timeoutMs: 1500 });
-    if (!r.ok || !r.data || !Array.isArray(r.data.items)) {
+    const rows = r.data?.item?.items ?? r.data?.items;
+    if (!r.ok || !r.data || !Array.isArray(rows)) {
       return { ok: false as const, amount: null };
     }
     let total = 0;
-    for (const it of r.data.items) {
+    for (const it of rows) {
       const d = typeof it.debit === "number" ? it.debit : Number(String(it.debit ?? "0").replace(/,/g, "")) || 0;
       total += d;
     }
