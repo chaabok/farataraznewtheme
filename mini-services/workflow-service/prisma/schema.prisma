@@ -174,6 +174,8 @@ model WorkflowInstance {
 
 /// WorkflowActionLog — تاریخچهٔ append-only (FR-10): هیچ UPDATE/CDELETE —
 /// هر اقدام با بازیگر، گره از/به، اقدام، دلیل و زمان؛ خط زمانی فرم سند (فاز ۲).
+/// t179 فاز ۳: ViaDelegation/DelegatorID — حسابرسی کامل اقدامِ تفویضی (FR-09):
+/// اگر اقدام توسط نمایندهٔ تفویض‌گرفته ثبت شود پرچم می‌خورد و تفویض‌کننده ثبت است.
 model WorkflowActionLog {
   workflowActionLogId BigInt   @id @map("WorkflowActionLogID")
   instanceId          BigInt   @map("InstanceID")
@@ -184,6 +186,8 @@ model WorkflowActionLog {
   actorName           String   @default("") @map("ActorName")
   roleCode            String   @default("") @map("RoleCode")
   comment             String   @default("") @map("Comment")
+  viaDelegation       Boolean  @default(false) @map("ViaDelegation") // t179 — اقدام تفویضی
+  delegatorId         String   @default("") @map("DelegatorID") // t179 — تفویض‌کننده
   createdAt           DateTime @default(now()) @map("CreatedAt")
 
   @@index([instanceId])
@@ -192,10 +196,13 @@ model WorkflowActionLog {
 
 /// WorkflowNotification — ابلاغ/کارتابل (FR-07/08 فاز ۳؛ ردیف‌ها از فاز ۱
 /// هنگام پارک نمونه روی گره ساخته می‌شوند): گیرنده سمت/کاربر + خواندن.
+/// t179 فاز ۳: Kind — action (ابلاغ گام) | info (اطلاع آغازگر) | sla (هشدار
+/// تأخیر SLA) — برای تفکیک کارتابل و جلوگیری از تکرار هشدار SLA per گره.
 model WorkflowNotification {
   workflowNotificationId BigInt    @id @map("WorkflowNotificationID")
   instanceId             BigInt    @map("InstanceID")
   nodeId                 BigInt    @map("NodeID")
+  kind                   String    @default("action") @map("Kind")
   recipientRoleCode      String    @default("") @map("RecipientRoleCode")
   recipientUserId        String    @default("") @map("RecipientUserID")
   title                  String    @map("Title")
@@ -205,6 +212,39 @@ model WorkflowNotification {
 
   @@index([instanceId])
   @@map("WorkflowNotification")
+}
+
+/// WorkflowDelegation — تفویض به‌نیابت بازه‌دار (FR-09 — t179 فاز ۳):
+/// دارندهٔ سمت (delegator) اقدام گام‌های آن سمت را در یک بازهٔ زمانی به
+/// نماینده (delegate) می‌سپارد؛ موتور در نبودِ تخصیص مستقیم، تفویضِ معتبر را
+/// می‌پذیرد و اقدام را «تفویضی» در تاریخچه ثبت می‌کند. سمت سیستمی ماند و
+/// تفویض فقط جانشینِ موقت است — مسئولیت حقوقی با تفویض‌کننده.
+model WorkflowDelegation {
+  workflowDelegationId BigInt    @id @map("WorkflowDelegationID")
+  roleCode             String    @map("RoleCode")
+  delegatorUserId      String    @map("DelegatorUserID")
+  delegatorName        String    @default("") @map("DelegatorName")
+  delegateUserId       String    @map("DelegateUserID")
+  delegateName         String    @default("") @map("DelegateName")
+  validFrom            DateTime  @map("ValidFrom")
+  validTo              DateTime? @map("ValidTo") // null = تا اطلاع ثانوی
+  comment              String    @default("") @map("Comment")
+  isActive             Boolean   @default(true) @map("IsActive")
+  version              Int       @default(1) @map("Version")
+  creator              String    @map("Creator")
+  lastModifier         String?   @map("LastModifier")
+  businessStructureRef BigInt    @map("BusinessStructureRef")
+  companyRef           BigInt?   @map("CompanyRef")
+  branchRef            BigInt?   @map("BranchRef")
+  agencyRef            BigInt?   @map("AgencyRef")
+  shopRef              BigInt?   @map("ShopRef")
+  createdAt            DateTime  @default(now()) @map("CreatedAt")
+  updatedAt            DateTime  @updatedAt @map("UpdatedAt")
+
+  @@unique([roleCode, delegatorUserId, delegateUserId])
+  @@index([delegateUserId])
+  @@index([delegatorUserId])
+  @@map("WorkflowDelegation")
 }
 
 /// WorkflowStatusMap — نگاشت وضعیت فرم به چرخه (FR-11؛ D-3): GateType =

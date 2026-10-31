@@ -193,6 +193,15 @@ export class InstancesService {
     const actorId = dto.actorId.trim();
     const actorName = (dto.actorName ?? "").trim();
 
+    /* مبلغ مؤثر برای شرط آستانه (D-2 — t179 فاز ۳): اگر کلاینت مبلغ نفرستد
+       (مثلاً کارتابل) موتور خودش از منبع حقیقت می‌خواند — دورزدن ایستگاه
+       مدیر با نبودِ داده در هیچ کلاینتی ممکن نیست. */
+    let effectiveAmount = dto.amount;
+    if (effectiveAmount === undefined && inst.entityType === "voucher") {
+      const amt = await this.link.getVoucherAmount(inst.entityId);
+      if (amt.ok && typeof amt.amount === "number") effectiveAmount = amt.amount;
+    }
+
     /* ابطال (FR-13 — پیش از تایید نهایی آزاد): فقط آغازگر، با دلیل */
     if (dto.action === STANDARD.cancel) {
       if (actorId !== inst.startedBy) {
@@ -226,7 +235,10 @@ export class InstancesService {
       return this.detail(inst.workflowInstanceId);
     }
 
-    /* تایید/رد — فقط دارندهٔ سمتِ گرهٔ جاری (FR-06) */
+    /* تایید/رد — دارندهٔ سمتِ گرهٔ جاری (FR-06) یا نمایندهٔ تفویض معتبر
+       (FR-09 — t179 فاز ۳): تفویض بازه‌دار فقط در نبودِ تخصیص مستقیم
+       بررسی می‌شود و اقدام تفویضی در تاریخچه پرچم ViaDelegation +
+       DelegatorID می‌خورد (مسئولیت با تفویض‌کننده). */
     if (currentNode.nodeType !== "action") {
       throw new BadRequestException("گرهٔ جاری قابل اقدام نیست");
     }
@@ -242,10 +254,29 @@ export class InstancesService {
         ],
       },
     });
-    if (!hasRole) {
-      throw new ForbiddenException(
-        `کاربر جاری دارندهٔ سمت «${currentNode.roleCode}» (گام جاری) نیست`,
-      );
+    let roleGrant: { viaDelegation: boolean; delegatorId: string } = {
+      viaDelegation: false,
+      delegatorId: "",
+    };
+    if (hasRole) {
+      /* اقدام مستقیم دارندهٔ سمت */
+    } else {
+      const del = await this.prisma.workflowDelegation.findFirst({
+        where: {
+          roleCode: currentNode.roleCode,
+          delegateUserId: actorId,
+          isActive: true,
+          validFrom: { lte: now },
+          OR: [{ validTo: null }, { validTo: { gte: now } }],
+        },
+        orderBy: { workflowDelegationId: "asc" },
+      });
+      if (!del) {
+        throw new ForbiddenException(
+          `کاربر جاری دارندهٔ سمت «${currentNode.roleCode}» (گام جاری) نیست`,
+        );
+      }
+      roleGrant = { viaDelegation: true, delegatorId: del.delegatorUserId };
     }
 
     if (dto.action === STANDARD.reject) {
@@ -277,6 +308,8 @@ export class InstancesService {
           actorName,
           roleCode: currentNode.roleCode,
           comment: (dto.comment ?? "").trim(),
+          viaDelegation: roleGrant.viaDelegation,
+          delegatorId: roleGrant.delegatorId,
         });
         await this.notifyUser(
           tx,
@@ -307,7 +340,7 @@ export class InstancesService {
       while (walker.nodeType === "condition" && guard++ < 10) {
         const outs = transitions.filter((x) => x.fromNodeId === walker.workflowNodeId);
         const chosen = this.pickConditionTransition(outs, {
-          amount: dto.amount,
+          amount: effectiveAmount,
           threshold: def.thresholdAmount ?? undefined,
         });
         if (!chosen) throw new BadRequestException("هیچ گذار خروجی از گرهٔ شرط برآورده نشد");
@@ -348,6 +381,8 @@ export class InstancesService {
             actorName,
             roleCode: currentNode.roleCode,
             comment: (dto.comment ?? "").trim(),
+            viaDelegation: roleGrant.viaDelegation,
+            delegatorId: roleGrant.delegatorId,
           });
         }
         if (finished) {
@@ -611,6 +646,8 @@ export class InstancesService {
         fromNodeTitle: nodeById.get(l.fromNodeId)?.title ?? "",
         toNodeTitle: nodeById.get(l.toNodeId)?.title ?? "",
         comment: l.comment,
+        viaDelegation: l.viaDelegation,
+        delegatorId: l.delegatorId,
         createdAt: l.createdAt.toISOString(),
       })),
       notifications: notifications.map((n) => ({
@@ -720,6 +757,8 @@ export class InstancesService {
       actorName: string;
       roleCode: string;
       comment: string;
+      viaDelegation?: boolean;
+      delegatorId?: string;
     },
   ) {
     const id = await this.ids.generateNextIdInTx(tx, "WorkflowActionLog");
@@ -734,11 +773,17 @@ export class InstancesService {
         actorName: data.actorName,
         roleCode: data.roleCode,
         comment: data.comment,
+        viaDelegation: data.viaDelegation ?? false,
+        delegatorId: data.delegatorId ?? "",
       },
     });
   }
 
-  /** ابلاغ به همهٔ کاربران فعال سمتِ گره (FR-07) — فاز ۳ کارتابل می‌خواند. */
+  /**
+   * ابلاغ به همهٔ کاربران فعال سمتِ گره + نمایندگانِ تفویض معتبر (FR-07 +
+   * FR-09 — t179 فاز ۳): کارتابل این ابلاغ‌ها را می‌خواند؛ نماینده هم ابلاغ
+   * می‌گیرد چون می‌تواند اقدام کند (kind=action).
+   */
   private async notifyRole(tx: Tx, inst: { workflowInstanceId: bigint; entityLabel: string; entityType: string }, node: { workflowNodeId: bigint; roleCode: string; title: string }) {
     if (!node.roleCode) return;
     const now = new Date();
@@ -752,6 +797,14 @@ export class InstancesService {
         ],
       },
     });
+    const delegates = await this.prisma.workflowDelegation.findMany({
+      where: {
+        roleCode: node.roleCode,
+        isActive: true,
+        validFrom: { lte: now },
+        OR: [{ validTo: null }, { validTo: { gte: now } }],
+      },
+    });
     const title = `در انتظار اقدام: ${node.title} — ${inst.entityLabel || inst.entityType}`;
     for (const u of users) {
       const id = await this.ids.generateNextIdInTx(tx, "WorkflowNotification");
@@ -760,10 +813,27 @@ export class InstancesService {
           workflowNotificationId: BigInt(id),
           instanceId: inst.workflowInstanceId,
           nodeId: node.workflowNodeId,
+          kind: "action",
           recipientRoleCode: node.roleCode,
           recipientUserId: u.userId,
           title,
           body: `سند «${inst.entityLabel || inst.entityType}» (${inst.entityId}) به گام «${node.title}» رسید`,
+        },
+      });
+    }
+    for (const d of delegates) {
+      if (users.some((u) => u.userId === d.delegateUserId)) continue; // دارندهٔ مستقیم — ابلاغ تکراری نه
+      const id = await this.ids.generateNextIdInTx(tx, "WorkflowNotification");
+      await tx.workflowNotification.create({
+        data: {
+          workflowNotificationId: BigInt(id),
+          instanceId: inst.workflowInstanceId,
+          nodeId: node.workflowNodeId,
+          kind: "action",
+          recipientRoleCode: node.roleCode,
+          recipientUserId: d.delegateUserId,
+          title,
+          body: `سند «${inst.entityLabel || inst.entityType}» (${inst.entityId}) به گام «${node.title}» رسید (تفویضی از ${d.delegatorName || d.delegatorUserId})`,
         },
       });
     }

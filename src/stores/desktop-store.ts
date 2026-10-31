@@ -13,7 +13,8 @@ export type WindowKind =
   | "dfb-menu"
   | "dfb-form"
   | "dfb-studio"
-  | "dfb-list";
+  | "dfb-list"
+  | "cartable"; // t179 — کارتابل گردش کار (فاز ۳: کارتابل/ابلاغ/تفویض/SLA)
 
 /**
  * Task 81 — a "window" is now a TAB of the desktop shell (owner request):

@@ -8,6 +8,7 @@ import { RolesModule } from "./roles/roles.module";
 import { DefinitionsModule } from "./definitions/definitions.module";
 import { InstancesModule } from "./instances/instances.module";
 import { StatusMapModule } from "./status-map/status-map.module";
+import { CartableModule } from "./cartable/cartable.module"; // t179 فاز ۳ — کارتابل/ابلاغ/تفویض/SLA
 import { SeedModule } from "./seed/seed.module";
 import { HealthController } from "./health/health.controller";
 
@@ -20,6 +21,7 @@ import { HealthController } from "./health/health.controller";
     DefinitionsModule,
     InstancesModule,
     StatusMapModule,
+    CartableModule, // t179 — کارتابل، تفویض بازه‌دار و موتور SLA
     SeedModule,
   ],
   controllers: [HealthController],
