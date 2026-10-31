@@ -3,28 +3,38 @@
 import * as React from "react";
 import {
   CircleStop,
-  GitBranch,
   Link2,
   Loader2,
   PencilRuler,
   Plus,
-  RefreshCw,
   Save,
   Scissors,
-  Shapes,
   Split,
-  Trash2,
-  Unplug,
+  Undo2,
   Workflow,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { appApi } from "@/lib/api";
-import { useT } from "@/stores/settings-store";
-import { useTabDirty } from "@/components/desktop/app-window";
+import { useT, useSettings } from "@/stores/settings-store";
+import { useDesktop } from "@/stores/desktop-store";
+import { normalizeDigits } from "@/components/forms/form-primitives";
+import { displayToStoredDate, storedToDisplayDate } from "@/lib/calendar-date";
+import { useTabDirty, useWindowChrome } from "@/components/desktop/app-window";
+import { ActionIconButton } from "@/components/forms/action-bar";
+import {
+  SimpleFormTwoRowTabbed,
+  type SimpleFormField,
+  type SimpleFormTab,
+} from "@/components/forms/simple-form-two-row-tabbed";
+import {
+  useRecordTranslation,
+  type DataTranslationField,
+} from "@/components/forms/common/use-record-translation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
@@ -42,20 +52,28 @@ import {
 } from "@/components/ui/select";
 
 /**
- * WorkflowDesignerForm — طراح بصری فرآیند گردش کار (t180 — فاز ۴ نقشهٔ راه).
+ * WorkflowDesignerForm — طراح فرآیند گردش کار.
  *
- * تصمیم مالک: «فرم‌هایی که قرار است در گردش کار شرکت داشته باشند باید توسط
- * کاربر انتخاب شود و دیاگرام چرخش آن فرم در ابتدا مشخص گردد» — این فرم سه
- * بخش دارد:
- *  ① «فرم‌های مشارکت‌کننده» — کاتالوگ فرم‌های دارای فیلد وضعیت با کلید
- *     مشارکت (فعلاً فقط سند حسابداری آداپتورِ متصل دارد — t178).
- *  ② «فرآیندها و دیاگرام چرخش» — نسخه‌های WorkflowDefinition با فعال‌سازی
- *     (FR-01: فقط یک نسخهٔ فعال per فرم)، نسخهٔ جدید (کپی کامل) و حذف.
- *  ③ بوم طراح — گره‌های شروع/اقدام/شرط/پایان با درگ، گذارها با کلیکِ اتصال،
- *     ویرایشگر سمت/SLA/وضعیت پایانی/شرط آستانه (D-2) و ذخیرهٔ معتبر
- *     (اعتبارسنجی موتور-سازگار — دیاگرام نامعتبر هرگز ذخیره نمی‌شود).
- * نسخهٔ «در استفاده» قطعی است (۴۰۹) — ویرایش فقط با «نسخهٔ جدید»؛ جابجایی
- * گره‌ها نمایشی است و همیشه آزاد.
+ * t190 (فرمان مالک) — بازطراحی کامل با پوستهٔ «SimpleFormTwoRowTabbed» تا
+ * «همه فرم‌های نرم‌افزار یکسان باشند»:
+ *  ① «لیست فرم‌ها» — چون تعداد فرم‌های گردش کار می‌تواند بسیار زیاد باشد،
+ *     کاتالوگ فرم‌های مشارکت‌کننده از کارت‌های بخش ① قدیمی به «کامپوننت
+ *     دراپ‌داون آیکون لیست» (RecordListDropdown) در اکشن بار منتقل شد؛ کاربر
+ *     یک فرم را برمی‌گزیند و فرآیندهای همان فرم در تب «فرآیندها» و فیلدها
+ *     بار می‌شود (تب، ایستا/onOpenRow است — ردیف‌ها آینهٔ سرورند).
+ *  ② «خاتمهٔ فرآیند» — آیکون تازه در اکشن بار: مودال با تاریخ خاتمه (پیش‌فرض
+ *     امروز در تقویم زبان انتخابی) + توضیحات؛ با تأیید، فرآیند خاتمه می‌یابد
+ *     (IsTerminated + تاریخ + توضیح؛ از موتور خارج می‌شود) و «فرآیندهای فرم
+ *     از یک بازه تاریخی تغییر می‌کند» — ادامهٔ کار با «نسخهٔ جدید».
+ *  ③ «برگشت خاتمه» — آیکون تازه: قید خاتمه پاک می‌شود و نسخه آزاد می‌شود
+ *     (فعال‌سازی دوباره دستی و با دیاگرام معتبر است).
+ *  ④ فرآیند خاتمه‌یافته فقط-خواندنی است: فیلدها و دیاگرام قفل‌اند (سرور هم
+ *     updateMeta/saveGraph/activate/remove را برای نسخهٔ خاتمه‌یافته ۴۰۹
+ *     می‌زند) — لایهٔ دومِ محافظت در برابر دستکاری.
+ *  ⑤ بوم طراح بصری (گره/گذار/شرط/SLA) عیناً حفظ شد و به اسلات `children`
+ *     پوسته می‌نشیند — زیر تب فرآیندها.
+ * منطق نسخه‌بندی FR-01 (نسخهٔ در استفاده قطعی است — ویرایش فقط با «نسخهٔ
+ * جدید») و اعتبارسنجی موتور-سازگارِ ذخیرهٔ دیاگرام از t180 برقرار است.
  */
 
 const wf = appApi("workflow");
@@ -84,6 +102,10 @@ interface DefItem {
   processVersion: number;
   thresholdAmount: number | null;
   isActive: boolean;
+  /* t190 — خاتمهٔ فرآیند */
+  isTerminated: boolean;
+  terminatedAt: string | null;
+  terminationNote: string;
   usedByInstances: boolean;
   instanceCount: number;
   nodeCount: number;
@@ -128,6 +150,10 @@ interface DefDetail {
   processVersion: number;
   thresholdAmount: number | null;
   isActive: boolean;
+  /* t190 — خاتمهٔ فرآیند */
+  isTerminated: boolean;
+  terminatedAt: string | null;
+  terminationNote: string;
   usedByInstances: boolean;
   instanceCount: number;
   nodes: Array<Omit<GNode, "nodeType"> & { nodeType: string }>;
@@ -181,40 +207,68 @@ function PlayGlyph() {
   );
 }
 
+const pad2 = (n: number) => String(n).padStart(2, "0");
+/** امروز به میلادی ISO — مبدأ «تاریخ روز» مودال خاتمه (نمایش در تقویم زبان). */
+const todayISO = () => {
+  const now = new Date();
+  return `${now.getFullYear()}-${pad2(now.getMonth() + 1)}-${pad2(now.getDate())}`;
+};
+
 /* ------------------------------ کامپوننت ------------------------------ */
 
 export function WorkflowDesignerForm() {
   const t = useT();
+  const locale = useSettings((s) => s.locale);
+  const chrome = useWindowChrome();
+  const headerMaximized = useDesktop(
+    (s) => s.windows.find((w) => w.kind === "workflow-designer")?.maximized ?? false,
+  );
 
   /* داده‌های پایه */
   const [catalog, setCatalog] = React.useState<CatalogItem[]>([]);
   const [defs, setDefs] = React.useState<DefItem[]>([]);
   const [roles, setRoles] = React.useState<RoleItem[]>([]);
   const [loading, setLoading] = React.useState(true);
-  const [toggling, setToggling] = React.useState<string | null>(null);
-  const [busyId, setBusyId] = React.useState<number | null>(null);
-  const [delArm, setDelArm] = React.useState<number | null>(null);
+  /* t190 — نسخهٔ فهرست فرآیندها برای remount تب ایستا (الگوی loadedKey) */
+  const [defsStamp, setDefsStamp] = React.useState(0);
 
-  /* طراح */
-  const [selId, setSelId] = React.useState<number | null>(null);
+  /* ① فرمِ برگزیده از دراپ‌داون «لیست فرم‌ها» */
+  const [selEntityType, setSelEntityType] = React.useState<string | null>(null);
+  const [toggling, setToggling] = React.useState(false);
+
+  /* فرآیند جاری (متا) */
+  const [currentId, setCurrentId] = React.useState<number | null>(null);
   const [detail, setDetail] = React.useState<DefDetail | null>(null);
   const [graphLoading, setGraphLoading] = React.useState(false);
+  const [values, setValues] = React.useState({
+    code: "",
+    name: "",
+    threshold: "",
+    description: "",
+  });
+  const [metaDirty, setMetaDirty] = React.useState(false);
+  const [saving, setSaving] = React.useState(false);
+  const [busyId, setBusyId] = React.useState<number | null>(null);
+
+  /* طراح بوم */
   const [nodes, setNodes] = React.useState<GNode[]>([]);
   const [transitions, setTransitions] = React.useState<GTrans[]>([]);
   const [selNode, setSelNode] = React.useState<string | null>(null);
   const [selTrans, setSelTrans] = React.useState<number | null>(null);
   const [connectMode, setConnectMode] = React.useState(false);
   const [connectFrom, setConnectFrom] = React.useState<string | null>(null);
-  const [dirty, setDirty] = React.useState(false);
-  const [saving, setSaving] = React.useState(false);
+  const [canvasDirty, setCanvasDirty] = React.useState(false);
+  const [savingGraph, setSavingGraph] = React.useState(false);
   const [errors, setErrors] = React.useState<string[]>([]);
 
-  /* دیالوگ فرآیند جدید */
-  const [createOpen, setCreateOpen] = React.useState(false);
-  const [creating, setCreating] = React.useState(false);
-  const [cForm, setCForm] = React.useState({ entityType: "", code: "", name: "", threshold: "" });
+  /* مودال خاتمهٔ فرآیند (t190) */
+  const [termOpen, setTermOpen] = React.useState(false);
+  const [termDate, setTermDate] = React.useState("");
+  const [termNote, setTermNote] = React.useState("");
+  const [terminating, setTerminating] = React.useState(false);
+  const [reinstating, setReinstating] = React.useState(false);
 
-  useTabDirty(dirty);
+  useTabDirty(metaDirty || canvasDirty);
 
   const nodesRef = React.useRef<GNode[]>(nodes);
   React.useEffect(() => {
@@ -223,7 +277,15 @@ export function WorkflowDesignerForm() {
   const posRef = React.useRef<Record<string, { x: number; y: number }>>({});
   const innerRef = React.useRef<HTMLDivElement | null>(null);
 
-  const editable = !!detail && !detail.usedByInstances;
+  const selForm = catalog.find((c) => c.entityType === selEntityType) ?? null;
+  const defsOfForm = React.useMemo(
+    () => (selEntityType ? defs.filter((d) => d.entityType === selEntityType) : []),
+    [defs, selEntityType],
+  );
+  /* t190 — خاتمه‌یافته = فقط-خواندنی (فرمان مالک)؛ نسخهٔ در استفاده هم قطعی است (FR-01) */
+  const isTerminated = !!detail?.isTerminated;
+  const metaEditable = selEntityType != null && !isTerminated;
+  const canvasEditable = !!detail && !detail.usedByInstances && !detail.isTerminated;
 
   /* ------------------------------ واکشی ------------------------------ */
 
@@ -252,8 +314,16 @@ export function WorkflowDesignerForm() {
     setCatalog(cat);
     setDefs(dd);
     setRoles(rr);
+    setDefsStamp((s) => s + 1);
     setLoading(false);
   }, [fetchCatalog, fetchDefs, fetchRoles]);
+
+  const refreshDefs = React.useCallback(async () => {
+    const dd = await fetchDefs().catch(() => [] as DefItem[]);
+    setDefs(dd);
+    setDefsStamp((s) => s + 1);
+    return dd;
+  }, [fetchDefs]);
 
   /* بارگذاری اولیه — setState فقط در callbackهای async (نه sync در بدنهٔ effect) */
   React.useEffect(() => {
@@ -264,6 +334,7 @@ export function WorkflowDesignerForm() {
         setCatalog(cat);
         setDefs(dd);
         setRoles(rr);
+        setDefsStamp((s) => s + 1);
         setLoading(false);
       },
       () => {
@@ -274,6 +345,31 @@ export function WorkflowDesignerForm() {
       alive = false;
     };
   }, [fetchCatalog, fetchDefs, fetchRoles]);
+
+  /* ------------------------------ انتخاب فرم / بازکردن فرآیند ------------------------------ */
+
+  /** ① کاربر از دراپ‌داون «لیست» فرمی را برمی‌گزیند — فرآیندهای همان فرم
+   *  در تب «فرآیندها» می‌آید و فیلدها برای ثبت فرآیند تازهٔ همان فرم خالی می‌شود. */
+  const selectForm = React.useCallback(
+    (entityType: string) => {
+      if (entityType === selEntityType) return;
+      setSelEntityType(entityType);
+      setCurrentId(null);
+      setDetail(null);
+      setNodes([]);
+      setTransitions([]);
+      setSelNode(null);
+      setSelTrans(null);
+      setConnectMode(false);
+      setConnectFrom(null);
+      setErrors([]);
+      setMetaDirty(false);
+      setCanvasDirty(false);
+      setValues({ code: "", name: "", threshold: "", description: "" });
+      posRef.current = {};
+    },
+    [selEntityType],
+  );
 
   const applyDetail = React.useCallback((d: DefDetail) => {
     const mapped: DefDetail = {
@@ -291,6 +387,9 @@ export function WorkflowDesignerForm() {
       processVersion: mapped.processVersion,
       thresholdAmount: mapped.thresholdAmount,
       isActive: mapped.isActive,
+      isTerminated: mapped.isTerminated,
+      terminatedAt: mapped.terminatedAt,
+      terminationNote: mapped.terminationNote,
       usedByInstances: mapped.usedByInstances,
       instanceCount: mapped.instanceCount,
       nodes: [],
@@ -321,47 +420,249 @@ export function WorkflowDesignerForm() {
         isDefault: tr.isDefault,
       })),
     );
+    setValues({
+      code: mapped.code,
+      name: mapped.name,
+      threshold: mapped.thresholdAmount == null ? "" : String(mapped.thresholdAmount),
+      description: mapped.description,
+    });
   }, []);
 
   const openDef = React.useCallback(
     async (id: number) => {
-      setSelId(id);
+      setCurrentId(id);
       setGraphLoading(true);
       setSelNode(null);
       setSelTrans(null);
       setConnectMode(false);
       setConnectFrom(null);
       setErrors([]);
-      setDirty(false);
+      setMetaDirty(false);
+      setCanvasDirty(false);
       posRef.current = {};
       try {
         const d = await wf.get<DefDetail>(`workflow-definitions/${id}`);
+        if (d.entityType !== selEntityType) setSelEntityType(d.entityType);
         applyDetail(d);
       } catch (e) {
         toast.error(e instanceof Error && e.message ? e.message : t("common.error"));
-        setSelId(null);
+        setCurrentId(null);
         setDetail(null);
       } finally {
         setGraphLoading(false);
       }
     },
-    [applyDetail, t],
+    [applyDetail, selEntityType, t],
   );
 
-  /* ------------------------------ مشارکت فرم‌ها ------------------------------ */
+  /** آیکون + اکشن بار = فرآیند جدید برای فرمِ برگزیده */
+  const newProcess = React.useCallback(() => {
+    if (!selEntityType) {
+      toast.error(t("wf.des.errFormPick"));
+      return;
+    }
+    setCurrentId(null);
+    setDetail(null);
+    setNodes([]);
+    setTransitions([]);
+    setSelNode(null);
+    setSelTrans(null);
+    setConnectMode(false);
+    setConnectFrom(null);
+    setErrors([]);
+    setMetaDirty(false);
+    setCanvasDirty(false);
+    setValues({ code: "", name: "", threshold: "", description: "" });
+    posRef.current = {};
+  }, [selEntityType, t]);
 
-  const toggleParticipation = async (item: CatalogItem, value: boolean) => {
-    setToggling(item.entityType);
+  /* ------------------------------ ذخیرهٔ متا / حذف ------------------------------ */
+
+  /** ذخیرهٔ «فیلدهای فرآیند» (اکشن بار): ثبت جدید (POST با دیاگرام آغازین)
+   *  یا ویرایش متای رکورد جاری (PUT meta). نسخهٔ خاتمه‌یافته قفل است. */
+  const doSave = async (): Promise<boolean> => {
+    if (!selEntityType) {
+      toast.error(t("wf.des.errFormPick"));
+      return false;
+    }
+    if (!values.code.trim()) {
+      toast.error(t("wf.des.errCodeRequired"));
+      return false;
+    }
+    if (!values.name.trim()) {
+      toast.error(t("wf.des.errNameRequired"));
+      return false;
+    }
+    setSaving(true);
     try {
-      await wf.put(`workflow-catalog/${encodeURIComponent(item.entityType)}`, { participates: value });
-      toast.success(value ? t("wf.des.enrolledToast") : t("wf.des.unenrolledToast"));
-      const [cat, dd] = await Promise.all([fetchCatalog(), fetchDefs()]);
-      setCatalog(cat);
-      setDefs(dd);
+      if (currentId == null) {
+        const res = await wf.post<DefDetail>("workflow-definitions", {
+          code: values.code.trim().toUpperCase(),
+          name: values.name.trim(),
+          entityType: selEntityType,
+          description: values.description.trim(),
+          thresholdAmount: values.threshold.trim()
+            ? Number(normalizeDigits(values.threshold))
+            : undefined,
+        });
+        toast.success(t("wf.des.createdToast"));
+        await refreshDefs();
+        await openDef(res.id);
+        return true;
+      }
+      if (isTerminated) {
+        toast.error(t("wf.des.terminatedReadOnlyToast"));
+        return false;
+      }
+      const res = await wf.put<DefDetail>(`workflow-definitions/${currentId}`, {
+        name: values.name.trim(),
+        description: values.description.trim(),
+        thresholdAmount: values.threshold.trim()
+          ? Number(normalizeDigits(values.threshold))
+          : null,
+      });
+      toast.success(t("abar.savedToast"));
+      applyDetail(res);
+      setMetaDirty(false);
+      void refreshDefs();
+      return true;
+    } catch (e) {
+      toast.error(e instanceof Error && e.message ? e.message : t("common.error"));
+      return false;
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const doDelete = async (): Promise<void> => {
+    if (currentId == null) {
+      toast.info(t("dfb.noRecordSelected"));
+      return;
+    }
+    if (isTerminated) {
+      toast.error(t("wf.des.terminatedReadOnlyToast"));
+      return;
+    }
+    setBusyId(currentId);
+    try {
+      await wf.del(`workflow-definitions/${currentId}`);
+      toast.success(t("wf.des.deletedToast"));
+      setCurrentId(null);
+      setDetail(null);
+      setNodes([]);
+      setTransitions([]);
+      setValues({ code: "", name: "", threshold: "", description: "" });
+      setMetaDirty(false);
+      setCanvasDirty(false);
+      await refreshDefs();
     } catch (e) {
       toast.error(e instanceof Error && e.message ? e.message : t("common.error"));
     } finally {
-      setToggling(null);
+      setBusyId(null);
+    }
+  };
+
+  /* ------------------------------ مشارکت فرم (کاتالوگ) ------------------------------ */
+
+  const toggleParticipation = async (value: boolean) => {
+    if (!selEntityType || !selForm) return;
+    setToggling(true);
+    try {
+      await wf.put(`workflow-catalog/${encodeURIComponent(selEntityType)}`, {
+        participates: value,
+      });
+      toast.success(value ? t("wf.des.enrolledToast") : t("wf.des.unenrolledToast"));
+      await refreshAll();
+    } catch (e) {
+      toast.error(e instanceof Error && e.message ? e.message : t("common.error"));
+    } finally {
+      setToggling(false);
+    }
+  };
+
+  /* ------------------------------ فعال‌سازی / نسخهٔ جدید (نوار بوم) ------------------------------ */
+
+  const doActivate = async (d: DefDetail) => {
+    setBusyId(d.id);
+    try {
+      await wf.post<DefDetail>(`workflow-definitions/${d.id}/activate`, {});
+      toast.success(t("wf.des.activatedToast"));
+      await refreshAll();
+      await openDef(d.id);
+    } catch (e) {
+      toast.error(e instanceof Error && e.message ? e.message : t("common.error"));
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const doNewVersion = async (d: DefDetail) => {
+    setBusyId(d.id);
+    try {
+      const res = await wf.post<DefDetail>(`workflow-definitions/${d.id}/versions`, {});
+      toast.success(`${t("wf.des.versionCreatedToast")} — v${res.processVersion}`);
+      await refreshDefs();
+      await openDef(res.id);
+    } catch (e) {
+      toast.error(e instanceof Error && e.message ? e.message : t("common.error"));
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  /* ------------------------------ خاتمه / برگشت خاتمه (t190) ------------------------------ */
+
+  const openTerminate = () => {
+    if (currentId == null || !detail) {
+      toast.info(t("dfb.noRecordSelected"));
+      return;
+    }
+    /* پیش‌فرض مودال: تاریخ روز (در تقویم زبان انتخابی) */
+    setTermDate(storedToDisplayDate(todayISO(), locale));
+    setTermNote("");
+    setTermOpen(true);
+  };
+
+  const doTerminate = async () => {
+    if (currentId == null || !detail) return;
+    const iso = displayToStoredDate(termDate, locale, normalizeDigits);
+    if (!iso) {
+      toast.error(t("wf.des.termDateInvalid"));
+      return;
+    }
+    setTerminating(true);
+    try {
+      const res = await wf.put<DefDetail>(`workflow-definitions/${currentId}/terminate`, {
+        terminatedAt: iso,
+        note: termNote.trim(),
+      });
+      toast.success(t("wf.des.terminatedToast"));
+      setTermOpen(false);
+      applyDetail(res);
+      setMetaDirty(false);
+      setCanvasDirty(false);
+      await refreshDefs();
+    } catch (e) {
+      toast.error(e instanceof Error && e.message ? e.message : t("common.error"));
+    } finally {
+      setTerminating(false);
+    }
+  };
+
+  const doReinstate = async () => {
+    if (currentId == null || !detail) return;
+    setReinstating(true);
+    try {
+      const res = await wf.put<DefDetail>(`workflow-definitions/${currentId}/reinstate`, {});
+      toast.success(t("wf.des.reinstatedToast"));
+      applyDetail(res);
+      setMetaDirty(false);
+      setCanvasDirty(false);
+      await refreshDefs();
+    } catch (e) {
+      toast.error(e instanceof Error && e.message ? e.message : t("common.error"));
+    } finally {
+      setReinstating(false);
     }
   };
 
@@ -395,9 +696,9 @@ export function WorkflowDesignerForm() {
     e.preventDefault();
   };
 
-  /** ذخیرهٔ ساکتِ مختصات — حتی برای نسخهٔ در استفاده (صرفاً نمایشی). */
+  /** ذخیرهٔ ساکتِ مختصات — حتی برای نسخهٔ در استفاده/خاتمه‌یافته (صرفاً نمایشی). */
   const persistLayout = async () => {
-    if (!selId) return;
+    if (!currentId) return;
     const positions = nodesRef.current
       .filter((n) => typeof n.id === "number")
       .map((n) => ({
@@ -407,7 +708,7 @@ export function WorkflowDesignerForm() {
       }));
     if (!positions.length) return;
     try {
-      await wf.put(`workflow-definitions/${selId}/layout`, { positions });
+      await wf.put(`workflow-definitions/${currentId}/layout`, { positions });
     } catch {
       /* جابجایی نمایشی است — خطا ساکت نادیده گرفته می‌شود */
     }
@@ -416,7 +717,7 @@ export function WorkflowDesignerForm() {
   /* ------------------------------ گره‌ها و گذارها ------------------------------ */
 
   const addNode = (type: "action" | "condition" | "end") => {
-    if (!editable) return;
+    if (!canvasEditable) return;
     const maxN = nodes.reduce((m, x) => {
       const mt = /^N(\d+)$/.exec(x.nodeCode);
       return mt ? Math.max(m, Number(mt[1])) : m;
@@ -444,17 +745,17 @@ export function WorkflowDesignerForm() {
     setNodes((prev) => [...prev, node]);
     setSelNode(code);
     setSelTrans(null);
-    setDirty(true);
+    setCanvasDirty(true);
   };
 
   const updateNode = (code: string, patch: Partial<GNode>) => {
-    if (!editable) return;
+    if (!canvasEditable) return;
     setNodes((prev) => prev.map((n) => (n.nodeCode === code ? { ...n, ...patch } : n)));
-    setDirty(true);
+    setCanvasDirty(true);
   };
 
   const delNode = (code: string) => {
-    if (!editable) return;
+    if (!canvasEditable) return;
     const n = nodes.find((x) => x.nodeCode === code);
     if (!n || n.nodeType === "start") {
       toast.error(t("wf.des.errStartDelete"));
@@ -463,7 +764,7 @@ export function WorkflowDesignerForm() {
     setNodes((prev) => prev.filter((x) => x.nodeCode !== code));
     setTransitions((prev) => prev.filter((tr) => tr.fromCode !== code && tr.toCode !== code));
     if (selNode === code) setSelNode(null);
-    setDirty(true);
+    setCanvasDirty(true);
   };
 
   const onNodeClick = (code: string) => {
@@ -502,7 +803,7 @@ export function WorkflowDesignerForm() {
       setSelNode(null);
       setConnectFrom(null);
       setConnectMode(false);
-      setDirty(true);
+      setCanvasDirty(true);
       return;
     }
     setSelNode(code);
@@ -510,7 +811,7 @@ export function WorkflowDesignerForm() {
   };
 
   const updateTrans = (idx: number, patch: Partial<GTrans>) => {
-    if (!editable) return;
+    if (!canvasEditable) return;
     setTransitions((prev) => {
       const next = prev.map((tr, i) => (i === idx ? { ...tr, ...patch } : tr));
       /* شاخهٔ پیش‌فرضِ یکتا per گرهٔ شرط */
@@ -522,14 +823,14 @@ export function WorkflowDesignerForm() {
       }
       return next;
     });
-    setDirty(true);
+    setCanvasDirty(true);
   };
 
   const delTrans = (idx: number) => {
-    if (!editable) return;
+    if (!canvasEditable) return;
     setTransitions((prev) => prev.filter((_, i) => i !== idx));
     setSelTrans(null);
-    setDirty(true);
+    setCanvasDirty(true);
   };
 
   /* ------------------------------ اعتبارسنجی سمت کلاینت ------------------------------ */
@@ -614,23 +915,27 @@ export function WorkflowDesignerForm() {
     return errs;
   };
 
-  /* ------------------------------ ذخیره و نسخه‌ها ------------------------------ */
+  /* ------------------------------ ذخیرهٔ دیاگرام ------------------------------ */
 
-  const doSave = async (): Promise<boolean> => {
-    if (!selId || !detail) return false;
-    if (!editable) {
+  const doSaveGraph = async (): Promise<void> => {
+    if (!currentId || !detail) return;
+    if (isTerminated) {
+      toast.error(t("wf.des.terminatedReadOnlyToast"));
+      return;
+    }
+    if (!canvasEditable) {
       toast.error(t("wf.des.readonlyToast"));
-      return false;
+      return;
     }
     const errs = clientValidate();
     setErrors(errs);
     if (errs.length > 0) {
       toast.error(t("wf.des.invalidToast"));
-      return false;
+      return;
     }
-    setSaving(true);
+    setSavingGraph(true);
     try {
-      const res = await wf.put<DefDetail>(`workflow-definitions/${selId}/graph`, {
+      const res = await wf.put<DefDetail>(`workflow-definitions/${currentId}/graph`, {
         nodes: nodes.map((n, i) => ({
           nodeCode: n.nodeCode,
           nodeType: n.nodeType,
@@ -652,108 +957,16 @@ export function WorkflowDesignerForm() {
         })),
       });
       applyDetail(res);
-      setDirty(false);
+      setCanvasDirty(false);
       posRef.current = {};
       toast.success(t("wf.des.savedToast"));
-      void fetchDefs().then(setDefs).catch(() => undefined);
-      return true;
+      void refreshDefs();
     } catch (e) {
       const msg = e instanceof Error && e.message ? e.message : t("common.error");
       setErrors([msg]);
       toast.error(msg);
-      return false;
     } finally {
-      setSaving(false);
-    }
-  };
-
-  const doNewVersion = async (d: DefItem) => {
-    setBusyId(d.id);
-    try {
-      const res = await wf.post<DefDetail>(`workflow-definitions/${d.id}/versions`, {});
-      toast.success(`${t("wf.des.versionCreatedToast")} — v${res.processVersion}`);
-      const dd = await fetchDefs().catch(() => [] as DefItem[]);
-      setDefs(dd);
-      await openDef(res.id);
-    } catch (e) {
-      toast.error(e instanceof Error && e.message ? e.message : t("common.error"));
-    } finally {
-      setBusyId(null);
-    }
-  };
-
-  const doActivate = async (d: DefItem) => {
-    setBusyId(d.id);
-    try {
-      await wf.post<DefDetail>(`workflow-definitions/${d.id}/activate`, {});
-      toast.success(t("wf.des.activatedToast"));
-      const [dd, cc] = await Promise.all([
-        fetchDefs().catch(() => [] as DefItem[]),
-        fetchCatalog().catch(() => [] as CatalogItem[]),
-      ]);
-      setDefs(dd);
-      setCatalog(cc); /* چیپ «فرآیند فعال» کاتالوگ هم به‌روز شود */
-      if (selId === d.id) await openDef(d.id);
-    } catch (e) {
-      toast.error(e instanceof Error && e.message ? e.message : t("common.error"));
-    } finally {
-      setBusyId(null);
-    }
-  };
-
-  const doDeleteDef = async (d: DefItem) => {
-    setBusyId(d.id);
-    try {
-      await wf.del(`workflow-definitions/${d.id}`);
-      toast.success(t("wf.des.deletedToast"));
-      setDelArm(null);
-      const dd = await fetchDefs().catch(() => [] as DefItem[]);
-      setDefs(dd);
-      if (selId === d.id) {
-        setSelId(null);
-        setDetail(null);
-        setNodes([]);
-        setTransitions([]);
-      }
-    } catch (e) {
-      toast.error(e instanceof Error && e.message ? e.message : t("common.error"));
-      setDelArm(null);
-    } finally {
-      setBusyId(null);
-    }
-  };
-
-  const doCreate = async () => {
-    if (!cForm.entityType) {
-      toast.error(t("wf.des.errFormRequired"));
-      return;
-    }
-    if (!cForm.code.trim()) {
-      toast.error(t("wf.des.errCodeRequired"));
-      return;
-    }
-    if (!cForm.name.trim()) {
-      toast.error(t("wf.des.errNameRequired"));
-      return;
-    }
-    setCreating(true);
-    try {
-      const res = await wf.post<DefDetail>("workflow-definitions", {
-        code: cForm.code.trim().toUpperCase(),
-        name: cForm.name.trim(),
-        entityType: cForm.entityType,
-        description: "",
-        thresholdAmount: cForm.threshold.trim() ? Number(cForm.threshold) : undefined,
-      });
-      toast.success(`${t("wf.des.createdToast")} — ${res.code} v${res.processVersion}`);
-      setCreateOpen(false);
-      const dd = await fetchDefs().catch(() => [] as DefItem[]);
-      setDefs(dd);
-      await openDef(res.id);
-    } catch (e) {
-      toast.error(e instanceof Error && e.message ? e.message : t("common.error"));
-    } finally {
-      setCreating(false);
+      setSavingGraph(false);
     }
   };
 
@@ -796,207 +1009,315 @@ export function WorkflowDesignerForm() {
   const nodeByCode = React.useMemo(() => new Map(nodes.map((n) => [n.nodeCode, n])), [nodes]);
   const selNodeObj = selNode ? nodeByCode.get(selNode) ?? null : null;
 
+  /* ------------------------------ ترجمهٔ رکورد (t187 — در همهٔ فرم‌ها) ------------------------------ */
+
+  const recordTr = useRecordTranslation({
+    entityType: "WorkflowDefinition",
+    entityId: currentId,
+    getFields: (): DataTranslationField[] => {
+      const out: DataTranslationField[] = [];
+      const push = (key: string, label: string, value: string) => {
+        const v = value.trim();
+        if (v) out.push({ key, label, value: v });
+      };
+      push("name", t("wf.des.defName"), values.name);
+      push("description", t("common.description"), values.description);
+      return out;
+    },
+    onTranslated: () => {
+      void refreshDefs();
+    },
+  });
+
+  /* ------------------------------ فیلدها / تب / لیست ------------------------------ */
+
+  const onFieldChange = React.useCallback(
+    (id: string, value: string | boolean) => {
+      /* مشارکت فرم = سطح کاتالوگ، مستقل از فرآیند (حتی برای فرآیند
+         خاتمه‌یافته آزاد است) — بیدرنگ اعمال می‌شود و dirty نمی‌کند */
+      if (id === "participates") {
+        void toggleParticipation(Boolean(value));
+        return;
+      }
+      if (!metaEditable) return;
+      setMetaDirty(true);
+      if (id === "threshold") {
+        if (typeof value === "string") {
+          const num = normalizeDigits(value).replace(/[^0-9.]/g, "");
+          setValues((v) => ({ ...v, threshold: num }));
+        }
+        return;
+      }
+      if (typeof value === "string") {
+        setValues((v) => ({ ...v, [id]: value }));
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [metaEditable, selEntityType, selForm],
+  );
+
+  const fields = React.useMemo<SimpleFormField[]>(
+    () => [
+      {
+        id: "formTitle",
+        label: t("wf.des.chooseForm"),
+        value: selForm?.formTitle ?? "",
+        disabled: true,
+      },
+      {
+        id: "participates",
+        label: t("wf.des.formParticipates"),
+        type: "checkbox",
+        checked: selForm?.participates ?? false,
+        disabled: !selForm || !selForm.adapterReady || toggling,
+      },
+      {
+        id: "code",
+        label: t("wf.des.defCode"),
+        required: true,
+        value: values.code,
+        ltr: true,
+        disabled: !metaEditable || currentId != null,
+      },
+      {
+        id: "name",
+        label: t("wf.des.defName"),
+        required: true,
+        value: values.name,
+        disabled: !metaEditable,
+      },
+      {
+        id: "threshold",
+        label: t("wf.des.threshold"),
+        type: "number",
+        value: values.threshold,
+        ltr: true,
+        disabled: !metaEditable,
+      },
+      {
+        id: "description",
+        label: t("common.description"),
+        type: "textarea",
+        value: values.description,
+        disabled: !metaEditable,
+      },
+      {
+        id: "processVersion",
+        label: t("wf.des.versionLabel"),
+        value: detail ? `v${detail.processVersion}` : "",
+        disabled: true,
+      },
+      {
+        id: "status",
+        label: t("wf.des.statusLabel"),
+        value: detail
+          ? detail.isTerminated
+            ? t("wf.des.terminatedBadge")
+            : detail.isActive
+              ? t("wf.des.activeBadge")
+              : t("wf.des.inactiveBadge")
+          : "",
+        disabled: true,
+      },
+      {
+        id: "terminatedAt",
+        label: t("wf.des.termDate"),
+        value: detail?.terminatedAt ? storedToDisplayDate(detail.terminatedAt, locale) : "",
+        disabled: true,
+      },
+      {
+        id: "terminationNote",
+        label: t("wf.des.termNoteLabel"),
+        value: detail?.terminationNote ?? "",
+        disabled: true,
+      },
+    ],
+    [t, selForm, values, metaEditable, currentId, detail, locale, toggling],
+  );
+
+  /* تب ایستای «فرآیندها» — ردیف‌ها آینهٔ سرورند (static: بدون نوار +/×/کپی)؛
+     کلیک روی ردیف، فرآیند را در فیلدها و بوم باز می‌کند (onOpenRow). */
+  const tabs = React.useMemo<SimpleFormTab[]>(
+    () => [
+      {
+        id: "processes",
+        label: t("wf.des.tabDefs"),
+        kind: "grid",
+        static: true,
+        onOpenRow: (row) => {
+          const id = Number(row.defId);
+          if (Number.isFinite(id) && id > 0) void openDef(id);
+        },
+        columns: [
+          { id: "code", label: t("wf.des.defCode"), minWidth: "min-w-32", readOnly: true },
+          { id: "name", label: t("wf.des.defName"), minWidth: "min-w-48", readOnly: true },
+          { id: "version", label: t("wf.des.versionLabel"), minWidth: "min-w-14", readOnly: true },
+          { id: "active", label: t("fy.active"), minWidth: "min-w-16", readOnly: true },
+          { id: "used", label: t("wf.des.colUsed"), minWidth: "min-w-16", readOnly: true },
+          { id: "terminated", label: t("wf.des.colTerminated"), minWidth: "min-w-16", readOnly: true },
+          {
+            id: "terminatedAt",
+            label: t("wf.des.colTerminatedAt"),
+            minWidth: "min-w-28",
+            readOnly: true,
+          },
+          { id: "nodeCount", label: t("wf.des.colNodes"), minWidth: "min-w-16", readOnly: true },
+        ],
+        rows: defsOfForm.map((d) => ({
+          defId: String(d.id),
+          code: d.code,
+          name: d.name,
+          version: `v${d.processVersion}`,
+          active: d.isActive ? t("abar.listYes") : t("abar.listNo"),
+          used: d.usedByInstances ? t("abar.listYes") : t("abar.listNo"),
+          terminated: d.isTerminated ? t("abar.listYes") : t("abar.listNo"),
+          terminatedAt: d.terminatedAt ? storedToDisplayDate(d.terminatedAt, locale) : "",
+          nodeCount: String(d.nodeCount),
+        })),
+      },
+    ],
+    [t, defsOfForm, openDef, locale],
+  );
+
+  /* ① دراپ‌داون «لیست» — فهرست فرم‌های کاتالوگ گردش کار (فرمان مالک t190) */
+  const listItems = React.useMemo(
+    () =>
+      catalog.map((c) => ({
+        id: c.entityType,
+        title: c.formTitle,
+        subtitle: c.softwareName,
+        cells: [
+          { label: t("wf.des.chooseForm"), value: c.formTitle },
+          { label: t("wf.des.colSoftware"), value: c.softwareName },
+          {
+            label: t("wf.des.formParticipates"),
+            value: c.participates ? t("abar.listYes") : t("abar.listNo"),
+          },
+          {
+            label: t("wf.des.activeDef"),
+            value: c.activeDefinition
+              ? `${c.activeDefinition.code} v${c.activeDefinition.processVersion}`
+              : t("wf.des.noActiveDef"),
+          },
+          { label: t("wf.des.runningCount"), value: String(c.runningInstances) },
+        ],
+      })),
+    [catalog, t],
+  );
+
+  /* ناوبری رکوردهای «|< < > >|» روی فرآیندهای فرمِ برگزیده */
+  const currentIdx = defsOfForm.findIndex((d) => d.id === currentId);
+  const nav = (i: number) => {
+    const d = defsOfForm[i];
+    if (d) void openDef(d.id);
+  };
+
+  /* یادداشت انتهای فرم (Task 149 — فقط در ناحیهٔ انتهایی) */
+  const hint =
+    selEntityType == null
+      ? t("wf.des.formPickHint")
+      : detail == null && !graphLoading
+        ? t("wf.des.newDefHint")
+        : null;
+
+  /* remount شل وقتی فهرست فرآیندها/فرمِ برگزیده عوض می‌شود — ردیف‌های تب
+     ایستا همیشه تازه (الگوی loadedKey فرم سمت‌ها) */
+  const gridKey = `${selEntityType ?? "none"}|${defsStamp}`;
+
   /* ------------------------------ رندر ------------------------------ */
 
   return (
-    <div className="flex h-full min-h-0 flex-col" dir="rtl">
-      {/* هدر فرم — هم‌الگوی سایر فرم‌های تنظیمات */}
-      <div className="flex h-12 shrink-0 items-center gap-2 border-b border-border/60 px-3">
-        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-cyan-600 to-teal-700 text-white shadow-sm">
-          <PencilRuler className="h-4 w-4" aria-hidden />
-        </span>
-        <div className="min-w-0 flex-1">
-          <h2 className="truncate text-sm font-bold">{t("wf.des.title")}</h2>
-          <p className="truncate text-[11px] text-muted-foreground">{t("wf.des.subtitle")}</p>
-        </div>
-        {dirty && (
-          <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-800 dark:bg-amber-950/60 dark:text-amber-300">
-            {t("wf.des.dirtyHint")}
-          </span>
-        )}
-        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => void refreshAll()} aria-label={t("wf.cartable.refresh")}>
-          <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} aria-hidden />
-        </Button>
-      </div>
-
-      <div className="min-h-0 flex-1 overflow-y-auto scrollbar-slim">
-        {/* بخش ۱ — فرم‌های مشارکت‌کننده */}
-        <section className="border-b border-border/60 p-4">
-          <div className="mb-3 flex items-center gap-2">
-            <Shapes className="h-4 w-4 text-teal-600 dark:text-teal-400" aria-hidden />
-            <h3 className="text-sm font-semibold">{t("wf.des.sectionForms")}</h3>
-            <span className="text-[11px] text-muted-foreground">{t("wf.des.sectionFormsHint")}</span>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-            {catalog.map((item) => (
-              <div
-                key={item.entityType}
-                className={cn(
-                  "flex flex-col gap-2 rounded-xl border p-3 transition-colors",
-                  item.participates ? "border-teal-500/50 bg-teal-500/5" : "border-border/70 bg-card/60",
-                )}
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      <span className="truncate text-sm font-semibold">{item.formTitle}</span>
-                      <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
-                        {item.softwareName}
-                      </span>
-                    </div>
-                    <p className="mt-1 line-clamp-2 text-[11px] leading-relaxed text-muted-foreground">
-                      {item.description}
-                    </p>
-                  </div>
-                  {item.adapterReady ? (
-                    <Switch
-                      checked={item.participates}
-                      disabled={toggling === item.entityType}
-                      onCheckedChange={(v) => void toggleParticipation(item, v)}
-                      aria-label={t("wf.des.formParticipates")}
-                    />
-                  ) : (
-                    <span className="flex items-center gap-1 rounded-full bg-muted px-2 py-1 text-[10px] text-muted-foreground">
-                      <Unplug className="h-3 w-3" aria-hidden />
-                      {t("wf.des.adapterNotReady")}
-                    </span>
-                  )}
-                </div>
-                {item.participates && (
-                  <div className="flex flex-wrap items-center gap-1.5 border-t border-border/40 pt-2">
-                    {item.activeDefinition ? (
-                      <span className="flex items-center gap-1 rounded-full bg-teal-600/10 px-2 py-0.5 text-[10px] font-medium text-teal-700 dark:text-teal-300">
-                        <Workflow className="h-3 w-3" aria-hidden />
-                        {t("wf.des.activeDef")}: {item.activeDefinition.code} v{item.activeDefinition.processVersion}
-                      </span>
-                    ) : (
-                      <span className="rounded-full bg-amber-600/10 px-2 py-0.5 text-[10px] font-medium text-amber-700 dark:text-amber-300">
-                        {t("wf.des.noActiveDef")}
-                      </span>
-                    )}
-                    {item.runningInstances > 0 && (
-                      <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">
-                        {t("wf.des.runningCount")}: {item.runningInstances}
-                      </span>
-                    )}
-                  </div>
-                )}
-              </div>
-            ))}
-            {!loading && catalog.length === 0 && (
-              <p className="text-xs text-muted-foreground">{t("wf.des.noCatalog")}</p>
-            )}
-          </div>
-        </section>
-
-        {/* بخش ۲ — فرآیندها و دیاگرام چرخش */}
-        <section className="border-b border-border/60 p-4">
-          <div className="mb-3 flex flex-wrap items-center gap-2">
-            <GitBranch className="h-4 w-4 text-teal-600 dark:text-teal-400" aria-hidden />
-            <h3 className="text-sm font-semibold">{t("wf.des.sectionDefs")}</h3>
-            <div className="ms-auto flex items-center gap-2">
-              <Button size="sm" variant="outline" className="h-8" onClick={() => setCreateOpen(true)}>
-                <Plus className="h-3.5 w-3.5" aria-hidden />
-                {t("wf.des.newDef")}
-              </Button>
-            </div>
-          </div>
-          <div className="space-y-2">
-            {defs.map((d) => (
-              <div
-                key={d.id}
-                className={cn(
-                  "flex flex-wrap items-center gap-2 rounded-xl border p-3 transition-colors",
-                  selId === d.id ? "border-teal-500/60 bg-teal-500/5" : "border-border/70 bg-card/60",
-                )}
-              >
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    <span className="font-mono text-xs text-muted-foreground" dir="ltr">
-                      {d.code}
-                    </span>
-                    <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px]" dir="ltr">
-                      v{d.processVersion}
-                    </span>
-                    <span className="truncate text-sm font-semibold">{d.name}</span>
-                    {d.isActive && (
-                      <span className="rounded-full bg-teal-600/10 px-1.5 py-0.5 text-[10px] font-medium text-teal-700 dark:text-teal-300">
-                        {t("wf.des.activeBadge")}
-                      </span>
-                    )}
-                    {d.usedByInstances && (
-                      <span className="rounded-full bg-stone-600/10 px-1.5 py-0.5 text-[10px] font-medium text-stone-700 dark:text-stone-300">
-                        {t("wf.des.usedBadge")}
-                      </span>
-                    )}
-                  </div>
-                  <p className="mt-0.5 text-[11px] text-muted-foreground">
-                    {t("wf.des.defMeta")
-                      .replace("{n}", String(d.nodeCount))
-                      .replace("{c}", String(d.instanceCount))}
-                    {d.thresholdAmount != null
-                      ? ` · ${t("wf.des.thresholdShort")}: ${d.thresholdAmount.toLocaleString("fa-IR")}`
-                      : ""}
-                  </p>
-                </div>
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <Button
-                    size="sm"
-                    variant={selId === d.id ? "secondary" : "outline"}
-                    className="h-8"
-                    onClick={() => void openDef(d.id)}
-                    disabled={busyId === d.id || graphLoading}
-                  >
-                    <PencilRuler className="h-3.5 w-3.5" aria-hidden />
-                    {t("wf.des.design")}
-                  </Button>
-                  {!d.isActive && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-8"
-                      onClick={() => void doActivate(d)}
-                      disabled={busyId === d.id}
-                    >
-                      {busyId === d.id ? (
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
-                      ) : (
-                        <BadgeOk />
-                      )}
-                      {t("wf.des.activate")}
-                    </Button>
-                  )}
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-8"
-                    onClick={() => void doNewVersion(d)}
-                    disabled={busyId === d.id}
-                  >
-                    {t("wf.des.newVersion")}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-8 text-destructive hover:text-destructive"
-                    onClick={() => (delArm === d.id ? void doDeleteDef(d) : setDelArm(d.id))}
-                    disabled={busyId === d.id}
-                  >
-                    <Trash2 className="h-3.5 w-3.5" aria-hidden />
-                    {delArm === d.id ? t("wf.des.delConfirm") : ""}
-                  </Button>
-                </div>
-              </div>
-            ))}
-            {!loading && defs.length === 0 && (
-              <p className="text-xs text-muted-foreground">{t("wf.des.noDefs")}</p>
-            )}
-          </div>
-        </section>
-
-        {/* بخش ۳ — بوم طراح */}
-        {selId && (
-          <section className="p-4">
+    <>
+      {recordTr.dialog}
+      <SimpleFormTwoRowTabbed
+        key={gridKey}
+        title={t("wf.des.title")}
+        badge={t("wf.badge")}
+        icon={<PencilRuler className="h-3.5 w-3.5" aria-hidden />}
+        fields={fields}
+        onFieldChange={onFieldChange}
+        tabs={tabs}
+        hint={hint}
+        onFirst={() => nav(0)}
+        onPrev={() => nav(Math.max(0, currentIdx - 1))}
+        onNext={() => nav(Math.min(defsOfForm.length - 1, currentIdx + 1))}
+        onLast={() => nav(defsOfForm.length - 1)}
+        onReset={newProcess}
+        onSave={() => void doSave()}
+        onSaveNew={async () => {
+          if (await doSave()) newProcess();
+        }}
+        onCopy={() => {
+          /* فرآیند جدید با همان متا — کد پاک می‌شود (فرمِ برگزیده حفظ می‌شود) */
+          setCurrentId(null);
+          setDetail(null);
+          setNodes([]);
+          setTransitions([]);
+          setSelNode(null);
+          setSelTrans(null);
+          setCanvasDirty(false);
+          setMetaDirty(false);
+          setErrors([]);
+          setValues((v) => ({ ...v, code: "" }));
+          toast.success(t("abar.copyToast"));
+        }}
+        onDelete={doDelete}
+        onDeleteNew={async () => {
+          await doDelete();
+          newProcess();
+        }}
+        onPrint={() => {
+          toast.success(t("abar.printToast"));
+        }}
+        onClose={chrome?.onClose}
+        onTranslateOnline={recordTr.translateOnline}
+        onTranslateOffline={recordTr.openTranslateOffline}
+        listItems={listItems}
+        listLoading={loading}
+        listActiveId={selEntityType}
+        onListRefresh={async () => {
+          await refreshAll();
+        }}
+        onOpenListItem={(item) => {
+          selectForm(item.id);
+          toast.success(t("abar.itemOpened"));
+        }}
+        canSave={metaEditable}
+        canDelete={currentId != null && !isTerminated}
+        barExtras={
+          <>
+            {/* t190 — آیکون «خاتمهٔ فرآیند» در اکشن بار: مودال تاریخ (پیش‌فرض
+                امروز) + توضیحات؛ با تأیید، فرآیند خاتمه می‌یابد */}
+            <ActionIconButton
+              label={t("wf.des.terminate")}
+              tint="from-rose-500 to-rose-600"
+              icon={<CircleStop className="h-[18px] w-[18px]" aria-hidden />}
+              disabled={currentId == null || isTerminated || terminating || graphLoading}
+              onClick={openTerminate}
+            />
+            {/* t190 — آیکون «برگشت خاتمه»: قید خاتمه پاک و فیلدها آزاد می‌شود */}
+            <ActionIconButton
+              label={t("wf.des.reinstate")}
+              tint="from-amber-500 to-amber-600"
+              icon={<Undo2 className="h-[18px] w-[18px]" aria-hidden />}
+              disabled={currentId == null || !isTerminated || reinstating || graphLoading}
+              busy={reinstating}
+              onClick={() => void doReinstate()}
+            />
+          </>
+        }
+        onHeaderClose={chrome?.onClose}
+        onHeaderMinimize={chrome?.onMinimize}
+        onHeaderMaximize={chrome?.onToggleMaximize}
+        headerMaximized={headerMaximized}
+        onHeaderDragStart={chrome?.onDragStart}
+        onHeaderDragMove={chrome?.onDragMove}
+        onHeaderDragEnd={chrome?.onDragEnd}
+        onHeaderDoubleClick={chrome?.onDoubleClick}
+      >
+        {/* ⑤ بوم طراح — اسلات children پوسته (زیر تب فرآیندها) */}
+        {currentId != null && (
+          <section className="px-4 pb-4 pt-3">
             {graphLoading ? (
               <div className="flex h-40 items-center justify-center text-muted-foreground">
                 <Loader2 className="me-2 h-5 w-5 animate-spin" aria-hidden />
@@ -1010,21 +1331,53 @@ export function WorkflowDesignerForm() {
                     {detail.code} v{detail.processVersion}
                   </span>
                   <span className="truncate text-sm font-semibold">{detail.name}</span>
-                  {detail.isActive ? (
-                    <span className="rounded-full bg-teal-600/10 px-2 py-0.5 text-[10px] font-medium text-teal-700 dark:text-teal-300">
+                  {detail.isTerminated ? (
+                    <span className="rounded-full bg-rose-600/10 px-1.5 py-0.5 text-[10px] font-medium text-rose-700 dark:text-rose-300">
+                      {t("wf.des.terminatedBadge")}
+                    </span>
+                  ) : detail.isActive ? (
+                    <span className="rounded-full bg-teal-600/10 px-1.5 py-0.5 text-[10px] font-medium text-teal-700 dark:text-teal-300">
                       {t("wf.des.activeBadge")}
                     </span>
                   ) : (
-                    <span className="rounded-full bg-amber-600/10 px-2 py-0.5 text-[10px] font-medium text-amber-700 dark:text-amber-300">
+                    <span className="rounded-full bg-amber-600/10 px-1.5 py-0.5 text-[10px] font-medium text-amber-700 dark:text-amber-300">
                       {t("wf.des.inactiveBadge")}
+                    </span>
+                  )}
+                  {detail.usedByInstances && (
+                    <span className="rounded-full bg-stone-600/10 px-1.5 py-0.5 text-[10px] font-medium text-stone-700 dark:text-stone-300">
+                      {t("wf.des.usedBadge")}
                     </span>
                   )}
                   <div className="ms-auto flex flex-wrap items-center gap-1.5">
                     <Button
                       size="sm"
+                      variant="outline"
+                      className="h-8"
+                      disabled={detail.isActive || detail.isTerminated || busyId === detail.id}
+                      onClick={() => void doActivate(detail)}
+                    >
+                      {busyId === detail.id ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
+                      ) : (
+                        <BadgeOk />
+                      )}
+                      {t("wf.des.activate")}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8"
+                      disabled={busyId === detail.id}
+                      onClick={() => void doNewVersion(detail)}
+                    >
+                      {t("wf.des.newVersion")}
+                    </Button>
+                    <Button
+                      size="sm"
                       variant={connectMode ? "secondary" : "outline"}
                       className={cn("h-8", connectMode && "ring-2 ring-teal-500/60")}
-                      disabled={!editable}
+                      disabled={!canvasEditable}
                       onClick={() => {
                         setConnectMode((v) => !v);
                         setConnectFrom(null);
@@ -1037,7 +1390,7 @@ export function WorkflowDesignerForm() {
                       size="sm"
                       variant="outline"
                       className="h-8"
-                      disabled={!editable}
+                      disabled={!canvasEditable}
                       onClick={() => addNode("action")}
                     >
                       <Plus className="h-3.5 w-3.5" aria-hidden />
@@ -1047,7 +1400,7 @@ export function WorkflowDesignerForm() {
                       size="sm"
                       variant="outline"
                       className="h-8"
-                      disabled={!editable}
+                      disabled={!canvasEditable}
                       onClick={() => addNode("condition")}
                     >
                       <Split className="h-3.5 w-3.5" aria-hidden />
@@ -1057,7 +1410,7 @@ export function WorkflowDesignerForm() {
                       size="sm"
                       variant="outline"
                       className="h-8"
-                      disabled={!editable}
+                      disabled={!canvasEditable}
                       onClick={() => addNode("end")}
                     >
                       <CircleStop className="h-3.5 w-3.5" aria-hidden />
@@ -1066,10 +1419,10 @@ export function WorkflowDesignerForm() {
                     <Button
                       size="sm"
                       className="h-8 bg-teal-600 text-white hover:bg-teal-700"
-                      disabled={!editable || saving || !dirty}
-                      onClick={() => void doSave()}
+                      disabled={!canvasEditable || savingGraph || !canvasDirty}
+                      onClick={() => void doSaveGraph()}
                     >
-                      {saving ? (
+                      {savingGraph ? (
                         <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
                       ) : (
                         <Save className="h-3.5 w-3.5" aria-hidden />
@@ -1079,7 +1432,12 @@ export function WorkflowDesignerForm() {
                   </div>
                 </div>
 
-                {detail.usedByInstances && (
+                {detail.isTerminated && (
+                  <div className="rounded-xl border border-rose-500/40 bg-rose-500/10 p-3 text-xs leading-relaxed text-rose-800 dark:text-rose-300">
+                    {t("wf.des.terminatedBanner")}
+                  </div>
+                )}
+                {detail.usedByInstances && !detail.isTerminated && (
                   <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-xs leading-relaxed text-amber-800 dark:text-amber-300">
                     {t("wf.des.usedBanner")}
                   </div>
@@ -1293,7 +1651,7 @@ export function WorkflowDesignerForm() {
                           size="sm"
                           variant="ghost"
                           className="h-7 text-destructive hover:text-destructive"
-                          disabled={!editable || selNodeObj.nodeType === "start"}
+                          disabled={!canvasEditable || selNodeObj.nodeType === "start"}
                           onClick={() => delNode(selNodeObj.nodeCode)}
                         >
                           <Scissors className="h-3.5 w-3.5" aria-hidden />
@@ -1307,7 +1665,7 @@ export function WorkflowDesignerForm() {
                         <Input
                           id="wf-node-title"
                           value={selNodeObj.title}
-                          disabled={!editable}
+                          disabled={!canvasEditable}
                           onChange={(e) => updateNode(selNodeObj.nodeCode, { title: e.target.value })}
                           className="h-8"
                         />
@@ -1318,7 +1676,7 @@ export function WorkflowDesignerForm() {
                             <Label className="text-xs">{t("wf.des.role")}</Label>
                             <Select
                               value={selNodeObj.roleCode}
-                              disabled={!editable}
+                              disabled={!canvasEditable}
                               onValueChange={(v) => updateNode(selNodeObj.nodeCode, { roleCode: v })}
                             >
                               <SelectTrigger className="h-8">
@@ -1344,7 +1702,7 @@ export function WorkflowDesignerForm() {
                               type="number"
                               min={1}
                               value={selNodeObj.slaHours ?? ""}
-                              disabled={!editable}
+                              disabled={!canvasEditable}
                               onChange={(e) =>
                                 updateNode(selNodeObj.nodeCode, {
                                   slaHours: e.target.value ? Number(e.target.value) : null,
@@ -1361,7 +1719,7 @@ export function WorkflowDesignerForm() {
                           <Label className="text-xs">{t("wf.des.finalStatus")}</Label>
                           <Select
                             value={selNodeObj.finalStatus != null ? String(selNodeObj.finalStatus) : undefined}
-                            disabled={!editable}
+                            disabled={!canvasEditable}
                             onValueChange={(v) => {
                               const fs = Number(v);
                               updateNode(selNodeObj.nodeCode, {
@@ -1407,7 +1765,7 @@ export function WorkflowDesignerForm() {
                               size="sm"
                               variant="ghost"
                               className="h-7 text-destructive hover:text-destructive"
-                              disabled={!editable}
+                              disabled={!canvasEditable}
                               onClick={() => delTrans(selTrans)}
                             >
                               <Scissors className="h-3.5 w-3.5" aria-hidden />
@@ -1418,7 +1776,7 @@ export function WorkflowDesignerForm() {
                             <Label className="text-xs">{t("wf.des.transAction")}</Label>
                             <Select
                               value={tr.action}
-                              disabled={!editable}
+                              disabled={!canvasEditable}
                               onValueChange={(v) => updateTrans(selTrans, { action: v })}
                             >
                               <SelectTrigger className="h-8">
@@ -1447,7 +1805,7 @@ export function WorkflowDesignerForm() {
                                 <Input
                                   id="wf-trans-expr"
                                   value={tr.conditionExpr}
-                                  disabled={!editable || tr.isDefault}
+                                  disabled={!canvasEditable || tr.isDefault}
                                   onChange={(e) => updateTrans(selTrans, { conditionExpr: e.target.value })}
                                   className="h-8 font-mono"
                                   dir="ltr"
@@ -1457,7 +1815,7 @@ export function WorkflowDesignerForm() {
                                     <button
                                       key={preset}
                                       type="button"
-                                      disabled={!editable || tr.isDefault}
+                                      disabled={!canvasEditable || tr.isDefault}
                                       onClick={() => updateTrans(selTrans, { conditionExpr: preset })}
                                       className="rounded-full border border-border/70 bg-muted/50 px-2 py-0.5 font-mono text-[10px] text-muted-foreground transition-colors hover:bg-accent disabled:opacity-50"
                                     >
@@ -1470,7 +1828,7 @@ export function WorkflowDesignerForm() {
                                 <Switch
                                   id="wf-trans-default"
                                   checked={tr.isDefault}
-                                  disabled={!editable}
+                                  disabled={!canvasEditable}
                                   onCheckedChange={(v) => updateTrans(selTrans, { isDefault: v })}
                                 />
                                 <Label htmlFor="wf-trans-default" className="text-xs">
@@ -1490,95 +1848,65 @@ export function WorkflowDesignerForm() {
             ) : null}
           </section>
         )}
-      </div>
+      </SimpleFormTwoRowTabbed>
 
-      {/* دیالوگ فرآیند جدید */}
-      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+      {/* مودال خاتمهٔ فرآیند (t190) — تاریخ خاتمه با پیش‌فرض «تاریخ روز» +
+          توضیحات؛ با تأیید کاربر فرآیند خاتمه می‌یابد */}
+      <Dialog open={termOpen} onOpenChange={setTermOpen}>
         <DialogContent className="sm:max-w-md" dir="rtl">
           <DialogHeader>
-            <DialogTitle>{t("wf.des.newDef")}</DialogTitle>
-            <DialogDescription>{t("wf.des.newDefHint")}</DialogDescription>
+            <DialogTitle>{t("wf.des.termTitle")}</DialogTitle>
+            <DialogDescription>{t("wf.des.termDesc")}</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
             <div className="space-y-1">
-              <Label className="text-xs">{t("wf.des.chooseForm")}</Label>
-              <Select
-                value={cForm.entityType}
-                onValueChange={(v) => {
-                  const suggested = `WF-${v.toUpperCase().replace(/[^A-Z0-9]/g, "")}`;
-                  setCForm((f) => ({ ...f, entityType: v, code: f.code || suggested }));
-                }}
-              >
-                <SelectTrigger className="h-9">
-                  <SelectValue placeholder={t("wf.des.chooseForm")} />
-                </SelectTrigger>
-                <SelectContent>
-                  {catalog
-                    .filter((c) => c.participates && c.adapterReady)
-                    .map((c) => (
-                      <SelectItem key={c.entityType} value={c.entityType}>
-                        {c.formTitle}
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="wf-def-code" className="text-xs">
-                {t("wf.des.defCode")}
+              <Label htmlFor="wf-term-date" className="text-xs">
+                {t("wf.des.termDate")}
               </Label>
               <Input
-                id="wf-def-code"
-                value={cForm.code}
-                onChange={(e) => setCForm((f) => ({ ...f, code: e.target.value }))}
-                className="h-9 font-mono"
-                dir="ltr"
-              />
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="wf-def-name" className="text-xs">
-                {t("wf.des.defName")}
-              </Label>
-              <Input
-                id="wf-def-name"
-                value={cForm.name}
-                onChange={(e) => setCForm((f) => ({ ...f, name: e.target.value }))}
-                className="h-9"
-              />
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="wf-def-threshold" className="text-xs">
-                {t("wf.des.threshold")}
-              </Label>
-              <Input
-                id="wf-def-threshold"
-                type="number"
-                min={0}
-                value={cForm.threshold}
-                onChange={(e) => setCForm((f) => ({ ...f, threshold: e.target.value }))}
+                id="wf-term-date"
+                value={termDate}
+                onChange={(e) => setTermDate(e.target.value)}
                 className="h-9"
                 dir="ltr"
+                placeholder="____/__/__"
+                aria-label={t("wf.des.termDate")}
               />
-              <p className="text-[10px] text-muted-foreground">{t("wf.des.thresholdHint")}</p>
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="wf-term-note" className="text-xs">
+                {t("common.description")}
+              </Label>
+              <Textarea
+                id="wf-term-note"
+                value={termNote}
+                onChange={(e) => setTermNote(e.target.value)}
+                className="min-h-20"
+                aria-label={t("common.description")}
+              />
             </div>
             <div className="flex items-center justify-end gap-2 pt-1">
-              <Button variant="outline" size="sm" onClick={() => setCreateOpen(false)}>
+              <Button variant="outline" size="sm" onClick={() => setTermOpen(false)}>
                 {t("common.cancel")}
               </Button>
               <Button
                 size="sm"
-                className="bg-teal-600 text-white hover:bg-teal-700"
-                disabled={creating}
-                onClick={() => void doCreate()}
+                className="bg-rose-600 text-white hover:bg-rose-700"
+                disabled={terminating}
+                onClick={() => void doTerminate()}
               >
-                {creating && <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />}
-                {t("wf.des.createBtn")}
+                {terminating ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
+                ) : (
+                  <CircleStop className="h-3.5 w-3.5" aria-hidden />
+                )}
+                {t("wf.des.termConfirm")}
               </Button>
             </div>
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 }
 

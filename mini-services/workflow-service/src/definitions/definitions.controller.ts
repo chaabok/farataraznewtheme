@@ -13,6 +13,7 @@ import { DefinitionsService } from "./definitions.service";
 import type {
   CreateDefinitionDto,
   UpdateDefinitionMetaDto,
+  TerminateDefinitionDto,
   SaveGraphDto,
   SaveLayoutDto,
 } from "./definitions.dto";
@@ -43,6 +44,18 @@ export class DefinitionsController {
   @Put(":id")
   updateMeta(@Param("id", ParseIntPipe) id: number, @Body() dto: UpdateDefinitionMetaDto) {
     return this.defs.updateMeta(BigInt(id), dto);
+  }
+
+  /* t190 — خاتمهٔ فرآیند: مودالِ تاریخ (پیش‌فرض امروز) + توضیحات، با تأیید کاربر */
+  @Put(":id/terminate")
+  terminate(@Param("id", ParseIntPipe) id: number, @Body() dto: TerminateDefinitionDto) {
+    return this.defs.terminate(BigInt(id), dto);
+  }
+
+  /* t190 — برگشت خاتمه: قید خاتمه پاک می‌شود و فیلدها آزاد می‌شوند */
+  @Put(":id/reinstate")
+  reinstate(@Param("id", ParseIntPipe) id: number) {
+    return this.defs.reinstate(BigInt(id));
   }
 
   @Put(":id/layout")

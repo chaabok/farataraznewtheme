@@ -11,6 +11,7 @@ import { HEAD_OFFICE_NODE_ID } from "../../../_shared/app-base-entity";
 import type {
   CreateDefinitionDto,
   UpdateDefinitionMetaDto,
+  TerminateDefinitionDto,
   SaveGraphDto,
   SaveLayoutDto,
 } from "./definitions.dto";
@@ -79,6 +80,10 @@ export class DefinitionsService {
         processVersion: d.processVersion,
         thresholdAmount: d.thresholdAmount,
         isActive: d.isActive,
+        /* t190 — خاتمهٔ فرآیند */
+        isTerminated: d.isTerminated,
+        terminatedAt: d.terminatedAt ? d.terminatedAt.toISOString().slice(0, 10) : null,
+        terminationNote: d.terminationNote,
         usedByInstances: (instanceCounts.get(d.workflowDefinitionId) ?? 0) > 0,
         instanceCount: instanceCounts.get(d.workflowDefinitionId) ?? 0,
         nodeCount: nodeCounts.get(d.workflowDefinitionId) ?? 0,
@@ -111,6 +116,10 @@ export class DefinitionsService {
       processVersion: d.processVersion,
       thresholdAmount: d.thresholdAmount,
       isActive: d.isActive,
+      /* t190 — خاتمهٔ فرآیند */
+      isTerminated: d.isTerminated,
+      terminatedAt: d.terminatedAt ? d.terminatedAt.toISOString().slice(0, 10) : null,
+      terminationNote: d.terminationNote,
       usedByInstances: instanceCount > 0,
       instanceCount,
       nodes: nodes.map((n) => ({
@@ -258,6 +267,10 @@ export class DefinitionsService {
   async updateMeta(id: bigint, dto: UpdateDefinitionMetaDto) {
     const d = await this.prisma.workflowDefinition.findUnique({ where: { workflowDefinitionId: id } });
     if (!d) throw new NotFoundException("فرآیند یافت نشد");
+    /* t190 — فرآیند خاتمه‌یافته فقط-خواندنی است (فرمان مالک) */
+    if (d.isTerminated) {
+      throw new ConflictException("این فرآیند خاتمه یافته است — فیلدها فقط-خواندنی‌اند؛ برای ویرایش ابتدا «برگشت خاتمه» را بزنید");
+    }
     const data: Record<string, unknown> = {};
     if (dto.name !== undefined) {
       const name = dto.name.trim();
@@ -277,6 +290,57 @@ export class DefinitionsService {
         data,
       });
     }
+    return this.getOne(id);
+  }
+
+  /* ------------------------------ خاتمهٔ فرآیند (t190) ------------------------------ */
+
+  /**
+   * خاتمهٔ فرآیند (فرمان مالک t190): «فرآیندها ممکن است خاتمه پیدا کنند و
+   * فرآیندهای فرم از یک بازه تاریخی تغییر پیدا کند». با تأیید کاربر:
+   *  · IsTerminated=true + TerminatedAt + TerminationNote ثبت می‌شود؛
+   *  · نسخه از موتور خارج می‌شود (IsActive=false) — ورودهای تازه به نسخهٔ
+   *    جانشینِ همان فرم ارجاع می‌شود؛ نمونه‌های جاری دست‌نخورده می‌مانند؛
+   *  · نسخهٔ خاتمه‌یافته فقط-خواندنی است (updateMeta/saveGraph/activate قفل).
+   * «برگشت خاتمه» (reinstate) قفل‌ها را باز می‌کند (بدون فعال‌سازیِ خودکار).
+   */
+  async terminate(id: bigint, dto: TerminateDefinitionDto) {
+    const d = await this.prisma.workflowDefinition.findUnique({ where: { workflowDefinitionId: id } });
+    if (!d) throw new NotFoundException("فرآیند یافت نشد");
+    const raw = (dto.terminatedAt ?? "").trim();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+      throw new BadRequestException("تاریخ خاتمه معتبر نیست — قالب مورد انتظار YYYY-MM-DD است");
+    }
+    const at = new Date(`${raw}T00:00:00.000Z`);
+    if (Number.isNaN(at.getTime())) {
+      throw new BadRequestException("تاریخ خاتمه معتبر نیست");
+    }
+    await this.prisma.workflowDefinition.update({
+      where: { workflowDefinitionId: id },
+      data: {
+        isTerminated: true,
+        terminatedAt: at,
+        terminationNote: (dto.note ?? "").trim(),
+        isActive: false,
+      },
+    });
+    this.logger.log(`Terminated ${d.code} v${d.processVersion} at ${raw} (entityType=${d.entityType})`);
+    return this.getOne(id);
+  }
+
+  /** برگشت خاتمه (t190): قید خاتمه و تاریخ/توضیحات آن پاک می‌شود؛ نسخه
+   *  غیرفعال می‌ماند — فعال‌سازی دوباره با دیاگرامِ معتبر دستی انجام می‌شود. */
+  async reinstate(id: bigint) {
+    const d = await this.prisma.workflowDefinition.findUnique({ where: { workflowDefinitionId: id } });
+    if (!d) throw new NotFoundException("فرآیند یافت نشد");
+    if (!d.isTerminated) {
+      throw new BadRequestException("این فرآیند خاتمه نیافته است — برگشت خاتمه ممکن نیست");
+    }
+    await this.prisma.workflowDefinition.update({
+      where: { workflowDefinitionId: id },
+      data: { isTerminated: false, terminatedAt: null, terminationNote: "" },
+    });
+    this.logger.log(`Termination reverted for ${d.code} v${d.processVersion}`);
     return this.getOne(id);
   }
 
@@ -319,6 +383,10 @@ export class DefinitionsService {
   async saveGraph(id: bigint, dto: SaveGraphDto) {
     const d = await this.prisma.workflowDefinition.findUnique({ where: { workflowDefinitionId: id } });
     if (!d) throw new NotFoundException("فرآیند یافت نشد");
+    /* t190 — فرآیند خاتمه‌یافته فقط-خواندنی است (فرمان مالک) */
+    if (d.isTerminated) {
+      throw new ConflictException("این فرآیند خاتمه یافته است — دیاگرام فقط-خواندنی است؛ برای ادامه «نسخهٔ جدید» بسازید یا «برگشت خاتمه» را بزنید");
+    }
     const used = await this.prisma.workflowInstance.count({ where: { definitionId: id } });
     if (used > 0) {
       throw new ConflictException(
@@ -451,6 +519,10 @@ export class DefinitionsService {
   async activate(id: bigint) {
     const d = await this.prisma.workflowDefinition.findUnique({ where: { workflowDefinitionId: id } });
     if (!d) throw new NotFoundException("فرآیند یافت نشد");
+    /* t190 — نسخهٔ خاتمه‌یافته وارد موتور نمی‌شود */
+    if (d.isTerminated) {
+      throw new ConflictException("این فرآیند خاتمه یافته است — برای فعال‌سازی ابتدا «برگشت خاتمه» را بزنید");
+    }
     const nodes = await this.prisma.workflowNode.findMany({ where: { definitionId: id } });
     const transitions = await this.prisma.workflowTransition.findMany({
       where: { definitionId: id },
@@ -499,6 +571,10 @@ export class DefinitionsService {
   async remove(id: bigint) {
     const d = await this.prisma.workflowDefinition.findUnique({ where: { workflowDefinitionId: id } });
     if (!d) throw new NotFoundException("فرآیند یافت نشد");
+    /* t190 — نسخهٔ خاتمه‌یافته سابقهٔ فرآیندِ فرم است و حذف نمی‌شود */
+    if (d.isTerminated) {
+      throw new ConflictException("این فرآیند خاتمه یافته است — سابقهٔ فرآیند حذف‌شدنی نیست");
+    }
     const used = await this.prisma.workflowInstance.count({ where: { definitionId: id } });
     if (used > 0) {
       throw new ConflictException(

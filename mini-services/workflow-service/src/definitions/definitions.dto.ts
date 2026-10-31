@@ -20,6 +20,13 @@ export interface UpdateDefinitionMetaDto {
   thresholdAmount?: number | null;
 }
 
+/** t190 — خاتمهٔ فرآیند: تاریخ خاتمه (ISO 'YYYY-MM-DD'، پیش‌فرض مودال = امروز)
+ *  + توضیحات. نسخهٔ خاتمه‌یافته فقط-خواندنی می‌شود و از موتور خارج است. */
+export interface TerminateDefinitionDto {
+  terminatedAt: string; // 'YYYY-MM-DD'
+  note?: string;
+}
+
 export interface GraphNodeDto {
   nodeCode: string;
   nodeType: string; // start | action | condition | end

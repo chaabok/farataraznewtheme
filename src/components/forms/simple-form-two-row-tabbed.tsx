@@ -152,6 +152,15 @@ export interface SimpleFormTab {
   /** Task 49 — input fields of a "fields" tab (entered like the main rows,
       saved with the form's own record) */
   fields?: SimpleFormField[];
+  /** t190 — a STATIC grid tab is a display/picker table (e.g. the workflow
+      designer's «فرآیندها» list): renders exactly like a grid tab but the
+      footer row-action strip (+ / × / copy / save) is suppressed — its rows
+      mirror saved records and are never created/deleted inline. */
+  static?: boolean;
+  /** t190 — fires when the user CLICKS a row (in addition to the internal
+      selection highlight) so picker grids can open the record (e.g. load a
+      process into the form). Absent = rows only highlight (legacy). */
+  onOpenRow?: (row: Record<string, string>, index: number) => void;
   /* Task 52 (owner rule «عنوان عناصر طراحی در پیش‌نمایش نباید نمایش داده
      شود») — the Task 50 inner-strip model (band tab + children) is GONE:
      the dfb mapper now flattens the tabs created with «افزودن تب» into the
@@ -252,6 +261,17 @@ export interface SimpleFormTwoRowTabbedProps {
       they ALWAYS render in a dedicated zone at the very END of the form
       (after the tabs, before the row-actions strip), never inside it. */
   footerFields?: SimpleFormField[];
+
+  /** t190 — extra custom icons INSIDE the action bar (between پرینت and
+      ترجمه) — e.g. the workflow designer's «خاتمهٔ فرآیند» / «برگشت خاتمه»
+      tiles; the caller owns rendering (ActionIconButton) and enablement. */
+  barExtras?: React.ReactNode;
+
+  /** t190 — extra zone rendered at the END of the scrolling body (after the
+      tabs) — the workflow designer hosts its diagram canvas here while the
+      shell (header / action bar / fields / tabs) stays identical to every
+      other form. Absent = nothing. */
+  children?: React.ReactNode;
 
   /* ----- OPTIONAL chromeless-window header controls (Task 28) -----
      When hosted by a chromeless window (no light title bar) the green
@@ -367,6 +387,8 @@ export function SimpleFormTwoRowTabbed({
   actions,
   fieldsAlign,
   footerFields,
+  barExtras,
+  children,
   onHeaderClose,
   onHeaderMaximize,
   onHeaderMinimize,
@@ -418,6 +440,8 @@ export function SimpleFormTwoRowTabbed({
   /* the ACTIVE GRID tab the footer record buttons operate on */
   const activeTabDef = tabsProp.find((x) => x.id === activeTab);
   const activeTabIsGrid = activeTabDef ? activeTabDef.kind !== "fields" : true;
+  /* t190 — static grid tabs (pickers) have no footer row strip */
+  const activeTabIsStatic = activeTabDef?.static === true;
 
   const commitRows = (tabId: string, rows: Record<string, string>[]) => {
     setRowsByTab((prev) => ({ ...prev, [tabId]: rows }));
@@ -505,7 +529,11 @@ export function SimpleFormTwoRowTabbed({
               return (
                 <tr
                   key={ri}
-                  onClick={() => setSelected({ tabId: tb.id, index: ri })}
+                  onClick={() => {
+                    setSelected({ tabId: tb.id, index: ri });
+                    /* t190 — picker grids open the record on row click */
+                    tb.onOpenRow?.(rows[ri], ri);
+                  }}
                   className={cn(
                     "cursor-pointer transition-colors",
                     sel ? "bg-primary/10" : "hover:bg-foreground/5",
@@ -666,6 +694,7 @@ export function SimpleFormTwoRowTabbed({
           canDelete={canDelete}
           canPrint={canPrint}
           actions={actions}
+          extraActions={barExtras}
         />
         {/* Task 26 — per-button RTL flip (NOT on the group): the RTL flex
             flow already puts «اولین» at the reading start (right edge), and
@@ -776,6 +805,10 @@ export function SimpleFormTwoRowTabbed({
             </Tabs>
           </div>
         )}
+
+        {/* t190 — caller-owned extra zone at the END of the scrolling body
+            (the workflow designer's diagram canvas) */}
+        {children}
       </div>
 
       {/* 3.5) Task 53 — FOOTER band zone (owner: «این باند همیشه در انتهای
@@ -799,12 +832,13 @@ export function SimpleFormTwoRowTabbed({
       {/* 4) footer strip — row actions of the ACTIVE tab (only when tabs exist
           AND the active tab is a GRID tab — Task 49: "fields" tabs have no
           record rows, the footer add button creates grid records only).
+          t190 — STATIC grid tabs (display pickers) suppress it as well.
           Task 29 — direction-aware anchoring: the row buttons anchor at the
           inline START and flow with the reading direction (RTL locales lay
           them out right→left with «افزودن» rightmost; LTR locales left→right
           with Add leftmost). me-auto reserves the far END side for the
           caller-owned record counter. */}
-      {hasTabs && activeTabIsGrid && (
+      {hasTabs && activeTabIsGrid && !activeTabIsStatic && (
         <footer className="flex h-10 shrink-0 items-center gap-1 border-t border-border/60 bg-muted/40 px-3">
           <div className="me-auto flex items-center gap-1">
             <MiniRowButton

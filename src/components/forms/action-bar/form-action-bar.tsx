@@ -1,5 +1,6 @@
 "use client";
 
+import type * as React from "react";
 import { cn } from "@/lib/utils";
 import { useT } from "@/stores/settings-store";
 import { ResetFieldsButton } from "./reset-button";
@@ -47,6 +48,11 @@ export interface FormActionBarProps {
      record; system forms may leave them undefined (items show a hint). */
   onTranslateOnline?: FormAction;
   onTranslateOffline?: FormAction;
+
+  /** t190 — caller-owned extra tiles rendered after پرینت (before ترجمه)
+      — e.g. the workflow designer's «خاتمهٔ فرآیند» / «برگشت خاتمه» icons;
+      the caller renders them (ActionIconButton) and owns enablement. */
+  extraActions?: React.ReactNode;
 
   /* capability gates (e.g. delete only when a saved record is loaded) */
   canSave?: boolean;
@@ -111,6 +117,7 @@ export function FormActionBar({
   onListRefresh,
   onTranslateOnline,
   onTranslateOffline,
+  extraActions,
   canSave = true,
   canCopy = true,
   canDelete = true,
@@ -165,6 +172,10 @@ export function FormActionBar({
           جداکنندهٔ پیش از آن فقط با حضور خودِ پرینت معنا دارد. */}
       {hasCopyDelete && show("print") && <Divider />}
       {show("print") && <PrintFormButton onClick={print} disabled={!canPrint} />}
+      {/* t190 — caller-owned extra tiles (e.g. خاتمهٔ فرآیند / برگشت خاتمه)،
+          after the standard icons and before the «ترجمه» tile */}
+      {extraActions && <Divider />}
+      {extraActions}
       {/* Task 90 — «ترجمه» renders in EVERY form (system + non-system),
           deliberately OUTSIDE the stored-actions allowlist per the owner's
           blanket rule; its enablement (≥2 active languages) lives inside. */}
