@@ -170,11 +170,13 @@ export function WorkflowAdapter({
   const [dialog, setDialog] = React.useState<DialogKind | null>(null);
   const [reason, setReason] = React.useState("");
 
-  /* کال‌بک‌های میزبان در ref — جلوگیری از حلقهٔ واکشی */
+  /* کال‌بک‌های میزبان در ref — جلوگیری از حلقهٔ واکشی (به‌روزرسانی در effect، نه رندر) */
   const stateCb = React.useRef(onStateChange);
-  stateCb.current = onStateChange;
   const afterCb = React.useRef(onAfterAction);
-  afterCb.current = onAfterAction;
+  React.useEffect(() => {
+    stateCb.current = onStateChange;
+    afterCb.current = onAfterAction;
+  });
 
   const publish = React.useCallback((d: WfDetail | null) => {
     stateCb.current?.({
@@ -233,29 +235,39 @@ export function WorkflowAdapter({
   /* سمت‌های فعال کاربر جاری (نمایش دکمه‌ها — موتور مستقل راستی‌آزمایی می‌کند) */
   React.useEffect(() => {
     let alive = true;
-    const uid = username.trim();
-    if (!uid) {
-      setMyRoles(new Set());
-      return;
-    }
-    wf
-      .get<{ items: Array<{ roleCode: string }> }>(
-        `workflow-roles/assignments?userId=${encodeURIComponent(uid)}`,
-      )
-      .then((r) => {
+    const sync = async () => {
+      const uid = username.trim();
+      if (!uid) {
+        setMyRoles(new Set());
+        return;
+      }
+      try {
+        const r = await wf.get<{ items: Array<{ roleCode: string }> }>(
+          `workflow-roles/assignments?userId=${encodeURIComponent(uid)}`,
+        );
         if (!alive) return;
         setMyRoles(new Set((r.items ?? []).map((x) => x.roleCode)));
-      })
-      .catch(() => {
+      } catch {
         if (alive) setMyRoles(new Set());
-      });
+      }
+    };
+    void sync();
     return () => {
       alive = false;
     };
   }, [username, wf]);
 
   React.useEffect(() => {
-    void load();
+    let alive = true;
+    const run = async () => {
+      /* یک مرز await — واکشی خارج از اجرای همگامِ effect */
+      await Promise.resolve();
+      if (alive) await load();
+    };
+    void run();
+    return () => {
+      alive = false;
+    };
   }, [load]);
 
   /* ------------------------------ اقدام‌ها ------------------------------ */

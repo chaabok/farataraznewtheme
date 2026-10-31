@@ -533,7 +533,7 @@ export class VoucherService {
       });
     }
     /* t178 — قفل نرم سند در جریان رسیدگی (FR-06): PUT سندِ دارای نمونهٔ running ممنوع */
-    await this.assertNotWorkflowLocked(id);
+    await this.assertNotWorkflowLocked(id, existing);
     const structureRef = await this.resolveStructureRef(dto.structureId ?? Number(existing.businessStructureRef));
     const anchors = await resolveDetailTypeChain(this.prisma, structureRef);
     await this.assertTypeIssuable(dto.voucherTypeRef);
@@ -629,7 +629,7 @@ export class VoucherService {
       });
     }
     /* t178 — قفل نرم سند در جریان رسیدگی (FR-06): حذف سندِ دارای نمونهٔ running ممنوع */
-    await this.assertNotWorkflowLocked(id);
+    await this.assertNotWorkflowLocked(id, existing);
     /* حذف اتمی: تفصیلی‌ها ← اقلام ← سند (ترتیب فرزند→والد) */
     await this.prisma.$transaction(async (tx) => {
       const items = await tx.voucherItem.findMany({
@@ -648,9 +648,23 @@ export class VoucherService {
 
   /* ---------------------------- t178 — پل گردش کار ---------------------------- */
 
-  /** قفل نرم (FR-06): سند دارای نمونهٔ running ویرایش/حذف نمی‌شود — ۴۲۳.
+  /**
+   * قفل‌های قطعی‌سازی (t178):
+   *  ۱) وضعیت پایانی موتور (۳/۴) — سند قطعی است؛ ویرایش/حذف ممنوع (D-4 —
+   *     «وضعیت ۳/۴ فقط از مسیر موتور»)؛
+   *  ۲) نمونهٔ running در گردش کار — قفل نرم FR-06 (۴۲۳).
    *  دسترس‌ناپذیری workflow-service = باز (fail-open مستند در voucher.service). */
-  private async assertNotWorkflowLocked(id: number) {
+  private async assertNotWorkflowLocked(id: number, existing?: { status: number }) {
+    if (existing && (existing.status === 3 || existing.status === 4)) {
+      throw new HttpException(
+        {
+          statusCode: 423,
+          message: "سند تاییدشده/دائمی است — ویرایش/حذف مجاز نیست (وضعیت پایانی فقط از مسیر موتور — D-4)",
+          messageKey: "common.error",
+        },
+        423,
+      );
+    }
     const r = await this.wfClient.call<{ locked: boolean; instanceId: number | null }>(
       this.wfBase,
       `/workflow-instances/lock?entityType=voucher&entityId=${id}`,
