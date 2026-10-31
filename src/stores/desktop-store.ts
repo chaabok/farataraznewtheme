@@ -14,11 +14,12 @@ export type WindowKind =
   | "dfb-form"
   | "dfb-studio"
   | "dfb-list"
-  | "workflow-menu"; // t183 — منوی گردش کار (فرمان مالک: هر تبِ هاب t181 فرم مستقل شد)
-  | "workflow-cartable"; // t183 — فرم مستقل کارتابل (t179)
-  | "workflow-roles"; // t183 — فرم مستقل سمت‌ها (t177)
-  | "workflow-designer"; // t183 — فرم مستقل طراح فرآیند (t180)
-  | "workflow-reports"; // t183 — فرم مستقل گزارش‌ها (t181)
+  // t183 — منوی گردش کار + فرم‌های مستقل (فرمان مالک: هر تبِ هاب t181 یک فرم شد)
+  | "workflow-menu"
+  | "workflow-cartable" // کارتابل (t179)
+  | "workflow-roles" // سمت‌ها (t177)
+  | "workflow-designer" // طراح فرآیند (t180)
+  | "workflow-reports" // گزارش‌ها (t181)
 
 /**
  * Task 81 — a "window" is now a TAB of the desktop shell (owner request):

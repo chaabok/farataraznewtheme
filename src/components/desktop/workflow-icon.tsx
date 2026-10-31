@@ -9,12 +9,11 @@ import { useAuthStore } from "@/store/auth-store";
 import { useDesktop } from "@/stores/desktop-store";
 
 /**
- * WorkflowIcon — آیکون گردش کار در نوار وظیفه (t181 — فاز ۵ + تصمیم تازهٔ
- * مالک: فرم‌های زیرسیستم کارتابل/گردش کار فقط از این آیکون در دسترس‌اند و
- * در منوی تنظیمات نیستند). خلاصهٔ شمارنده‌ها (گام‌های در انتظار اقدام من +
- * ابلاغ خوانده‌نشده) را هر ۶۰ ثانیه می‌خواند و بج می‌زند؛ کلیک = بازکردن
- * هاب «گردش کار» (کارتابل/سمت‌ها/طراح/گزارش‌ها). پیش‌زمینهٔ t179 زنگولهٔ
- * کارتابل بود که با هاب یکپارچه شد.
+ * WorkflowIcon — آیکون گردش کار در نوار وظیفه (t181 — فاز ۵ + t183: با تبدیل
+ * هاب به «منوی گردش کار»، کلیکِ این آیکون مستقیماً «کارتابل گردش کار» را
+ * باز می‌کند — بج آن شمارندهٔ گام‌ها/ابلاغ‌های همان صندوق است؛ منوی کامل
+ * فرم‌ها از آیکون گردش کارِ دسکتاپ در دسترس است). خلاصهٔ شمارنده‌ها را هر
+ * ۶۰ ثانیه می‌خواند و بج می‌زند.
  */
 export function WorkflowIcon() {
   const t = useT();
@@ -52,9 +51,9 @@ export function WorkflowIcon() {
     <button
       type="button"
       data-testid="workflow-icon"
-      title={t("wf.hub.title")}
-      aria-label={`${t("wf.hub.title")}${badge > 0 ? ` (${badge})` : ""}`}
-      onClick={() => openWindow("workflow")}
+      title={t("wf.cartable.title")}
+      aria-label={`${t("wf.cartable.title")}${badge > 0 ? ` (${badge})` : ""}`}
+      onClick={() => openWindow("workflow-cartable")}
       className={cn(
         "relative flex items-center justify-center rounded-lg transition-colors hover:bg-foreground/10 cursor-pointer",
         "h-8 w-8",
