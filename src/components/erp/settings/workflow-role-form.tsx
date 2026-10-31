@@ -270,8 +270,18 @@ export function WorkflowRoleForm({ onBack }: { onBack?: () => void }) {
     [],
   );
 
+  /* t188 — شمارهٔ ردِ applyRecord: فقط پاسخِ آخرین فراخوانی نوشته می‌شود
+     (دابل‌کلیک/ناوبری سریع = پاسخ‌های به‌هم‌ریخته دور ریخته می‌شوند) و کلیدِ
+     remount همیشه تازه است تا گرید هیچ‌وقت با ردیف‌های رکورد قبلی بماند. */
+  const applySeq = React.useRef(0);
+  /* t188 — اگر واکشی تخصیص‌های رکورد شکست بخورد، ذخیرهٔ تخصیص‌ها تا موفق‌شدن
+     واکشی بعدی قفل می‌شود؛ وگرنه ذخیرهٔ اصلی با گریدِ خالیِ خطا، REPLACE خالی
+     می‌فرستد و تخصیص‌های سالم سرور پاک می‌شوند (گزارش مالک t188). */
+  const [assignmentsLoadFailed, setAssignmentsLoadFailed] = React.useState(false);
+
   const applyRecord = React.useCallback(
     async (r: WfRoleDto) => {
+      const seq = ++applySeq.current;
       let rows: Record<string, string>[] = [];
       try {
         const res = await wf.get<{
@@ -282,9 +292,14 @@ export function WorkflowRoleForm({ onBack }: { onBack?: () => void }) {
             validTo: string;
           }>;
         }>(`workflow-roles/assignments/${encodeURIComponent(r.code)}`);
+        if (seq !== applySeq.current) return; // پاسخِ کهنه — رکورد دیگری باز شده
         rows = rowsToCells(res.items ?? []);
+        setAssignmentsLoadFailed(false);
       } catch {
-        rows = []; // خطای واکشی تخصیص‌ها = گرید خالی
+        if (seq !== applySeq.current) return;
+        rows = []; // خطای واکشی تخصیص‌ها = گرید خالی + قفلِ ذخیرهٔ تخصیص‌ها
+        setAssignmentsLoadFailed(true);
+        toast.error(t("wf.assignmentsLoadFailed"));
       }
       setAssignmentRows(rows);
       setCurrentId(r.id);
@@ -295,9 +310,12 @@ export function WorkflowRoleForm({ onBack }: { onBack?: () => void }) {
         description: r.description,
         active: r.isActive,
       });
-      setLoadedKey(r.code); // remount با ردیف‌های تازه
+      /* t188 — کلید remount همیشه با seq تازه می‌شود: اگر فقط code می‌ماند،
+         بازکردن دوبارهٔ همان رکورد گرید را remount نمی‌کرد و ردیف‌های داخلیِ
+         کهنهٔ گرید با وضعیت تازهٔ والد همگام نمی‌شد (ریشهٔ همگام‌شدگی). */
+      setLoadedKey(`${r.code}:${seq}`);
     },
-    [rowsToCells],
+    [rowsToCells, t],
   );
 
   const newRecord = React.useCallback(() => {
@@ -305,6 +323,7 @@ export function WorkflowRoleForm({ onBack }: { onBack?: () => void }) {
     setDirty(false); // فرم خالی، هیچ ویرایش ذخیره‌نشده‌ای نیست
     setValues(BLANK);
     setAssignmentRows([]);
+    setAssignmentsLoadFailed(false); // t188 — ثبتِ جدید قیدِ بارگذاری ندارد
     setLoadedKey("new");
   }, []);
 
@@ -332,10 +351,41 @@ export function WorkflowRoleForm({ onBack }: { onBack?: () => void }) {
      t184 — نام نمایشی از لیست کاربرانِ «فرم کاربران» resolve می‌شود
      (منبع دراپ‌دان)؛ ردیف‌های قدیمیِ بدون تطابق، snapshot قبلی‌شان حفظ
      می‌شود؛ قید یکتایی «هر کاربر به هر سمت یکبار»: چکِ تکراری + UNIQUE دیتابیس. */
-  const persistAssignments = async (rows: Record<string, string>[]): Promise<void> => {
+  /* وضعیت ذخیرهٔ تخصیص‌ها — t188: "skipped" یعنی هیچ PUTی زده نشد و
+     تخصیص‌های سرور دست‌نخورده ماندند (محافظتِ داده). */
+  type PersistStatus = "saved" | "skipped";
+
+  const persistAssignments = async (
+    rows: Record<string, string>[],
+  ): Promise<PersistStatus> => {
     const code = values.code.trim();
     if (!code) throw new Error(t("wf.saveRoleFirst"));
-    const payloadRows = rows
+    /* t188 — ردیف‌ها پیش از فیلتر، دسته‌بندی می‌شوند: خالیِ کامل / دارای محتوا
+       بدون شناسهٔ کاربر / معتبر. REPLACE با payload خالیِ سهوی، تخصیص‌های
+       سالم سرور را پاک می‌کرد (گزارش مالک t188) — اکنون:
+       ① همهٔ ردیف‌ها خالی ⇒ اصلاً PUT زده نمی‌شود (no-op امن)؛
+       ② ردیفِ دارای محتوا بدون شناسه ⇒ خطای روشن (کاربر اصلاح می‌کند)؛
+       ③ rows واقعاً خالی (کاربر همهٔ سطرها را حذف کرده) ⇒ پاک‌کردن سهویِ
+          معتبر است و REPLACE خالی می‌رود. */
+    const isBlankRow = (r: Record<string, string>) =>
+      (r.userId ?? "").trim() === "" &&
+      (r.userName ?? "").trim() === "" &&
+      (r.validFrom ?? "").trim() === "" &&
+      (r.validTo ?? "").trim() === "";
+    const contentRows = rows.filter((r) => !isBlankRow(r));
+    if (contentRows.length === 0) {
+      if (rows.length === 0) {
+        // کاربر همهٔ سطرها را حذف کرده — پاک‌کردن سهوی، اعتبار دارد
+        await wf.put("workflow-roles/assignments", {
+          mode: "replace",
+          roleCode: code,
+          rows: [],
+        });
+        return "saved";
+      }
+      return "skipped"; // فقط ردیف‌های خالی — تخصیص‌های قبلی دست‌نخورده
+    }
+    const payloadRows = contentRows
       .map((r) => {
         const uid = (r.userId ?? "").trim();
         return {
@@ -349,6 +399,11 @@ export function WorkflowRoleForm({ onBack }: { onBack?: () => void }) {
         };
       })
       .filter((r) => r.userId !== "");
+    if (payloadRows.length === 0) {
+      /* t188 — ردیفِ دارای محتوا ولی بدون شناسهٔ کاربر: به‌جای REPLACE خالیِ
+         خاموش، خطای روشن — تا کاربر دراپ‌دان را تکمیل کند و داده‌ها پاک نشوند */
+      throw new Error(t("wf.errRowsWithoutUser"));
+    }
     const seen = new Set<string>();
     for (const r of payloadRows) {
       if (seen.has(r.userId)) throw new Error(`${t("wf.dupUser")}: ${r.userId}`);
@@ -359,6 +414,7 @@ export function WorkflowRoleForm({ onBack }: { onBack?: () => void }) {
       roleCode: code,
       rows: payloadRows,
     });
+    return "saved";
   };
 
   /* ذخیره: ثبت جدید (POST) یا ویرایش رکورد جاری (PUT) — true = موفق.
@@ -385,12 +441,20 @@ export function WorkflowRoleForm({ onBack }: { onBack?: () => void }) {
       toast.success(t("abar.savedToast"));
       /* t186 — ردیف‌های گریدِ تخصیص همراه ذخیرهٔ اصلی ذخیره می‌شوند */
       let assignmentsOk = true;
-      try {
-        await persistAssignments(assignmentRows);
-      } catch (e) {
+      if (assignmentsLoadFailed) {
+        /* t188 — واکشیِ قبلی تخصیص‌ها شکست خورده ⇒ ذخیرهٔ REPLACE خالی ممکن است
+           تخصیص‌های سالم سرور را پاک کند — این بار تخصیص‌ها زده نمی‌شوند */
         assignmentsOk = false;
-        const msg = e instanceof Error && e.message ? e.message : t("common.error");
-        toast.error(msg);
+        toast.warning(t("wf.assignmentsLoadFailed"));
+      } else {
+        try {
+          const st = await persistAssignments(assignmentRows);
+          if (st === "skipped") toast.info(t("wf.assignmentsNothingToSave"));
+        } catch (e) {
+          assignmentsOk = false;
+          const msg = e instanceof Error && e.message ? e.message : t("common.error");
+          toast.error(msg);
+        }
       }
       const rows = await fetchRecords().catch(() => [] as WfRoleDto[]);
       applyRecords(rows);
@@ -447,8 +511,13 @@ export function WorkflowRoleForm({ onBack }: { onBack?: () => void }) {
       return;
     }
     try {
-      await persistAssignments(rows);
-      toast.success(t("wf.assignmentsSaved"));
+      const st = await persistAssignments(rows);
+      if (st === "skipped") {
+        /* t188 — فقط ردیف‌های خالی: هیچ PUTی زده نشد؛ تخصیص‌های قبلی سالم ماندند */
+        toast.info(t("wf.assignmentsNothingToSave"));
+      } else {
+        toast.success(t("wf.assignmentsSaved"));
+      }
       const fresh = await fetchRecords().catch(() => [] as WfRoleDto[]);
       applyRecords(fresh);
       setDirty(false);
