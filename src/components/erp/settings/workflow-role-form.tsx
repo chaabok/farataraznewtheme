@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { appApi } from "@/lib/api";
 import { useT } from "@/stores/settings-store";
 import { useDesktop } from "@/stores/desktop-store";
+import { useOrgScope } from "@/stores/org-context-store";
 import { useTabDirty, useWindowChrome } from "@/components/desktop/app-window";
 import {
   SimpleFormTwoRowTabbed,
@@ -35,6 +36,23 @@ import {
  * کاربر را نگه می‌دارد (قرارداد سلولِ select، Task 58) و نام نمایشی هنگام
  * ذخیره از همان لیست کاربران resolve می‌شود؛ ردیف‌های قدیمیِ پیش از t184
  * با snapshot نام (userNameSnap) حفظ می‌شوند.
+ *
+ * t185 (فرمان مالک): «کاربران چندین بار تکرار شده‌اند که نباید تکراری
+ * باشند و فقط کاربران همین ساختار کسب و کار باید نمایش داده شوند» —
+ * علت: کاربر یک ردیف به ازای «هر» گرهٔ ساختار دارد (Task 126: دفتر مرکزی
+ * + هر شاخهٔ غیرمشترک) و واکشیِ سراسریِ بدون پارامترِ t184 همهٔ گره‌ها
+ * را می‌آورد ⇒ هر کاربر چندبار (و کاربران ساختارهای دیگر هم). اصلاح:
+ * ① قرارداد خواندن Task 122 — GET user?structureId=<گرهٔ انتخابی هدر>
+ * &headOfficeShares=<تیک دادهٔ مشترک ریشه>؛ «دقیقاً همان لیستی که خودِ
+ * فرم کاربران برای ساختار جاری نشان می‌دهد» و با تغییر کسکاد سازمانیِ
+ * هدر بازخوانی می‌شود. ② یکتاسازی بر کلید نام کاربری (نام‌های نمایشی
+ * می‌توانند تکراری باشند؛ نام کاربری در همهٔ گره‌های ثبت یکتاست) با
+ * تقدمِ ردیفِ «همین ساختار» بر ردیف دفتر مرکزی — کاربر حتی با تیک
+ * اشتراکِ دفتر مرکزی (دو ردیف در محدوده) یکبار در دراپ‌دان می‌آید.
+ * نگارهٔ label از «همهٔ» ردیف‌های واکشی‌شده ساخته می‌شود تا تخصیص‌های
+ * قدیمی (شناسهٔ ردیف دفتر مرکزی پیش از t185) هم برچسب و ذخیرهٔ مجدد
+ * درست داشته باشند (optionsFor ردیفِ خودِ سطر را اگر در لیست یکتا نیست
+ * دوباره تزریق می‌کند).
  */
 
 const wf = appApi("workflow");
@@ -58,12 +76,14 @@ interface FormValues {
   active: boolean;
 }
 
-/** t184 — کاربرِ «فرم کاربران» (settings-service /user) برای دراپ‌دان تخصیص */
+/** t184 — کاربرِ «فرم کاربران» (settings-service /user) برای دراپ‌دان تخصیص؛
+ *  t185 — businessStructureRef برای یکتاسازی (تقدم ردیفِ همین ساختار) */
 interface WfUserDto {
   id: number;
   fullName: string;
   username: string;
   isActive: boolean;
+  businessStructureRef: number;
 }
 
 const BLANK: FormValues = { code: "", title: "", description: "", active: true };
@@ -88,9 +108,12 @@ export function WorkflowRoleForm({ onBack }: { onBack?: () => void }) {
   useTabDirty(dirty);
 
   /* t184 — کاربرانِ تعریف‌شده در «فرم کاربران»: منبعِ دراپ‌دان ستون «نام کاربر».
-     یک‌بار در mount واکشی می‌شود (فهرست سراسری بدون پارامتر — همان منبعی که
-     فرم کاربران نشان می‌دهد). */
+     t185 — واکشی با قرارداد خواندن Task 122 (structureId + headOfficeShares از
+     کسکاد سازمانی هدر) — دقیقاً همان لیستی که خودِ «فرم کاربران» برای ساختار
+     جاری نشان می‌دهد؛ فهرستِ سراسریِ بدون پارامتر، ردیفِ هر گره را می‌آورد و
+     کاربر تکراری/خارج از ساختار می‌داد. با تغییر کسکاد، بازخوانی می‌شود. */
   const [users, setUsers] = React.useState<WfUserDto[]>([]);
+  const { scope, scopeKey, loaded: orgLoaded } = useOrgScope();
 
   /* ردیف‌های تب تخصیص — آخرین نسخه از طریق onTabRowsChange نگه داشته می‌شود؛
      loadedKey کلید remount شل است: فقط پس از رسیدن ردیف‌های تازه عوض می‌شود
@@ -121,12 +144,22 @@ export function WorkflowRoleForm({ onBack }: { onBack?: () => void }) {
     };
   }, [fetchRecords, applyRecords]);
 
-  /* t184 — واکشی کاربران «فرم کاربران» برای دراپ‌دان ستون «نام کاربر»
-     (همان فهرست سراسری GET user که خود فرم کاربران نشان می‌دهد). */
+  /* t185 — واکشی کاربران «فرم کاربران» در محدودهٔ ساختار جاری (Task 122).
+     درخت سازمانی هنوز نیامده/شرکتی انتخاب نیست ⇒ لیست خالی (پیامِ داخل
+     دراپ‌دان)؛ پس از رسیدن درخت با ساختارِ انتخابی هدر واکشی می‌شود. */
   React.useEffect(() => {
     let alive = true;
+    if (!orgLoaded || scope.businessStructureRef == null) {
+      setUsers([]);
+      return;
+    }
+    setUsers([]); // ساختار عوض شد — لیست کهنه تا رسیدن لیست تازه پاک می‌شود
+    const qs = new URLSearchParams({
+      structureId: String(scope.businessStructureRef),
+      headOfficeShares: scope.shared ? "true" : "false",
+    });
     settingsApi
-      .get<{ items?: WfUserDto[] }>("user")
+      .get<{ items?: WfUserDto[] }>(`user?${qs.toString()}`)
       .then((res) => {
         if (alive) setUsers(res.items ?? []);
       })
@@ -136,7 +169,7 @@ export function WorkflowRoleForm({ onBack }: { onBack?: () => void }) {
     return () => {
       alive = false;
     };
-  }, []);
+  }, [orgLoaded, scopeKey, scope.businessStructureRef, scope.shared]);
 
   /** t184 — برچسب نمایشی کاربر در دراپ‌دان و snapshot ذخیره‌شده:
       «نام و نام خانوادگی (نام کاربری)» — با fallback برای فیلدهای خالی. */
@@ -147,11 +180,38 @@ export function WorkflowRoleForm({ onBack }: { onBack?: () => void }) {
     return name || uname || `#${u.id}`;
   }, []);
 
-  /* t184 — گزینه‌های دراپ‌دان: value = شناسهٔ یکتای کاربر (نام‌ها می‌توانند
-     تکراری باشند — در دیتای زنده چند «مصطفی شربتی» هست)، label = نام نمایشی. */
-  const userOptions = React.useMemo<SimpleFormFieldOption[]>(
-    () => users.map((u) => ({ value: String(u.id), label: userLabel(u) })),
+  /* t185 — یکتاسازی: کلید = نام کاربری (در همهٔ گره‌های ثبت یکتاست؛ نام‌های
+     نمایشی می‌توانند تکراری باشند). سرور به ازای هر گره یک ردیف می‌سازد
+     (Task 126) و با تیک اشتراک دفتر مرکزی دو ردیفِ یک کاربر در محدوده
+     می‌آید — ردیفِ «همین ساختار» مقدم بر ردیف دفتر مرکزی نگه داشته می‌شود
+     تا شناسهٔ ذخیره‌شده در تخصیص، کاربرِ همین ساختار باشد. ترتیبِ سرور
+     (نام، نام کاربری) با حفظ اولین رخداد می‌ماند. */
+  const usersUnique = React.useMemo(() => {
+    const scopeRef = scope.businessStructureRef;
+    const rank = (u: WfUserDto) =>
+      u.businessStructureRef === scopeRef ? 0 : u.businessStructureRef === 1 ? 1 : 2;
+    const byKey = new Map<string, WfUserDto>();
+    for (const u of users) {
+      const key = (u.username ?? "").trim().toLowerCase() || `#row:${u.id}`;
+      const prev = byKey.get(key);
+      if (!prev || rank(u) < rank(prev)) byKey.set(key, u);
+    }
+    return [...byKey.values()];
+  }, [users, scope.businessStructureRef]);
+
+  /* t185 — نگارهٔ برچسب از «همهٔ» ردیف‌های واکشی‌شده (نه فقط لیست یکتا):
+     تخصیص‌های قدیمی که شناسهٔ ردیف دفتر مرکزی را نگه داشته‌اند هم برچسب
+     درست دارند و هنگام ذخیرهٔ بعدی نامشان resolve می‌شود. */
+  const labelById = React.useMemo(
+    () => new Map(users.map((u) => [String(u.id), userLabel(u)])),
     [users, userLabel],
+  );
+
+  /* t184 — گزینه‌های دراپ‌دان از لیست یکتاسازی‌شده: value = شناسهٔ یکتای
+     کاربر، label = نام نمایشی. */
+  const userOptions = React.useMemo<SimpleFormFieldOption[]>(
+    () => usersUnique.map((u) => ({ value: String(u.id), label: userLabel(u) })),
+    [usersUnique, userLabel],
   );
 
   /** ردیف‌های گرید از تخصیص‌های سرور — رکورد فقط پس از رسیدن ردیف‌ها باز می‌شود.
@@ -287,7 +347,6 @@ export function WorkflowRoleForm({ onBack }: { onBack?: () => void }) {
       toast.info(t("wf.saveRoleFirst"));
       return;
     }
-    const labelById = new Map(users.map((u) => [String(u.id), userLabel(u)]));
     const payloadRows = rows
       .map((r) => {
         const uid = (r.userId ?? "").trim();
@@ -405,7 +464,15 @@ export function WorkflowRoleForm({ onBack }: { onBack?: () => void }) {
                 const v = (r.userName ?? "").trim();
                 if (v !== "") taken.add(v);
               });
-              return userOptions.filter((o) => !taken.has(o.value));
+              const list = userOptions.filter((o) => !taken.has(o.value));
+              /* t185 — تخصیصِ قدیمی که شناسه‌اش در لیست یکتاسازی‌شده نیست
+                 (مثلاً ردیف دفتر مرکزی پیش از t185) هم برچسبش را می‌گیرد */
+              const own = (rows[ri]?.userName ?? "").trim();
+              if (own !== "" && !list.some((o) => o.value === own)) {
+                const lbl = labelById.get(own);
+                if (lbl) list.unshift({ value: own, label: lbl });
+              }
+              return list;
             },
           },
           { id: "validFrom", label: t("wf.validFrom"), type: "date", minWidth: "min-w-36" },
@@ -414,7 +481,7 @@ export function WorkflowRoleForm({ onBack }: { onBack?: () => void }) {
         rows: assignmentRows,
       },
     ],
-    [t, assignmentRows, userOptions],
+    [t, assignmentRows, userOptions, labelById],
   );
 
   const current = records.find((r) => r.id === currentId) ?? null;
