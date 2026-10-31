@@ -164,6 +164,18 @@ else
 fi
 log_step_end "bun run db:push (best-effort)"
 
+# --- 5. next-watchdog (t188 — بوتِ مجدد سندباکس Next را OOM می‌کند) ----------
+# تجربهٔ ۲۰۲۶-۱۰-۳۱: سندباکس ریبوت شد؛ next-server هنگام بوت OOM شد و هیچ
+# ناظری آن را بالا نیاورد (واچ‌داگ فقط دستی استارت می‌شد) ⇒ پیش‌نمایش مرده
+# می‌ماند. اکنون بوت خودش واچ‌داگ را یتیم (double-fork) بالا می‌آورد؛ idempotent.
+if pgrep -f "next-watchdog.sh" >/dev/null 2>&1; then
+        echo "[BUN] next-watchdog already running — skipping."
+else
+        nohup bash "$SCRIPT_DIR/next-watchdog.sh" </dev/null >/dev/null 2>&1 &
+        disown $! 2>/dev/null || true
+        echo "[BUN] next-watchdog started (orphaned) — نگهبان :3000"
+fi
+
 if [ "$DEV_STARTED_HERE" = "1" ] && [ -n "${DEV_PID:-}" ]; then
         echo "Next.js dev server is running in background (PID: $DEV_PID)."
         echo "Use 'kill $DEV_PID' to stop it."

@@ -5148,6 +5148,7 @@ Stage Summary:
 - artifacts: src/components/erp/settings/workflow-role-form.tsx؛ .zscreenshots/t187-final.png.
 
 ---
+<<<<<<< HEAD
 Task ID: t187-b
 Agent: Z.ai Code (main)
 Task: فرمان مالک — «اطلاعات فرم سمت های کاربران وقتی در تب اطلاعات تخصیص کاربر را ثبت می کنم و روی آیکون های ذخیره کلیک می کنم خطای internal server error می دهد» (ادامهٔ t187 — عیبِ عملیاتیِ باقی‌مانده پس از اصلاحِ UI).
@@ -5163,3 +5164,20 @@ Work Log:
 Stage Summary:
 - خطای «internal server error» هنگام ذخیرهٔ تخصیص کاربران برطرف شد — نه با تغییرِ کدِ فرم، بلکه با بستنِ حفرهٔ عملیاتی: workflow-service اکنون مشمول نگهبانِ خودکارِ Task 112 است و هر بار مرگِ میانهٔ جلسه، حداکثر تا ~۳۰-۹۰ ثانیه بعد به‌عنوان فرزندِ پروسهٔ ماندگار احیا می‌شود؛ به‌علاوه پروسه‌های زامبی مصرف‌کنندهٔ حافظه پاک شدند. سناریوی مالک (افزودن کاربر به تخصیص و کلیک ذخیره) از سر گرفته و بدون خطا تأیید شد.
 - artifacts: mini-services/auto-push-service/index.ts.
+=======
+Task ID: t188
+Agent: Z.ai Code (main)
+Task: فرمان مالک — «پیش نمایش برنامه اجرا نمی شود».
+
+Work Log:
+- ریشه‌یابی: سندباکس در میانهٔ جلسه ریبوت شده بود (uptime فقط ~۲۰ دقیقه؛ dmesg: OOM-kill روی next-server با RSS ~۱.۱۵GB در ثانیهٔ ۷۹ بوت). پس از بوت، همهٔ mini-serviceها (:3001..3004، :3010) زنده بودند اما Next.js (:3000) مرده ماند — واچ‌داگِ next-watchdog.sh که فقط دستی/یتیم استارت می‌شد با ریبوت از بین رفته بود و هیچ بخشی از بوت آن را بالا نمی‌آورد ⇒ پیش‌نمایش مرده.
+- بازیابی (مطابق قرارداد Turbopack): pkill پسماند next + rm -rf .next + استارتِ یتیمِ (double-fork subshell) next-watchdog.sh ⇒ Next سالم بالا آمد (~۱۲ ثانیه) و واچ‌داگ با ppid=1 ماندگار شد.
+- عیب دوم (کشف حین راستی‌آزمایی): سندباکس فایل .env ریشه را در بوتِ مجدد بازتولید می‌کند (فقط DATABASE_URL — کلید INTERNAL_API_KEY پاک شد) ⇒ BFF با رشتهٔ خالی امضا می‌کرد و همهٔ سرویس‌ها 401 «bad internal key» می‌دادند (settings/workflow/…). اصلاح دوطرفه: ① fallback ثابت DEFAULT_INTERNAL_API_KEY در src/lib/internal-sign.ts (سمت BFF) ② همان ثابت در mini-services/_shared/internal-auth.ts (سمت سرویس‌ها — با bun --hot بی‌درنگ اعمال شد؛ سرویس‌های بدون .env اختصاصی هم پوشش یافتند) ③ بازگرداندن خط INTERNAL_API_KEY به .env ریشه (کنار DATABASE_URL پلتفرمی).
+- پوشش آینده: dev.sh اکنون در پایانِ بوت، next-watchdog.sh را به‌صورت idempotent (pgrep گارد) و یتیم بالا می‌آورد — «بوتِ مجدد ⇒ پیش‌نمایش مرده» دیگر تکرار نمی‌شود.
+- راستی‌آزمایی (agent-browser ۱۴۴۰/زوم ۱۱۰٪ + curl): صفحهٔ ریشه کامل رندر شد (۲۹ آیکون میزکار، هدر RTL، عنوان درست)؛ پنجرهٔ «گردش کار» باز شد و منوی ۴گانه حاضر؛ CSS سالم (اسکرین‌شات t188-preview-up.png)؛ بدون خطای کنسول. سلامتِ زنجیرهٔ داخلی: settings/business-structure و workflow/workflow-roles و workflow-cartable/summary و accounting/health همگی 200 (پیش‌تر 401)؛ سناریوی t187 (PUT assignments) از مسیر BFF سالم. lint: فایل‌های این سهمیه 0/0 (پایهٔ ۱۶ خطای قدیمی دست‌نخورده).
+- نکتهٔ فرآیندی: پروسه‌های بوت در این سندباکس فقط به‌صورت «یتیم» (والد فوراً بمیرد) یا فرزندِ پروسهٔ ماندگار زنده می‌مانند — واچ‌داگ با double-fork، سرویس‌ها با نگهبانِ auto-push؛ این قاعده اکنون در ابتدای next-watchdog.sh هم مستند است.
+
+Stage Summary:
+- پیش‌نمایش احیا شد و مکانیزم‌های سه‌لایه برای تکرارنشدنِ آن برقرار شد: ① نگهبانِ :3000 (next-watchdog) حالا بخشی از بوتِ استاندارد است ② کلید داخلی HMAC روی هر دو سمت fallback دارد تا بازتولیدِ .env توسط سندباکس زنجیرهٔ BFF→سرویس‌ها را نشکند ③ بهداشت حافظه (پاک‌سازی زامبی‌های t187-b) خطر OOMِ بوت را کم می‌کند.
+- artifacts: src/lib/internal-sign.ts؛ mini-services/_shared/internal-auth.ts؛ .env؛ .zscripts/dev.sh؛ .zscreenshots/t188-preview-up.png.
+>>>>>>> 2d82665 (t188: restore dead preview after sandbox reboot — orphan watchdog into boot + internal-key fallback on both sides (env wipe-proof))

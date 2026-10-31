@@ -18,6 +18,14 @@ export const INTERNAL_KEY_HEADER = "x-internal-key";
 export const INTERNAL_TS_HEADER = "x-internal-timestamp";
 export const INTERNAL_SIGN_HEADER = "x-internal-signature";
 
+/**
+ * t188 — پشتوانهٔ کلید داخلی: سندباکس .env ریشه را در بوتِ مجدد بازتولید می‌کند
+ * و کلید از دست می‌رود؛ سرویس‌های بدون .env اختصاصی «internal auth not
+ * configured» می‌دادند. مقدارِ پیش‌فرض باید EXACTLY با src/lib/internal-sign.ts
+ * یکی باشد (مدل تهدید: loopback-only — هر env موجود بر این پیش‌فرض مقدم است).
+ */
+export const DEFAULT_INTERNAL_API_KEY = "farataraz-internal-dev-key-2026";
+
 export const PUBLIC_INTERNAL_METADATA = "public-internal";
 export const PublicInternal = () => SetMetadata(PUBLIC_INTERNAL_METADATA, true);
 
@@ -66,7 +74,7 @@ export class InternalAuthGuard implements CanActivate {
     if (isPublic) return true;
 
     const request = context.switchToHttp().getRequest();
-    const secret = process.env.INTERNAL_API_KEY;
+    const secret = process.env.INTERNAL_API_KEY || DEFAULT_INTERNAL_API_KEY;
     if (!secret) throw new UnauthorizedException("internal auth not configured");
 
     const key = request.headers[INTERNAL_KEY_HEADER];
