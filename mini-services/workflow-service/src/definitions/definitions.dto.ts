@@ -6,18 +6,34 @@
  * انجام می‌دهد.
  */
 
+export interface WfConditionDto {
+  field: string; // amount | description | voucherType | voucherNature | accountGroup | ledgerAccount | subsidiaryAccount | detailType | detailItem
+  op: string; // contains | gt | lt | eq | notContains | empty | notEmpty
+  value: string; // مقدار — برای amount: عدد یا «threshold» (آستانهٔ فرم)؛ برای empty/notEmpty خالی
+  join: "and" | "or"; // اتصال با شرطِ قبلی (و/یا — فیلترهای ترکیبی)
+}
+
 export interface CreateDefinitionDto {
   code: string;
   name: string;
   entityType: string;
   description?: string;
   thresholdAmount?: number;
+  /** t191 — شرط‌های ورود (فیلترها) در ثبتِ اولیه */
+  conditions?: WfConditionDto[];
 }
 
 export interface UpdateDefinitionMetaDto {
   name?: string;
   description?: string;
   thresholdAmount?: number | null;
+  /** t191 — شرط‌های ورود همراه ذخیرهٔ متا (قرارداد «ذخیره اطلاعات» فرم) */
+  conditions?: WfConditionDto[];
+}
+
+/** t191 — ذخیرهٔ مستقل شرط‌های ورود (دکمهٔ ذخیرهٔ کارت شرط‌ها) */
+export interface SaveConditionsDto {
+  conditions: WfConditionDto[];
 }
 
 /** t190 — خاتمهٔ فرآیند: تاریخ خاتمه (ISO 'YYYY-MM-DD'، پیش‌فرض مودال = امروز)

@@ -97,6 +97,12 @@ model WorkflowDefinition {
   entityType           String   @map("EntityType") // voucher / contract / ...
   processVersion       Int      @map("ProcessVersion")
   thresholdAmount      Float?   @map("ThresholdAmount") // D-2 — آستانهٔ per فرم
+  /// t191 — شرط‌های ورود (فیلترها): آرایهٔ JSON از {field,op,value,join}؛
+  /// «شامل/بزرگتر از/کوچکتر از/برابر با/شامل نباشد/خالی باشد/خالی نباشد» با
+  /// اتصالِ و/یا (ترکیبی). برای فرم «سند حسابداری»: نوع سند، ماهیت سند،
+  /// گروه حساب، حساب کل، حساب معین، نوع تفصیلی، جزئیات انواع تفصیلی + مبلغ؛
+  /// برای سایر فرم‌ها: مبلغ + شرح/توضیحات. اعتبارسنجی در DefinitionsService.
+  conditionsJson       String   @default("[]") @map("ConditionsJson")
   isActive             Boolean  @default(true) @map("IsActive")
   isTerminated         Boolean  @default(false) @map("IsTerminated") // t190
   terminatedAt         DateTime? @map("TerminatedAt") // t190 — تاریخ خاتمه (میلادی)
