@@ -84,3 +84,71 @@ $ DATABASE_URL="file:/home/z/my-project/db/workflow.db" NODE_PATH=./node_modules
 [32m[Nest] 2550  - [39m10/31/2026, 1:03:22 PM [32m    LOG[39m [38;5;3m[CartableSlaTimer] [39m[32mSLA timer armed (هر ۵ دقیقه — FR-12)[39m
 [32m[Nest] 2550  - [39m10/31/2026, 1:03:22 PM [32m    LOG[39m [38;5;3m[NestApplication] [39m[32mNest application successfully started[39m[38;5;3m +3ms[39m
 [32m[Nest] 2550  - [39m10/31/2026, 1:03:22 PM [32m    LOG[39m [38;5;3m[Bootstrap] [39m[32mworkflow-service listening on http://127.0.0.1:3004[39m
+$ DATABASE_URL="file:/home/z/my-project/db/workflow.db" NODE_PATH=./node_modules bun --hot src/main.ts
+[Nest] 18239  - 10/31/2026, 5:18:11 PM     LOG [NestFactory] Starting Nest application...
+[Nest] 18239  - 10/31/2026, 5:18:11 PM     LOG [InstanceLoader] PrismaModule dependencies initialized +17ms
+[Nest] 18239  - 10/31/2026, 5:18:11 PM     LOG [InstanceLoader] EntityLinkModule dependencies initialized +0ms
+[Nest] 18239  - 10/31/2026, 5:18:11 PM     LOG [InstanceLoader] IdGenerationModule dependencies initialized +1ms
+[Nest] 18239  - 10/31/2026, 5:18:11 PM     LOG [InstanceLoader] SeedModule dependencies initialized +1ms
+[Nest] 18239  - 10/31/2026, 5:18:11 PM     LOG [InstanceLoader] StatusMapModule dependencies initialized +0ms
+[Nest] 18239  - 10/31/2026, 5:18:11 PM     LOG [InstanceLoader] CatalogModule dependencies initialized +1ms
+[Nest] 18239  - 10/31/2026, 5:18:11 PM     LOG [InstanceLoader] AppModule dependencies initialized +0ms
+[Nest] 18239  - 10/31/2026, 5:18:11 PM     LOG [InstanceLoader] ReportsModule dependencies initialized +0ms
+[Nest] 18239  - 10/31/2026, 5:18:11 PM     LOG [InstanceLoader] DefinitionsModule dependencies initialized +0ms
+[Nest] 18239  - 10/31/2026, 5:18:11 PM     LOG [InstanceLoader] RolesModule dependencies initialized +0ms
+[Nest] 18239  - 10/31/2026, 5:18:11 PM     LOG [InstanceLoader] CartableModule dependencies initialized +0ms
+[Nest] 18239  - 10/31/2026, 5:18:11 PM     LOG [InstanceLoader] InstancesModule dependencies initialized +0ms
+[Nest] 18239  - 10/31/2026, 5:18:11 PM     LOG [RoutesResolver] HealthController {/}: +89ms
+[Nest] 18239  - 10/31/2026, 5:18:11 PM     LOG [RouterExplorer] Mapped {/health, GET} route +2ms
+[Nest] 18239  - 10/31/2026, 5:18:11 PM     LOG [RoutesResolver] RolesController {/workflow-roles}: +0ms
+[Nest] 18239  - 10/31/2026, 5:18:11 PM     LOG [RouterExplorer] Mapped {/workflow-roles, GET} route +1ms
+[Nest] 18239  - 10/31/2026, 5:18:11 PM     LOG [RouterExplorer] Mapped {/workflow-roles/assignments, GET} route +0ms
+[Nest] 18239  - 10/31/2026, 5:18:11 PM     LOG [RouterExplorer] Mapped {/workflow-roles/assignments/:roleCode, GET} route +1ms
+[Nest] 18239  - 10/31/2026, 5:18:11 PM     LOG [RouterExplorer] Mapped {/workflow-roles/assignments, PUT} route +0ms
+[Nest] 18239  - 10/31/2026, 5:18:11 PM     LOG [RouterExplorer] Mapped {/workflow-roles/:id, GET} route +1ms
+[Nest] 18239  - 10/31/2026, 5:18:11 PM     LOG [RouterExplorer] Mapped {/workflow-roles, POST} route +0ms
+[Nest] 18239  - 10/31/2026, 5:18:11 PM     LOG [RouterExplorer] Mapped {/workflow-roles/:id, PUT} route +0ms
+[Nest] 18239  - 10/31/2026, 5:18:11 PM     LOG [RouterExplorer] Mapped {/workflow-roles/:id, DELETE} route +0ms
+[Nest] 18239  - 10/31/2026, 5:18:11 PM     LOG [RoutesResolver] DefinitionsController {/workflow-definitions}: +1ms
+[Nest] 18239  - 10/31/2026, 5:18:11 PM     LOG [RouterExplorer] Mapped {/workflow-definitions, GET} route +0ms
+[Nest] 18239  - 10/31/2026, 5:18:11 PM     LOG [RouterExplorer] Mapped {/workflow-definitions, POST} route +0ms
+[Nest] 18239  - 10/31/2026, 5:18:11 PM     LOG [RouterExplorer] Mapped {/workflow-definitions/:id, GET} route +0ms
+[Nest] 18239  - 10/31/2026, 5:18:11 PM     LOG [RouterExplorer] Mapped {/workflow-definitions/:id, PUT} route +0ms
+[Nest] 18239  - 10/31/2026, 5:18:11 PM     LOG [RouterExplorer] Mapped {/workflow-definitions/:id/layout, PUT} route +1ms
+[Nest] 18239  - 10/31/2026, 5:18:11 PM     LOG [RouterExplorer] Mapped {/workflow-definitions/:id/graph, PUT} route +0ms
+[Nest] 18239  - 10/31/2026, 5:18:11 PM     LOG [RouterExplorer] Mapped {/workflow-definitions/:id/versions, POST} route +0ms
+[Nest] 18239  - 10/31/2026, 5:18:11 PM     LOG [RouterExplorer] Mapped {/workflow-definitions/:id/activate, POST} route +0ms
+[Nest] 18239  - 10/31/2026, 5:18:11 PM     LOG [RouterExplorer] Mapped {/workflow-definitions/:id, DELETE} route +0ms
+[Nest] 18239  - 10/31/2026, 5:18:11 PM     LOG [RoutesResolver] InstancesController {/workflow-instances}: +0ms
+[Nest] 18239  - 10/31/2026, 5:18:11 PM     LOG [RouterExplorer] Mapped {/workflow-instances/lock, GET} route +1ms
+[Nest] 18239  - 10/31/2026, 5:18:11 PM     LOG [RouterExplorer] Mapped {/workflow-instances, GET} route +0ms
+[Nest] 18239  - 10/31/2026, 5:18:11 PM     LOG [RouterExplorer] Mapped {/workflow-instances/:id, GET} route +0ms
+[Nest] 18239  - 10/31/2026, 5:18:11 PM     LOG [RouterExplorer] Mapped {/workflow-instances, POST} route +0ms
+[Nest] 18239  - 10/31/2026, 5:18:11 PM     LOG [RouterExplorer] Mapped {/workflow-instances/:id/act, POST} route +1ms
+[Nest] 18239  - 10/31/2026, 5:18:11 PM     LOG [RouterExplorer] Mapped {/workflow-instances/:id/undo-final, POST} route +0ms
+[Nest] 18239  - 10/31/2026, 5:18:11 PM     LOG [RouterExplorer] Mapped {/workflow-instances/:id/dependencies, POST} route +0ms
+[Nest] 18239  - 10/31/2026, 5:18:11 PM     LOG [RoutesResolver] StatusMapController {/workflow-status-map}: +0ms
+[Nest] 18239  - 10/31/2026, 5:18:11 PM     LOG [RouterExplorer] Mapped {/workflow-status-map, GET} route +0ms
+[Nest] 18239  - 10/31/2026, 5:18:11 PM     LOG [RoutesResolver] CartableController {/workflow-cartable}: +0ms
+[Nest] 18239  - 10/31/2026, 5:18:11 PM     LOG [RouterExplorer] Mapped {/workflow-cartable/summary, GET} route +0ms
+[Nest] 18239  - 10/31/2026, 5:18:11 PM     LOG [RouterExplorer] Mapped {/workflow-cartable/tasks, GET} route +0ms
+[Nest] 18239  - 10/31/2026, 5:18:11 PM     LOG [RouterExplorer] Mapped {/workflow-cartable/started, GET} route +1ms
+[Nest] 18239  - 10/31/2026, 5:18:11 PM     LOG [RouterExplorer] Mapped {/workflow-cartable/notifications, GET} route +0ms
+[Nest] 18239  - 10/31/2026, 5:18:11 PM     LOG [RouterExplorer] Mapped {/workflow-cartable/notifications/read, POST} route +0ms
+[Nest] 18239  - 10/31/2026, 5:18:11 PM     LOG [RouterExplorer] Mapped {/workflow-cartable/actions, GET} route +0ms
+[Nest] 18239  - 10/31/2026, 5:18:11 PM     LOG [RouterExplorer] Mapped {/workflow-cartable/sla-check, POST} route +0ms
+[Nest] 18239  - 10/31/2026, 5:18:11 PM     LOG [RouterExplorer] Mapped {/workflow-cartable/delegations, GET} route +0ms
+[Nest] 18239  - 10/31/2026, 5:18:11 PM     LOG [RouterExplorer] Mapped {/workflow-cartable/delegations, POST} route +0ms
+[Nest] 18239  - 10/31/2026, 5:18:11 PM     LOG [RouterExplorer] Mapped {/workflow-cartable/delegations/:id, PUT} route +0ms
+[Nest] 18239  - 10/31/2026, 5:18:11 PM     LOG [RouterExplorer] Mapped {/workflow-cartable/delegations/:id, DELETE} route +1ms
+[Nest] 18239  - 10/31/2026, 5:18:11 PM     LOG [RoutesResolver] CatalogController {/workflow-catalog}: +0ms
+[Nest] 18239  - 10/31/2026, 5:18:11 PM     LOG [RouterExplorer] Mapped {/workflow-catalog, GET} route +0ms
+[Nest] 18239  - 10/31/2026, 5:18:11 PM     LOG [RouterExplorer] Mapped {/workflow-catalog/:entityType, PUT} route +0ms
+[Nest] 18239  - 10/31/2026, 5:18:11 PM     LOG [RoutesResolver] ReportsController {/workflow-reports}: +0ms
+[Nest] 18239  - 10/31/2026, 5:18:11 PM     LOG [RouterExplorer] Mapped {/workflow-reports/overview, GET} route +0ms
+[Nest] 18239  - 10/31/2026, 5:18:11 PM     LOG [RouterExplorer] Mapped {/workflow-reports/bottlenecks, GET} route +1ms
+[Nest] 18239  - 10/31/2026, 5:18:11 PM     LOG [RouterExplorer] Mapped {/workflow-reports/instances, GET} route +0ms
+[Nest] 18239  - 10/31/2026, 5:18:11 PM     LOG [PrismaService] Prisma connected (workflow.db) — §2.5 auto-rowversion active on: IDGeneration, WorkflowRole, WorkflowRoleAssignment, WorkflowDefinition, WorkflowInstance, WorkflowStatusMap, WorkflowEntityCatalog
+[Nest] 18239  - 10/31/2026, 5:18:11 PM     LOG [CartableSlaTimer] SLA timer armed (هر ۵ دقیقه — FR-12)
+[Nest] 18239  - 10/31/2026, 5:18:11 PM     LOG [NestApplication] Nest application successfully started +0ms
+[Nest] 18239  - 10/31/2026, 5:18:11 PM     LOG [Bootstrap] workflow-service listening on http://127.0.0.1:3004

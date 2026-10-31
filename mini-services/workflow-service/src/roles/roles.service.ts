@@ -125,6 +125,10 @@ export class RolesService {
    * ردیف‌های گرید بازسازی می‌شوند — ساده، اتمی و هم‌خوان با تعامل گرید فرم.
    */
   async bulkAssignments(dto: BulkAssignmentsDto) {
+    // t188 — ردیابی: چند ردیف واقعاً رسید؟ (payload خالی = پاک‌شدن داده با REPLACE)
+    console.log(
+      `[t188] bulkAssignments roleCode=${dto.roleCode} rowsIn=${(dto.rows ?? []).length} userIds=[${(dto.rows ?? []).map((r) => r.userId).join(",")}]`,
+    );
     const role = await this.prisma.workflowRole.findUnique({ where: { code: dto.roleCode } });
     if (!role) throw new NotFoundException("سمت یافت نشد");
     const actor = dto.actor?.trim() || "system";
