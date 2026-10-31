@@ -1083,6 +1083,8 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
      وضعیت ۳/۴ هم فقط از مسیر موتور تنظیم می‌شود ⇒ سند قطعی است (D-4). */
   const [wfRunning, setWfRunning] = React.useState(false);
   const formLocked = wfRunning || status === 3 || status === 4;
+  /* t178 — هر بار فرم سندی را بازخوانی می‌کند، آداپتور هم وضعیت گردش کار را دوباره می‌خواند */
+  const [wfReloadTick, setWfReloadTick] = React.useState(0);
 
   /* ------------------------------ اقلام سند ------------------------------ */
   const [rows, setRows] = React.useState<ItemRow[]>(() => [blankRow()]);
@@ -1483,6 +1485,7 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
     (d: VoucherDetail["item"]) => {
       setCurrentId(d.id);
       setDirty(false);
+      setWfReloadTick((v) => v + 1); // t178 — آداپتور هم‌گام شود
       setVoucherNo(String(d.voucherNo));
       setSerialNo(String(d.serialNo));
       setSubNo(d.subNo == null ? "" : String(d.subNo));
@@ -2171,8 +2174,7 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                   headerH != null && "overflow-y-auto scrollbar-slim",
                 )}
               >
-              {/* t178 — قفل نرم: در جریان رسیدگی/قطعی، فیلدهای هدر غیرفعال‌اند (fieldset.contents — چیدمان شبکه دست‌نخورده) */}
-              <fieldset disabled={formLocked} className="contents">
+              {/* t178 — قفل نرم: در جریان رسیدگی/قطعی، فیلدهای قابل ویرایش هدر غیرفعال‌اند (fieldset با display:contents در کروم disabled را منتقل نمی‌کند — پراپ صریح) */}
               <HeaderField label={t("vc.voucherNo")} required readOnly>
                 <Input
                   value={voucherNo}
@@ -2196,6 +2198,7 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
               <HeaderField label={t("vc.subNo")}>
                 <Input
                   value={subNo}
+                  disabled={formLocked}
                   onChange={(e) => {
                     setSubNo(normalizeDigits(e.target.value).replace(/[^0-9]/g, ""));
                     markDirty();
@@ -2218,6 +2221,7 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
               <HeaderField label={t("vc.date")} required>
                 <Input
                   value={dateDisplay}
+                  disabled={formLocked}
                   onChange={(e) => {
                     setDateDisplay(applyDateMask(e.target.value, false));
                     markDirty();
@@ -2231,6 +2235,7 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
               <HeaderField label={t("vc.docType")} required>
                 <CellPicker
                   ariaLabel={t("vc.docType")}
+                  disabled={formLocked}
                   display={selectedType ? `${selectedType.code} - ${selectedType.title}` : ""}
                   placeholder={t("vc.selectPlaceholder")}
                   filterPlaceholder={t("abar.listFilterPh")}
@@ -2251,6 +2256,7 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
               <HeaderField label={t("vc.nature")} required>
                 <select
                   value={nature}
+                  disabled={formLocked}
                   aria-label={t("vc.nature")}
                   onChange={(e) => {
                     setNature(Number(e.target.value));
@@ -2265,6 +2271,7 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
               <HeaderField label={t("vc.status")} required>
                 <select
                   value={status}
+                  disabled={formLocked}
                   aria-label={t("vc.status")}
                   onChange={(e) => {
                     setStatus(Number(e.target.value));
@@ -2284,6 +2291,7 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
               <HeaderField label={t("vc.description")} required className="md:col-span-2">
                 <Textarea
                   value={description}
+                  disabled={formLocked}
                   onChange={(e) => {
                     setDescription(e.target.value);
                     markDirty();
@@ -2296,6 +2304,7 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
               <HeaderField label={t("vc.description2")} className="md:col-span-2">
                 <Textarea
                   value={description2}
+                  disabled={formLocked}
                   onChange={(e) => {
                     setDescription2(e.target.value);
                     markDirty();
@@ -2305,7 +2314,6 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
                   className="min-h-7 resize-none py-1 text-xs"
                 />
               </HeaderField>
-              </fieldset>
             </AlignedZone>
           </div>
             {/* Task 170 — دستگیرهٔ ارتفاع هدر: بوردر پایین هدر سند */}
@@ -2335,6 +2343,7 @@ export function VoucherNewForm({ onBack }: { onBack?: () => void }) {
             onAfterAction={() => {
               if (currentId != null) void openVoucher(currentId);
             }}
+            reloadToken={wfReloadTick}
             className="mt-3"
           />
 

@@ -96,6 +96,8 @@ export interface WorkflowAdapterProps {
   onStateChange?: (info: WorkflowStateInfo) => void;
   /** پس از هر اقدام موفق — میزبان وضعیت فرم خود را دوباره می‌خواند */
   onAfterAction?: () => void;
+  /** هر تغییرِ این مقدار ⇒ واکشی مجدد وضعیت گردش کار (مثلاً پس از بازخوانی فرم میزبان) */
+  reloadToken?: number;
   className?: string;
 }
 
@@ -151,6 +153,7 @@ export function WorkflowAdapter({
   onBeforeStart,
   onStateChange,
   onAfterAction,
+  reloadToken = 0,
   className,
 }: WorkflowAdapterProps) {
   const t = useT();
@@ -268,7 +271,7 @@ export function WorkflowAdapter({
     return () => {
       alive = false;
     };
-  }, [load]);
+  }, [load, reloadToken]);
 
   /* ------------------------------ اقدام‌ها ------------------------------ */
 
