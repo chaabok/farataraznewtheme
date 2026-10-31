@@ -859,6 +859,7 @@ export function GridCellInput({
   onChange,
   ariaLabel,
   disabled,
+  readOnly,
   onFocus,
 }: {
   column: SimpleFormGridColumn;
@@ -866,6 +867,10 @@ export function GridCellInput({
   onChange: (value: string) => void;
   ariaLabel: string;
   disabled?: boolean;
+  /* t184 (owner request «در ستون نام کاربر با دراپ‌دان لیست کاربران فرم
+     کاربران») — read-only TEXT cell (e.g. the user id auto-filled by the
+     user dropdown of the sibling column); renders crisp, not grayed. */
+  readOnly?: boolean;
   /* Task 95 — reveal hook for the translation overlay of TEXT cells
      (same contract as FieldCell's onRevealFocus — Task 70); the shell
      passes it only for text columns, so select/date/number/checkbox
@@ -918,13 +923,21 @@ export function GridCellInput({
       );
     }
     return (
-      <Select value={value || undefined} onValueChange={(v) => onChange(v)} disabled={disabled}>
+      /* t184 — always controlled (value="" also shows the placeholder per
+         Radix's shouldShowPlaceholder) — kills the dev warning «Select is
+         changing from uncontrolled to controlled» on first pick. */
+      <Select value={value} onValueChange={(v) => onChange(v)} disabled={disabled}>
         <SelectTrigger aria-label={ariaLabel} className="h-5 w-full min-w-0 border-transparent bg-transparent px-2 text-xs shadow-none hover:border-border focus:border-ring data-[placeholder]:text-muted-foreground">
-          <SelectValue placeholder="—" />
+          {/* t184 — localized trigger placeholder (default «—») */}
+          <SelectValue placeholder={column.placeholder ?? "—"} />
         </SelectTrigger>
         <SelectContent>
           {items.length === 0 && (
-            <div className="px-2 py-1.5 text-[11px] text-muted-foreground">—</div>
+            <div className="px-2 py-1.5 text-[11px] text-muted-foreground">
+              {/* t184 — localized empty-state text (e.g. «کاربری در فرم کاربران
+                  تعریف نشده است») instead of the bare dash */}
+              {column.emptyText ?? "—"}
+            </div>
           )}
           {items.map((o) => (
             <SelectItem key={o.value} value={o.value} className="text-xs">
@@ -975,6 +988,7 @@ export function GridCellInput({
       value={value}
       inputMode={type === "number" ? "decimal" : undefined}
       disabled={disabled}
+      readOnly={readOnly} // t184 — auto-filled cells stay crisp but non-editable
       aria-label={ariaLabel}
       dir={type === "number" ? "ltr" : undefined}
       onFocus={onFocus} // Task 95 — reveal base value under the cell overlay

@@ -10,22 +10,35 @@ import { useTabDirty, useWindowChrome } from "@/components/desktop/app-window";
 import {
   SimpleFormTwoRowTabbed,
   type SimpleFormField,
+  type SimpleFormFieldOption,
   type SimpleFormTab,
 } from "@/components/forms/simple-form-two-row-tabbed";
 
 /**
  * WorkflowRoleForm — t177 (فاز ۱ زیرسیستم گردش کار): فرم مدیریتی «سمت‌های
- * گردش کار» در پنجرهٔ تنظیمات. تصمیم مالک D-1: سمت‌ها و نقش‌های «جدید»
- * تعریف می‌شوند (نه نقش‌های فعلی auth) و گره‌های فرآیند به کد سمت ارجاع
- * می‌دهند. ۴ سمت سیستمیِ پیش‌فرض (ثبت‌کننده/حسابدار/سرپرست/مدیر رسیدگی)
- * از بوت seed شده‌اند و حذف‌شدنی نیستند.
+ * گردش کار». تصمیم مالک D-1: سمت‌ها و نقش‌های «جدید» تعریف می‌شوند (نه
+ * نقش‌های فعلی auth) و گره‌های فرآیند به کد سمت ارجاع می‌دهند. ۴ سمت
+ * سیستمیِ پیش‌فرض (ثبت‌کننده/حسابدار/سرپرست/مدیر رسیدگی) از بوت seed
+ * شده‌اند و حذف‌شدنی نیستند.
  *
  * تب «تخصیص کاربران» — گرید ردیفی با ذخیرهٔ REPLACE دسته‌ای (یک تراکنش در
- * workflow-service): شناسهٔ کاربر (ارجاع سبک به auth)، نام، بازهٔ اعتبار.
- * موتور فقط به دارندهٔ سمتِ گرهٔ جاری اجازهٔ اقدام می‌دهد (FR-06).
+ * workflow-service): شناسهٔ کاربر، نام، بازهٔ اعتبار. موتور فقط به دارندهٔ
+ * سمتِ گرهٔ جاری اجازهٔ اقدام می‌دهد (FR-06).
+ *
+ * t184 (فرمان مالک): در ستون «نام کاربر» یک دراپ‌دان (Select) است که
+ * کاربران تعریف‌شده در «فرم کاربران» (settings-service GET user) را
+ * فهرست می‌کند تا انتخاب از لیست انجام شود — نه تایپ آزاد. انتخاب، سلول
+ * «شناسهٔ کاربر» را خودکار پر می‌کند (pickFill) و کاربرانی که در ردیف‌های
+ * دیگر همین گرید انتخاب شده‌اند از لیست حذف می‌شوند (optionsFor) — قاعدهٔ
+ * «هر کاربر به هر سمت یکبار می‌تواند تخصیص یابد»؛ سنگرهای بعدی: چکِ تکراری
+ * هنگام ذخیره + قید UNIQUE(RoleCode,UserID) در دیتابیس. سلول نام، شناسهٔ
+ * کاربر را نگه می‌دارد (قرارداد سلولِ select، Task 58) و نام نمایشی هنگام
+ * ذخیره از همان لیست کاربران resolve می‌شود؛ ردیف‌های قدیمیِ پیش از t184
+ * با snapshot نام (userNameSnap) حفظ می‌شوند.
  */
 
 const wf = appApi("workflow");
+const settingsApi = appApi("settings"); // t184 — کاربرانِ «فرم کاربران»
 
 interface WfRoleDto {
   id: number;
@@ -43,6 +56,14 @@ interface FormValues {
   title: string;
   description: string;
   active: boolean;
+}
+
+/** t184 — کاربرِ «فرم کاربران» (settings-service /user) برای دراپ‌دان تخصیص */
+interface WfUserDto {
+  id: number;
+  fullName: string;
+  username: string;
+  isActive: boolean;
 }
 
 const BLANK: FormValues = { code: "", title: "", description: "", active: true };
@@ -65,6 +86,11 @@ export function WorkflowRoleForm({ onBack }: { onBack?: () => void }) {
   const [values, setValues] = React.useState<FormValues>(BLANK);
   const [dirty, setDirty] = React.useState(false);
   useTabDirty(dirty);
+
+  /* t184 — کاربرانِ تعریف‌شده در «فرم کاربران»: منبعِ دراپ‌دان ستون «نام کاربر».
+     یک‌بار در mount واکشی می‌شود (فهرست سراسری بدون پارامتر — همان منبعی که
+     فرم کاربران نشان می‌دهد). */
+  const [users, setUsers] = React.useState<WfUserDto[]>([]);
 
   /* ردیف‌های تب تخصیص — آخرین نسخه از طریق onTabRowsChange نگه داشته می‌شود؛
      loadedKey کلید remount شل است: فقط پس از رسیدن ردیف‌های تازه عوض می‌شود
@@ -95,12 +121,50 @@ export function WorkflowRoleForm({ onBack }: { onBack?: () => void }) {
     };
   }, [fetchRecords, applyRecords]);
 
-  /** ردیف‌های گرید از تخصیص‌های سرور — رکورد فقط پس از رسیدن ردیف‌ها باز می‌شود. */
+  /* t184 — واکشی کاربران «فرم کاربران» برای دراپ‌دان ستون «نام کاربر»
+     (همان فهرست سراسری GET user که خود فرم کاربران نشان می‌دهد). */
+  React.useEffect(() => {
+    let alive = true;
+    settingsApi
+      .get<{ items?: WfUserDto[] }>("user")
+      .then((res) => {
+        if (alive) setUsers(res.items ?? []);
+      })
+      .catch(() => {
+        if (alive) setUsers([]); // خطای واکشی = لیست خالی + پیامِ داخل دراپ‌دان
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  /** t184 — برچسب نمایشی کاربر در دراپ‌دان و snapshot ذخیره‌شده:
+      «نام و نام خانوادگی (نام کاربری)» — با fallback برای فیلدهای خالی. */
+  const userLabel = React.useCallback((u: WfUserDto) => {
+    const name = (u.fullName ?? "").trim();
+    const uname = (u.username ?? "").trim();
+    if (name && uname) return `${name} (${uname})`;
+    return name || uname || `#${u.id}`;
+  }, []);
+
+  /* t184 — گزینه‌های دراپ‌دان: value = شناسهٔ یکتای کاربر (نام‌ها می‌توانند
+     تکراری باشند — در دیتای زنده چند «مصطفی شربتی» هست)، label = نام نمایشی. */
+  const userOptions = React.useMemo<SimpleFormFieldOption[]>(
+    () => users.map((u) => ({ value: String(u.id), label: userLabel(u) })),
+    [users, userLabel],
+  );
+
+  /** ردیف‌های گرید از تخصیص‌های سرور — رکورد فقط پس از رسیدن ردیف‌ها باز می‌شود.
+   *  t184: سلولِ «userName» (انتخابِ دراپ‌دان) شناسهٔ کاربر را نگه می‌دارد
+   *  (قرارداد سلولِ select — Task 58) تا Select با options مقدار بخواند؛
+   *  نام نمایشیِ ذخیره‌شدهٔ سرور در سلول پنهانِ userNameSnap می‌ماند تا
+   *  ردیف‌های قدیمی (پیش از t184) هنگام ذخیرهٔ بعدی گم نشوند. */
   const rowsToCells = React.useCallback(
     (items: Array<{ userId: string; userName: string; validFrom: string; validTo: string }>) =>
       items.map((a) => ({
         userId: a.userId,
-        userName: a.userName,
+        userName: a.userId,
+        userNameSnap: a.userName,
         validFrom: isoToCell(a.validFrom),
         validTo: isoToCell(a.validTo),
       })),
@@ -211,7 +275,10 @@ export function WorkflowRoleForm({ onBack }: { onBack?: () => void }) {
     }
   };
 
-  /* ذخیرهٔ دسته‌ای تخصیص‌ها (REPLACE در یک تراکنش سرویس) */
+  /* ذخیرهٔ دسته‌ای تخصیص‌ها (REPLACE در یک تراکنش سرویس).
+     t184 — نام نمایشی از لیست کاربرانِ «فرم کاربران» resolve می‌شود
+     (منبع دراپ‌دان)؛ ردیف‌های قدیمیِ بدون تطابق، snapshot قبلی‌شان حفظ
+     می‌شود؛ قید یکتایی «هر کاربر به هر سمت یکبار»: چکِ تکراری + UNIQUE دیتابیس. */
   const saveAssignments = async (
     _tabId: string,
     rows: Record<string, string>[],
@@ -220,13 +287,20 @@ export function WorkflowRoleForm({ onBack }: { onBack?: () => void }) {
       toast.info(t("wf.saveRoleFirst"));
       return;
     }
+    const labelById = new Map(users.map((u) => [String(u.id), userLabel(u)]));
     const payloadRows = rows
-      .map((r) => ({
-        userId: (r.userId ?? "").trim(),
-        userName: (r.userName ?? "").trim(),
-        validFrom: cellToIso(r.validFrom ?? ""),
-        validTo: cellToIso(r.validTo ?? ""),
-      }))
+      .map((r) => {
+        const uid = (r.userId ?? "").trim();
+        return {
+          userId: uid,
+          userName:
+            uid !== ""
+              ? (labelById.get(uid) ?? (r.userNameSnap ?? "").trim())
+              : (r.userName ?? "").trim(),
+          validFrom: cellToIso(r.validFrom ?? ""),
+          validTo: cellToIso(r.validTo ?? ""),
+        };
+      })
       .filter((r) => r.userId !== "");
     const seen = new Set<string>();
     for (const r of payloadRows) {
@@ -303,15 +377,44 @@ export function WorkflowRoleForm({ onBack }: { onBack?: () => void }) {
         label: t("wf.assignmentsTab"),
         kind: "grid",
         columns: [
-          { id: "userId", label: t("wf.userId"), required: true, minWidth: "min-w-32" },
-          { id: "userName", label: t("wf.userName"), minWidth: "min-w-40" },
+          /* t184 — شناسهٔ کاربر دیگر تایپ نمی‌شود؛ با انتخاب از دراپ‌دانِ
+             «نام کاربر» خودکار پر می‌شود (pickFill) و فقط-خواندنی است. */
+          {
+            id: "userId",
+            label: t("wf.userId"),
+            required: true,
+            readOnly: true,
+            minWidth: "min-w-28",
+          },
+          /* t184 (فرمان مالک) — دراپ‌دانِ کاربرانِ «فرم کاربران»: انتخاب از
+             لیست، نه تایپ آزاد. کاربرانِ ردیف‌های دیگرِ گرید از لیست حذف
+             می‌شوند تا «هر کاربر به هر سمت یکبار» در UI هم برقرار باشد؛
+             سلول، شناسهٔ کاربر را نگه می‌دارد (قرارداد select — Task 58). */
+          {
+            id: "userName",
+            label: t("wf.userName"),
+            type: "select",
+            minWidth: "min-w-44",
+            placeholder: t("wf.pickUser"),
+            emptyText: t("wf.noUsersDefined"),
+            pickFill: { userId: "value" },
+            optionsFor: (rows, ri) => {
+              const taken = new Set<string>();
+              rows.forEach((r, i) => {
+                if (i === ri) return; // انتخابِ خودِ ردیف در لیستش می‌ماند
+                const v = (r.userName ?? "").trim();
+                if (v !== "") taken.add(v);
+              });
+              return userOptions.filter((o) => !taken.has(o.value));
+            },
+          },
           { id: "validFrom", label: t("wf.validFrom"), type: "date", minWidth: "min-w-36" },
           { id: "validTo", label: t("wf.validTo"), type: "date", minWidth: "min-w-36" },
         ],
         rows: assignmentRows,
       },
     ],
-    [t, assignmentRows],
+    [t, assignmentRows, userOptions],
   );
 
   const current = records.find((r) => r.id === currentId) ?? null;

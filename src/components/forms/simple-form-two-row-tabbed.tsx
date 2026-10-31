@@ -110,6 +110,30 @@ export interface SimpleFormGridColumn {
   type?: SimpleFormFieldType;
   /** items of a select/radio column (defined items, query or script) */
   options?: SimpleFormFieldOption[];
+  /** t184 (owner request «در ستون نام کاربر با دراپ‌دان، لیست کاربران
+      تعریف‌شده در فرم کاربران نمایش داده شود؛ هر کاربر به هر سمت یکبار») —
+      per-row items of a select cell: the shell calls it with the LIVE rows
+      and the row index so the form can filter the list (e.g. users already
+      assigned to other rows disappear from the dropdown). Absent = the
+      static options. */
+  optionsFor?: (
+    rows: Record<string, string>[],
+    rowIndex: number,
+  ) => SimpleFormFieldOption[];
+  /** t184 — extra cells written when an option is picked in this column:
+      cellId → which part of the picked option to store ("value" | "label").
+      The own cell keeps the legacy behavior (stores option.value) unless it
+      is listed here itself. E.g. the user dropdown writes the picked user's
+      id into the sibling «شناسهٔ کاربر» cell. */
+  pickFill?: Record<string, "value" | "label">;
+  /** t184 — trigger placeholder of a select cell (default «—») */
+  placeholder?: string;
+  /** t184 — text rendered inside the dropdown when the resolved list is
+      empty (e.g. «کاربری در فرم کاربران تعریف نشده است»); default «—» */
+  emptyText?: string;
+  /** t184 — read-only cell (e.g. the user id auto-filled by the user
+      dropdown of the sibling column); renders crisp, non-editable */
+  readOnly?: boolean;
 }
 
 /** OPTIONAL detail tab below the two-row fields (owner: tabs must be optional). */
@@ -495,6 +519,32 @@ export function SimpleFormTwoRowTabbed({
                     const base = row[c.id] ?? "";
                     const ov = cellOverlay?.(tb.id, ri, c.id);
                     const canReveal = (c.type ?? "text") === "text";
+                    /* t184 — per-row select items (e.g. users not yet assigned
+                       to OTHER rows); the resolved list also feeds pickFill. */
+                    const cellOptions = c.optionsFor ? c.optionsFor(rows, ri) : c.options;
+                    const onCellChange = (v: string) => {
+                      /* t184 — a pick on a pickFill column writes the option
+                         parts into the mapped cells (own cell keeps the legacy
+                         option.value write unless remapped) */
+                      if (c.pickFill) {
+                        const opt = (cellOptions ?? []).find((o) => o.value === v);
+                        if (opt) {
+                          const next = [...(rowsByTab[tb.id] ?? [])];
+                          if (!next[ri]) return;
+                          const cells: Record<string, string> = {
+                            [c.id]: c.pickFill[c.id] === "label" ? opt.label : v,
+                          };
+                          for (const [cellId, part] of Object.entries(c.pickFill)) {
+                            if (cellId === c.id) continue;
+                            cells[cellId] = part === "label" ? opt.label : opt.value;
+                          }
+                          next[ri] = { ...next[ri], ...cells };
+                          commitRows(tb.id, next);
+                          return;
+                        }
+                      }
+                      setCell(tb.id, ri, c.id, v);
+                    };
                     return (
                       <td key={c.id} className="border-b border-border/50 px-1.5 py-0.5">
                         {/* Task 58 — the cell editor follows the COLUMN TYPE:
@@ -502,11 +552,13 @@ export function SimpleFormTwoRowTabbed({
                             list, date → the masked YYYY/MM/DD input, number →
                             LTR decimal, radio → a radio group — the owner rule
                             «هر فیلدی در گرید باید با همان فرمت از کاربر اطلاعات
-                            دریافت کند» */}
+                            دریافت کند»; t184 — select items may be per-row and
+                            a pick can fill sibling cells (user dropdown). */}
                         <GridCellInput
-                          column={c}
+                          column={c.optionsFor ? { ...c, options: cellOptions } : c}
                           value={ov ?? base}
-                          onChange={(v) => setCell(tb.id, ri, c.id, v)}
+                          onChange={onCellChange}
+                          readOnly={c.readOnly}
                           onFocus={canReveal ? () => onCellReveal?.(tb.id, ri, c.id) : undefined}
                           ariaLabel={`${tb.label} — ${c.label} ${ri + 1}`}
                         />
