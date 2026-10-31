@@ -53,6 +53,14 @@ import {
  * قدیمی (شناسهٔ ردیف دفتر مرکزی پیش از t185) هم برچسب و ذخیرهٔ مجدد
  * درست داشته باشند (optionsFor ردیفِ خودِ سطر را اگر در لیست یکتا نیست
  * دوباره تزریق می‌کند).
+ *
+ * t186 (فرمان مالک: «اطلاعات تب تخصیص کاربر بعد از ذخیره شدن نگهداری نمی
+ * شود و پاک می شود»): ردیف‌های تب «تخصیص کاربر» باید همراه ذخیرهٔ اصلیِ
+ * فرم هم ذخیره شوند — پیش از این فقط خودِ سمت ذخیره و سپس applyRecord
+ * تخصیص‌ها را از سرور بازخوانی می‌کرد (که ردیف‌های هنوز-ذخیره‌نشده را
+ * نداشتند) ⇒ گرید پس از هر ذخیره خالی می‌شد و تایپ کاربر از دست می‌رفت.
+ * اصلاح: ذخیرهٔ اصلی، ردیف‌های گرید را هم در همان فراخوانی (REPLACE یک
+ * تراکنش) ذخیره می‌کند؛ ویرایش ردیف‌ها هم رکورد را dirty می‌کند.
  */
 
 const wf = appApi("workflow");
@@ -301,7 +309,45 @@ export function WorkflowRoleForm({ onBack }: { onBack?: () => void }) {
     return null;
   };
 
-  /* ذخیره: ثبت جدید (POST) یا ویرایش رکورد جاری (PUT) — true = موفق */
+  /* t186 — ذخیرهٔ دسته‌ای ردیف‌های تخصیص (REPLACE در یک تراکنش سرویس).
+     مشترک میان دکمهٔ ذخیرهٔ خودِ تب و ذخیرهٔ اصلیِ فرم؛ خطاها throw می‌شوند
+     تا هر تماس‌گیرنده به شیوهٔ خودش برخورد کند (توست/عدم پاک‌کردن ردیف‌ها).
+     t184 — نام نمایشی از لیست کاربرانِ «فرم کاربران» resolve می‌شود
+     (منبع دراپ‌دان)؛ ردیف‌های قدیمیِ بدون تطابق، snapshot قبلی‌شان حفظ
+     می‌شود؛ قید یکتایی «هر کاربر به هر سمت یکبار»: چکِ تکراری + UNIQUE دیتابیس. */
+  const persistAssignments = async (rows: Record<string, string>[]): Promise<void> => {
+    const code = values.code.trim();
+    if (!code) throw new Error(t("wf.saveRoleFirst"));
+    const payloadRows = rows
+      .map((r) => {
+        const uid = (r.userId ?? "").trim();
+        return {
+          userId: uid,
+          userName:
+            uid !== ""
+              ? (labelById.get(uid) ?? (r.userNameSnap ?? "").trim())
+              : (r.userName ?? "").trim(),
+          validFrom: cellToIso(r.validFrom ?? ""),
+          validTo: cellToIso(r.validTo ?? ""),
+        };
+      })
+      .filter((r) => r.userId !== "");
+    const seen = new Set<string>();
+    for (const r of payloadRows) {
+      if (seen.has(r.userId)) throw new Error(`${t("wf.dupUser")}: ${r.userId}`);
+      seen.add(r.userId);
+    }
+    await wf.put("workflow-roles/assignments", {
+      mode: "replace",
+      roleCode: code,
+      rows: payloadRows,
+    });
+  };
+
+  /* ذخیره: ثبت جدید (POST) یا ویرایش رکورد جاری (PUT) — true = موفق.
+     t186 — ردیف‌های تب «تخصیص کاربر» همراه ذخیرهٔ اصلی نگه داشته می‌شوند؛
+     اگر ذخیرهٔ تخصیص‌ها شکست بخورد، رکورد با ردیف‌های کاربر باز می‌ماند
+     (بدون remount) تا تایپِ کاربر پاک نشود و پیام خطا دیده شود. */
   const doSave = async (): Promise<boolean> => {
     const err = validate();
     if (err) {
@@ -320,10 +366,31 @@ export function WorkflowRoleForm({ onBack }: { onBack?: () => void }) {
           ? await wf.post<WfRoleDto>("workflow-roles", body)
           : await wf.put<WfRoleDto>(`workflow-roles/${currentId}`, body);
       toast.success(t("abar.savedToast"));
+      /* t186 — ردیف‌های گریدِ تخصیص همراه ذخیرهٔ اصلی ذخیره می‌شوند */
+      let assignmentsOk = true;
+      try {
+        await persistAssignments(assignmentRows);
+      } catch (e) {
+        assignmentsOk = false;
+        const msg = e instanceof Error && e.message ? e.message : t("common.error");
+        toast.error(msg);
+      }
       const rows = await fetchRecords().catch(() => [] as WfRoleDto[]);
       applyRecords(rows);
-      /* code روی ثبت جدید قفل می‌شود — رکورد ذخیره‌شده با تخصیص‌هایش باز می‌شود */
-      await applyRecord(res);
+      if (assignmentsOk) {
+        /* code روی ثبت جدید قفل می‌شود — رکورد ذخیره‌شده با تخصیص‌هایش باز می‌شود */
+        await applyRecord(res);
+      } else {
+        /* سمت ذخیره شد ولی تخصیص‌ها نه ⇒ ردیف‌های کاربر پاک نشوند */
+        setCurrentId(res.id);
+        setValues({
+          code: res.code,
+          title: res.title,
+          description: res.description,
+          active: res.isActive,
+        });
+        setDirty(false);
+      }
       return true;
     } catch (e) {
       const msg = e instanceof Error && e.message ? e.message : t("common.error");
@@ -349,10 +416,8 @@ export function WorkflowRoleForm({ onBack }: { onBack?: () => void }) {
     }
   };
 
-  /* ذخیرهٔ دسته‌ای تخصیص‌ها (REPLACE در یک تراکنش سرویس).
-     t184 — نام نمایشی از لیست کاربرانِ «فرم کاربران» resolve می‌شود
-     (منبع دراپ‌دان)؛ ردیف‌های قدیمیِ بدون تطابق، snapshot قبلی‌شان حفظ
-     می‌شود؛ قید یکتایی «هر کاربر به هر سمت یکبار»: چکِ تکراری + UNIQUE دیتابیس. */
+  /* ذخیرهٔ تب «تخصیص کاربر» از دکمهٔ ذخیرهٔ خودِ گرید (t186 — منطق مشترک
+     با ذخیرهٔ اصلی در persistAssignments). */
   const saveAssignments = async (
     _tabId: string,
     rows: Record<string, string>[],
@@ -361,34 +426,8 @@ export function WorkflowRoleForm({ onBack }: { onBack?: () => void }) {
       toast.info(t("wf.saveRoleFirst"));
       return;
     }
-    const payloadRows = rows
-      .map((r) => {
-        const uid = (r.userId ?? "").trim();
-        return {
-          userId: uid,
-          userName:
-            uid !== ""
-              ? (labelById.get(uid) ?? (r.userNameSnap ?? "").trim())
-              : (r.userName ?? "").trim(),
-          validFrom: cellToIso(r.validFrom ?? ""),
-          validTo: cellToIso(r.validTo ?? ""),
-        };
-      })
-      .filter((r) => r.userId !== "");
-    const seen = new Set<string>();
-    for (const r of payloadRows) {
-      if (seen.has(r.userId)) {
-        toast.error(`${t("wf.dupUser")}: ${r.userId}`);
-        return;
-      }
-      seen.add(r.userId);
-    }
     try {
-      await wf.put("workflow-roles/assignments", {
-        mode: "replace",
-        roleCode: values.code.trim(),
-        rows: payloadRows,
-      });
+      await persistAssignments(rows);
       toast.success(t("wf.assignmentsSaved"));
       const fresh = await fetchRecords().catch(() => [] as WfRoleDto[]);
       applyRecords(fresh);
@@ -544,7 +583,10 @@ export function WorkflowRoleForm({ onBack }: { onBack?: () => void }) {
         toast.success(t("abar.printToast"));
       }}
       onClose={onBack}
-      onTabRowsChange={(tabId, rows) => setAssignmentRows(rows)}
+      onTabRowsChange={(tabId, rows) => {
+        setAssignmentRows(rows);
+        setDirty(true); // t186 — ویرایش ردیف‌های تخصیص = اطلاعات ذخیره‌نشده
+      }}
       onSaveRows={saveAssignments}
       listItems={records.map((r) => ({
         id: String(r.id),
