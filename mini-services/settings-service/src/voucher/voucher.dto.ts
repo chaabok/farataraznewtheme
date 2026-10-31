@@ -144,11 +144,12 @@ export class SaveVoucherDto {
   @Max(2)
   nature!: number;
 
-  /** وضعیت — پیش‌فرض ۱ (ثبت اولیه)؛ ۳/۴ فقط پس از تایید ⇒ ۴۲۲ در صدور. */
+  /** وضعیت — پیش‌فرض ۱ (ثبت اولیه)؛ ۵=تایید کاربر (گلوگاه ورود گردش کار D-3)؛
+   *  ۳/۴ فقط از مسیر موتور گردش کار ⇒ ۴۲۲ در صدور. */
   @IsOptional()
   @IsInt()
   @Min(1)
-  @Max(4)
+  @Max(5)
   status?: number;
 
   /** تاریخ سند — الزامی؛ میلادی ISO 'YYYY-MM-DD' (Task 77). */
@@ -182,4 +183,22 @@ export class SaveVoucherDto {
   @IsInt()
   @Min(1)
   structureId?: number;
+}
+
+/**
+ * EngineStatusDto — نوشتن وضعیت سند فقط از موتور گردش کار (t178 — D-4/D-5):
+ * ۱=ثبت اولیه (گرهٔ رد) · ۳/۴=وضعیت پایانی گرهٔ پایان · ۵=بازگشت به گلوگاه ورود
+ * (ابطال/واگرد). مسیر controller با EngineKeyGuard محافظت می‌شود.
+ */
+export class EngineStatusDto {
+  @IsInt()
+  @Min(1)
+  @Max(5)
+  status!: number;
+
+  /** بازیگر موتور (برای LastModifier) — پیش‌فرض «workflow-engine». */
+  @IsOptional()
+  @IsString()
+  @MaxLength(60)
+  actorId?: string;
 }

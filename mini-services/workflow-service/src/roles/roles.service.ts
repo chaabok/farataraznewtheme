@@ -99,6 +99,28 @@ export class RolesService {
   }
 
   /**
+   * سمت‌های فعال یک کاربر (t178 — آداپتور مشترک): آیا کاربر جاری اجازهٔ اقدام
+   * روی گام جاری دارد؟ (موتور هم‌چنان مستقل راستی‌آزمایی می‌کند — FR-06)
+   */
+  async listAssignmentsByUser(userId?: string) {
+    const uid = (userId ?? "").trim();
+    if (!uid) return { items: [] };
+    const now = new Date();
+    const rows = await this.prisma.workflowRoleAssignment.findMany({
+      where: {
+        userId: uid,
+        isActive: true,
+        AND: [
+          { OR: [{ validFrom: null }, { validFrom: { lte: now } }] },
+          { OR: [{ validTo: null }, { validTo: { gte: now } }] },
+        ],
+      },
+      orderBy: { workflowRoleAssignmentId: "asc" },
+    });
+    return { items: rows.map((r) => this.assignmentToDto(r)) };
+  }
+
+  /**
    * ذخیرهٔ دسته‌ای با معنای REPLACE (یک تراکنش): تخصیص‌های فعلی سمت حذف و از
    * ردیف‌های گرید بازسازی می‌شوند — ساده، اتمی و هم‌خوان با تعامل گرید فرم.
    */

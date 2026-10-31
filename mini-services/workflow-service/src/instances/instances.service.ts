@@ -1,27 +1,44 @@
-import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from "@nestjs/common";
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ForbiddenException,
+  ConflictException,
+  Logger,
+} from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { IdGenerationService } from "../id-generation/id-generation.service";
 import { DefinitionsService } from "../definitions/definitions.service";
+import { EntityLinkService } from "../entity-link/entity-link.service";
 import { HEAD_OFFICE_NODE_ID } from "../../../_shared/app-base-entity";
 import { Prisma } from "@prisma/client";
-import type { StartInstanceDto, ActDto } from "./instances.dto";
+import type { StartInstanceDto, ActDto, UndoFinalDto, RegisterDependencyDto } from "./instances.dto";
 
 type Tx = Prisma.TransactionClient;
 
 /**
- * InstancesService — موتور حالت گردش کار (t177 — فاز ۱).
+ * InstancesService — موتور حالت گردش کار (t177 فاز ۱ + t178 فاز ۲).
  *
  * ورود (D-3): فقط با وضعیت entry-gate («تایید کاربر») و اقدام آغازین
  * «ارسال به رسیدگی»؛ اسناد excluded («یادداشت») و pre-entry و engine-final
- * (تاییدشده/دائمی) رد می‌شوند (تصمیم‌های مالک D-3/D-7).
+ * (تاییدشده/دائمی) رد می‌شوند (تصمیم‌های مالک D-3/D-7). از t178 وضعیت واقعی
+ * سند از سرویس مالک (settings-service) خوانده می‌شود — «منبع حقیقت» — تا
+ * ادعای فرمت قابل جعل نباشد.
  *
  * قفل هم‌زمانی (FR-06): برای هر سند حداکثر یک نمونهٔ running؛ اقدام فقط توسط
- * دارندهٔ سمتِ گرهٔ جاری (WorkflowRoleAssignment فعال و در بازه).
+ * دارندهٔ سمتِ گرهٔ جاری (WorkflowRoleAssignment فعال و در بازه). endpoint
+ * /lock برای قفل نرم سمت سرویس فرم (۴۲۳ روی PUT/DELETE سند در جریان).
  *
  * گذارها اتمی‌اند (یک تراکنش: جابجایی گره + تاریخچه + ابلاغ)؛ گرهٔ شرط خودکار
  * ارزیابی می‌شود (amount نسبت به آستانهٔ per فرم — D-2) تا گرهٔ پایان؛ وضعیت
- * پایانی سند از گرهٔ پایان فرآیند خوانده می‌شود (D-4). رد = دلیل اجباری (FR-05)؛
+ * پایانی سند از گرهٔ پایان فرآیند خوانده می‌شود (D-4) و از t178 روی سند
+ * «نوشته» می‌شود (write-back فقط-موتور). رد = دلیل اجباری (FR-05)؛
  * ابطال = فقط آغازگر و با دلیل (FR-13). هیچ محدودیت دوره‌ای در ورود نیست (D-6).
+ *
+ * واگردِ تایید نهایی (D-5 — t178): نمونهٔ approved تا زمانی که «اقدام آتی» در
+ * فرم‌های دیگر ثبت نشده واگردشدنی است؛ دفتر وابستگی (WorkflowDependency) با
+ * endpoint فقط-موتور پر می‌شود و واگرد با وجود هر ردیفی ۴۰۹ می‌گیرد. واگرد
+ * وضعیت سند را به گلوگاه ورود (۵) برمی‌گرداند تا ویرایش و ارسال مجدد ممکن شود.
  */
 
 const STANDARD = {
@@ -33,10 +50,13 @@ const STANDARD = {
 
 @Injectable()
 export class InstancesService {
+  private readonly logger = new Logger(InstancesService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly ids: IdGenerationService,
     private readonly defs: DefinitionsService,
+    private readonly link: EntityLinkService,
   ) {}
 
   /* ------------------------------ شروع (ارسال به رسیدگی) ------------------------------ */
@@ -44,14 +64,33 @@ export class InstancesService {
   async start(dto: StartInstanceDto) {
     const def = await this.defs.findActive(dto.entityType);
 
-    // گلوگاه ورود (D-3) — وقتی فرم وضعیت خود را اعلام می‌کند
-    if (dto.formStatus !== undefined) {
+    /* منبع حقیقت گلوگاه ورود (D-3 — t178): وضعیت واقعی سند از سرویس مالک خوانده
+       می‌شود؛ formStatus فقط زمانی معیار است که خواندن از منبع ممکن نباشد
+       (fail-open مستند — دسترس‌ناپذیری سرویس فرم نباید همهٔ فرم‌ها را قفل کند). */
+    let effectiveFormStatus = dto.formStatus;
+    if (dto.entityType === "voucher") {
+      const src = await this.link.getVoucherStatus(dto.entityId);
+      if (src.ok && src.data && typeof src.data.status === "number") {
+        effectiveFormStatus = src.data.status;
+      } else if (dto.formStatus === undefined) {
+        throw new BadRequestException(
+          "خواندن وضعیت سند از سرویس مالک ناموفق بود — ورود به چرخهٔ رسیدگی رد شد",
+        );
+      } else {
+        this.logger.warn(
+          `منبع حقیقت در دسترس نبود (status=${src.status}) — اعتبارسنجی با formStatus اعلامی ادامه می‌یابد`,
+        );
+      }
+    }
+
+    // گلوگاه ورود (D-3) — وضعیت مؤثر (واقعی یا اعلامی)
+    if (effectiveFormStatus !== undefined) {
       const map = await this.prisma.workflowStatusMap.findUnique({
-        where: { entityType_formStatus: { entityType: dto.entityType, formStatus: dto.formStatus } },
+        where: { entityType_formStatus: { entityType: dto.entityType, formStatus: effectiveFormStatus } },
       });
       if (!map) {
         throw new BadRequestException(
-          `وضعیت ${dto.formStatus} برای entityType=${dto.entityType} در نگاشت گردش کار ثبت نشده است`,
+          `وضعیت ${effectiveFormStatus} برای entityType=${dto.entityType} در نگاشت گردش کار ثبت نشده است`,
         );
       }
       if (map.gateType === "excluded") {
@@ -66,7 +105,7 @@ export class InstancesService {
       }
       if (map.gateType === "engine-final") {
         throw new BadRequestException(
-          `وضعیت ${dto.formStatus} فقط از مسیر موتور گردش کار قابل تنظیم است`,
+          `وضعیت ${effectiveFormStatus} فقط از مسیر موتور گردش کار قابل تنظیم است`,
         );
       }
     }
@@ -182,6 +221,8 @@ export class InstancesService {
         });
         await this.notifyUser(tx, inst, inst.startedBy, "گردش کار سند ابطال شد", actorName);
       });
+      /* D-4/D-5 — ابطال ⇒ سند به گلوگاه ورود (۵) برمی‌گردد تا ویرایش و ارسال مجدد ممکن شود */
+      await this.writeBackEntityStatus(inst.entityType, inst.entityId, 5, actorId);
       return this.detail(inst.workflowInstanceId);
     }
 
@@ -245,6 +286,8 @@ export class InstancesService {
           `${actorName}: ${(dto.comment ?? "").trim()}`,
         );
       });
+      /* D-4 — گرهٔ پایان رد (N7) وضعیت پایانی سند را تعیین می‌کند (۱ = ثبت اولیه) */
+      await this.writeBackEntityStatus(inst.entityType, inst.entityId, target.finalStatus, actorId);
       return this.detail(inst.workflowInstanceId);
     }
 
@@ -319,6 +362,10 @@ export class InstancesService {
           await this.notifyRole(tx, inst, target);
         }
       });
+      /* D-4 — گرهٔ پایان موفق (N6) وضعیت پایانی سند را تعیین می‌کند (۳/۴) */
+      if (finished) {
+        await this.writeBackEntityStatus(inst.entityType, inst.entityId, target.finalStatus, actorId);
+      }
       return this.detail(inst.workflowInstanceId);
     }
 
@@ -327,7 +374,123 @@ export class InstancesService {
     );
   }
 
+  /* ------------------- واگرد تایید نهایی (D-5 — t178 فاز ۲) ------------------- */
+
+  /**
+   * واگرد: فقط نمونهٔ approved و فقط تا پیش از ثبت «اقدام آتی» در فرم‌های دیگر.
+   * دفتر وابستگی (WorkflowDependency) با endpoint فقط-موتور پر می‌شود؛ با وجود
+   * هر ردیفی واگرد ۴۰۹ می‌گیرد. دلیل اجباری است و وضعیت سند به گلوگاه ورود (۵)
+   * برمی‌گردد تا ویرایش و ارسال مجدد ممکن شود.
+   */
+  async undoFinal(id: number, dto: UndoFinalDto) {
+    const inst = await this.prisma.workflowInstance.findUnique({
+      where: { workflowInstanceId: BigInt(id) },
+    });
+    if (!inst) throw new NotFoundException("نمونهٔ گردش کار یافت نشد");
+    if (inst.currentState !== "approved") {
+      throw new BadRequestException("واگرد فقط برای نمونهٔ تاییدشدهٔ نهایی ممکن است (D-5)");
+    }
+    if (!(dto.comment ?? "").trim()) {
+      throw new BadRequestException("ثبت دلیل برای واگرد الزامی است (D-5)");
+    }
+    const deps = await this.prisma.workflowDependency.findMany({
+      where: { instanceId: inst.workflowInstanceId },
+      orderBy: { workflowDependencyId: "asc" },
+      take: 50,
+    });
+    if (deps.length > 0) {
+      throw new ConflictException({
+        statusCode: 409,
+        message: `واگرد ممکن نیست — بر اساس این سند ${deps.length} اقدام آتی ثبت شده است (D-5)`,
+        dependencies: deps.map((d) => ({
+          id: Number(d.workflowDependencyId),
+          entityType: d.dependentEntityType,
+          entityId: d.dependentEntityId,
+          label: d.dependentEntityLabel,
+          registeredBy: d.registeredBy,
+          createdAt: d.createdAt.toISOString(),
+        })),
+      });
+    }
+    const actorId = dto.actorId.trim();
+    const actorName = (dto.actorName ?? "").trim();
+    await this.prisma.$transaction(async (tx) => {
+      await tx.workflowInstance.update({
+        where: { workflowInstanceId: inst.workflowInstanceId },
+        data: {
+          currentState: "undone",
+          finishedAt: new Date(),
+          finalStatus: null,
+          lastModifier: actorId,
+        },
+      });
+      await this.logAction(tx, inst.workflowInstanceId, {
+        fromNodeId: inst.currentNodeId,
+        toNodeId: 0n,
+        action: "واگرد",
+        actorId,
+        actorName,
+        roleCode: "",
+        comment: (dto.comment ?? "").trim(),
+      });
+      await this.notifyUser(
+        tx,
+        inst,
+        inst.startedBy,
+        "تایید نهایی سند واگرد شد",
+        `${actorName}: ${(dto.comment ?? "").trim()}`,
+      );
+    });
+    /* D-5 — بازگشت سند به گلوگاه ورود (۵ = تایید کاربر) */
+    await this.writeBackEntityStatus(inst.entityType, inst.entityId, 5, actorId);
+    return this.detail(inst.workflowInstanceId);
+  }
+
+  /** ثبت «اقدام آتی» بر اساس سند تاییدشده (فرم‌های مصرف‌کننده — فقط-موتور). */
+  async registerDependency(id: number, dto: RegisterDependencyDto) {
+    const inst = await this.prisma.workflowInstance.findUnique({
+      where: { workflowInstanceId: BigInt(id) },
+    });
+    if (!inst) throw new NotFoundException("نمونهٔ گردش کار یافت نشد");
+    if (inst.currentState !== "approved") {
+      throw new BadRequestException("ثبت وابستگی فقط برای نمونهٔ تاییدشدهٔ نهایی معنا دارد");
+    }
+    const existing = await this.prisma.workflowDependency.findUnique({
+      where: {
+        instanceId_dependentEntityType_dependentEntityId: {
+          instanceId: inst.workflowInstanceId,
+          dependentEntityType: dto.dependentEntityType.trim(),
+          dependentEntityId: dto.dependentEntityId.trim(),
+        },
+      },
+    });
+    if (existing) {
+      return { id: Number(existing.workflowDependencyId), duplicate: true };
+    }
+    const depId = await this.ids.generateNextId("WorkflowDependency");
+    const row = await this.prisma.workflowDependency.create({
+      data: {
+        workflowDependencyId: BigInt(depId),
+        instanceId: inst.workflowInstanceId,
+        dependentEntityType: dto.dependentEntityType.trim(),
+        dependentEntityId: dto.dependentEntityId.trim(),
+        dependentEntityLabel: (dto.dependentEntityLabel ?? "").trim(),
+        registeredBy: (dto.registeredBy ?? "").trim(),
+      },
+    });
+    return { id: Number(row.workflowDependencyId), duplicate: false };
+  }
+
   /* ------------------------------ خواندن ------------------------------ */
+
+  /** قفل نرم سند در جریان (FR-06) — سرویس فرم با این endpoint ویرایش را ۴۲۳ می‌کند. */
+  async lock(entityType: string, entityId: string) {
+    const row = await this.prisma.workflowInstance.findFirst({
+      where: { entityType, entityId, currentState: "running" },
+      select: { workflowInstanceId: true, currentNodeId: true },
+    });
+    return { locked: !!row, instanceId: row ? Number(row.workflowInstanceId) : null };
+  }
 
   async list(query: {
     entityType?: string;
@@ -463,6 +626,22 @@ export class InstancesService {
   }
 
   /* ------------------------------ ابزارهای داخلی ------------------------------ */
+
+  /**
+   * اعمال وضعیت پایانی موتور روی فرم (D-4/D-5 — فقط entityType=voucher در فاز ۲).
+   * همیشه پس از تراکنش اتمی موتور فراخوانی می‌شود؛ خطای آن نمونه را بازنمی‌گرداند
+   * (best-effort + لاگ) — فرم با واکشی مجدد وضعیت واقعی را می‌خواند.
+   */
+  private async writeBackEntityStatus(
+    entityType: string,
+    entityId: string,
+    status: number | null | undefined,
+    actorId: string,
+  ) {
+    if (status == null) return;
+    if (entityType !== "voucher") return; // فاز ۲ فقط سند — فرم‌های بعدی همین‌جا گسترش می‌یابند
+    await this.link.writeBackVoucherStatus(entityId, status, actorId);
+  }
 
   /**
    * انتخاب گذار خروجی گرهٔ شرط: اولین شرطِ برآورده؛ در نبود آن شاخهٔ پیش‌فرض

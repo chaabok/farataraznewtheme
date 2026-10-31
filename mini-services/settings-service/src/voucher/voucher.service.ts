@@ -1,12 +1,14 @@
 import {
   BadRequestException,
   ConflictException,
+  HttpException,
   Injectable,
   Logger,
   NotFoundException,
 } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
 import { IdGenerationService } from "../id-generation/id-generation.service";
+import { InternalHttpClient } from "../../../_shared/internal-http";
 import {
   appBaseOnCreate,
   appBaseOnUpdate,
@@ -64,12 +66,21 @@ function bigToNum(v: bigint): number {
   return n;
 }
 
-/** وضعیت‌های مجاز فرم صدور — ۳/۴ فقط پس از تایید (فرمان مالک). */
-const ISSUABLE_STATUSES = new Set([1, 2]);
+/** وضعیت‌های مجاز فرم صدور — ۵=تایید کاربر (گلوگاه ورود گردش کار D-3)؛
+ *  ۳/۴ فقط پس از تایید و فقط از مسیر موتور گردش کار (فرمان مالک — D-4). */
+const ISSUABLE_STATUSES = new Set([1, 2, 5]);
+
+/** وضعیت‌هایی که فقط موتور گردش کار حق نوشتنشان را دارد (engine-status — t178). */
+const ENGINE_STATUSES = new Set([1, 3, 4, 5]);
 
 @Injectable()
 export class VoucherService {
   private readonly logger = new Logger(VoucherService.name);
+
+  /** قفل نرم سند در جریان رسیدگی (FR-06 — t178): پرس‌وجو از workflow-service؛
+   *  دسترس‌ناپذیری سرویس گردش کار = باز (fail-open مستند — قفل اصلی UI موتور است). */
+  private readonly wfClient = new InternalHttpClient(process.env.INTERNAL_API_KEY ?? "");
+  private readonly wfBase = process.env.WORKFLOW_SERVICE_URL ?? "http://127.0.0.1:3004";
 
   constructor(
     private readonly prisma: PrismaService,
@@ -521,6 +532,8 @@ export class VoucherService {
         messageKey: "common.error",
       });
     }
+    /* t178 — قفل نرم سند در جریان رسیدگی (FR-06): PUT سندِ دارای نمونهٔ running ممنوع */
+    await this.assertNotWorkflowLocked(id);
     const structureRef = await this.resolveStructureRef(dto.structureId ?? Number(existing.businessStructureRef));
     const anchors = await resolveDetailTypeChain(this.prisma, structureRef);
     await this.assertTypeIssuable(dto.voucherTypeRef);
@@ -615,6 +628,8 @@ export class VoucherService {
         messageKey: "common.error",
       });
     }
+    /* t178 — قفل نرم سند در جریان رسیدگی (FR-06): حذف سندِ دارای نمونهٔ running ممنوع */
+    await this.assertNotWorkflowLocked(id);
     /* حذف اتمی: تفصیلی‌ها ← اقلام ← سند (ترتیب فرزند→والد) */
     await this.prisma.$transaction(async (tx) => {
       const items = await tx.voucherItem.findMany({
@@ -629,6 +644,78 @@ export class VoucherService {
     });
     this.logger.log(`Voucher deleted — ID=${id} No=${existing.voucherNo} (Task 158)`);
     return { ok: true };
+  }
+
+  /* ---------------------------- t178 — پل گردش کار ---------------------------- */
+
+  /** قفل نرم (FR-06): سند دارای نمونهٔ running ویرایش/حذف نمی‌شود — ۴۲۳.
+   *  دسترس‌ناپذیری workflow-service = باز (fail-open مستند در voucher.service). */
+  private async assertNotWorkflowLocked(id: number) {
+    const r = await this.wfClient.call<{ locked: boolean; instanceId: number | null }>(
+      this.wfBase,
+      `/workflow-instances/lock?entityType=voucher&entityId=${id}`,
+      { timeoutMs: 1200 },
+    );
+    if (r.ok && r.data?.locked) {
+      throw new HttpException(
+        {
+          statusCode: 423,
+          message: "سند در جریان رسیدگی گردش کار است — ویرایش/حذف مجاز نیست (قفل نرم FR-06)",
+          messageKey: "common.error",
+        },
+        423,
+      );
+    }
+  }
+
+  /** وضعیت واقعی سند — منبع حقیقت گلوگاه ورود موتور (D-3). */
+  async internalStatus(id: number) {
+    const v = await this.prisma.voucher.findUnique({
+      where: { id: BigInt(id) },
+      select: { id: true, voucherNo: true, status: true },
+    });
+    if (!v) {
+      throw new NotFoundException({
+        statusCode: 404,
+        message: `سند با شناسهٔ «${id}» یافت نشد`,
+        messageKey: "common.error",
+      });
+    }
+    return { id: Number(v.id), voucherNo: String(v.voucherNo), status: v.status };
+  }
+
+  /**
+   * نوشتن وضعیت فقط توسط موتور (D-4/D-5 — t178): گارد EngineKeyGuard روی مسیر
+   * controller است؛ ۱=ثبت اولیه (رد) · ۳/۴=گرهٔ پایان · ۵=بازگشت به گلوگاه ورود.
+   * هیچ دادهٔ دیگری اینجا دست نمی‌خورد.
+   */
+  async setEngineStatus(id: number, dto: EngineStatusDto) {
+    if (!ENGINE_STATUSES.has(dto.status)) {
+      throw new BadRequestException({
+        statusCode: 422,
+        message: `وضعیت ${dto.status} از مسیر موتور نوشتنی نیست — مجاز: ۱/۳/۴/۵`,
+        messageKey: "common.error",
+      });
+    }
+    const existing = await this.prisma.voucher.findUnique({ where: { id: BigInt(id) } });
+    if (!existing) {
+      throw new NotFoundException({
+        statusCode: 404,
+        message: `سند با شناسهٔ «${id}» یافت نشد`,
+        messageKey: "common.error",
+      });
+    }
+    const updated = await this.prisma.voucher.update({
+      where: { id: existing.id },
+      data: {
+        status: dto.status,
+        ...appBaseOnUpdate(SYSTEM_ACTOR),
+      },
+    });
+    this.logger.log(
+      `Voucher engine-status — ID=${id} status=${dto.status} (t178 — وضعیت پایانی گردش کار D-4/D-5)`,
+    );
+    return { id: Number(updated.id), voucherNo: String(updated.voucherNo), status: updated.status };
   }
 
   /* ---------------------------- validators ---------------------------- */
@@ -680,12 +767,12 @@ export class VoucherService {
     }
   }
 
-  /** وضعیت ۳/۴ فقط پس از تایید — در فرم صدور رد می‌شود. */
+  /** وضعیت ۳/۴ فقط پس از تایید و فقط از مسیر موتور — ۵=تایید کاربر مجاز است (D-3). */
   private async assertStatusIssuable(status?: number) {
     if (status != null && !ISSUABLE_STATUSES.has(status)) {
       throw new BadRequestException({
         statusCode: 422,
-        message: "وضعیت «تاییدشده/دائمی» فقط پس از تایید سند قابل انتخاب است.",
+        message: "وضعیت «تاییدشده/دائمی» فقط از مسیر موتور گردش کار قابل تنظیم است.",
         messageKey: "common.error",
       });
     }

@@ -15,7 +15,7 @@ export class InternalHttpClient {
   async call<T>(
     baseURL: string,
     path: string,
-    init?: { method?: string; body?: unknown; timeoutMs?: number },
+    init?: { method?: string; body?: unknown; timeoutMs?: number; headers?: Record<string, string> },
   ): Promise<InternalCallResult<T>> {
     const method = (init?.method ?? "GET").toUpperCase();
     const url = `${baseURL.replace(/\/+$/, "")}${path}`;
@@ -26,6 +26,7 @@ export class InternalHttpClient {
         headers: {
           "content-type": "application/json",
           ...signInternalRequest(this.secret, method, path),
+          ...(init?.headers ?? {}),
         },
         body: init?.body !== undefined ? JSON.stringify(init.body) : undefined,
         signal: AbortSignal.timeout(init?.timeoutMs ?? 4000),

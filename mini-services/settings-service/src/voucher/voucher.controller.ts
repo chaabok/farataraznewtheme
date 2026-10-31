@@ -1,6 +1,7 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, Query } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Put, Query, UseGuards } from "@nestjs/common";
 import { VoucherService } from "./voucher.service";
-import { SaveVoucherDto } from "./voucher.dto";
+import { SaveVoucherDto, EngineStatusDto } from "./voucher.dto";
+import { EngineKeyGuard } from "../../../_shared/engine-auth";
 
 /**
  * Voucher — Task 158 (درخواست مالک): فرم «سند حسابداری جدید»
@@ -49,6 +50,19 @@ export class VoucherController {
   @Get(":id")
   detail(@Param("id", ParseIntPipe) id: number) {
     return this.vouchers.detail(id);
+  }
+
+  /** t178 — وضعیت واقعی سند: منبع حقیقت گلوگاه ورود موتور (D-3) — خواندنی از BFF هم مشکلی ندارد */
+  @Get(":id/status")
+  internalStatus(@Param("id", ParseIntPipe) id: number) {
+    return this.vouchers.internalStatus(id);
+  }
+
+  /** t178 — نوشتن وضعیت پایانی فقط از موتور (D-4/D-5) — گارد دوم کلید موتور */
+  @Patch(":id/engine-status")
+  @UseGuards(EngineKeyGuard)
+  setEngineStatus(@Param("id", ParseIntPipe) id: number, @Body() dto: EngineStatusDto) {
+    return this.vouchers.setEngineStatus(id, dto);
   }
 
   @Post()

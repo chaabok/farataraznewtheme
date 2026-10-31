@@ -230,3 +230,20 @@ model WorkflowStatusMap {
   @@unique([entityType, formStatus])
   @@map("WorkflowStatusMap")
 }
+
+/// WorkflowDependency — دفتر وابستگی واگرد (D-5 — t178 فاز ۲): هر فرم
+/// مصرف‌کننده که بر اساس سندِ تاییدشده «اقدام آتی» ثبت کند، یک ردیف اینجا
+/// می‌نویسد (endpoint داخلی با کلید موتور — فرم‌های آینده). واگردِ تایید
+/// نهایی فقط وقتی مجاز است که برای نمونه هیچ ردیفی ثبت نشده باشد.
+model WorkflowDependency {
+  workflowDependencyId BigInt   @id @map("WorkflowDependencyID")
+  instanceId           BigInt   @map("InstanceID")
+  dependentEntityType  String   @map("DependentEntityType") // payment / contract / ...
+  dependentEntityId    String   @map("DependentEntityID")
+  dependentEntityLabel String   @default("") @map("DependentEntityLabel")
+  registeredBy         String   @default("") @map("RegisteredBy")
+  createdAt            DateTime @default(now()) @map("CreatedAt")
+
+  @@unique([instanceId, dependentEntityType, dependentEntityId])
+  @@map("WorkflowDependency")
+}

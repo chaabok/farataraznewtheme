@@ -7,6 +7,7 @@ import {
   ParseIntPipe,
   Post,
   Put,
+  Query,
 } from "@nestjs/common";
 import { RolesService } from "./roles.service";
 import type { CreateRoleDto, UpdateRoleDto, BulkAssignmentsDto } from "./roles.dto";
@@ -21,6 +22,11 @@ export class RolesController {
   }
 
   /* مسیرهای مشخص قبل از :id — جلوگیری از گیر کردن «assignments» در ParseIntPipe */
+  @Get("assignments")
+  listAssignmentsByUser(@Query("userId") userId?: string) {
+    return this.roles.listAssignmentsByUser(userId);
+  }
+
   @Get("assignments/:roleCode")
   listAssignments(@Param("roleCode") roleCode: string) {
     return this.roles.listAssignments(roleCode);

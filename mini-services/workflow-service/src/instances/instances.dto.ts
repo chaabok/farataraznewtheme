@@ -72,3 +72,47 @@ export class ActDto {
   @IsNumber()
   amount?: number;
 }
+
+/**
+ * UndoFinalDto — واگرد تایید نهایی (D-5 — t178 فاز ۲): فقط نمونهٔ approved،
+ * تا پیش از ثبت «اقدام آتی» در فرم‌های دیگر؛ دلیل اجباری و ثبت در تاریخچه.
+ */
+export class UndoFinalDto {
+  @IsString()
+  @MaxLength(60)
+  actorId!: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  actorName?: string;
+
+  @IsString()
+  @MaxLength(500)
+  comment!: string;
+}
+
+/**
+ * RegisterDependencyDto — ثبت «اقدام آتی» بر اساس سند تاییدشده در دفتر
+ * وابستگی (فقط-موتور — فرم‌های مصرف‌کنندهٔ آینده). با وجود هر ردیفی،
+ * واگردِ سند ۴۰۹ می‌گیرد (D-5).
+ */
+export class RegisterDependencyDto {
+  @IsString()
+  @MaxLength(60)
+  dependentEntityType!: string;
+
+  @IsString()
+  @MaxLength(60)
+  dependentEntityId!: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  dependentEntityLabel?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(60)
+  registeredBy?: string;
+}
