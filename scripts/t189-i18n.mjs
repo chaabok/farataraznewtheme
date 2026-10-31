@@ -1,5 +1,5 @@
 /**
- * Task t188 — i18n: فرمان مالک — «اطلاعات تب تخصیص کاربران ذخیره نمی گردد و
+ * Task t189 — i18n: فرمان مالک — «اطلاعات تب تخصیص کاربران ذخیره نمی گردد و
  * بعد از بستن و باز کردن فرم اطلاعات کاربران تخصیص داده شده پاک می شود».
  * علت ریشه‌ای: ذخیرهٔ REPLACE با payload خالی (ردیف‌های بدون شناسهٔ کاربر در
  * سمت کلاینت فیلتر می‌شدند ⇒ آرایهٔ خالی ⇒ حذف کامل تخصیص‌های سرور با توست
@@ -60,6 +60,21 @@ const KEYS = {
     "Laden der vorherigen Zuweisungen fehlgeschlagen — zum Schutz Ihrer Daten wurden die Zuweisungen diesmal nicht gespeichert",
     "Не удалось загрузить предыдущие назначения — для защиты ваших данных назначения в этот раз не сохранены",
   ],
+  "wf.errRowsWithoutUserPartial": [
+    "در برخی ردیف‌ها کاربر انتخاب نشده بود — آن ردیف‌ها ذخیره نشدند",
+    "Some rows had no user selected — those rows were not saved",
+    "Bazı satırlarda kullanıcı seçilmemişti — o satırlar kaydedilmedi",
+    "لم يتم اختيار مستخدم في بعض الصفوف — لم يتم حفظ تلك الصفوف",
+    "कुछ पंक्तियों में उपयोगकर्ता चयनित नहीं था — वे पंक्तियाँ सहेजी नहीं गईं",
+    "ځینې قطارونه کاروونکی نه درلود — هغه قطارونه خوندي نشول",
+    "هەندێک ڕیز بەکارهێنەریان هەڵنەبژێردرابوو — ئەو ڕیزانە پاشەکەوت نەکراون",
+    "Algumas linhas não tinham utilizador selecionado — essas linhas não foram guardadas",
+    "일부 행에서 사용자가 선택되지 않았습니다 — 해당 행은 저장되지 않았습니다",
+    "Certaines lignes n'avaient pas d'utilisateur sélectionné — ces lignes n'ont pas été enregistrées",
+    "部分行未选择用户——这些行未保存",
+    "Einige Zeilen hatten keinen ausgewählten Benutzer — diese Zeilen wurden nicht gespeichert",
+    "В некоторых строках не был выбран пользователь — эти строки не сохранены",
+  ],
 };
 
 const ORDER = [
@@ -67,6 +82,19 @@ const ORDER = [
 ];
 
 let src = readFileSync(FILE, "utf8");
+
+/* idempotent: کلیدهایی که قبلاً ×۱۳ درج شده‌اند دوباره درج نشوند */
+for (const k of Object.keys(KEYS)) {
+  if ((src.split(`"${k}":`).length - 1) === 13) {
+    console.log(`skip (already ×13): ${k}`);
+    delete KEYS[k];
+  }
+}
+if (Object.keys(KEYS).length === 0) {
+  console.log("OK — nothing to insert");
+  process.exit(0);
+}
+
 const lines = src.split("\n");
 
 const anchors = [];
