@@ -382,3 +382,51 @@ Bun v1.3.14 (Linux x64 baseline)
 [Nest] 1210  - 10/31/2026, 7:25:58 AM     LOG [DefinitionsService] Activated WF-T180-558044 v1 (entityType=voucher)
 [Nest] 1210  - 10/31/2026, 7:25:58 AM     LOG [DefinitionsService] Activated WF-VOUCHER v6 (entityType=voucher)
 [Nest] 1210  - 10/31/2026, 8:12:41 AM     LOG [DefinitionsService] Definition WF-VOUCHERWEWERWER v1 created (starter graph) — entityType=voucher
+[Nest] 1210  - 10/31/2026, 11:03:16 AM   ERROR [ExceptionsHandler] PrismaClientUnknownRequestError: 
+Invalid `this.prisma.workflowRole.update()` invocation in
+/home/z/my-project/mini-services/workflow-service/src/roles/roles.service.ts:59:48
+
+  56 async update(id: bigint, dto: UpdateRoleDto) {
+  57   const existing = await this.prisma.workflowRole.findUnique({ where: { workflowRoleId: id } });
+  58   if (!existing) throw new NotFoundException("سمت یافت نشد");
+→ 59   const row = await this.prisma.workflowRole.update(
+Error occurred during query execution:
+ConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(SqliteError { extended_code: 1032, message: Some("attempt to write a readonly database") }), transient: false })
+    at handleRequestError (/home/z/my-project/mini-services/workflow-service/node_modules/@prisma/client/runtime/library.js:121:7462)
+    at handleAndLogRequestError (/home/z/my-project/mini-services/workflow-service/node_modules/@prisma/client/runtime/library.js:121:6593)
+    at request (/home/z/my-project/mini-services/workflow-service/node_modules/@prisma/client/runtime/library.js:121:6300)
+    at processTicksAndRejections (native:7:39) {
+  clientVersion: '6.19.3'
+}
+[Nest] 1210  - 10/31/2026, 11:03:19 AM   ERROR [ExceptionsHandler] PrismaClientUnknownRequestError: 
+Invalid `this.prisma.workflowRole.update()` invocation in
+/home/z/my-project/mini-services/workflow-service/src/roles/roles.service.ts:59:48
+
+  56 async update(id: bigint, dto: UpdateRoleDto) {
+  57   const existing = await this.prisma.workflowRole.findUnique({ where: { workflowRoleId: id } });
+  58   if (!existing) throw new NotFoundException("سمت یافت نشد");
+→ 59   const row = await this.prisma.workflowRole.update(
+Error occurred during query execution:
+ConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(SqliteError { extended_code: 1032, message: Some("attempt to write a readonly database") }), transient: false })
+    at handleRequestError (/home/z/my-project/mini-services/workflow-service/node_modules/@prisma/client/runtime/library.js:121:7462)
+    at handleAndLogRequestError (/home/z/my-project/mini-services/workflow-service/node_modules/@prisma/client/runtime/library.js:121:6593)
+    at request (/home/z/my-project/mini-services/workflow-service/node_modules/@prisma/client/runtime/library.js:121:6300)
+    at processTicksAndRejections (native:7:39) {
+  clientVersion: '6.19.3'
+}
+[Nest] 1210  - 10/31/2026, 11:03:31 AM   ERROR [ExceptionsHandler] PrismaClientUnknownRequestError: 
+Invalid `this.prisma.workflowRole.update()` invocation in
+/home/z/my-project/mini-services/workflow-service/src/roles/roles.service.ts:59:48
+
+  56 async update(id: bigint, dto: UpdateRoleDto) {
+  57   const existing = await this.prisma.workflowRole.findUnique({ where: { workflowRoleId: id } });
+  58   if (!existing) throw new NotFoundException("سمت یافت نشد");
+→ 59   const row = await this.prisma.workflowRole.update(
+Error occurred during query execution:
+ConnectorError(ConnectorError { user_facing_error: None, kind: QueryError(SqliteError { extended_code: 1032, message: Some("attempt to write a readonly database") }), transient: false })
+    at handleRequestError (/home/z/my-project/mini-services/workflow-service/node_modules/@prisma/client/runtime/library.js:121:7462)
+    at handleAndLogRequestError (/home/z/my-project/mini-services/workflow-service/node_modules/@prisma/client/runtime/library.js:121:6593)
+    at request (/home/z/my-project/mini-services/workflow-service/node_modules/@prisma/client/runtime/library.js:121:6300)
+    at processTicksAndRejections (native:7:39) {
+  clientVersion: '6.19.3'
+}
