@@ -41,14 +41,14 @@ export function WorkflowHub() {
       {/* نوار ناوبری سمت شروع (در RTL راست) */}
       <nav
         aria-label={t("wf.hub.title")}
-        className="flex w-40 shrink-0 flex-col gap-1 border-e border-border/60 bg-muted/30 p-2 sm:w-48"
+        className="flex w-14 shrink-0 flex-col gap-1 border-e border-border/60 bg-muted/30 p-2 sm:w-48"
         data-testid="wf-hub-nav"
       >
         <div className="mb-2 flex items-center gap-2 px-1.5 pt-1">
           <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-cyan-600 to-teal-700 text-white shadow-sm">
             <Workflow className="h-4 w-4" aria-hidden />
           </span>
-          <span className="min-w-0">
+          <span className="hidden min-w-0 sm:block">
             <span className="block truncate text-xs font-bold">{t("wf.hub.title")}</span>
             <span className="block truncate text-[10px] text-muted-foreground">
               {t("wf.hub.subtitle")}
@@ -79,7 +79,8 @@ export function WorkflowHub() {
             >
               {n.icon}
             </span>
-            <span className="min-w-0 flex-1 truncate">{n.label}</span>
+            <span className="hidden min-w-0 flex-1 truncate sm:block">{n.label}</span>
+            <span className="sr-only sm:hidden">{n.label}</span>
           </button>
         ))}
       </nav>
