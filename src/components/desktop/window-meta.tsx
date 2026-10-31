@@ -11,7 +11,7 @@
  */
 
 import * as React from "react";
-import { FilePlus2, ListChecks, ListTree, Network, Workflow, Wrench } from "lucide-react";
+import { BarChart3, FilePlus2, Inbox, ListChecks, ListTree, Network, PencilRuler, Workflow, Wrench } from "lucide-react";
 import { useT } from "@/stores/settings-store";
 import type { WinState, WindowKind } from "@/stores/desktop-store";
 import {
@@ -36,7 +36,11 @@ import { DfbMenuWindow } from "@/components/erp/form-builder/dfb-menu-window";
 import { DfbFormRuntime } from "@/components/erp/form-builder/dfb-form-runtime";
 import { FormDesignStudio } from "@/components/erp/form-builder/dfb-studio";
 import { RecordsListWindow } from "@/components/erp/form-builder/records-list-window";
-import { WorkflowHub } from "@/components/erp/workflow/workflow-hub";
+import { WorkflowMenu } from "@/components/erp/workflow/workflow-menu";
+import { WorkflowCartable } from "@/components/erp/workflow/workflow-cartable";
+import { WorkflowReports } from "@/components/erp/workflow/workflow-reports";
+import { WorkflowRoleForm } from "@/components/erp/settings/workflow-role-form";
+import { WorkflowDesignerForm } from "@/components/erp/settings/workflow-designer-form";
 
 interface StaticWindowMeta {
   titleKey: string;
@@ -97,17 +101,55 @@ export const STATIC_WINDOWS: Partial<Record<Exclude<WindowKind, "app">, StaticWi
     ),
     content: <FormBuilderWindow />,
   },
-  /* t181 — آیکون گردش کار: پنجرهٔ واحد زیرسیستم (تصمیم مالک — فرم‌های
-     کارتابل/گردش کار فقط اینجا میزبانی می‌شوند، نه در منوی تنظیمات):
-     کارتابل (t179)، سمت‌ها (t177)، طراح فرآیند (t180) و گزارش‌ها (t181 فاز ۵). */
-  workflow: {
+  /* t183 — فرمان مالک: «هر کدام از تب‌های فرم گردش کار را یک فرم کنید و
+     در منوی گردش کار قرار دهید» — هاب t181 به الگوی منوی فرم‌ها تبدیل شد
+     (مثل "ابزارهای پیشرفته"): آیکون گردش کار دسکتاپ/استارت/پین، منو را
+     باز می‌کند و هر آیتم فرم مستقل خودش را در تب جداگانه باز می‌کند؛
+     زنگولهٔ نوار وظیفه مستقیماً کارتابل را باز می‌کند. */
+  "workflow-menu": {
     titleKey: "wf.hub.title",
     icon: (
       <span className="flex h-5 w-5 items-center justify-center rounded-md bg-gradient-to-br from-cyan-600 to-teal-700 text-white">
         <Workflow className="h-3 w-3" />
       </span>
     ),
-    content: <WorkflowHub />,
+    content: <WorkflowMenu />,
+  },
+  "workflow-cartable": {
+    titleKey: "wf.cartable.title",
+    icon: (
+      <span className="flex h-5 w-5 items-center justify-center rounded-md bg-gradient-to-br from-cyan-500 to-teal-600 text-white">
+        <Inbox className="h-3 w-3" />
+      </span>
+    ),
+    content: <WorkflowCartable />,
+  },
+  "workflow-roles": {
+    titleKey: "wf.formTitle",
+    icon: (
+      <span className="flex h-5 w-5 items-center justify-center rounded-md bg-gradient-to-br from-teal-600 to-cyan-800 text-white">
+        <Workflow className="h-3 w-3" />
+      </span>
+    ),
+    content: <WorkflowRoleForm />,
+  },
+  "workflow-designer": {
+    titleKey: "wf.des.title",
+    icon: (
+      <span className="flex h-5 w-5 items-center justify-center rounded-md bg-gradient-to-br from-cyan-600 to-teal-700 text-white">
+        <PencilRuler className="h-3 w-3" />
+      </span>
+    ),
+    content: <WorkflowDesignerForm />,
+  },
+  "workflow-reports": {
+    titleKey: "wf.rep.navLabel",
+    icon: (
+      <span className="flex h-5 w-5 items-center justify-center rounded-md bg-gradient-to-br from-teal-500 to-cyan-700 text-white">
+        <BarChart3 className="h-3 w-3" />
+      </span>
+    ),
+    content: <WorkflowReports />,
   },
 };
 
