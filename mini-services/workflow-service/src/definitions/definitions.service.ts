@@ -14,6 +14,8 @@ import type {
   TerminateDefinitionDto,
   SaveGraphDto,
   SaveLayoutDto,
+  SaveConditionsDto,
+  WfConditionDto,
 } from "./definitions.dto";
 
 type Tx = import("@prisma/client").Prisma.TransactionClient;
@@ -37,6 +39,24 @@ const CONDITION_RE = /^amount\s*(>=|<=|==|!=|>|<)\s*(threshold|\d+(?:\.\d+)?)$/;
 const NODE_TYPES = new Set(["start", "action", "condition", "end"]);
 const VALID_ACTIONS = new Set(["ارسال به رسیدگی", "تایید", "رد", "بله", "خیر"]);
 
+/* t191 — شرط‌های ورود (فیلترها): فیلدهای عمومی همهٔ فرم‌ها + هفت فیلتر
+ * حسابداری مخصوص فرم «سند حسابداری» (نوع/ماهیت سند، گروه/کل/معین،
+ * نوع تفصیلی و جزئیات آن) + عملگرهای یکسان برای همهٔ فرم‌ها با اتصال و/یا. */
+const COND_FIELDS_BASE = new Set(["amount", "description"]);
+const COND_FIELDS_VOUCHER = new Set([
+  "voucherType",
+  "voucherNature",
+  "accountGroup",
+  "ledgerAccount",
+  "subsidiaryAccount",
+  "detailType",
+  "detailItem",
+]);
+const COND_OPS = new Set(["contains", "gt", "lt", "eq", "notContains", "empty", "notEmpty"]);
+const COND_JOINS = new Set(["and", "or"]);
+const COND_MAX = 50;
+const COND_VALUE_MAX = 240;
+
 @Injectable()
 export class DefinitionsService {
   private readonly logger = new Logger(DefinitionsService.name);
@@ -45,6 +65,106 @@ export class DefinitionsService {
     private readonly prisma: PrismaService,
     private readonly ids: IdGenerationService,
   ) {}
+
+  /* ------------------------------ شرط‌های ورود (t191) ------------------------------ */
+
+  /** پارس امن ConditionsJson — خرابی/دستکاریِ دستی ⇒ آرایهٔ خالی (هرگز throw). */
+  private parseConditions(raw: string | null | undefined): WfConditionDto[] {
+    try {
+      const arr = JSON.parse(raw ?? "[]");
+      if (!Array.isArray(arr)) return [];
+      return arr
+        .filter((c): c is Record<string, unknown> => !!c && typeof c === "object")
+        .map((c) => ({
+          field: String(c.field ?? ""),
+          op: String(c.op ?? ""),
+          value: String(c.value ?? ""),
+          join: c.join === "or" ? "or" : "and",
+        }))
+        .filter((c) => c.field && c.op);
+    } catch {
+      return [];
+    }
+  }
+
+  /**
+   * اعتبارسنجی و نرمال‌سازی شرط‌های ورود — فیلد بر اساس entityType (فیلترهای
+   * حسابداری فقط برای voucher)، عملگر و اتصال از مجموعهٔ بسته، مقدار اجباری
+   * به‌جز «خالی باشد/خالی نباشد»، amount فقط عدد یا «threshold» (آستانهٔ فرم).
+   * خروجی: رشتهٔ JSON آمادهٔ ذخیره.
+   */
+  private normalizeConditions(raw: unknown, entityType: string): string {
+    if (raw === undefined || raw === null) return "[]";
+    if (!Array.isArray(raw)) {
+      throw new BadRequestException("شرط‌ها باید آرایه باشند");
+    }
+    if (raw.length > COND_MAX) {
+      throw new BadRequestException(`حداکثر ${COND_MAX} شرط مجاز است`);
+    }
+    const allowedFields = new Set([
+      ...COND_FIELDS_BASE,
+      ...(entityType === "voucher" ? COND_FIELDS_VOUCHER : []),
+    ]);
+    const out: WfConditionDto[] = [];
+    for (const item of raw) {
+      if (!item || typeof item !== "object") {
+        throw new BadRequestException("هر شرط باید یک شیء {field, op, value, join} باشد");
+      }
+      const f = item as Record<string, unknown>;
+      const field = String(f.field ?? "").trim();
+      const op = String(f.op ?? "").trim();
+      const join = String(f.join ?? "and").trim() || "and";
+      if (!allowedFields.has(field)) {
+        throw new BadRequestException(`فیلد شرط «${field || "خالی"}» برای این فرم مجاز نیست`);
+      }
+      if (!COND_OPS.has(op)) {
+        throw new BadRequestException(`عملگر شرط «${op || "خالی"}» معتبر نیست`);
+      }
+      if (!COND_JOINS.has(join)) {
+        throw new BadRequestException(`اتصال شرط «${join}» معتبر نیست — و یا یا`);
+      }
+      const noValue = op === "empty" || op === "notEmpty";
+      let value = String(f.value ?? "").trim();
+      if (noValue) {
+        value = "";
+      } else {
+        if (!value) {
+          throw new BadRequestException("مقدار شرط خالی است — برای «خالی بودن» از عملگر مخصوص استفاده کنید");
+        }
+        if (value.length > COND_VALUE_MAX) {
+          throw new BadRequestException(`مقدار شرط حداکثر ${COND_VALUE_MAX} نویسه است`);
+        }
+        if (field === "amount") {
+          if (value !== "threshold" && Number.isNaN(Number(value))) {
+            throw new BadRequestException("مقدار شرطِ مبلغ باید عدد یا «threshold» (آستانهٔ فرم) باشد");
+          }
+        }
+      }
+      out.push({ field, op, value, join: join as WfConditionDto["join"] });
+    }
+    return JSON.stringify(out);
+  }
+
+  /**
+   * ذخیرهٔ مستقل شرط‌های ورود (دکمهٔ «ذخیرهٔ شرط‌ها» کارت شرط‌ها) — جایگزینی
+   * کامل؛ نسخهٔ خاتمه‌یافته فقط-خواندنی است. شرط‌ها فقط بر ورودهای «تازه»
+   * اثر دارند و به نمونه‌های جاری کاری ندارند — برخلاف دیاگرام، برای نسخهٔ
+   * در استفاده هم قابل ویرایش است (هم‌قرارداد آستانهٔ مبلغ در updateMeta).
+   */
+  async saveConditions(id: bigint, dto: SaveConditionsDto) {
+    const d = await this.prisma.workflowDefinition.findUnique({ where: { workflowDefinitionId: id } });
+    if (!d) throw new NotFoundException("فرآیند یافت نشد");
+    if (d.isTerminated) {
+      throw new ConflictException("این فرآیند خاتمه یافته است — شرط‌ها فقط-خواندنی‌اند؛ برای ویرایش ابتدا «برگشت خاتمه» را بزنید");
+    }
+    const json = this.normalizeConditions(dto.conditions, d.entityType);
+    await this.prisma.workflowDefinition.update({
+      where: { workflowDefinitionId: id },
+      data: { conditionsJson: json },
+    });
+    this.logger.log(`Conditions saved for ${d.code} v${d.processVersion} — ${(JSON.parse(json) as unknown[]).length} rows`);
+    return this.getOne(id);
+  }
 
   /* ------------------------------ خواندن ------------------------------ */
 
@@ -80,6 +200,8 @@ export class DefinitionsService {
         processVersion: d.processVersion,
         thresholdAmount: d.thresholdAmount,
         isActive: d.isActive,
+        conditions: this.parseConditions(d.conditionsJson), // t191 — شرط‌های ورود
+        conditionCount: this.parseConditions(d.conditionsJson).length,
         /* t190 — خاتمهٔ فرآیند */
         isTerminated: d.isTerminated,
         terminatedAt: d.terminatedAt ? d.terminatedAt.toISOString().slice(0, 10) : null,
@@ -116,6 +238,7 @@ export class DefinitionsService {
       processVersion: d.processVersion,
       thresholdAmount: d.thresholdAmount,
       isActive: d.isActive,
+      conditions: this.parseConditions(d.conditionsJson), // t191 — شرط‌های ورود
       /* t190 — خاتمهٔ فرآیند */
       isTerminated: d.isTerminated,
       terminatedAt: d.terminatedAt ? d.terminatedAt.toISOString().slice(0, 10) : null,
@@ -205,6 +328,7 @@ export class DefinitionsService {
           Number.isNaN(Number(dto.thresholdAmount))
             ? null
             : Number(dto.thresholdAmount),
+        conditionsJson: this.normalizeConditions(dto.conditions, entityType), // t191
         isActive: false, // پس از ویرایش دیاگرام با «فعال‌سازی» وارد موتور می‌شود
         creator: "designer",
         businessStructureRef: HEAD_OFFICE_NODE_ID,
@@ -283,6 +407,10 @@ export class DefinitionsService {
         dto.thresholdAmount === null || Number.isNaN(Number(dto.thresholdAmount))
           ? null
           : Number(dto.thresholdAmount);
+    }
+    /* t191 — شرط‌های ورود همراه ذخیرهٔ متا (قرارداد «ذخیره اطلاعات») */
+    if (dto.conditions !== undefined) {
+      data.conditionsJson = this.normalizeConditions(dto.conditions, d.entityType);
     }
     if (Object.keys(data).length > 0) {
       await this.prisma.workflowDefinition.update({
@@ -463,6 +591,7 @@ export class DefinitionsService {
           entityType: src.entityType,
           processVersion: nextVersion,
           thresholdAmount: src.thresholdAmount,
+          conditionsJson: src.conditionsJson, // t191 — نسخهٔ تازه شرط‌ها را به ارث می‌برد و آزادانه ویرایش می‌شود
           isActive: false,
           creator: "designer",
           businessStructureRef: HEAD_OFFICE_NODE_ID,

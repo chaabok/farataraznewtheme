@@ -16,6 +16,7 @@ import type {
   TerminateDefinitionDto,
   SaveGraphDto,
   SaveLayoutDto,
+  SaveConditionsDto,
 } from "./definitions.dto";
 
 /**
@@ -56,6 +57,12 @@ export class DefinitionsController {
   @Put(":id/reinstate")
   reinstate(@Param("id", ParseIntPipe) id: number) {
     return this.defs.reinstate(BigInt(id));
+  }
+
+  /* t191 — شرط‌های ورود (فیلترها): جایگزینی کامل با اعتبارسنجی فیلد/عملگر/اتصال */
+  @Put(":id/conditions")
+  saveConditions(@Param("id", ParseIntPipe) id: number, @Body() dto: SaveConditionsDto) {
+    return this.defs.saveConditions(BigInt(id), dto);
   }
 
   @Put(":id/layout")

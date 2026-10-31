@@ -4,6 +4,7 @@ import * as React from "react";
 import {
   CircleStop,
   Link2,
+  ListFilter,
   Loader2,
   PencilRuler,
   Plus,
@@ -74,11 +75,45 @@ import {
  *     پوسته می‌نشیند — زیر تب فرآیندها.
  * منطق نسخه‌بندی FR-01 (نسخهٔ در استفاده قطعی است — ویرایش فقط با «نسخهٔ
  * جدید») و اعتبارسنجی موتور-سازگارِ ذخیرهٔ دیاگرام از t180 برقرار است.
+ *
+ * t191 (فرمان مالک) — شرط‌های ورود (فیلترها) در طراحی گردش کار:
+ *  ① عنوان فرم «طراحی فرآیند گردش کار» (کلید wf.des.title).
+ *  ② کارت «شرط‌های ورود» زیر گرید فیلدها: تا امروز تنها فیلتر، «آستانهٔ مبلغ»
+ *     بود (D-2)؛ اکنون اگر کاربر از لیست فرم‌ها «سند حسابداری» را برگزیند،
+ *     هفت فیلتر حسابداری هم در شرط‌ها لحاظ می‌شود: نوع سند، ماهیت سند،
+ *     گروه حساب، حساب کل، حساب معین، نوع تفصیلی و جزئیات انواع تفصیلی —
+ *     با دراپ‌داون دادهٔ واقعی (voucher-type/account-tree/detail-type/detail-items).
+ *  ③ عملگرهای یکسان برای همهٔ فرم‌ها: شامل، بزرگتر از، کوچکتر از، برابر با،
+ *     شامل نباشد، خالی باشد، خالی نباشد (برای فرم‌های غیرحسابداری: مبلغ +
+ *     شرح/توضیحات با همین عملگرها).
+ *  ④ فیلترهای ترکیبی: اتصال هر ردیف با ردیف قبلی با «و/یا».
+ *  ⑤ مقدار شرطِ مبلغ می‌تواند «آستانهٔ فرم» باشد (همان آستانهٔ مبلغ D-2) یا
+ *     عدد مستقیم؛ ذخیره در ConditionsJson با PUT :id/conditions و همراه
+ *     «ذخیره اطلاعات» متا؛ نسخهٔ جدید شرط‌ها را به ارث می‌برد؛ نسخهٔ
+ *     خاتمه‌یافته شرط‌هایش فقط-خواندنی است.
  */
 
 const wf = appApi("workflow");
+const stApi = appApi("settings"); // t191 — گزینه‌های فیلترهای حسابداری (نوع سند/درخت حساب/تفصیلی‌ها)
 
 /* ------------------------------ انواع ------------------------------ */
+
+/** t191 — عملگرهای یکسان شرط‌ها برای همهٔ فرم‌ها (فرمان مالک) */
+type CondOp = "contains" | "gt" | "lt" | "eq" | "notContains" | "empty" | "notEmpty";
+
+/** t191 — یک شرط ورود: فیلد + عملگر + مقدار + اتصال و/یا با شرط قبلی */
+interface WfCond {
+  field: string;
+  op: CondOp;
+  value: string;
+  join: "and" | "or";
+}
+
+/** t191 — گزینهٔ دراپ‌داون فیلترهای مرجع (کد + عنوان از سرویس تنظیمات) */
+interface RefOption {
+  code: string;
+  title: string;
+}
 
 interface CatalogItem {
   id: number;
@@ -102,6 +137,7 @@ interface DefItem {
   processVersion: number;
   thresholdAmount: number | null;
   isActive: boolean;
+  conditions?: WfCond[]; // t191 — شرط‌های ورود (فهرست — شمارش)
   /* t190 — خاتمهٔ فرآیند */
   isTerminated: boolean;
   terminatedAt: string | null;
@@ -150,6 +186,7 @@ interface DefDetail {
   processVersion: number;
   thresholdAmount: number | null;
   isActive: boolean;
+  conditions: WfCond[]; // t191 — شرط‌های ورود
   /* t190 — خاتمهٔ فرآیند */
   isTerminated: boolean;
   terminatedAt: string | null;
@@ -175,6 +212,55 @@ const NODE_H = 96;
 const SNAP = 10;
 const CONDITION_RE = /^amount\s*(>=|<=|==|!=|>|<)\s*(threshold|\d+(?:\.\d+)?)$/;
 const ACTION_OPTIONS = ["ارسال به رسیدگی", "تایید", "رد", "بله", "خیر"];
+
+/* t191 — فیلدهای شرط ورود: دو فیلد عمومی برای همهٔ فرم‌ها + هفت فیلتر
+ * حسابداری فقط برای فرم «سند حسابداری» (فرمان مالک). */
+const COND_FIELDS_BASE: Array<{ id: string; key: string }> = [
+  { id: "amount", key: "wf.des.condFieldAmount" },
+  { id: "description", key: "wf.des.condFieldDescription" },
+];
+const COND_FIELDS_VOUCHER: Array<{ id: string; key: string }> = [
+  { id: "voucherType", key: "wf.des.condFieldType" },
+  { id: "voucherNature", key: "wf.des.condFieldNature" },
+  { id: "accountGroup", key: "wf.des.condFieldGroup" },
+  { id: "ledgerAccount", key: "wf.des.condFieldLedger" },
+  { id: "subsidiaryAccount", key: "wf.des.condFieldSubsidiary" },
+  { id: "detailType", key: "wf.des.condFieldDetailType" },
+  { id: "detailItem", key: "wf.des.condFieldDetailItem" },
+];
+/** t191 — عملگرهای یکسان برای همهٔ فرم‌ها (فرمان مالک): شامل، بزرگتر از،
+ * کوچکتر از، برابر با، شامل نباشد، خالی باشد، خالی نباشد. */
+const COND_OPS: Array<{ id: CondOp; key: string }> = [
+  { id: "contains", key: "wf.des.opContains" },
+  { id: "gt", key: "wf.des.opGt" },
+  { id: "lt", key: "wf.des.opLt" },
+  { id: "eq", key: "wf.des.opEq" },
+  { id: "notContains", key: "wf.des.opNotContains" },
+  { id: "empty", key: "wf.des.opEmpty" },
+  { id: "notEmpty", key: "wf.des.opNotEmpty" },
+];
+/** فیلدهایی که مقدارشان از دراپ‌داون دادهٔ واقعی می‌آید (t191) */
+const COND_SELECT_FIELDS = new Set([
+  "voucherType",
+  "accountGroup",
+  "ledgerAccount",
+  "subsidiaryAccount",
+  "detailType",
+  "detailItem",
+]);
+
+const EMPTY_CONDS: WfCond[] = [];
+const EMPTY_REFS = {
+  voucherTypes: [] as RefOption[],
+  accountGroups: [] as RefOption[],
+  ledgerAccounts: [] as RefOption[],
+  subsidiaryAccounts: [] as RefOption[],
+  detailTypes: [] as RefOption[],
+  detailItems: [] as RefOption[],
+};
+
+/** شرط خالی نو برای «افزودن شرط» — پیش‌فرض: مبلغ بزرگتر از آستانهٔ فرم (D-2) */
+const newCond = (): WfCond => ({ field: "amount", op: "gt", value: "threshold", join: "and" });
 
 const NODE_STYLE: Record<GNode["nodeType"], { chip: string; border: string; icon: React.ReactNode }> = {
   start: {
@@ -267,7 +353,14 @@ export function WorkflowDesignerForm() {
   const [terminating, setTerminating] = React.useState(false);
   const [reinstating, setReinstating] = React.useState(false);
 
-  useTabDirty(metaDirty || canvasDirty);
+  /* t191 — شرط‌های ورود (فیلترها) + گزینه‌های مرجع دراپ‌داون‌ها */
+  const [conds, setConds] = React.useState<WfCond[]>(EMPTY_CONDS);
+  const [condsDirty, setCondsDirty] = React.useState(false);
+  const [savingConds, setSavingConds] = React.useState(false);
+  const [refOpts, setRefOpts] = React.useState(EMPTY_REFS);
+  const [refsLoaded, setRefsLoaded] = React.useState(false);
+
+  useTabDirty(metaDirty || canvasDirty || condsDirty);
 
   const nodesRef = React.useRef<GNode[]>(nodes);
   React.useEffect(() => {
@@ -277,6 +370,12 @@ export function WorkflowDesignerForm() {
   const innerRef = React.useRef<HTMLDivElement | null>(null);
 
   const selForm = catalog.find((c) => c.entityType === selEntityType) ?? null;
+  const isVoucherForm = selEntityType === "voucher"; // t191 — سند حسابداری: فیلترهای حسابداری
+  /** فیلدهای شرط بر اساس فرم برگزیده: عمومی + حسابداری فقط برای سند */
+  const condFields = React.useMemo(
+    () => (isVoucherForm ? [...COND_FIELDS_BASE, ...COND_FIELDS_VOUCHER] : COND_FIELDS_BASE),
+    [isVoucherForm],
+  );
   const defsOfForm = React.useMemo(
     () => (selEntityType ? defs.filter((d) => d.entityType === selEntityType) : []),
     [defs, selEntityType],
@@ -324,6 +423,52 @@ export function WorkflowDesignerForm() {
     return dd;
   }, [fetchDefs]);
 
+  /* t191 — گزینه‌های مرجع فیلترهای حسابداری: یکبار برای کل عمر پنجره، فقط
+   * وقتی فرم «سند حسابداری» برگزیده شده واکشی می‌شود (سبک‌ماندن سایر فرم‌ها). */
+  React.useEffect(() => {
+    if (!isVoucherForm || refsLoaded) return;
+    let alive = true;
+    const load = async () => {
+      const [vt, at, dt, di] = await Promise.all([
+        stApi
+          .get<{ items: Array<{ code: string; title: string; isActive: boolean; isSystem?: boolean }> }>(
+            "voucher-type",
+          )
+          .catch(() => ({ items: [] })),
+        stApi
+          .get<{ items: Array<{ code: string; title: string; level: number; isActive: boolean }> }>(
+            "account-tree",
+          )
+          .catch(() => ({ items: [] })),
+        stApi
+          .get<{ items: Array<{ code: string; title: string; isActive: boolean }> }>("detail-type")
+          .catch(() => ({ items: [] })),
+        stApi
+          .get<{ items: Array<{ code: string; title: string; isActive: boolean }> }>("detail-items")
+          .catch(() => ({ items: [] })),
+      ]);
+      if (!alive) return;
+      const opt = (r: { code: string; title: string }): RefOption => ({
+        code: r.code,
+        title: r.title,
+      });
+      const nodes = at.items ?? [];
+      setRefOpts({
+        voucherTypes: (vt.items ?? []).filter((r) => r.isActive !== false).map(opt),
+        accountGroups: nodes.filter((r) => r.level === 1 && r.isActive !== false).map(opt),
+        ledgerAccounts: nodes.filter((r) => r.level === 2 && r.isActive !== false).map(opt),
+        subsidiaryAccounts: nodes.filter((r) => r.level === 3 && r.isActive !== false).map(opt),
+        detailTypes: (dt.items ?? []).filter((r) => r.isActive !== false).map(opt),
+        detailItems: (di.items ?? []).filter((r) => r.isActive !== false).map(opt),
+      });
+      setRefsLoaded(true);
+    };
+    void load();
+    return () => {
+      alive = false;
+    };
+  }, [isVoucherForm, refsLoaded]);
+
   /* بارگذاری اولیه — setState فقط در callbackهای async (نه sync در بدنهٔ effect) */
   React.useEffect(() => {
     let alive = true;
@@ -365,6 +510,8 @@ export function WorkflowDesignerForm() {
       setMetaDirty(false);
       setCanvasDirty(false);
       setValues({ code: "", name: "", threshold: "", description: "" });
+      setConds(EMPTY_CONDS); // t191 — شرط‌های فرم قبلی نمی‌ماند
+      setCondsDirty(false);
       posRef.current = {};
     },
     [selEntityType],
@@ -394,6 +541,9 @@ export function WorkflowDesignerForm() {
       nodes: [],
       transitions: [],
     });
+    /* t191 — شرط‌های ورود از سرور (نمایش/ویرایش مجدد) */
+    setConds(Array.isArray(mapped.conditions) ? mapped.conditions : []);
+    setCondsDirty(false);
     setNodes(
       mapped.nodes.map((n) => ({
         id: n.id,
@@ -472,6 +622,8 @@ export function WorkflowDesignerForm() {
     setMetaDirty(false);
     setCanvasDirty(false);
     setValues({ code: "", name: "", threshold: "", description: "" });
+    setConds(EMPTY_CONDS); // t191
+    setCondsDirty(false);
     posRef.current = {};
   }, [selEntityType, t]);
 
@@ -492,6 +644,12 @@ export function WorkflowDesignerForm() {
       toast.error(t("wf.des.errNameRequired"));
       return false;
     }
+    /* t191 — شرط‌های ناقص مانع کل ذخیره می‌شوند (آستانهٔ خالی/مقدار نامعتبر) */
+    const condErr = validateConds();
+    if (condErr) {
+      toast.error(condErr);
+      return false;
+    }
     try {
       if (currentId == null) {
         const res = await wf.post<DefDetail>("workflow-definitions", {
@@ -502,6 +660,7 @@ export function WorkflowDesignerForm() {
           thresholdAmount: values.threshold.trim()
             ? Number(normalizeDigits(values.threshold))
             : undefined,
+          conditions: conds, // t191 — شرط‌ها همراه ثبت اولیه
         });
         toast.success(t("wf.des.createdToast"));
         await refreshDefs();
@@ -518,6 +677,7 @@ export function WorkflowDesignerForm() {
         thresholdAmount: values.threshold.trim()
           ? Number(normalizeDigits(values.threshold))
           : null,
+        conditions: conds, // t191 — شرط‌ها همراه «ذخیره اطلاعات» (یک کلیک، همه‌چیز)
       });
       toast.success(t("abar.savedToast"));
       applyDetail(res);
@@ -548,6 +708,8 @@ export function WorkflowDesignerForm() {
       setNodes([]);
       setTransitions([]);
       setValues({ code: "", name: "", threshold: "", description: "" });
+      setConds(EMPTY_CONDS); // t191
+      setCondsDirty(false);
       setMetaDirty(false);
       setCanvasDirty(false);
       await refreshDefs();
@@ -659,6 +821,90 @@ export function WorkflowDesignerForm() {
       toast.error(e instanceof Error && e.message ? e.message : t("common.error"));
     } finally {
       setReinstating(false);
+    }
+  };
+
+  /* ------------------------------ شرط‌های ورود (t191) ------------------------------ */
+
+  const addCond = () => {
+    if (!metaEditable) return;
+    setConds((prev) => [...prev, newCond()]);
+    setCondsDirty(true);
+  };
+
+  const updateCond = (idx: number, patch: Partial<WfCond>) => {
+    if (!metaEditable) return;
+    setConds((prev) => prev.map((c, i) => (i === idx ? { ...c, ...patch } : c)));
+    setCondsDirty(true);
+  };
+
+  const delCond = (idx: number) => {
+    if (!metaEditable) return;
+    setConds((prev) => prev.filter((_, i) => i !== idx));
+    setCondsDirty(true);
+  };
+
+  /** اعتبارسنجی سمت کلاینت شرط‌ها — پیام اولین خطا (سرور هم دوباره می‌سنجد) */
+  const validateConds = (): string | null => {
+    for (const c of conds) {
+      if (!c.field) return t("wf.des.errCondInvalid");
+      const noValue = c.op === "empty" || c.op === "notEmpty";
+      if (!noValue && !c.value.trim()) return t("wf.des.errCondInvalid");
+      if (c.field === "amount" && c.value === "threshold" && !values.threshold.trim()) {
+        return t("wf.des.condThresholdMissing");
+      }
+      if (
+        c.field === "amount" &&
+        c.value !== "threshold" &&
+        c.value.trim() &&
+        Number.isNaN(Number(normalizeDigits(c.value)))
+      ) {
+        return t("wf.des.errCondAmountNumber");
+      }
+    }
+    return null;
+  };
+
+  /**
+   * ذخیرهٔ مستقل شرط‌ها (دکمهٔ کارت شرط‌ها). برای رکورد ذخیره‌نشده (ثبت جدید)،
+   * شرط‌ها با «ذخیره اطلاعات» همان اکشن بار در POST ثبت اولیه می‌روند.
+   */
+  const doSaveConds = async (): Promise<void> => {
+    if (!selEntityType) {
+      toast.error(t("wf.des.errFormPick"));
+      return;
+    }
+    if (isTerminated) {
+      toast.error(t("wf.des.terminatedReadOnlyToast"));
+      return;
+    }
+    if (currentId == null) {
+      /* رکورد هنوز ذخیره نشده — کاربر به ذخیرهٔ اصلی هدایت می‌شود */
+      const err = validateConds();
+      if (err) {
+        toast.error(err);
+        return;
+      }
+      toast.info(t("wf.des.condSaveViaMainSave"));
+      return;
+    }
+    const err = validateConds();
+    if (err) {
+      toast.error(err);
+      return;
+    }
+    setSavingConds(true);
+    try {
+      const res = await wf.put<DefDetail>(`workflow-definitions/${currentId}/conditions`, {
+        conditions: conds,
+      });
+      applyDetail(res);
+      setCondsDirty(false);
+      toast.success(t("wf.des.condSavedToast"));
+    } catch (e) {
+      toast.error(e instanceof Error && e.message ? e.message : t("common.error"));
+    } finally {
+      setSavingConds(false);
     }
   };
 
@@ -1220,6 +1466,128 @@ export function WorkflowDesignerForm() {
      ایستا همیشه تازه (الگوی loadedKey فرم سمت‌ها) */
   const gridKey = `${selEntityType ?? "none"}|${defsStamp}`;
 
+  /* ------------------------------ شرط‌ها: گزینه‌ها و ادیتور مقدار (t191) ------------------------------ */
+
+  const optionsFor = (field: string): RefOption[] => {
+    switch (field) {
+      case "voucherType":
+        return refOpts.voucherTypes;
+      case "accountGroup":
+        return refOpts.accountGroups;
+      case "ledgerAccount":
+        return refOpts.ledgerAccounts;
+      case "subsidiaryAccount":
+        return refOpts.subsidiaryAccounts;
+      case "detailType":
+        return refOpts.detailTypes;
+      case "detailItem":
+        return refOpts.detailItems;
+      default:
+        return [];
+    }
+  };
+
+  /** ادیتور مقدار هر شرط — بر اساس فیلد: دراپ‌داون دادهٔ واقعی، ماهیت،
+   *  مبلغ (عدد یا «آستانهٔ فرم»)، متن آزاد، یا بی‌مقدار (خالی باشد/نباشد). */
+  const renderCondValue = (c: WfCond, i: number) => {
+    const noValue = c.op === "empty" || c.op === "notEmpty";
+    if (noValue) {
+      return (
+        <span className="text-[11px] text-muted-foreground" aria-label={t("wf.des.condValue")}>
+          {t("wf.des.condNoValue")}
+        </span>
+      );
+    }
+    if (c.field === "voucherNature") {
+      return (
+        <Select
+          value={c.value || undefined}
+          disabled={!metaEditable}
+          onValueChange={(v) => updateCond(i, { value: v })}
+        >
+          <SelectTrigger className="h-8" aria-label={t("wf.des.condValue")}>
+            <SelectValue placeholder={t("wf.des.condValue")} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="1">{t("wf.des.natureNormal")}</SelectItem>
+            <SelectItem value="2">{t("wf.des.natureLegal")}</SelectItem>
+          </SelectContent>
+        </Select>
+      );
+    }
+    if (COND_SELECT_FIELDS.has(c.field)) {
+      const opts = optionsFor(c.field);
+      const known = opts.some((o) => o.code === c.value);
+      return (
+        <Select
+          value={c.value || undefined}
+          disabled={!metaEditable}
+          onValueChange={(v) => updateCond(i, { value: v })}
+        >
+          <SelectTrigger className="h-8" aria-label={t("wf.des.condValue")}>
+            <SelectValue placeholder={t("wf.des.condValue")} />
+          </SelectTrigger>
+          <SelectContent className="max-h-72">
+            {opts.map((o) => (
+              <SelectItem key={o.code} value={o.code}>
+                {o.code} — {o.title}
+              </SelectItem>
+            ))}
+            {c.value && !known && (
+              <SelectItem value={c.value}>
+                {c.value} — {t("wf.des.condSavedValue")}
+              </SelectItem>
+            )}
+          </SelectContent>
+        </Select>
+      );
+    }
+    if (c.field === "amount") {
+      const useThreshold = c.value === "threshold";
+      return (
+        <div className="flex items-center gap-1.5">
+          <Input
+            value={useThreshold ? values.threshold : c.value}
+            disabled={!metaEditable || useThreshold}
+            onChange={(e) => {
+              const num = normalizeDigits(e.target.value).replace(/[^0-9.]/g, "");
+              updateCond(i, { value: num });
+            }}
+            className="h-8"
+            dir="ltr"
+            inputMode="decimal"
+            aria-label={t("wf.des.condValue")}
+            placeholder={useThreshold ? t("wf.des.condUseThreshold") : "0"}
+          />
+          <Button
+            type="button"
+            size="sm"
+            variant={useThreshold ? "secondary" : "outline"}
+            className={cn(
+              "h-8 shrink-0 px-2 text-[10px]",
+              useThreshold && "ring-2 ring-teal-500/60",
+            )}
+            disabled={!metaEditable}
+            title={t("wf.des.condUseThreshold")}
+            onClick={() => updateCond(i, { value: useThreshold ? "" : "threshold" })}
+          >
+            {t("wf.des.condUseThreshold")}
+          </Button>
+        </div>
+      );
+    }
+    /* description و هر فیلد متنی دیگر */
+    return (
+      <Input
+        value={c.value}
+        disabled={!metaEditable}
+        onChange={(e) => updateCond(i, { value: e.target.value })}
+        className="h-8"
+        aria-label={t("wf.des.condValue")}
+      />
+    );
+  };
+
   /* ------------------------------ رندر ------------------------------ */
 
   return (
@@ -1244,7 +1612,7 @@ export function WorkflowDesignerForm() {
           if (await doSave()) newProcess();
         }}
         onCopy={() => {
-          /* فرآیند جدید با همان متا — کد پاک می‌شود (فرمِ برگزیده حفظ می‌شود) */
+          /* فرآیند جدید با همان متا و شرط‌ها — کد پاک می‌شود (فرمِ برگزیده حفظ می‌شود) */
           setCurrentId(null);
           setDetail(null);
           setNodes([]);
@@ -1253,6 +1621,7 @@ export function WorkflowDesignerForm() {
           setSelTrans(null);
           setCanvasDirty(false);
           setMetaDirty(false);
+          setCondsDirty(false); // t191 — شرط‌ها می‌مانند (کپی)
           setErrors([]);
           setValues((v) => ({ ...v, code: "" }));
           toast.success(t("abar.copyToast"));
@@ -1311,6 +1680,158 @@ export function WorkflowDesignerForm() {
         onHeaderDragEnd={chrome?.onDragEnd}
         onHeaderDoubleClick={chrome?.onDoubleClick}
       >
+        {/* t191 — کارت «شرط‌های ورود» (فیلترها): برای فرآیند ذخیره‌شده و ثبتِ
+            جدید هر دو؛ اتصال و/یا + عملگرهای یکسان + فیلترهای حسابداری برای
+            فرم «سند حسابداری» */}
+        {selEntityType != null && (
+          <section className="px-4 pb-1 pt-3">
+            <div className="rounded-xl border border-border/70 bg-card/60 p-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <ListFilter className="h-4 w-4 text-teal-700 dark:text-teal-300" aria-hidden />
+                <span className="text-sm font-semibold">{t("wf.des.condTitle")}</span>
+                <span
+                  className="rounded-full bg-muted px-1.5 text-[10px] text-muted-foreground"
+                  aria-label={t("wf.des.condCount")}
+                >
+                  {conds.length}
+                </span>
+                {condsDirty && !isTerminated && (
+                  <span className="rounded-full bg-amber-600/10 px-1.5 py-0.5 text-[10px] text-amber-700 dark:text-amber-300">
+                    {t("wf.des.unsavedBadge")}
+                  </span>
+                )}
+                <div className="ms-auto flex items-center gap-1.5">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-8"
+                    disabled={!metaEditable}
+                    onClick={addCond}
+                  >
+                    <Plus className="h-3.5 w-3.5" aria-hidden />
+                    {t("wf.des.condAdd")}
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="h-8 bg-teal-600 text-white hover:bg-teal-700"
+                    disabled={!metaEditable || savingConds || !condsDirty}
+                    onClick={() => void doSaveConds()}
+                  >
+                    {savingConds ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
+                    ) : (
+                      <Save className="h-3.5 w-3.5" aria-hidden />
+                    )}
+                    {t("wf.des.condSave")}
+                  </Button>
+                </div>
+              </div>
+              <p className="pt-1.5 text-[11px] leading-relaxed text-muted-foreground">
+                {t("wf.des.condHint")}
+              </p>
+              {!isVoucherForm && (
+                <p className="pt-1 text-[11px] leading-relaxed text-muted-foreground/80">
+                  {t("wf.des.condNonVoucherNote")}
+                </p>
+              )}
+              {isTerminated && (
+                <p className="mt-2 rounded-lg border border-rose-500/40 bg-rose-500/10 p-2 text-[11px] text-rose-800 dark:text-rose-300">
+                  {t("wf.des.condTerminatedNote")}
+                </p>
+              )}
+
+              {conds.length === 0 ? (
+                <p className="pt-2 text-xs text-muted-foreground">{t("wf.des.condEmpty")}</p>
+              ) : (
+                <div className="mt-2 space-y-2">
+                  {conds.map((c, i) => (
+                    <div
+                      key={i}
+                      data-testid="wf-cond-row"
+                      className="grid grid-cols-1 items-center gap-2 rounded-lg border border-border/50 bg-background/40 p-2 sm:grid-cols-[7.5rem_minmax(0,1fr)_minmax(0,11rem)_minmax(0,1fr)_2rem]"
+                    >
+                      {/* اتصال و/یا با شرط قبلی — ردیف اول فقط برچسب */}
+                      {i > 0 ? (
+                        <Select
+                          value={c.join}
+                          disabled={!metaEditable}
+                          onValueChange={(v) => updateCond(i, { join: v as WfCond["join"] })}
+                        >
+                          <SelectTrigger className="h-8" aria-label={t("wf.des.condJoin")}>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="and">{t("wf.des.joinAnd")}</SelectItem>
+                            <SelectItem value="or">{t("wf.des.joinOr")}</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <span className="hidden text-[10px] font-medium text-muted-foreground sm:block">
+                          {t("wf.des.condWhere")}
+                        </span>
+                      )}
+                      {/* فیلد — هفت فیلتر حسابداری فقط برای سند حسابداری */}
+                      <Select
+                        value={c.field}
+                        disabled={!metaEditable}
+                        onValueChange={(v) =>
+                          updateCond(i, { field: v, value: v === "amount" ? "threshold" : "" })
+                        }
+                      >
+                        <SelectTrigger className="h-8" aria-label={t("wf.des.condField")}>
+                          <SelectValue placeholder={t("wf.des.condField")} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {condFields.map((f) => (
+                            <SelectItem key={f.id} value={f.id}>
+                              {t(f.key)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {/* عملگر — یکسان برای همهٔ فرم‌ها (فرمان مالک) */}
+                      <Select
+                        value={c.op}
+                        disabled={!metaEditable}
+                        onValueChange={(v) =>
+                          updateCond(i, {
+                            op: v as CondOp,
+                            value: v === "empty" || v === "notEmpty" ? "" : c.value,
+                          })
+                        }
+                      >
+                        <SelectTrigger className="h-8" aria-label={t("wf.des.condOp")}>
+                          <SelectValue placeholder={t("wf.des.condOp")} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {COND_OPS.map((o) => (
+                            <SelectItem key={o.id} value={o.id}>
+                              {t(o.key)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {/* مقدار — ادیتور بر اساس فیلد */}
+                      {renderCondValue(c, i)}
+                      {/* حذف شرط */}
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8 text-destructive hover:text-destructive"
+                        disabled={!metaEditable}
+                        onClick={() => delCond(i)}
+                        aria-label={t("common.delete")}
+                      >
+                        <Scissors className="h-3.5 w-3.5" aria-hidden />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </section>
+        )}
+
         {/* ⑤ بوم طراح — اسلات children پوسته (زیر تب فرآیندها) */}
         {currentId != null && (
           <section className="px-4 pb-4 pt-3">
