@@ -294,3 +294,4 @@ $ DATABASE_URL="file:/home/z/my-project/db/workflow.db" NODE_PATH=./node_modules
 [Nest] 21757  - 10/31/2026, 5:36:41 PM     LOG [CartableSlaTimer] SLA timer armed (هر ۵ دقیقه — FR-12)
 [Nest] 21757  - 10/31/2026, 5:36:41 PM     LOG [NestApplication] Nest application successfully started +0ms
 [Nest] 21757  - 10/31/2026, 5:36:41 PM     LOG [Bootstrap] workflow-service listening on http://127.0.0.1:3004
+[t189] bulkAssignments roleCode=2 rowsIn=1 userIds=[22]
