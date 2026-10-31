@@ -5148,7 +5148,6 @@ Stage Summary:
 - artifacts: src/components/erp/settings/workflow-role-form.tsx؛ .zscreenshots/t187-final.png.
 
 ---
-<<<<<<< HEAD
 Task ID: t187-b
 Agent: Z.ai Code (main)
 Task: فرمان مالک — «اطلاعات فرم سمت های کاربران وقتی در تب اطلاعات تخصیص کاربر را ثبت می کنم و روی آیکون های ذخیره کلیک می کنم خطای internal server error می دهد» (ادامهٔ t187 — عیبِ عملیاتیِ باقی‌مانده پس از اصلاحِ UI).
@@ -5164,7 +5163,8 @@ Work Log:
 Stage Summary:
 - خطای «internal server error» هنگام ذخیرهٔ تخصیص کاربران برطرف شد — نه با تغییرِ کدِ فرم، بلکه با بستنِ حفرهٔ عملیاتی: workflow-service اکنون مشمول نگهبانِ خودکارِ Task 112 است و هر بار مرگِ میانهٔ جلسه، حداکثر تا ~۳۰-۹۰ ثانیه بعد به‌عنوان فرزندِ پروسهٔ ماندگار احیا می‌شود؛ به‌علاوه پروسه‌های زامبی مصرف‌کنندهٔ حافظه پاک شدند. سناریوی مالک (افزودن کاربر به تخصیص و کلیک ذخیره) از سر گرفته و بدون خطا تأیید شد.
 - artifacts: mini-services/auto-push-service/index.ts.
-=======
+
+---
 Task ID: t188
 Agent: Z.ai Code (main)
 Task: فرمان مالک — «پیش نمایش برنامه اجرا نمی شود».
@@ -5180,4 +5180,3 @@ Work Log:
 Stage Summary:
 - پیش‌نمایش احیا شد و مکانیزم‌های سه‌لایه برای تکرارنشدنِ آن برقرار شد: ① نگهبانِ :3000 (next-watchdog) حالا بخشی از بوتِ استاندارد است ② کلید داخلی HMAC روی هر دو سمت fallback دارد تا بازتولیدِ .env توسط سندباکس زنجیرهٔ BFF→سرویس‌ها را نشکند ③ بهداشت حافظه (پاک‌سازی زامبی‌های t187-b) خطر OOMِ بوت را کم می‌کند.
 - artifacts: src/lib/internal-sign.ts؛ mini-services/_shared/internal-auth.ts؛ .env؛ .zscripts/dev.sh؛ .zscreenshots/t188-preview-up.png.
->>>>>>> 2d82665 (t188: restore dead preview after sandbox reboot — orphan watchdog into boot + internal-key fallback on both sides (env wipe-proof))
