@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Vazirmatn', Tahoma, sans-serif; background:#F8FAFC; color:#243447; padding:44px 36px; }
+  .canvas { width:1160px; margin:0 auto; }
+  .kicker { font-size:12px; font-weight:600; color:#64748B; letter-spacing:.02em; margin-bottom:6px; }
+  h1 { font-size:26px; font-weight:800; color:#1E293B; }
+  .subtitle { font-size:13.5px; color:#475569; margin-top:8px; line-height:1.9; }
+  .title-wrap { margin-bottom:28px; }
+
+  .phase-group { background:#FFFFFF; border:1px solid #CBD5E1; border-radius:14px; overflow:hidden; }
+  .phase-head { display:flex; align-items:center; gap:14px; padding:13px 18px; background:#F1F5F9; border-bottom:1px solid #E2E8F0; }
+  .phase-badge { min-width:52px; height:30px; border-radius:8px; background:#334155; color:#fff; font-size:12.5px; font-weight:700; display:flex; align-items:center; justify-content:center; padding:0 10px; }
+  .phase-title { font-size:16.5px; font-weight:800; color:#1E293B; }
+  .role-chip { margin-inline-start:auto; font-size:12px; font-weight:600; color:#0F766E; background:#F0FDFA; border:1px solid #5EEAD4; border-radius:999px; padding:4px 12px; }
+  .steps { padding:14px 18px 16px; display:flex; flex-direction:column; gap:10px; }
+  .step { display:flex; align-items:flex-start; gap:12px; }
+  .step-num { min-width:26px; height:26px; border-radius:50%; background:#E2E8F0; color:#334155; border:1.5px solid #64748B; font-size:12.5px; font-weight:700; display:flex; align-items:center; justify-content:center; margin-top:1px; }
+  .step-text { font-size:14.5px; color:#1E293B; line-height:1.85; padding-top:1px; }
+  .step-text b { color:#0F172A; }
+  .status-tag { display:inline-block; font-size:12px; font-weight:700; border-radius:6px; padding:1px 8px; margin-inline-start:6px; vertical-align:1px; }
+  .st1 { background:#F1F5F9; border:1px solid #94A3B8; color:#334155; }
+  .st2 { background:#FEF3C7; border:1px solid #D97706; color:#92400E; }
+  .st3 { background:#F0FDF4; border:1px solid #10B981; color:#065F46; }
+  .st4 { background:#E2E8F0; border:1.5px solid #475569; color:#1E293B; }
+
+  .branch-row { display:flex; gap:12px; flex-wrap:wrap; padding-inline-start:38px; }
+  .chip { font-size:13px; font-weight:600; border-radius:9px; padding:7px 14px; line-height:1.8; }
+  .chip-yes { background:#F0FDF4; border:1px solid #10B981; color:#065F46; }
+  .chip-no  { background:#FEF2F2; border:1px solid #EF4444; color:#B91C1C; }
+
+  .arrow-wrap { display:flex; flex-direction:column; align-items:center; height:36px; justify-content:center; }
+  .arrow-line { width:2px; height:16px; background:#64748B; }
+  .arrow-head { width:0; height:0; border-left:7px solid transparent; border-right:7px solid transparent; border-top:9px solid #64748B; }
+
+  .legend { margin-top:30px; background:#FFFFFF; border:1px solid #CBD5E1; border-radius:12px; padding:16px 18px; }
+  .legend-title { font-size:13px; font-weight:800; color:#334155; margin-bottom:10px; }
+  .legend-row { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .note { font-size:12.5px; color:#475569; margin-top:10px; line-height:1.9; }
+</style>
+</head>
+<body>
+<div class="canvas">
+  <div class="title-wrap">
+    <div class="kicker">زیرسیستم گردش کار — نمونهٔ فرآیند مرجع</div>
+    <h1>فلوچارت گردش کار سند حسابداری</h1>
+    <div class="subtitle">چرخش سند از «ثبت اولیه» تا «دائمی» — این فرآیند در «طراح گردش کار» بدون کدنویسی تعریف می‌شود و هر فرمِ دارای فیلد وضعیت می‌تواند روی همین الگو سوار شود.</div>
+  </div>
+
+  <div class="phase-group">
+    <div class="phase-head">
+      <div class="phase-badge">فاز ۱</div>
+      <div class="phase-title">ثبت و ارسال</div>
+      <div class="role-chip">نقش: کاربر ثبت‌کننده</div>
+    </div>
+    <div class="steps">
+      <div class="step"><div class="step-num">۱</div><div class="step-text">ایجاد سند جدید در فرم سند حسابداری <span class="status-tag st1">وضعیت ۱ — ثبت اولیه</span></div></div>
+      <div class="step"><div class="step-num">۲</div><div class="step-text">تکمیل اقلام سند، معین و تفصیلی‌ها، شرح، پیوست‌ها و مستندات پشتیبان</div></div>
+      <div class="step"><div class="step-num">۳</div><div class="step-text">فشردن «ارسال به گردش کار» ⇒ سند در <b>کارتابل حسابدار</b> قرار می‌گیرد و برای ثبت‌کننده قفل می‌شود</div></div>
+    </div>
+  </div>
+
+  <div class="arrow-wrap"><div class="arrow-line"></div><div class="arrow-head"></div></div>
+
+  <div class="phase-group">
+    <div class="phase-head">
+      <div class="phase-badge">فاز ۲</div>
+      <div class="phase-title">بازبینی و مطابقت</div>
+      <div class="role-chip">نقش: حسابدار</div>
+    </div>
+    <div class="steps">
+      <div class="step"><div class="step-num">۴</div><div class="step-text">بازبینی اقلام، صحت حساب‌ها و تفصیلی‌ها، تطابق با مدرک پشتیبان و قواعد حسابداری</div></div>
+      <div class="step"><div class="step-num">۵</div><div class="step-text">تصمیم: «سند مطابق است؟»</div></div>
+      <div class="branch-row">
+        <div class="chip chip-yes">بله ⇒ تایید حسابداری <span class="status-tag st2">وضعیت ۲ — یادداشت</span> و ارجاع به سرپرست مالی</div>
+        <div class="chip chip-no">خیر ⇒ رد با ثبت دلیل و برگشت به گام ۱ برای اصلاح</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow-wrap"><div class="arrow-line"></div><div class="arrow-head"></div></div>
+
+  <div class="phase-group">
+    <div class="phase-head">
+      <div class="phase-badge">فاز ۳</div>
+      <div class="phase-title">تایید سلسله‌مراتبی</div>
+      <div class="role-chip">نقش: سرپرست مالی / مدیر مالی</div>
+    </div>
+    <div class="steps">
+      <div class="step"><div class="step-num">۶</div><div class="step-text">تایید سرپرست مالی — بررسی معیارهای کنترلی و انطباق با بودجه</div></div>
+      <div class="step"><div class="step-num">۷</div><div class="step-text">قاعدهٔ شرطی در موتور گردش کار: «جمع مبلغ سند بالاتر از آستانهٔ تعریف‌شده است؟»</div></div>
+      <div class="branch-row">
+        <div class="chip chip-yes">بله ⇒ عبور از ایستگاه تایید مدیر مالی</div>
+        <div class="chip chip-no">خیر ⇒ عبور مستقیم به گام ۸ (بدون تایید مدیر)</div>
+      </div>
+      <div class="step"><div class="step-num">۸</div><div class="step-text">تایید نهایی <span class="status-tag st3">وضعیت ۳ — تاییدشده</span> ⇒ سند قفل می‌شود؛ فقط از این مسیر قابل تنظیم است</div></div>
+    </div>
+  </div>
+
+  <div class="arrow-wrap"><div class="arrow-line"></div><div class="arrow-head"></div></div>
+
+  <div class="phase-group">
+    <div class="phase-head">
+      <div class="phase-badge">فاز ۴</div>
+      <div class="phase-title">قطعی‌سازی و بایگانی</div>
+      <div class="role-chip">نقش: سیستم (خودکار)</div>
+    </div>
+    <div class="steps">
+      <div class="step"><div class="step-num">۹</div><div class="step-text">در بستن دورهٔ مالی، سندهای تاییدشده به‌صورت خودکار قطعی می‌شوند <span class="status-tag st4">وضعیت ۴ — دائمی</span></div></div>
+      <div class="step"><div class="step-num">۱۰</div><div class="step-text">ابلاغ نتیجه به ثبت‌کننده + ثبت کامل تاریخچهٔ اقدام‌ها (چه‌کسی، چه‌زمانی، با چه دلیلی)</div></div>
+    </div>
+  </div>
+
+  <div class="legend">
+    <div class="legend-title">راهنمای وضعیت‌های سند (نگاشت به گام‌های فرآیند)</div>
+    <div class="legend-row">
+      <span class="status-tag st1">۱ — ثبت اولیه</span>
+      <span class="status-tag st2">۲ — یادداشت</span>
+      <span class="status-tag st3">۳ — تاییدشده</span>
+      <span class="status-tag st4">۴ — دائمی</span>
+    </div>
+    <div class="note">حلقهٔ برگشت: رد در هر یک از گام‌های بازبینی یا تایید، سند را با ثبت دلیل به گام ۱ (ثبت‌کننده) برمی‌گرداند — مسیر «واگرد» فقط پیش از تایید نهایی فعال است. در کنار مسیر اصلی، «تفویض اختیار» (جایگزینی تاییدکننده در غیاب) و «یادآوری SLA» (تایم‌اوت هر گام) نیز به‌عنوان مکانیزم‌های جانبی در دسترس‌اند.</div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Vazirmatn', Tahoma, sans-serif; background:#F8FAFC; color:#243447; padding:44px 36px; }
+  .canvas { width:1160px; margin:0 auto; }
+  .kicker { font-size:12px; font-weight:600; color:#64748B; margin-bottom:6px; }
+  h1 { font-size:26px; font-weight:800; color:#1E293B; }
+  .subtitle { font-size:13.5px; color:#475569; margin-top:8px; line-height:1.9; }
+  .title-wrap { margin-bottom:28px; }
+
+  .band { background:#FFFFFF; border:1px solid #CBD5E1; border-radius:14px; overflow:hidden; }
+  .band-head { display:flex; align-items:center; gap:12px; padding:12px 18px; background:#F1F5F9; border-bottom:1px solid #E2E8F0; }
+  .band-dot { width:12px; height:12px; border-radius:3px; background:#334155; }
+  .band-title { font-size:15.5px; font-weight:800; color:#1E293B; }
+  .band-sub { font-size:12px; color:#64748B; margin-inline-start:auto; font-weight:600; }
+  .band-body { padding:14px 18px 16px; }
+
+  .chips { display:flex; gap:10px; flex-wrap:wrap; }
+  .chip { font-size:13px; font-weight:600; color:#334155; background:#F8FAFC; border:1px solid #CBD5E1; border-radius:9px; padding:7px 14px; }
+  .chip-core { background:#E2E8F0; border-color:#94A3B8; color:#0F172A; font-weight:700; }
+
+  .adapter { margin-top:12px; font-size:12.5px; color:#0F766E; background:#F0FDFA; border:1px dashed #5EEAD4; border-radius:9px; padding:9px 14px; line-height:1.8; }
+  .adapter b { color:#115E59; }
+
+  .modules { display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; }
+  .module { background:#F8FAFC; border:1px solid #CBD5E1; border-radius:10px; padding:11px 13px; }
+  .module-title { font-size:13.5px; font-weight:800; color:#0F172A; margin-bottom:5px; }
+  .module-desc { font-size:11.5px; color:#475569; line-height:1.75; }
+
+  .svc-tag { display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:700; color:#115E59; background:#F0FDFA; border:1px solid #5EEAD4; border-radius:999px; padding:4px 12px; }
+
+  .arrow-wrap { display:flex; flex-direction:column; align-items:center; height:36px; justify-content:center; }
+  .arrow-line { width:2px; height:16px; background:#64748B; }
+  .arrow-head { width:0; height:0; border-left:7px solid transparent; border-right:7px solid transparent; border-top:9px solid #64748B; }
+
+  .data-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .data-card { background:#F8FAFC; border:1px solid #CBD5E1; border-radius:10px; padding:11px 13px; }
+  .data-title { font-size:13.5px; font-weight:800; color:#0F172A; margin-bottom:4px; }
+  .data-desc { font-size:11.5px; color:#475569; line-height:1.75; }
+</style>
+</head>
+<body>
+<div class="canvas">
+  <div class="title-wrap">
+    <div class="kicker">مشاورهٔ معماری — زیرسیستم گردش کار</div>
+    <h1>معماری پیشنهادی گردش کار: سرویس مستقل، سوار بر فرم‌های موجود</h1>
+    <div class="subtitle">موتور گردش کار یک mini-service مستقل است و هیچ فرمی به آن گره خورده نیست؛ فرم‌ها از طریق یک «آداپتور مشترک» به موتور متصل می‌شوند — افزودن هر فرم جدید با وضعیت، فقط با یک ردیف پیکربندی.</div>
+  </div>
+
+  <div class="band">
+    <div class="band-head"><div class="band-dot"></div><div class="band-title">لایهٔ فرم‌ها — هر فرمی که فیلد وضعیت دارد</div><div class="band-sub">کلاینت Next.js</div></div>
+    <div class="band-body">
+      <div class="chips">
+        <div class="chip chip-core">سند حسابداری</div>
+        <div class="chip">قرارداد</div>
+        <div class="chip">درختواره حساب‌ها</div>
+        <div class="chip">کاربر جدید</div>
+        <div class="chip">طرف حساب</div>
+        <div class="chip">هر فرم آینده…</div>
+      </div>
+      <div class="adapter"><b>آداپتور مشترک گردش کار</b> (یک کامپوننت React قابل استفادهٔ مجدد): نوار وضعیت زنده + دکمه‌های «ارسال / تایید / رد / برگشت / تفویض» + کشوی تاریخچهٔ اقدام‌ها — فرم فقط «entityType» و «شناسهٔ رکورد» را به موتور اعلام می‌کند.</div>
+    </div>
+  </div>
+
+  <div class="arrow-wrap"><div class="arrow-line"></div><div class="arrow-head"></div></div>
+
+  <div class="band">
+    <div class="band-head"><div class="band-dot"></div><div class="band-title">لایهٔ BFF — پروکسی یکپارچه</div><div class="band-sub">Next.js :3000</div></div>
+    <div class="band-body">
+      <div class="chips">
+        <div class="chip chip-core">/api/workflow/*</div>
+        <div class="chip">کنترل دسترسی با auth-service (نقش‌ها و مجوزها)</div>
+        <div class="chip">پیام‌ها و برچسب‌ها i18n ×۱۳ زبان</div>
+        <div class="chip">نظارت و لاگ یکپارچه</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow-wrap"><div class="arrow-line"></div><div class="arrow-head"></div></div>
+
+  <div class="band">
+    <div class="band-head"><div class="band-dot"></div><div class="band-title">سرویس گردش کار — موتور مستقل</div><div class="band-sub"><span class="svc-tag">mini-service :3004</span></div></div>
+    <div class="band-body">
+      <div class="modules">
+        <div class="module"><div class="module-title">موتور حالت (State Machine)</div><div class="module-desc">حرکت نمونه روی گره‌ها و گذارها؛ قفل هم‌زمانی؛ جلوگیری از تایید موازی؛ فقط گذارهای مجاز.</div></div>
+        <div class="module"><div class="module-title">طراح فرآیند</div><div class="module-desc">تعریف گره‌ها، نقش‌های مجاز، گذارها و شرط‌ها به‌صورت گراف — بدون کدنویسی، با نسخه‌بندی فرآیند.</div></div>
+        <div class="module"><div class="module-title">موتور قواعد</div><div class="module-desc">شرط مبلغ، شعبه، نوع سند، دورهٔ مالی — انتخاب مسیر تایید به‌صورت خودکار در لحظهٔ ارسال.</div></div>
+        <div class="module"><div class="module-title">کارتابل و ابلاغ</div><div class="module-desc">«در انتظار اقدام من»، یادآوری SLA هر گام، ارتقای خودکار در تایم‌اوت، اطلاع‌رسانی به ذی‌نفعان.</div></div>
+        <div class="module"><div class="module-title">گزارش گردش</div><div class="module-desc">مسیر اسناد، گلوگاه‌ها، میانگین زمان هر گام، عملکرد تاییدکنندگان، اسناد معلق.</div></div>
+        <div class="module"><div class="module-title">تاریخچه و حسابرسی</div><div class="module-desc">ثبت هر اقدام با بازیگر، زمان، دلیل و پیوست؛ گزارش ردگیری کامل برای هر سند.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow-wrap"><div class="arrow-line"></div><div class="arrow-head"></div></div>
+
+  <div class="band">
+    <div class="band-head"><div class="band-dot"></div><div class="band-title">لایهٔ داده — ارجاع سبک، بدون کپی داده</div><div class="band-sub">SQLite</div></div>
+    <div class="band-body">
+      <div class="data-grid">
+        <div class="data-card"><div class="data-title">db/workflow.db — دیتابیس اختصاصی گردش کار</div><div class="module-desc">تعریف فرآیند، گره‌ها و گذارها، نمونه‌های در جریان، تاریخچهٔ اقدام‌ها، تفویض‌ها، ابلاغ‌ها (۷ جدول — جزئیات در دیاگرام ERD).</div></div>
+        <div class="data-card"><div class="data-title">منابع موجود — فقط با شناسه</div><div class="module-desc">settings.db (شناسهٔ سند و فرم‌ها)، auth.db (کاربر و نقش‌ها). موتور گردش کار هرگز دادهٔ فرم را کپی نمی‌کند؛ فقط «entityType + entityId» نگه می‌دارد.</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

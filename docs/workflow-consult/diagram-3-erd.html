@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Vazirmatn', Tahoma, sans-serif; background:#F8FAFC; color:#243447; padding:44px 36px; }
+  .outer { width:1560px; margin:0 auto; }
+  .kicker { font-size:12px; font-weight:600; color:#64748B; margin-bottom:6px; }
+  h1 { font-size:26px; font-weight:800; color:#1E293B; }
+  .subtitle { font-size:13.5px; color:#475569; margin-top:8px; line-height:1.9; margin-bottom:30px; }
+
+  .erd { position:relative; width:1560px; height:1130px; }
+  .erd svg.wires { position:absolute; inset:0; z-index:0; }
+  .tbl { position:absolute; z-index:1; background:#FFFFFF; border:1.5px solid #CBD5E1; border-radius:12px; overflow:hidden; box-shadow:0 1px 3px rgba(15,23,42,.06); }
+  .tbl-head { display:flex; align-items:center; justify-content:space-between; gap:10px; background:#F1F5F9; border-bottom:1px solid #E2E8F0; padding:10px 14px; }
+  .tbl-en { font-size:14px; font-weight:800; color:#0F172A; direction:ltr; }
+  .tbl-fa { font-size:11.5px; font-weight:600; color:#475569; }
+  .rows { padding:9px 14px 11px; display:flex; flex-direction:column; gap:7px; }
+  .col { display:flex; align-items:baseline; gap:8px; }
+  .badge { font-size:9.5px; font-weight:800; border-radius:4px; padding:1px 5px; direction:ltr; flex:none; position:relative; top:-1px; }
+  .pk { background:#334155; color:#fff; }
+  .fk { background:#E2E8F0; color:#334155; border:1px solid #94A3B8; }
+  .col-name { font-size:12.5px; font-weight:700; color:#1E293B; direction:ltr; unicode-bidi:embed; }
+  .col-desc { font-size:11.5px; color:#64748B; margin-inline-start:auto; text-align:left; }
+
+  .strip { position:absolute; z-index:1; background:#F0FDFA; border:1.5px solid #5EEAD4; border-radius:12px; padding:14px 18px; }
+  .strip-title { font-size:14px; font-weight:800; color:#115E59; direction:ltr; display:inline; }
+  .strip-fa { font-size:13.5px; font-weight:800; color:#115E59; display:inline; margin-inline-start:8px; }
+  .strip-line { font-size:12.5px; color:#134E4A; margin-top:8px; line-height:1.9; }
+</style>
+</head>
+<body>
+<div class="outer">
+  <div class="kicker">مشاورهٔ داده — زیرسیستم گردش کار</div>
+  <h1>ERD جداول گردش کار (db/workflow.db)</h1>
+  <div class="subtitle">هفت جدول هسته + یک جدول نگاشت. نمونهٔ گردش کار (Instance) به رکورد فرم فقط با «entityType + entityId» ارجاع می‌دهد — هیچ دادهٔ فرم کپی نمی‌شود؛ با نسخه‌بندی فرآیند، اسنادِ در جریان با همان نسخهٔ خودشان ادامه می‌دهند.</div>
+
+  <div class="erd">
+    <svg class="wires" width="1560" height="1130" viewBox="0 0 1560 1130" fill="none">
+      <defs>
+        <marker id="ah" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto">
+          <path d="M0,0 L9,4 L0,8 Z" fill="#64748B"/>
+        </marker>
+      </defs>
+      <!-- def (راست) → node (وسط) -->
+      <line x1="1120" y1="112" x2="986" y2="112" stroke="#64748B" stroke-width="1.6" marker-end="url(#ah)"/>
+      <text x="1053" y="100" text-anchor="middle" font-size="11.5" fill="#475569" font-family="Vazirmatn">۱:N گره‌ها</text>
+      <!-- node → trans (چپ) -->
+      <line x1="580" y1="112" x2="446" y2="112" stroke="#64748B" stroke-width="1.6" marker-end="url(#ah)"/>
+      <text x="513" y="100" text-anchor="middle" font-size="11.5" fill="#475569" font-family="Vazirmatn">۱:N گذارها</text>
+      <!-- def → inst -->
+      <path d="M1160,224 V290 H1000 V346" stroke="#64748B" stroke-width="1.6" marker-end="url(#ah)"/>
+      <text x="1080" y="282" text-anchor="middle" font-size="11.5" fill="#475569" font-family="Vazirmatn">۱:N نمونهٔ گردش</text>
+      <!-- inst → log -->
+      <path d="M1000,600 V648 H1290 V686" stroke="#64748B" stroke-width="1.6" marker-end="url(#ah)"/>
+      <text x="1145" y="642" text-anchor="middle" font-size="11.5" fill="#475569" font-family="Vazirmatn">۱:N تاریخچهٔ اقدام</text>
+      <!-- inst → notif -->
+      <line x1="780" y1="600" x2="780" y2="686" stroke="#64748B" stroke-width="1.6" marker-end="url(#ah)"/>
+      <text x="790" y="652" text-anchor="start" font-size="11.5" fill="#475569" font-family="Vazirmatn">۱:N ابلاغ</text>
+      <!-- inst → strip (dashed) -->
+      <path d="M1035,600 V976" stroke="#94A3B8" stroke-width="1.5" stroke-dasharray="5 5" marker-end="url(#ah)"/>
+      <text x="1024" y="968" text-anchor="end" font-size="11.5" fill="#64748B" font-family="Vazirmatn">نگاشت وضعیت فرم‌ها</text>
+    </svg>
+
+    <div class="tbl" style="right:40px; top:0; width:400px; height:224px;">
+      <div class="tbl-head"><span class="tbl-en">WorkflowDefinition</span><span class="tbl-fa">تعریف فرآیند</span></div>
+      <div class="rows">
+        <div class="col"><span class="badge pk">PK</span><span class="col-name">id</span><span class="col-desc">شناسه</span></div>
+        <div class="col"><span class="col-name">code</span><span class="col-desc">مثل WF-VOUCHER</span></div>
+        <div class="col"><span class="col-name">name</span><span class="col-desc">«گردش کار سند حسابداری»</span></div>
+        <div class="col"><span class="col-name">entityType</span><span class="col-desc">voucher / contract / …</span></div>
+        <div class="col"><span class="col-name">version</span><span class="col-desc">نسخهٔ فرآیند</span></div>
+        <div class="col"><span class="col-name">isActive</span><span class="col-desc">فقط یک نسخهٔ فعال</span></div>
+      </div>
+    </div>
+
+    <div class="tbl" style="right:580px; top:0; width:400px; height:250px;">
+      <div class="tbl-head"><span class="tbl-en">WorkflowNode</span><span class="tbl-fa">گره‌های فرآیند</span></div>
+      <div class="rows">
+        <div class="col"><span class="badge pk">PK</span><span class="col-name">id</span><span class="col-desc">شناسه</span></div>
+        <div class="col"><span class="badge fk">FK</span><span class="col-name">definitionId</span><span class="col-desc">فرآیند مادر</span></div>
+        <div class="col"><span class="col-name">nodeType</span><span class="col-desc">شروع / اقدام / شرط / پایان</span></div>
+        <div class="col"><span class="col-name">title</span><span class="col-desc">«بازبینی حسابدار»</span></div>
+        <div class="col"><span class="col-name">roleCode</span><span class="col-desc">نقش مجاز اقدام</span></div>
+        <div class="col"><span class="col-name">slaHours</span><span class="col-desc">مهل اقدام</span></div>
+        <div class="col"><span class="col-name">orderIndex</span><span class="col-desc">ترتیب</span></div>
+      </div>
+    </div>
+
+    <div class="tbl" style="right:1120px; top:0; width:400px; height:224px;">
+      <div class="tbl-head"><span class="tbl-en">WorkflowTransition</span><span class="tbl-fa">گذارها (قواعد حرکت)</span></div>
+      <div class="rows">
+        <div class="col"><span class="badge pk">PK</span><span class="col-name">id</span><span class="col-desc">شناسه</span></div>
+        <div class="col"><span class="badge fk">FK</span><span class="col-name">fromNodeId</span><span class="col-desc">از گره</span></div>
+        <div class="col"><span class="badge fk">FK</span><span class="col-name">toNodeId</span><span class="col-desc">به گره</span></div>
+        <div class="col"><span class="col-name">action</span><span class="col-desc">ارسال / تایید / رد / برگشت / ابطال</span></div>
+        <div class="col"><span class="col-name">conditionExpr</span><span class="col-desc">شرط مثل «مبلغ > آستانه»</span></div>
+        <div class="col"><span class="col-name">isDefault</span><span class="col-desc">مسیر پیش‌فرض</span></div>
+      </div>
+    </div>
+
+    <div class="tbl" style="right:480px; top:350px; width:600px; height:250px;">
+      <div class="tbl-head"><span class="tbl-en">WorkflowInstance</span><span class="tbl-fa">نمونهٔ در جریان (قلب سیستم)</span></div>
+      <div class="rows">
+        <div class="col"><span class="badge pk">PK</span><span class="col-name">id</span><span class="col-desc">شناسه</span></div>
+        <div class="col"><span class="badge fk">FK</span><span class="col-name">definitionId + version</span><span class="col-desc">فرآیند و نسخهٔ آن</span></div>
+        <div class="col"><span class="col-name">entityType + entityId</span><span class="col-desc">ارجاع سبک به رکورد فرم</span></div>
+        <div class="col"><span class="col-name">currentStatus</span><span class="col-desc">وضعیت فرم — سند: ۱..۴</span></div>
+        <div class="col"><span class="badge fk">FK</span><span class="col-name">currentNodeId</span><span class="col-desc">گرهٔ جاری</span></div>
+        <div class="col"><span class="col-name">state</span><span class="col-desc">در جریان / تایید / رد / ابطال</span></div>
+        <div class="col"><span class="col-name">startedBy / startedAt / finishedAt</span><span class="col-desc">شروع و پایان</span></div>
+      </div>
+    </div>
+
+    <div class="tbl" style="right:40px; top:690px; width:460px; height:224px;">
+      <div class="tbl-head"><span class="tbl-en">WorkflowActionLog</span><span class="tbl-fa">تاریخچهٔ اقدام‌ها (حسابرسی)</span></div>
+      <div class="rows">
+        <div class="col"><span class="badge pk">PK</span><span class="col-name">id</span><span class="col-desc">شناسه</span></div>
+        <div class="col"><span class="badge fk">FK</span><span class="col-name">instanceId</span><span class="col-desc">نمونهٔ گردش</span></div>
+        <div class="col"><span class="col-name">fromNodeId / toNodeId</span><span class="col-desc">مسیر حرکت</span></div>
+        <div class="col"><span class="col-name">action + actorId</span><span class="col-desc">اقدام و بازیگر</span></div>
+        <div class="col"><span class="col-name">comment / attachments</span><span class="col-desc">دلیل و مدارک</span></div>
+        <div class="col"><span class="col-name">createdAt</span><span class="col-desc">زمان — خط زمانی کامل</span></div>
+      </div>
+    </div>
+
+    <div class="tbl" style="right:550px; top:690px; width:460px; height:224px;">
+      <div class="tbl-head"><span class="tbl-en">WorkflowNotification</span><span class="tbl-fa">ابلاغ و کارتابل</span></div>
+      <div class="rows">
+        <div class="col"><span class="badge pk">PK</span><span class="col-name">id</span><span class="col-desc">شناسه</span></div>
+        <div class="col"><span class="badge fk">FK</span><span class="col-name">instanceId / nodeId</span><span class="col-desc">نمونه و گره</span></div>
+        <div class="col"><span class="col-name">userId</span><span class="col-desc">گیرندهٔ اقدام</span></div>
+        <div class="col"><span class="col-name">channel</span><span class="col-desc">کارتابل / ایمیل / پیام</span></div>
+        <div class="col"><span class="col-name">sentAt / readAt</span><span class="col-desc">ارسال و مطالعه</span></div>
+      </div>
+    </div>
+
+    <div class="tbl" style="right:1060px; top:690px; width:460px; height:190px;">
+      <div class="tbl-head"><span class="tbl-en">WorkflowDelegation</span><span class="tbl-fa">تفویض اختیار</span></div>
+      <div class="rows">
+        <div class="col"><span class="badge pk">PK</span><span class="col-name">id</span><span class="col-desc">شناسه</span></div>
+        <div class="col"><span class="col-name">fromUserId / toUserId</span><span class="col-desc">ارجاع به auth.db</span></div>
+        <div class="col"><span class="col-name">scope</span><span class="col-desc">نوع سند / سقف مبلغ</span></div>
+        <div class="col"><span class="col-name">fromDate / toDate / isActive</span><span class="col-desc">بازهٔ اعتبار</span></div>
+      </div>
+    </div>
+
+    <div class="strip" style="right:40px; top:980px; width:1480px;">
+      <span class="strip-title">WorkflowStatusMap</span><span class="strip-fa">— نگاشت وضعیت هر فرم به گام گردش کار</span>
+      <div class="strip-line">سند حسابداری: «۱ ثبت اولیه → گام ثبت» · «۲ یادداشت → گام بازبینی (حسابدار)» · «۳ تاییدشده → گام تایید نهایی» · «۴ دائمی → پایان فرآیند» — افزودن هر فرم دیگر با فیلد وضعیت: فقط یک ردیف با entityType تازه، بدون تغییر در موتور و بدون تغییر در فرم.</div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
