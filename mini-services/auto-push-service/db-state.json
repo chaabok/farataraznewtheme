@@ -15,5 +15,6 @@
   "sales.db": "01435566f8e89baff5310893edd9e6bdaf7e9bc337b3e8dc5971b7ef8eaec503",
   "secondary.db": "6e13c8e182bf839d1f8cbf77d6f2df56bdfec56ad968bc1891fa1fce619b9f31",
   "settings.db": "b1c0be7386dae02ccf40002ff3c125c0227f55ff963542756baf32e61580eee6",
-  "setup.db": "3156779f3911a11bc31001ba669fabe4ab13ce751fffbe8fce286638fec1b7ba"
+  "setup.db": "3156779f3911a11bc31001ba669fabe4ab13ce751fffbe8fce286638fec1b7ba",
+  "workflow.db": "853e95fd5350b9864e479664442d044faedf1abded340327add90e3e530d30f9"
 }

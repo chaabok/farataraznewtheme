@@ -14,4 +14,6 @@ bun install v1.3.14 (0d9b296a)
 + @prisma/client@6.19.3
 + bcryptjs@2.4.3
 
-44 error: Cannot find module '@nestjs/core' from '/home/z/my-project/mini-services/shared/src/error: Cannot find module '@nestjs/core' from '/home/z/my-project/mini-services/shared/src/index.ts'
+44 error: Cannot find module '@nestjs/core' from '/home/z/my-project/mini-services/shared/src/error: Canerror: script "dev" was terminated by signal SIGTERM (Polite quit request)
+d/src/index.ts'
+error: script "dev" was terminated by signal SIGTERM (Polite quit request)

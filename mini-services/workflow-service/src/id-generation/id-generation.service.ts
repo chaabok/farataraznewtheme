@@ -117,7 +117,7 @@ export class IdGenerationService {
 function hashTableName(name: string): bigint {
   let h = 5381n;
   for (let i = 0; i < name.length; i++) {
-    h = ((h << 5n) + h + BigInt(name.charCodeAt(i))) & 0xffffffffffffffffn;
+    h = ((h << 5n) + h + BigInt(name.charCodeAt(i))) & 0x7fffffffffffffffn;
   }
   return h;
 }

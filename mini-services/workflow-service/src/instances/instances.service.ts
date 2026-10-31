@@ -466,7 +466,8 @@ export class InstancesService {
 
   /**
    * انتخاب گذار خروجی گرهٔ شرط: اولین شرطِ برآورده؛ در نبود آن شاخهٔ پیش‌فرض
-   * (خیر)؛ اگر هیچ شرطی ارزیابی‌پذیر نبود (نبود amount) خطای روشن می‌دهیم.
+   * (خیر)؛ اگر شرط به amount نیاز داشته باشد و amount نیاید خطای روشن می‌دهیم —
+   * دور زدن بی‌صدای ایستگاه تایید مدیر با نبودِ داده مجاز نیست (کنترل مالی).
    */
   private pickConditionTransition(
     outs: Array<{ toNodeId: bigint; action: string; conditionExpr: string; isDefault: boolean }>,
@@ -487,13 +488,12 @@ export class InstancesService {
       }
       if (r) return { toNodeId: t.toNodeId, action: t.action, isDefault: false };
     }
-    if (fallback) return fallback;
     if (missingAmount) {
       throw new BadRequestException(
         "ارزیابی شرط آستانه به مبلغ سند نیاز دارد — amount را همراه اقدام بفرستید",
       );
     }
-    return null;
+    return fallback;
   }
 
   /** "amount > threshold" | "amount <= 250000" → true/false | "unevaluable" */

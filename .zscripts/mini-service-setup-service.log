@@ -12,12 +12,8 @@ warn: @prisma/client's postinstall cost you 31.9s
 [setup-service] Running bun run dev...
 $ bun --hot src/main.ts
 error: Cannot find module '@nestjs/core' from '/home/z/my-project/mini-services/shared/src/index.ts'
- this))
-
------ Native stack trace -----
-
- 1: 0x942e80  [node]
- 2: 0x943568 node::Assert(node::AssertionInfo const&) [node]
+error: script "dev" was terminated by signal SIGTERM (Polite quit request)
+node::Assert(node::AssertionInfo const&) [node]
  3: 0x9f18d0 node::WorkerThreadsTaskRunner::WorkerThreadsTaskRunner(int, node::PlatformDebugLogLevel) [node]
  4: 0x9f2062 node::NodePlatform::NodePlatform(int, v8::TracingController*, v8::PageAllocator*) [node]
  5: 0x8e21ce  [node]
@@ -31,3 +27,4 @@ error: postinstall script from "@prisma/client" terminated by SIGABRT (Abort)
 [setup-service] Running bun run dev...
 $ bun --hot src/main.ts
 error: Cannot find module '@nestjs/core' from '/home/z/my-project/mini-services/shared/src/index.ts'
+error: script "dev" was terminated by signal SIGTERM (Polite quit request)

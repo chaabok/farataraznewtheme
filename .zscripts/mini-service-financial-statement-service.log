@@ -10,4 +10,6 @@ error: postinstall script from "@prisma/client" terminated by SIGABRT (Abort)
 31 packages installed [121.80s]
 [financial-statement-service] Running bun run dev...
 $ bun --hot src/main.ts
-error: Cannot find module '@nestjs/core' from '/home/z/my-project/mini-services/shared/src/index.ts'
+error: Canerror: script "dev" was terminated by signal SIGTERM (Polite quit request)
+d/src/index.ts'
+error: script "dev" was terminated by signal SIGTERM (Polite quit request)

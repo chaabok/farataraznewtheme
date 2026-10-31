@@ -18,6 +18,10 @@ const SERVICES: Record<string, { cwd: string; port: number }> = {
     port: 3001,
   },
   "dfb-service": { cwd: "/home/z/my-project/mini-services/dfb-service", port: 3003 },
+  "workflow-service": {
+    cwd: "/home/z/my-project/mini-services/workflow-service",
+    port: 3004,
+  },
 };
 
 export const runtime = "nodejs";

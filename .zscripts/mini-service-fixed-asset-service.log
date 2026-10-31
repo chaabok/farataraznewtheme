@@ -10,8 +10,8 @@ bun install v1.3.14 (0d9b296a)
 [fixed-asset-service] Running bun run dev...
 $ bun --hot src/main.ts
 error: Cannot find module '@nestjs/core' from '/home/z/my-project/mini-services/shared/src/index.ts'
-v_cwd
-    at process.wrappedCwd [as cwd] (node:internal/bootstrap/switches/does_own_process_state:142:28)
+error: script "dev" was terminated by signal SIGTERM (Polite quit request)
+does_own_process_state:142:28)
     at node:path:1236:24
     at Object.resolve (node:path:1269:19)
     at resolveMainPath (node:internal/modules/run_main:35:36)
@@ -28,3 +28,4 @@ error: postinstall script from "@prisma/client" exited with 1
 [fixed-asset-service] Running bun run dev...
 $ bun --hot src/main.ts
 error: Cannot find module '@nestjs/core' from '/home/z/my-project/mini-services/shared/src/index.ts'
+error: script "dev" was terminated by signal SIGTERM (Polite quit request)

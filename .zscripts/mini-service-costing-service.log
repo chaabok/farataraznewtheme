@@ -15,4 +15,6 @@ bun install v1.3.14 (0d9b296a)
 53 packages installed [121.88s]
 [costing-service] Running bun run dev...
 $ bun --hot src/main.ts
-error: Cannot find module '@nestjs/core' from '/home/z/my-project/mini-services/shared/src/index.ts'
+erroerror: script "dev" was terminated by signal SIGTERM (Polite quit request)
+/shared/src/index.ts'
+error: script "dev" was terminated by signal SIGTERM (Polite quit request)

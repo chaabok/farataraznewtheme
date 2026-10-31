@@ -11,8 +11,8 @@ bun install v1.3.14 (0d9b296a)
 [sales-service] Running bun run dev...
 $ bun --hot src/main.ts
 error: Cannot find module '@nestjs/core' from '/home/z/my-project/mini-services/shared/src/index.ts'
-tformDebugLogLevel) [node]
- 4: 0x9f2062 node::NodePlatform::NodePlatform(int, v8::TracingController*, v8::PageAllocator*) [node]
+error: script "dev" was terminated by signal SIGTERM (Polite quit request)
+t, v8::TracingController*, v8::PageAllocator*) [node]
  5: 0x8e21ce  [node]
  6: 0x8e253c node::Start(int, char**) [node]
  7: 0x7f7c76c4aca8  [/lib/x86_64-linux-gnu/libc.so.6]
@@ -24,3 +24,4 @@ error: preinstall script from "prisma" terminated by SIGABRT (Abort)
 [sales-service] Running bun run dev...
 $ bun --hot src/main.ts
 error: Cannot find module '@nestjs/core' from '/home/z/my-project/mini-services/shared/src/index.ts'
+error: script "dev" was terminated by signal SIGTERM (Polite quit request)

@@ -13,4 +13,5 @@ Failed to install 1 package
 [payment-service] Running bun run dev...
 $ bun --hot src/main.ts
 error: Cannot find module '@nestjs/core' from '/home/z/my-project/mini-services/shared/src/index.ts'
-ndex.ts'
+error: script "dev" was terminated by signal SIGTERM (Polite quit request)
+request)

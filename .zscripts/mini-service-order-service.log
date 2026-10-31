@@ -12,4 +12,5 @@ warn: @prisma/client's postinstall cost you 32.4s
 [order-service] Running bun run dev...
 $ bun --hot src/main.ts
 error: Cannot find module '@nestjs/core' from '/home/z/my-project/mini-services/shared/src/index.ts'
-ore' from '/home/z/my-project/mini-services/shared/src/index.ts'
+error: script "dev" was terminated by signal SIGTERM (Polite quit request)
+ipt "dev" was terminated by signal SIGTERM (Polite quit request)
