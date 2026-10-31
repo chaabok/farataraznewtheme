@@ -14,7 +14,7 @@ export type WindowKind =
   | "dfb-form"
   | "dfb-studio"
   | "dfb-list"
-  | "cartable"; // t179 — کارتابل گردش کار (فاز ۳: کارتابل/ابلاغ/تفویض/SLA)
+  | "workflow"; // t181 — پنجرهٔ واحد زیرسیستم گردش کار (هاب: کارتابل/سمت‌ها/طراح/گزارش‌ها)
 
 /**
  * Task 81 — a "window" is now a TAB of the desktop shell (owner request):

@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Inbox } from "lucide-react";
+import { Workflow } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { appApi } from "@/lib/api";
 import { useT } from "@/stores/settings-store";
@@ -9,12 +9,14 @@ import { useAuthStore } from "@/store/auth-store";
 import { useDesktop } from "@/stores/desktop-store";
 
 /**
- * CartableBell — زنگولهٔ کارتابل گردش کار در نوار وظیفه (t179 فاز ۳).
- * خلاصهٔ شمارنده‌ها (گام‌های در انتظار اقدام من + ابلاغ خوانده‌نشده) را هر
- * ۶۰ ثانیه می‌خواند؛ کلیک = بازکردن تب «کارتابل گردش کار». بدون کاربر وارد
- * شده یا خطای شبکه، بی‌صدا خالی می‌ماند.
+ * WorkflowIcon — آیکون گردش کار در نوار وظیفه (t181 — فاز ۵ + تصمیم تازهٔ
+ * مالک: فرم‌های زیرسیستم کارتابل/گردش کار فقط از این آیکون در دسترس‌اند و
+ * در منوی تنظیمات نیستند). خلاصهٔ شمارنده‌ها (گام‌های در انتظار اقدام من +
+ * ابلاغ خوانده‌نشده) را هر ۶۰ ثانیه می‌خواند و بج می‌زند؛ کلیک = بازکردن
+ * هاب «گردش کار» (کارتابل/سمت‌ها/طراح/گزارش‌ها). پیش‌زمینهٔ t179 زنگولهٔ
+ * کارتابل بود که با هاب یکپارچه شد.
  */
-export function CartableBell() {
+export function WorkflowIcon() {
   const t = useT();
   const user = useAuthStore((s) => s.user);
   const openWindow = useDesktop((s) => s.openWindow);
@@ -49,20 +51,20 @@ export function CartableBell() {
   return (
     <button
       type="button"
-      data-testid="cartable-bell"
-      title={t("wf.cartable.title")}
-      aria-label={`${t("wf.cartable.title")}${badge > 0 ? ` (${badge})` : ""}`}
-      onClick={() => openWindow("cartable")}
+      data-testid="workflow-icon"
+      title={t("wf.hub.title")}
+      aria-label={`${t("wf.hub.title")}${badge > 0 ? ` (${badge})` : ""}`}
+      onClick={() => openWindow("workflow")}
       className={cn(
         "relative flex items-center justify-center rounded-lg transition-colors hover:bg-foreground/10 cursor-pointer",
         "h-8 w-8",
         badge > 0 && "text-teal-600 dark:text-teal-300",
       )}
     >
-      <Inbox className="h-4 w-4" aria-hidden />
+      <Workflow className="h-4 w-4" aria-hidden />
       {badge > 0 && (
         <span
-          data-testid="cartable-bell-badge"
+          data-testid="workflow-icon-badge"
           className="absolute -top-0.5 -end-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-600 px-1 text-[9px] font-bold text-white shadow"
         >
           {badge > 99 ? "99+" : badge}

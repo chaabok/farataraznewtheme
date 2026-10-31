@@ -12,7 +12,7 @@ import { FloatingMenu } from "./floating-menu";
 import { useChromeMetrics } from "./chrome-metrics";
 import { FiscalYearFooter } from "./fiscal-year-footer";
 import { FiscalYearMissingPrompt } from "./fiscal-year-missing-prompt";
-import { CartableBell } from "./cartable-bell";
+import { WorkflowIcon } from "./workflow-icon";
 import { ZoomControl } from "./taskbar/zoom-control";
 import { LoupeToggle } from "./taskbar/loupe-toggle";
 import { useDfb, findMenuNode } from "@/stores/dfb-store";
@@ -260,9 +260,10 @@ export function Taskbar() {
             فرم تعریف سال مالی directly (portal — DOM position is irrelevant) */}
         <FiscalYearMissingPrompt />
 
-        {/* t179 — زنگولهٔ کارتابل گردش کار: بج گام‌های در انتظار + ابلاغ
-            خوانده‌نشده؛ کلیک = تب «کارتابل گردش کار» */}
-        <CartableBell />
+        {/* t181 — آیکون گردش کار (پیش‌زمینه: زنگولهٔ کارتابل t179): بج
+            گام‌های در انتظار + ابلاغ خوانده‌نشده؛ کلیک = هاب «گردش کار»
+            (کارتابل/سمت‌ها/طراح/گزارش‌ها — میزبانِ اختصاصی زیرسیستم) */}
+        <WorkflowIcon />
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

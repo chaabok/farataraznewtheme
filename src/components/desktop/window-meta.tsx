@@ -11,7 +11,7 @@
  */
 
 import * as React from "react";
-import { FilePlus2, Inbox, ListChecks, ListTree, Network, Wrench } from "lucide-react";
+import { FilePlus2, ListChecks, ListTree, Network, Workflow, Wrench } from "lucide-react";
 import { useT } from "@/stores/settings-store";
 import type { WinState, WindowKind } from "@/stores/desktop-store";
 import {
@@ -36,7 +36,7 @@ import { DfbMenuWindow } from "@/components/erp/form-builder/dfb-menu-window";
 import { DfbFormRuntime } from "@/components/erp/form-builder/dfb-form-runtime";
 import { FormDesignStudio } from "@/components/erp/form-builder/dfb-studio";
 import { RecordsListWindow } from "@/components/erp/form-builder/records-list-window";
-import { WorkflowCartable } from "@/components/erp/workflow/workflow-cartable";
+import { WorkflowHub } from "@/components/erp/workflow/workflow-hub";
 
 interface StaticWindowMeta {
   titleKey: string;
@@ -97,16 +97,17 @@ export const STATIC_WINDOWS: Partial<Record<Exclude<WindowKind, "app">, StaticWi
     ),
     content: <FormBuilderWindow />,
   },
-  /* t179 — کارتابل گردش کار (فاز ۳): گام‌های در انتظار من، آغازشده‌های من،
-     ابلاغ‌ها، اقدام‌های من و تفویض‌ها + بج زنگولهٔ نوار وظیفه. */
-  cartable: {
-    titleKey: "wf.cartable.title",
+  /* t181 — آیکون گردش کار: پنجرهٔ واحد زیرسیستم (تصمیم مالک — فرم‌های
+     کارتابل/گردش کار فقط اینجا میزبانی می‌شوند، نه در منوی تنظیمات):
+     کارتابل (t179)، سمت‌ها (t177)، طراح فرآیند (t180) و گزارش‌ها (t181 فاز ۵). */
+  workflow: {
+    titleKey: "wf.hub.title",
     icon: (
       <span className="flex h-5 w-5 items-center justify-center rounded-md bg-gradient-to-br from-cyan-600 to-teal-700 text-white">
-        <Inbox className="h-3 w-3" />
+        <Workflow className="h-3 w-3" />
       </span>
     ),
-    content: <WorkflowCartable />,
+    content: <WorkflowHub />,
   },
 };
 
