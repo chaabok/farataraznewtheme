@@ -11,7 +11,7 @@
   h1 { font-size:26px; font-weight:800; color:#1E293B; }
   .subtitle { font-size:13.5px; color:#475569; margin-top:8px; line-height:1.9; margin-bottom:30px; }
 
-  .erd { position:relative; width:1560px; height:1130px; }
+  .erd { position:relative; width:1560px; height:1400px; }
   .erd svg.wires { position:absolute; inset:0; z-index:0; }
   .tbl { position:absolute; z-index:1; background:#FFFFFF; border:1.5px solid #CBD5E1; border-radius:12px; overflow:hidden; box-shadow:0 1px 3px rgba(15,23,42,.06); }
   .tbl-head { display:flex; align-items:center; justify-content:space-between; gap:10px; background:#F1F5F9; border-bottom:1px solid #E2E8F0; padding:10px 14px; }
@@ -33,12 +33,12 @@
 </head>
 <body>
 <div class="outer">
-  <div class="kicker">مشاورهٔ داده — زیرسیستم گردش کار</div>
+  <div class="kicker">مشاورهٔ داده — زیرسیستم گردش کار (به‌روزرسانی t176)</div>
   <h1>ERD جداول گردش کار (db/workflow.db)</h1>
-  <div class="subtitle">هفت جدول هسته + یک جدول نگاشت. نمونهٔ گردش کار (Instance) به رکورد فرم فقط با «entityType + entityId» ارجاع می‌دهد — هیچ دادهٔ فرم کپی نمی‌شود؛ با نسخه‌بندی فرآیند، اسنادِ در جریان با همان نسخهٔ خودشان ادامه می‌دهند.</div>
+  <div class="subtitle">نُه جدول هسته + یک جدول نگاشت. نمونهٔ گردش کار (Instance) به رکورد فرم فقط با «entityType + entityId» ارجاع می‌دهد — هیچ دادهٔ فرم کپی نمی‌شود؛ با نسخه‌بندی فرآیند، اسنادِ در جریان با همان نسخهٔ خودشان ادامه می‌دهند. طبق فرمان مالک، سمت‌ها و نقش‌های گردش کار «جدید» تعریف می‌شوند (WorkflowRole + تخصیص کاربر).</div>
 
   <div class="erd">
-    <svg class="wires" width="1560" height="1130" viewBox="0 0 1560 1130" fill="none">
+    <svg class="wires" width="1560" height="1400" viewBox="0 0 1560 1400" fill="none">
       <defs>
         <marker id="ah" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto">
           <path d="M0,0 L9,4 L0,8 Z" fill="#64748B"/>
@@ -53,15 +53,21 @@
       <!-- def → inst -->
       <path d="M1160,224 V290 H1000 V346" stroke="#64748B" stroke-width="1.6" marker-end="url(#ah)"/>
       <text x="1080" y="282" text-anchor="middle" font-size="11.5" fill="#475569" font-family="Vazirmatn">۱:N نمونهٔ گردش</text>
-      <!-- inst → log -->
-      <path d="M1000,600 V648 H1290 V686" stroke="#64748B" stroke-width="1.6" marker-end="url(#ah)"/>
-      <text x="1145" y="642" text-anchor="middle" font-size="11.5" fill="#475569" font-family="Vazirmatn">۱:N تاریخچهٔ اقدام</text>
+      <!-- node → role (سمت مجاز اقدام) -->
+      <path d="M620,250 V320 H240 V686" stroke="#64748B" stroke-width="1.6" marker-end="url(#ah)"/>
+      <text x="330" y="660" text-anchor="middle" font-size="11.5" fill="#475569" font-family="Vazirmatn">سمت مجاز اقدام</text>
+      <!-- role → assignment -->
+      <line x1="440" y1="787" x2="554" y2="787" stroke="#64748B" stroke-width="1.6" marker-end="url(#ah)"/>
+      <text x="500" y="674" text-anchor="middle" font-size="11.5" fill="#475569" font-family="Vazirmatn">۱:N تخصیص</text>
       <!-- inst → notif -->
-      <line x1="780" y1="600" x2="780" y2="686" stroke="#64748B" stroke-width="1.6" marker-end="url(#ah)"/>
-      <text x="790" y="652" text-anchor="start" font-size="11.5" fill="#475569" font-family="Vazirmatn">۱:N ابلاغ</text>
+      <path d="M530,600 V930 H780 V956" stroke="#64748B" stroke-width="1.6" marker-end="url(#ah)"/>
+      <text x="655" y="918" text-anchor="middle" font-size="11.5" fill="#475569" font-family="Vazirmatn">۱:N ابلاغ</text>
+      <!-- inst → log -->
+      <path d="M1010,600 V930 H1290 V956" stroke="#64748B" stroke-width="1.6" marker-end="url(#ah)"/>
+      <text x="1150" y="918" text-anchor="middle" font-size="11.5" fill="#475569" font-family="Vazirmatn">۱:N تاریخچهٔ اقدام</text>
       <!-- inst → strip (dashed) -->
-      <path d="M1035,600 V976" stroke="#94A3B8" stroke-width="1.5" stroke-dasharray="5 5" marker-end="url(#ah)"/>
-      <text x="1024" y="968" text-anchor="end" font-size="11.5" fill="#64748B" font-family="Vazirmatn">نگاشت وضعیت فرم‌ها</text>
+      <path d="M1035,600 V1256" stroke="#94A3B8" stroke-width="1.5" stroke-dasharray="5 5" marker-end="url(#ah)"/>
+      <text x="1024" y="1248" text-anchor="end" font-size="11.5" fill="#64748B" font-family="Vazirmatn">نگاشت وضعیت فرم‌ها</text>
     </svg>
 
     <div class="tbl" style="right:40px; top:0; width:400px; height:224px;">
@@ -82,8 +88,8 @@
         <div class="col"><span class="badge pk">PK</span><span class="col-name">id</span><span class="col-desc">شناسه</span></div>
         <div class="col"><span class="badge fk">FK</span><span class="col-name">definitionId</span><span class="col-desc">فرآیند مادر</span></div>
         <div class="col"><span class="col-name">nodeType</span><span class="col-desc">شروع / اقدام / شرط / پایان</span></div>
-        <div class="col"><span class="col-name">title</span><span class="col-desc">«بازبینی حسابدار»</span></div>
-        <div class="col"><span class="col-name">roleCode</span><span class="col-desc">نقش مجاز اقدام</span></div>
+        <div class="col"><span class="col-name">title</span><span class="col-desc">«رسیدگی حسابدار»</span></div>
+        <div class="col"><span class="col-name">roleCode</span><span class="col-desc">سمت مجاز اقدام — جدید</span></div>
         <div class="col"><span class="col-name">slaHours</span><span class="col-desc">مهل اقدام</span></div>
         <div class="col"><span class="col-name">orderIndex</span><span class="col-desc">ترتیب</span></div>
       </div>
@@ -96,7 +102,7 @@
         <div class="col"><span class="badge fk">FK</span><span class="col-name">fromNodeId</span><span class="col-desc">از گره</span></div>
         <div class="col"><span class="badge fk">FK</span><span class="col-name">toNodeId</span><span class="col-desc">به گره</span></div>
         <div class="col"><span class="col-name">action</span><span class="col-desc">ارسال / تایید / رد / برگشت / ابطال</span></div>
-        <div class="col"><span class="col-name">conditionExpr</span><span class="col-desc">شرط مثل «مبلغ > آستانه»</span></div>
+        <div class="col"><span class="col-name">conditionExpr</span><span class="col-desc">شرط مثل «مبلغ > آستانهٔ فرم»</span></div>
         <div class="col"><span class="col-name">isDefault</span><span class="col-desc">مسیر پیش‌فرض</span></div>
       </div>
     </div>
@@ -107,14 +113,35 @@
         <div class="col"><span class="badge pk">PK</span><span class="col-name">id</span><span class="col-desc">شناسه</span></div>
         <div class="col"><span class="badge fk">FK</span><span class="col-name">definitionId + version</span><span class="col-desc">فرآیند و نسخهٔ آن</span></div>
         <div class="col"><span class="col-name">entityType + entityId</span><span class="col-desc">ارجاع سبک به رکورد فرم</span></div>
-        <div class="col"><span class="col-name">currentStatus</span><span class="col-desc">وضعیت فرم — سند: ۱..۴</span></div>
+        <div class="col"><span class="col-name">currentStatus</span><span class="col-desc">وضعیت فرم — ورود فقط با «تایید کاربر»</span></div>
         <div class="col"><span class="badge fk">FK</span><span class="col-name">currentNodeId</span><span class="col-desc">گرهٔ جاری</span></div>
         <div class="col"><span class="col-name">state</span><span class="col-desc">در جریان / تایید / رد / ابطال</span></div>
         <div class="col"><span class="col-name">startedBy / startedAt / finishedAt</span><span class="col-desc">شروع و پایان</span></div>
       </div>
     </div>
 
-    <div class="tbl" style="right:40px; top:690px; width:460px; height:224px;">
+    <div class="tbl" style="right:1120px; top:690px; width:400px; height:170px;">
+      <div class="tbl-head"><span class="tbl-en">WorkflowRole</span><span class="tbl-fa">سمت‌های گردش کار — جدید</span></div>
+      <div class="rows">
+        <div class="col"><span class="badge pk">PK</span><span class="col-name">id</span><span class="col-desc">شناسه</span></div>
+        <div class="col"><span class="col-name">code</span><span class="col-desc">مثل RS-ACCOUNTANT</span></div>
+        <div class="col"><span class="col-name">title</span><span class="col-desc">«حسابدار رسیدگی»</span></div>
+        <div class="col"><span class="col-name">isActive</span><span class="col-desc">فعال</span></div>
+      </div>
+    </div>
+
+    <div class="tbl" style="right:600px; top:690px; width:400px; height:195px;">
+      <div class="tbl-head"><span class="tbl-en">WorkflowRoleAssignment</span><span class="tbl-fa">تخصیص کاربر به سمت</span></div>
+      <div class="rows">
+        <div class="col"><span class="badge pk">PK</span><span class="col-name">id</span><span class="col-desc">شناسه</span></div>
+        <div class="col"><span class="badge fk">FK</span><span class="col-name">roleCode</span><span class="col-desc">سمت</span></div>
+        <div class="col"><span class="col-name">userId</span><span class="col-desc">ارجاع به auth.db</span></div>
+        <div class="col"><span class="col-name">scope</span><span class="col-desc">شعبه / دامنه</span></div>
+        <div class="col"><span class="col-name">fromDate / toDate / isActive</span><span class="col-desc">بازهٔ اعتبار</span></div>
+      </div>
+    </div>
+
+    <div class="tbl" style="right:40px; top:960px; width:460px; height:224px;">
       <div class="tbl-head"><span class="tbl-en">WorkflowActionLog</span><span class="tbl-fa">تاریخچهٔ اقدام‌ها (حسابرسی)</span></div>
       <div class="rows">
         <div class="col"><span class="badge pk">PK</span><span class="col-name">id</span><span class="col-desc">شناسه</span></div>
@@ -126,7 +153,7 @@
       </div>
     </div>
 
-    <div class="tbl" style="right:550px; top:690px; width:460px; height:224px;">
+    <div class="tbl" style="right:550px; top:960px; width:460px; height:224px;">
       <div class="tbl-head"><span class="tbl-en">WorkflowNotification</span><span class="tbl-fa">ابلاغ و کارتابل</span></div>
       <div class="rows">
         <div class="col"><span class="badge pk">PK</span><span class="col-name">id</span><span class="col-desc">شناسه</span></div>
@@ -137,7 +164,7 @@
       </div>
     </div>
 
-    <div class="tbl" style="right:1060px; top:690px; width:460px; height:190px;">
+    <div class="tbl" style="right:1060px; top:960px; width:460px; height:190px;">
       <div class="tbl-head"><span class="tbl-en">WorkflowDelegation</span><span class="tbl-fa">تفویض اختیار</span></div>
       <div class="rows">
         <div class="col"><span class="badge pk">PK</span><span class="col-name">id</span><span class="col-desc">شناسه</span></div>
@@ -147,9 +174,9 @@
       </div>
     </div>
 
-    <div class="strip" style="right:40px; top:980px; width:1480px;">
-      <span class="strip-title">WorkflowStatusMap</span><span class="strip-fa">— نگاشت وضعیت هر فرم به گام گردش کار</span>
-      <div class="strip-line">سند حسابداری: «۱ ثبت اولیه → گام ثبت» · «۲ یادداشت → گام بازبینی (حسابدار)» · «۳ تاییدشده → گام تایید نهایی» · «۴ دائمی → پایان فرآیند» — افزودن هر فرم دیگر با فیلد وضعیت: فقط یک ردیف با entityType تازه، بدون تغییر در موتور و بدون تغییر در فرم.</div>
+    <div class="strip" style="right:40px; top:1260px; width:1480px;">
+      <span class="strip-title">WorkflowStatusMap</span><span class="strip-fa">— نگاشت وضعیت هر فرم به چرخه (تصمیم‌های قطعی مالک)</span>
+      <div class="strip-line">سند حسابداری: «۱ ثبت اولیه → پیش از ورود» · «تایید کاربر → گلوگاه ورود (فقط با اقدام «ارسال به رسیدگی»)» · «۲ یادداشت → خارج از چرخه» · «۳ تاییدشده و ۴ دائمی → وضعیت‌های پایانی طبق گرهٔ پایان فرآیند» — آستانهٔ مبلغ per فرم تنظیم می‌شود · اسنادِ تاییدشدهٔ موجود (پیش از استقرار) خارج از گردش‌اند · بدون محدودیت دوره برای ورود اسناد سنوات قبل.</div>
     </div>
   </div>
 </div>
