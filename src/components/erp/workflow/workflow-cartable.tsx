@@ -201,14 +201,15 @@ export function WorkflowCartable() {
     if (!uid) return;
     setLoading(true);
     try {
-      const [sum, tk, st, nt, ac, dg, roles] = await Promise.all([
+      const [sum, tk, st, nt, ac, dg, roles, myAssigns] = await Promise.all([
         wf.get<CartableSummary>(`workflow-cartable/summary?userId=${encodeURIComponent(uid)}`),
         wf.get<{ items: CartableTask[] }>(`workflow-cartable/tasks?userId=${encodeURIComponent(uid)}`),
         wf.get<{ items: CartableStarted[] }>(`workflow-cartable/started?userId=${encodeURIComponent(uid)}`),
         wf.get<{ items: CartableNotification[] }>(`workflow-cartable/notifications?userId=${encodeURIComponent(uid)}`),
         wf.get<{ items: CartableAction[] }>(`workflow-cartable/actions?userId=${encodeURIComponent(uid)}`),
         wf.get<{ items: CartableDelegation[] }>(`workflow-cartable/delegations?userId=${encodeURIComponent(uid)}&direction=all`),
-        wf.get<{ items: Array<{ code: string; title: string }> }>(`workflow-roles/assignments?userId=${encodeURIComponent(uid)}`),
+        wf.get<{ items: Array<{ code: string; title: string }> }>("workflow-roles"),
+        wf.get<{ items: Array<{ roleCode: string }> }>(`workflow-roles/assignments?userId=${encodeURIComponent(uid)}`),
       ]);
       setSummary(sum);
       setTasks(tk.items ?? []);
@@ -216,8 +217,13 @@ export function WorkflowCartable() {
       setNotifications(nt.items ?? []);
       setActions(ac.items ?? []);
       setDelegations(dg.items ?? []);
+      /* سمت‌های من: تخصیص‌های کاربر + عنوان رسمی سمت از فهرست سمت‌ها */
+      const titleOf = new Map((roles.items ?? []).map((r) => [r.code, r.title]));
       setMyRoleCodes(
-        (roles.items ?? []).map((r) => ({ code: r.code, title: r.title ?? r.code })),
+        [...new Set((myAssigns.items ?? []).map((a) => a.roleCode))].map((code) => ({
+          code,
+          title: titleOf.get(code) ?? code,
+        })),
       );
     } catch {
       /* کارتابل نباید با خطای گذرا بشکند — رفرش دستی موجود است */
