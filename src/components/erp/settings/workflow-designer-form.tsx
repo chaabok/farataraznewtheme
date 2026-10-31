@@ -247,7 +247,6 @@ export function WorkflowDesignerForm() {
     description: "",
   });
   const [metaDirty, setMetaDirty] = React.useState(false);
-  const [saving, setSaving] = React.useState(false);
   const [busyId, setBusyId] = React.useState<number | null>(null);
 
   /* طراح بوم */
@@ -493,7 +492,6 @@ export function WorkflowDesignerForm() {
       toast.error(t("wf.des.errNameRequired"));
       return false;
     }
-    setSaving(true);
     try {
       if (currentId == null) {
         const res = await wf.post<DefDetail>("workflow-definitions", {
@@ -529,8 +527,6 @@ export function WorkflowDesignerForm() {
     } catch (e) {
       toast.error(e instanceof Error && e.message ? e.message : t("common.error"));
       return false;
-    } finally {
-      setSaving(false);
     }
   };
 
