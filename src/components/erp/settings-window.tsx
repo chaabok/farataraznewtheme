@@ -15,6 +15,7 @@ import {
   ShieldPlus,
   UserPlus,
   Workflow,
+  PencilRuler,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useSettings, useT } from "@/stores/settings-store";
@@ -26,6 +27,7 @@ import { SoftwareConfigBody } from "@/components/erp/settings/software-config-wi
 import { UserRoleForm } from "@/components/erp/settings/user-role-form";
 import { UserNewForm } from "@/components/erp/settings/user-new-form";
 import { WorkflowRoleForm } from "@/components/erp/settings/workflow-role-form";
+import { WorkflowDesignerForm } from "@/components/erp/settings/workflow-designer-form";
 import { AppTile } from "@/components/desktop/app-tile";
 
 /* Task 35 — the Settings window hosts the BusinessStructure form as a
@@ -53,7 +55,8 @@ type SettingsPage =
   | "user-role"
   | "user-new"
   | "software-config"
-  | "workflow-roles";
+  | "workflow-roles"
+  | "workflow-designer";
 
 export function SettingsWindow() {
   const t = useT();
@@ -200,6 +203,32 @@ export function SettingsWindow() {
         </div>
         <div className="min-h-0 flex-1">
           <WorkflowRoleForm onBack={() => setPage("home")} />
+        </div>
+      </div>
+    );
+  }
+
+  if (page === "workflow-designer") {
+    return (
+      <div className="flex h-full flex-col">
+        {/* slim sub-page bar: back to the settings home (Win-11 settings pattern) */}
+        <div className="flex h-10 shrink-0 items-center gap-1.5 border-b border-border/60 px-2">
+          <button
+            onClick={() => setPage("home")}
+            className="flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-xs font-medium text-foreground/80 transition-colors hover:bg-foreground/10 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
+          >
+            <BackIcon className="h-3.5 w-3.5" aria-hidden />
+            {t("settings.back")}
+          </button>
+          <span className="text-xs text-muted-foreground/50" aria-hidden>
+            /
+          </span>
+          <span className="truncate text-xs font-semibold text-foreground/90">
+            {t("wf.des.title")}
+          </span>
+        </div>
+        <div className="min-h-0 flex-1">
+          <WorkflowDesignerForm onBack={() => setPage("home")} />
         </div>
       </div>
     );
@@ -374,6 +403,22 @@ export function SettingsWindow() {
           <span className="min-w-0 flex-1">
             <span className="block text-sm font-semibold">{t("wf.formTitle")}</span>
             <span className="block text-xs text-muted-foreground">{t("settings.wfDesc")}</span>
+          </span>
+          <ForwardIcon className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+        </button>
+
+        {/* t180 — launcher of the workflow process designer (فاز ۴): انتخاب
+            فرم‌های مشارکت‌کننده و طراحی دیاگرام چرخش (گره/گذار/شرط/SLA). */}
+        <button
+          onClick={() => setPage("workflow-designer")}
+          className="flex w-full items-center gap-3 rounded-xl border border-border/70 bg-card/60 p-4 text-start transition-colors hover:bg-accent/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
+        >
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-teal-500 to-emerald-700 text-white shadow-md">
+            <PencilRuler className="h-5 w-5" aria-hidden />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-semibold">{t("wf.des.title")}</span>
+            <span className="block text-xs text-muted-foreground">{t("wf.des.launcherDesc")}</span>
           </span>
           <ForwardIcon className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
         </button>
