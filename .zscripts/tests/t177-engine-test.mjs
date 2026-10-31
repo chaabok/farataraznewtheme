@@ -60,11 +60,14 @@ check("۵ ردیف نگاشت وضعیت", sm.status === 200 && sm.json.items.le
 check("گلوگاه ورود = وضعیت ۵", sm.json.items.some((r) => r.formStatus === 5 && r.gateType === "entry-gate"));
 check("یادداشت خارج از چرخه", sm.json.items.some((r) => r.formStatus === 2 && r.gateType === "excluded"));
 const defs = await call("GET", "/workflow-definitions?entityType=voucher");
+/* t180 فاز ۴: طراح نسخه‌های تازه می‌سازد و فعال می‌کند — این آزمون فقط یک
+   نسخهٔ فعال WF-VOUCHER لازم دارد (نسخه‌محور، نه وابسته به v1). */
 check(
-  "WF-VOUCHER v1 فعال",
-  defs.json.items.some((d) => d.code === "WF-VOUCHER" && d.processVersion === 1 && d.isActive),
+  "WF-VOUCHER فعال (یک نسخه)",
+  defs.json.items.some((d) => d.code === "WF-VOUCHER" && d.isActive) &&
+    defs.json.items.filter((d) => d.code === "WF-VOUCHER" && d.isActive).length === 1,
 );
-const defId = defs.json.items[0].id;
+const defId = defs.json.items.find((d) => d.isActive)?.id ?? defs.json.items[0].id;
 const defDetail = await call("GET", `/workflow-definitions/${defId}`);
 check("۷ گره / ۷ گذار", defDetail.json.nodes.length === 7 && defDetail.json.transitions.length === 7);
 check("آستانهٔ per فرم = ۱۰۰ میلیون", defDetail.json.thresholdAmount === 100000000);

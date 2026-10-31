@@ -478,7 +478,7 @@ export class DefinitionsService {
     if (errs.length > 0) {
       throw new BadRequestException({
         statusCode: 400,
-        message: "دیاگرام این نسخه معتبر نیست — ذخیره/فعال‌سازی ممکن نشد",
+        message: `${errs[0]}${errs.length > 1 ? ` (+${errs.length - 1} خطای دیگر)` : ""}`,
         errors: errs,
       });
     }
@@ -540,7 +540,7 @@ export class DefinitionsService {
     if (errs.length > 0) {
       throw new BadRequestException({
         statusCode: 400,
-        message: "دیاگرام معتبر نیست — هیچ تغییری ذخیره نشد",
+        message: `${errs[0]}${errs.length > 1 ? ` (+${errs.length - 1} خطای دیگر)` : ""}`,
         errors: errs,
       });
     }

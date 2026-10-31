@@ -21,8 +21,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { appApi } from "@/lib/api";
 import { useT } from "@/stores/settings-store";
-import { useDesktop } from "@/stores/desktop-store";
-import { useTabDirty, useWindowChrome } from "@/components/desktop/app-window";
+import { useTabDirty } from "@/components/desktop/app-window";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -176,12 +175,8 @@ function PlayGlyph() {
 
 /* ------------------------------ کامپوننت ------------------------------ */
 
-export function WorkflowDesignerForm({ onBack }: { onBack?: () => void }) {
+export function WorkflowDesignerForm() {
   const t = useT();
-  const chrome = useWindowChrome();
-  const headerMaximized = useDesktop(
-    (s) => s.windows.find((w) => w.kind === "settings")?.maximized ?? false,
-  );
 
   /* داده‌های پایه */
   const [catalog, setCatalog] = React.useState<CatalogItem[]>([]);
@@ -214,7 +209,9 @@ export function WorkflowDesignerForm({ onBack }: { onBack?: () => void }) {
   useTabDirty(dirty);
 
   const nodesRef = React.useRef<GNode[]>(nodes);
-  nodesRef.current = nodes;
+  React.useEffect(() => {
+    nodesRef.current = nodes;
+  }, [nodes]);
   const posRef = React.useRef<Record<string, { x: number; y: number }>>({});
   const innerRef = React.useRef<HTMLDivElement | null>(null);
 
@@ -250,9 +247,25 @@ export function WorkflowDesignerForm({ onBack }: { onBack?: () => void }) {
     setLoading(false);
   }, [fetchCatalog, fetchDefs, fetchRoles]);
 
+  /* بارگذاری اولیه — setState فقط در callbackهای async (نه sync در بدنهٔ effect) */
   React.useEffect(() => {
-    void refreshAll().catch(() => setLoading(false));
-  }, [refreshAll]);
+    let alive = true;
+    Promise.all([fetchCatalog(), fetchDefs(), fetchRoles()]).then(
+      ([cat, dd, rr]) => {
+        if (!alive) return;
+        setCatalog(cat);
+        setDefs(dd);
+        setRoles(rr);
+        setLoading(false);
+      },
+      () => {
+        if (alive) setLoading(false);
+      },
+    );
+    return () => {
+      alive = false;
+    };
+  }, [fetchCatalog, fetchDefs, fetchRoles]);
 
   const applyDetail = React.useCallback((d: DefDetail) => {
     const mapped: DefDetail = {

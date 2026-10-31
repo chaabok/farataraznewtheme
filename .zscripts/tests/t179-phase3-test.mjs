@@ -61,6 +61,13 @@ const W9 = `W9-${RUN}`;
 const X1 = `X1-${RUN}`;
 const STARTER = `S0-${RUN}`;
 
+/* t180 فاز ۴: گره‌ها per نسخه‌اند — SLA و NodeID گام N2 از نسخهٔ فعالِ فعلی خوانده می‌شود */
+const defList0 = await call(WF, "GET", "/workflow-definitions?entityType=voucher");
+const activeDefId0 = defList0.json?.items?.find((d) => d.isActive)?.id;
+const activeDef0 = await call(WF, "GET", `/workflow-definitions/${activeDefId0}`);
+const N2_ID = activeDef0.json?.nodes?.find((n) => n.nodeCode === "N2")?.id;
+const N2_SLA = activeDef0.json?.nodes?.find((n) => n.nodeCode === "N2")?.slaHours ?? 24;
+
 console.log("۰) منابع و تفویض پایه:");
 const meta = await call(ST, "GET", "/vouchers/meta");
 check("meta واکشی شد", ok(meta));
@@ -157,7 +164,7 @@ check("نمونه روی گام N2 (رسیدگی)", startA.json?.currentNode?.no
 const u9Tasks = await call(WF, "GET", `/workflow-cartable/tasks?userId=${encodeURIComponent(U9)}`);
 check("کارتابل نماینده شامل نمونه است (تفویض معتبر)", (u9Tasks.json?.items ?? []).some((x) => x.id === Number(iA)), `tasks=${u9Tasks.json?.items?.length}`);
 const u9task = (u9Tasks.json?.items ?? []).find((x) => x.id === Number(iA));
-check("نشان SLA گام رسیدگی (۲۴ ساعت) = ok", u9task?.slaState === "ok" && u9task?.slaHours === 24, JSON.stringify({ s: u9task?.slaState, h: u9task?.hoursLeft }));
+check(`نشان SLA گام رسیدگی (${N2_SLA} ساعت) = ok`, u9task?.slaState === "ok" && u9task?.slaHours === N2_SLA, JSON.stringify({ s: u9task?.slaState, h: u9task?.hoursLeft }));
 
 const s1TasksBefore = await call(WF, "GET", `/workflow-cartable/tasks?userId=S1`);
 check("کارتابل سرپرست هنوز شامل نمونه نیست", !(s1TasksBefore.json?.items ?? []).some((x) => x.id === Number(iA)));
@@ -259,18 +266,17 @@ const startC = await call(WF, "POST", "/workflow-instances", {
 const iC = startC.json?.id;
 check("سند C روی گام رسیدگی", startC.json?.currentNode?.nodeCode === "N2");
 
-/* ActionLog ورود به N2 را ۳۰ ساعت عقب می‌بریم (شبیه‌سازی گذر زمان) */
+/* ActionLog ورود به N2 را (SLA+۶) ساعت عقب می‌بریم — تضمین breach فارغ از SLAِ نسخهٔ فعال */
+const BACK_HOURS = (N2_SLA ?? 24) + 6;
 const db = new Database(DB);
-const n2Node = db
-  .query("SELECT WorkflowNodeID FROM WorkflowNode WHERE NodeCode='N2'")
-  .get();
+const n2Node = { WorkflowNodeID: N2_ID };
 const upd = db
   .query(
-    "UPDATE WorkflowActionLog SET CreatedAt = datetime('now','-30 hours') WHERE InstanceID=? AND ToNodeID=?",
+    `UPDATE WorkflowActionLog SET CreatedAt = datetime('now','-${BACK_HOURS} hours') WHERE InstanceID=? AND ToNodeID=?`,
   )
   .run(String(iC), String(n2Node.WorkflowNodeID));
 db.close();
-check("زمان ورود به N2 ۳۰ ساعت عقب کشیده شد", upd.changes >= 1, `rows=${upd.changes}`);
+check(`زمان ورود به N2 ${BACK_HOURS} ساعت عقب کشیده شد`, upd.changes >= 1, `rows=${upd.changes}`);
 
 const sla1 = await call(WF, "POST", "/workflow-cartable/sla-check", {});
 check("sla-check اجرا شد", ok(sla1) && typeof sla1.json?.checked === "number", JSON.stringify(sla1.json));

@@ -225,3 +225,187 @@ $ DATABASE_URL="file:/home/z/my-project/db/workflow.db" NODE_PATH=./node_modules
 [Nest] 26360  - 10/31/2026, 6:30:08 AM     LOG [CartableSlaTimer] SLA timer armed (هر ۵ دقیقه — FR-12)
 [Nest] 26360  - 10/31/2026, 6:30:08 AM     LOG [NestApplication] Nest application successfully started +1ms
 [Nest] 26360  - 10/31/2026, 6:30:08 AM     LOG [Bootstrap] workflow-service listening on http://127.0.0.1:3004
+[Nest] 26360  - 10/31/2026, 6:43:17 AM     LOG [NestFactory] Starting Nest application...
+[Nest] 26360  - 10/31/2026, 6:43:17 AM     LOG [InstanceLoader] PrismaModule dependencies initialized +26ms
+[Nest] 26360  - 10/31/2026, 6:43:17 AM     LOG [InstanceLoader] EntityLinkModule dependencies initialized +0ms
+[Nest] 26360  - 10/31/2026, 6:43:17 AM     LOG [InstanceLoader] IdGenerationModule dependencies initialized +0ms
+[Nest] 26360  - 10/31/2026, 6:43:17 AM     LOG [InstanceLoader] SeedModule dependencies initialized +1ms
+[Nest] 26360  - 10/31/2026, 6:43:17 AM     LOG [InstanceLoader] StatusMapModule dependencies initialized +0ms
+[Nest] 26360  - 10/31/2026, 6:43:17 AM     LOG [InstanceLoader] AppModule dependencies initialized +1ms
+[Nest] 26360  - 10/31/2026, 6:43:17 AM     LOG [InstanceLoader] CatalogModule dependencies initialized +0ms
+[Nest] 26360  - 10/31/2026, 6:43:17 AM     LOG [InstanceLoader] DefinitionsModule dependencies initialized +1ms
+[Nest] 26360  - 10/31/2026, 6:43:17 AM     LOG [InstanceLoader] RolesModule dependencies initialized +0ms
+[Nest] 26360  - 10/31/2026, 6:43:17 AM     LOG [InstanceLoader] CartableModule dependencies initialized +0ms
+[Nest] 26360  - 10/31/2026, 6:43:17 AM     LOG [InstanceLoader] InstancesModule dependencies initialized +0ms
+[Nest] 26360  - 10/31/2026, 6:43:17 AM     LOG [RoutesResolver] HealthController {/}: +257ms
+[Nest] 26360  - 10/31/2026, 6:43:17 AM     LOG [RouterExplorer] Mapped {/health, GET} route +3ms
+[Nest] 26360  - 10/31/2026, 6:43:17 AM     LOG [RoutesResolver] RolesController {/workflow-roles}: +0ms
+[Nest] 26360  - 10/31/2026, 6:43:17 AM     LOG [RouterExplorer] Mapped {/workflow-roles, GET} route +0ms
+[Nest] 26360  - 10/31/2026, 6:43:17 AM     LOG [RouterExplorer] Mapped {/workflow-roles/assignments, GET} route +1ms
+[Nest] 26360  - 10/31/2026, 6:43:17 AM     LOG [RouterExplorer] Mapped {/workflow-roles/assignments/:roleCode, GET} route +1ms
+[Nest] 26360  - 10/31/2026, 6:43:17 AM     LOG [RouterExplorer] Mapped {/workflow-roles/assignments, PUT} route +0ms
+[Nest] 26360  - 10/31/2026, 6:43:17 AM     LOG [RouterExplorer] Mapped {/workflow-roles/:id, GET} route +1ms
+[Nest] 26360  - 10/31/2026, 6:43:17 AM     LOG [RouterExplorer] Mapped {/workflow-roles, POST} route +0ms
+[Nest] 26360  - 10/31/2026, 6:43:17 AM     LOG [RouterExplorer] Mapped {/workflow-roles/:id, PUT} route +0ms
+[Nest] 26360  - 10/31/2026, 6:43:17 AM     LOG [RouterExplorer] Mapped {/workflow-roles/:id, DELETE} route +0ms
+[Nest] 26360  - 10/31/2026, 6:43:17 AM     LOG [RoutesResolver] DefinitionsController {/workflow-definitions}: +1ms
+[Nest] 26360  - 10/31/2026, 6:43:17 AM     LOG [RouterExplorer] Mapped {/workflow-definitions, GET} route +0ms
+[Nest] 26360  - 10/31/2026, 6:43:17 AM     LOG [RouterExplorer] Mapped {/workflow-definitions, POST} route +0ms
+[Nest] 26360  - 10/31/2026, 6:43:17 AM     LOG [RouterExplorer] Mapped {/workflow-definitions/:id, GET} route +0ms
+[Nest] 26360  - 10/31/2026, 6:43:17 AM     LOG [RouterExplorer] Mapped {/workflow-definitions/:id, PUT} route +0ms
+[Nest] 26360  - 10/31/2026, 6:43:17 AM     LOG [RouterExplorer] Mapped {/workflow-definitions/:id/layout, PUT} route +0ms
+[Nest] 26360  - 10/31/2026, 6:43:17 AM     LOG [RouterExplorer] Mapped {/workflow-definitions/:id/graph, PUT} route +0ms
+[Nest] 26360  - 10/31/2026, 6:43:17 AM     LOG [RouterExplorer] Mapped {/workflow-definitions/:id/versions, POST} route +0ms
+[Nest] 26360  - 10/31/2026, 6:43:17 AM     LOG [RouterExplorer] Mapped {/workflow-definitions/:id/activate, POST} route +1ms
+[Nest] 26360  - 10/31/2026, 6:43:17 AM     LOG [RouterExplorer] Mapped {/workflow-definitions/:id, DELETE} route +0ms
+[Nest] 26360  - 10/31/2026, 6:43:17 AM     LOG [RoutesResolver] InstancesController {/workflow-instances}: +0ms
+[Nest] 26360  - 10/31/2026, 6:43:17 AM     LOG [RouterExplorer] Mapped {/workflow-instances/lock, GET} route +0ms
+[Nest] 26360  - 10/31/2026, 6:43:17 AM     LOG [RouterExplorer] Mapped {/workflow-instances, GET} route +0ms
+[Nest] 26360  - 10/31/2026, 6:43:17 AM     LOG [RouterExplorer] Mapped {/workflow-instances/:id, GET} route +1ms
+[Nest] 26360  - 10/31/2026, 6:43:17 AM     LOG [RouterExplorer] Mapped {/workflow-instances, POST} route +0ms
+[Nest] 26360  - 10/31/2026, 6:43:17 AM     LOG [RouterExplorer] Mapped {/workflow-instances/:id/act, POST} route +0ms
+[Nest] 26360  - 10/31/2026, 6:43:17 AM     LOG [RouterExplorer] Mapped {/workflow-instances/:id/undo-final, POST} route +0ms
+[Nest] 26360  - 10/31/2026, 6:43:17 AM     LOG [RouterExplorer] Mapped {/workflow-instances/:id/dependencies, POST} route +0ms
+[Nest] 26360  - 10/31/2026, 6:43:17 AM     LOG [RoutesResolver] StatusMapController {/workflow-status-map}: +0ms
+[Nest] 26360  - 10/31/2026, 6:43:17 AM     LOG [RouterExplorer] Mapped {/workflow-status-map, GET} route +1ms
+[Nest] 26360  - 10/31/2026, 6:43:17 AM     LOG [RoutesResolver] CartableController {/workflow-cartable}: +0ms
+[Nest] 26360  - 10/31/2026, 6:43:17 AM     LOG [RouterExplorer] Mapped {/workflow-cartable/summary, GET} route +0ms
+[Nest] 26360  - 10/31/2026, 6:43:17 AM     LOG [RouterExplorer] Mapped {/workflow-cartable/tasks, GET} route +0ms
+[Nest] 26360  - 10/31/2026, 6:43:17 AM     LOG [RouterExplorer] Mapped {/workflow-cartable/started, GET} route +0ms
+[Nest] 26360  - 10/31/2026, 6:43:17 AM     LOG [RouterExplorer] Mapped {/workflow-cartable/notifications, GET} route +0ms
+[Nest] 26360  - 10/31/2026, 6:43:17 AM     LOG [RouterExplorer] Mapped {/workflow-cartable/notifications/read, POST} route +0ms
+[Nest] 26360  - 10/31/2026, 6:43:17 AM     LOG [RouterExplorer] Mapped {/workflow-cartable/actions, GET} route +0ms
+[Nest] 26360  - 10/31/2026, 6:43:17 AM     LOG [RouterExplorer] Mapped {/workflow-cartable/sla-check, POST} route +1ms
+[Nest] 26360  - 10/31/2026, 6:43:17 AM     LOG [RouterExplorer] Mapped {/workflow-cartable/delegations, GET} route +0ms
+[Nest] 26360  - 10/31/2026, 6:43:17 AM     LOG [RouterExplorer] Mapped {/workflow-cartable/delegations, POST} route +0ms
+[Nest] 26360  - 10/31/2026, 6:43:17 AM     LOG [RouterExplorer] Mapped {/workflow-cartable/delegations/:id, PUT} route +1ms
+[Nest] 26360  - 10/31/2026, 6:43:17 AM     LOG [RouterExplorer] Mapped {/workflow-cartable/delegations/:id, DELETE} route +0ms
+[Nest] 26360  - 10/31/2026, 6:43:17 AM     LOG [RoutesResolver] CatalogController {/workflow-catalog}: +0ms
+[Nest] 26360  - 10/31/2026, 6:43:17 AM     LOG [RouterExplorer] Mapped {/workflow-catalog, GET} route +1ms
+[Nest] 26360  - 10/31/2026, 6:43:17 AM     LOG [RouterExplorer] Mapped {/workflow-catalog/:entityType, PUT} route +0ms
+[Nest] 26360  - 10/31/2026, 6:43:17 AM     LOG [PrismaService] Prisma connected (workflow.db) — §2.5 auto-rowversion active on: IDGeneration, WorkflowRole, WorkflowRoleAssignment, WorkflowDefinition, WorkflowInstance, WorkflowStatusMap, WorkflowEntityCatalog
+[Nest] 26360  - 10/31/2026, 6:43:17 AM     LOG [CartableSlaTimer] SLA timer armed (هر ۵ دقیقه — FR-12)
+[Nest] 26360  - 10/31/2026, 6:43:17 AM     LOG [NestApplication] Nest application successfully started +0ms
+[Nest] 26360  - 10/31/2026, 6:43:17 AM     LOG [Bootstrap] workflow-service listening on http://127.0.0.1:3004
+$ DATABASE_URL="file:/home/z/my-project/db/workflow.db" NODE_PATH=./node_modules bun --hot src/main.ts
+[Nest] 27642  - 10/31/2026, 6:45:25 AM     LOG [NestFactory] Starting Nest application...
+[Nest] 27642  - 10/31/2026, 6:45:26 AM     LOG [InstanceLoader] PrismaModule dependencies initialized +17ms
+[Nest] 27642  - 10/31/2026, 6:45:26 AM     LOG [InstanceLoader] EntityLinkModule dependencies initialized +1ms
+[Nest] 27642  - 10/31/2026, 6:45:26 AM     LOG [InstanceLoader] IdGenerationModule dependencies initialized +0ms
+[Nest] 27642  - 10/31/2026, 6:45:26 AM     LOG [InstanceLoader] SeedModule dependencies initialized +1ms
+[Nest] 27642  - 10/31/2026, 6:45:26 AM     LOG [InstanceLoader] StatusMapModule dependencies initialized +0ms
+[Nest] 27642  - 10/31/2026, 6:45:26 AM     LOG [InstanceLoader] AppModule dependencies initialized +1ms
+[Nest] 27642  - 10/31/2026, 6:45:26 AM     LOG [InstanceLoader] CatalogModule dependencies initialized +0ms
+[Nest] 27642  - 10/31/2026, 6:45:26 AM     LOG [InstanceLoader] DefinitionsModule dependencies initialized +1ms
+[Nest] 27642  - 10/31/2026, 6:45:26 AM     LOG [InstanceLoader] RolesModule dependencies initialized +0ms
+[Nest] 27642  - 10/31/2026, 6:45:26 AM     LOG [InstanceLoader] CartableModule dependencies initialized +0ms
+[Nest] 27642  - 10/31/2026, 6:45:26 AM     LOG [InstanceLoader] InstancesModule dependencies initialized +0ms
+[Nest] 27642  - 10/31/2026, 6:45:26 AM     LOG [RoutesResolver] HealthController {/}: +120ms
+[Nest] 27642  - 10/31/2026, 6:45:26 AM     LOG [RouterExplorer] Mapped {/health, GET} route +2ms
+[Nest] 27642  - 10/31/2026, 6:45:26 AM     LOG [RoutesResolver] RolesController {/workflow-roles}: +1ms
+[Nest] 27642  - 10/31/2026, 6:45:26 AM     LOG [RouterExplorer] Mapped {/workflow-roles, GET} route +0ms
+[Nest] 27642  - 10/31/2026, 6:45:26 AM     LOG [RouterExplorer] Mapped {/workflow-roles/assignments, GET} route +1ms
+[Nest] 27642  - 10/31/2026, 6:45:26 AM     LOG [RouterExplorer] Mapped {/workflow-roles/assignments/:roleCode, GET} route +0ms
+[Nest] 27642  - 10/31/2026, 6:45:26 AM     LOG [RouterExplorer] Mapped {/workflow-roles/assignments, PUT} route +1ms
+[Nest] 27642  - 10/31/2026, 6:45:26 AM     LOG [RouterExplorer] Mapped {/workflow-roles/:id, GET} route +0ms
+[Nest] 27642  - 10/31/2026, 6:45:26 AM     LOG [RouterExplorer] Mapped {/workflow-roles, POST} route +0ms
+[Nest] 27642  - 10/31/2026, 6:45:26 AM     LOG [RouterExplorer] Mapped {/workflow-roles/:id, PUT} route +0ms
+[Nest] 27642  - 10/31/2026, 6:45:26 AM     LOG [RouterExplorer] Mapped {/workflow-roles/:id, DELETE} route +1ms
+[Nest] 27642  - 10/31/2026, 6:45:26 AM     LOG [RoutesResolver] DefinitionsController {/workflow-definitions}: +0ms
+[Nest] 27642  - 10/31/2026, 6:45:26 AM     LOG [RouterExplorer] Mapped {/workflow-definitions, GET} route +0ms
+[Nest] 27642  - 10/31/2026, 6:45:26 AM     LOG [RouterExplorer] Mapped {/workflow-definitions, POST} route +0ms
+[Nest] 27642  - 10/31/2026, 6:45:26 AM     LOG [RouterExplorer] Mapped {/workflow-definitions/:id, GET} route +1ms
+[Nest] 27642  - 10/31/2026, 6:45:26 AM     LOG [RouterExplorer] Mapped {/workflow-definitions/:id, PUT} route +0ms
+[Nest] 27642  - 10/31/2026, 6:45:26 AM     LOG [RouterExplorer] Mapped {/workflow-definitions/:id/layout, PUT} route +0ms
+[Nest] 27642  - 10/31/2026, 6:45:26 AM     LOG [RouterExplorer] Mapped {/workflow-definitions/:id/graph, PUT} route +0ms
+[Nest] 27642  - 10/31/2026, 6:45:26 AM     LOG [RouterExplorer] Mapped {/workflow-definitions/:id/versions, POST} route +0ms
+[Nest] 27642  - 10/31/2026, 6:45:26 AM     LOG [RouterExplorer] Mapped {/workflow-definitions/:id/activate, POST} route +1ms
+[Nest] 27642  - 10/31/2026, 6:45:26 AM     LOG [RouterExplorer] Mapped {/workflow-definitions/:id, DELETE} route +0ms
+[Nest] 27642  - 10/31/2026, 6:45:26 AM     LOG [RoutesResolver] InstancesController {/workflow-instances}: +0ms
+[Nest] 27642  - 10/31/2026, 6:45:26 AM     LOG [RouterExplorer] Mapped {/workflow-instances/lock, GET} route +0ms
+[Nest] 27642  - 10/31/2026, 6:45:26 AM     LOG [RouterExplorer] Mapped {/workflow-instances, GET} route +0ms
+[Nest] 27642  - 10/31/2026, 6:45:26 AM     LOG [RouterExplorer] Mapped {/workflow-instances/:id, GET} route +1ms
+[Nest] 27642  - 10/31/2026, 6:45:26 AM     LOG [RouterExplorer] Mapped {/workflow-instances, POST} route +0ms
+[Nest] 27642  - 10/31/2026, 6:45:26 AM     LOG [RouterExplorer] Mapped {/workflow-instances/:id/act, POST} route +0ms
+[Nest] 27642  - 10/31/2026, 6:45:26 AM     LOG [RouterExplorer] Mapped {/workflow-instances/:id/undo-final, POST} route +0ms
+[Nest] 27642  - 10/31/2026, 6:45:26 AM     LOG [RouterExplorer] Mapped {/workflow-instances/:id/dependencies, POST} route +0ms
+[Nest] 27642  - 10/31/2026, 6:45:26 AM     LOG [RoutesResolver] StatusMapController {/workflow-status-map}: +0ms
+[Nest] 27642  - 10/31/2026, 6:45:26 AM     LOG [RouterExplorer] Mapped {/workflow-status-map, GET} route +0ms
+[Nest] 27642  - 10/31/2026, 6:45:26 AM     LOG [RoutesResolver] CartableController {/workflow-cartable}: +0ms
+[Nest] 27642  - 10/31/2026, 6:45:26 AM     LOG [RouterExplorer] Mapped {/workflow-cartable/summary, GET} route +1ms
+[Nest] 27642  - 10/31/2026, 6:45:26 AM     LOG [RouterExplorer] Mapped {/workflow-cartable/tasks, GET} route +0ms
+[Nest] 27642  - 10/31/2026, 6:45:26 AM     LOG [RouterExplorer] Mapped {/workflow-cartable/started, GET} route +0ms
+[Nest] 27642  - 10/31/2026, 6:45:26 AM     LOG [RouterExplorer] Mapped {/workflow-cartable/notifications, GET} route +0ms
+[Nest] 27642  - 10/31/2026, 6:45:26 AM     LOG [RouterExplorer] Mapped {/workflow-cartable/notifications/read, POST} route +0ms
+[Nest] 27642  - 10/31/2026, 6:45:26 AM     LOG [RouterExplorer] Mapped {/workflow-cartable/actions, GET} route +0ms
+[Nest] 27642  - 10/31/2026, 6:45:26 AM     LOG [RouterExplorer] Mapped {/workflow-cartable/sla-check, POST} route +0ms
+[Nest] 27642  - 10/31/2026, 6:45:26 AM     LOG [RouterExplorer] Mapped {/workflow-cartable/delegations, GET} route +1ms
+[Nest] 27642  - 10/31/2026, 6:45:26 AM     LOG [RouterExplorer] Mapped {/workflow-cartable/delegations, POST} route +0ms
+[Nest] 27642  - 10/31/2026, 6:45:26 AM     LOG [RouterExplorer] Mapped {/workflow-cartable/delegations/:id, PUT} route +0ms
+[Nest] 27642  - 10/31/2026, 6:45:26 AM     LOG [RouterExplorer] Mapped {/workflow-cartable/delegations/:id, DELETE} route +0ms
+[Nest] 27642  - 10/31/2026, 6:45:26 AM     LOG [RoutesResolver] CatalogController {/workflow-catalog}: +0ms
+[Nest] 27642  - 10/31/2026, 6:45:26 AM     LOG [RouterExplorer] Mapped {/workflow-catalog, GET} route +0ms
+[Nest] 27642  - 10/31/2026, 6:45:26 AM     LOG [RouterExplorer] Mapped {/workflow-catalog/:entityType, PUT} route +0ms
+[Nest] 27642  - 10/31/2026, 6:45:26 AM     LOG [PrismaService] Prisma connected (workflow.db) — §2.5 auto-rowversion active on: IDGeneration, WorkflowRole, WorkflowRoleAssignment, WorkflowDefinition, WorkflowInstance, WorkflowStatusMap, WorkflowEntityCatalog
+[Nest] 27642  - 10/31/2026, 6:45:26 AM     LOG [CartableSlaTimer] SLA timer armed (هر ۵ دقیقه — FR-12)
+[Nest] 27642  - 10/31/2026, 6:45:26 AM     LOG [NestApplication] Nest application successfully started +0ms
+[Nest] 27642  - 10/31/2026, 6:45:26 AM     LOG [Bootstrap] workflow-service listening on http://127.0.0.1:3004
+[Nest] 27642  - 10/31/2026, 6:45:37 AM     LOG [DefinitionsService] New version WF-VOUCHER v2 copied from v1
+[Nest] 27642  - 10/31/2026, 6:45:37 AM     LOG [DefinitionsService] Activated WF-VOUCHER v2 (entityType=voucher)
+[Nest] 27642  - 10/31/2026, 6:45:37 AM     LOG [DefinitionsService] Definition WF-T180-136742 v1 created (starter graph) — entityType=voucher
+[Nest] 27642  - 10/31/2026, 6:45:37 AM     LOG [DefinitionsService] Activated WF-T180-136742 v1 (entityType=voucher)
+[Nest] 27642  - 10/31/2026, 6:45:37 AM     LOG [DefinitionsService] Activated WF-VOUCHER v2 (entityType=voucher)
+[Nest] 27642  - 10/31/2026, 6:46:29 AM     LOG [DefinitionsService] New version WF-VOUCHER v3 copied from v1
+[Nest] 27642  - 10/31/2026, 6:46:29 AM     LOG [DefinitionsService] Graph replaced for WF-VOUCHER v3 — 7 nodes / 7 transitions
+[Nest] 27642  - 10/31/2026, 6:46:29 AM     LOG [DefinitionsService] Activated WF-VOUCHER v3 (entityType=voucher)
+[Nest] 27642  - 10/31/2026, 6:46:29 AM     LOG [DefinitionsService] Definition WF-T180-189219 v1 created (starter graph) — entityType=voucher
+[Nest] 27642  - 10/31/2026, 6:46:29 AM     LOG [DefinitionsService] Activated WF-T180-189219 v1 (entityType=voucher)
+[Nest] 27642  - 10/31/2026, 6:46:29 AM     LOG [DefinitionsService] Activated WF-VOUCHER v3 (entityType=voucher)
+[Nest] 27642  - 10/31/2026, 6:47:41 AM     LOG [DefinitionsService] New version WF-VOUCHER v4 copied from v3
+[Nest] 27642  - 10/31/2026, 6:47:41 AM     LOG [DefinitionsService] Graph replaced for WF-VOUCHER v4 — 7 nodes / 7 transitions
+[Nest] 27642  - 10/31/2026, 6:47:41 AM     LOG [DefinitionsService] Activated WF-VOUCHER v4 (entityType=voucher)
+[Nest] 27642  - 10/31/2026, 6:47:42 AM     LOG [DefinitionsService] Definition WF-T180-261357 v1 created (starter graph) — entityType=voucher
+[Nest] 27642  - 10/31/2026, 6:47:42 AM     LOG [DefinitionsService] Activated WF-T180-261357 v1 (entityType=voucher)
+[Nest] 27642  - 10/31/2026, 6:47:42 AM     LOG [DefinitionsService] Activated WF-VOUCHER v4 (entityType=voucher)
+[Nest] 27642  - 10/31/2026, 6:47:46 AM    WARN [InstancesService] منبع حقیقت در دسترس نبود (status=400) — اعتبارسنجی با formStatus اعلامی ادامه می‌یابد
+[Nest] 27642  - 10/31/2026, 6:47:46 AM    WARN [InstancesService] منبع حقیقت در دسترس نبود (status=400) — اعتبارسنجی با formStatus اعلامی ادامه می‌یابد
+[Nest] 27642  - 10/31/2026, 6:47:46 AM    WARN [InstancesService] منبع حقیقت در دسترس نبود (status=400) — اعتبارسنجی با formStatus اعلامی ادامه می‌یابد
+[Nest] 27642  - 10/31/2026, 6:47:46 AM    WARN [InstancesService] منبع حقیقت در دسترس نبود (status=400) — اعتبارسنجی با formStatus اعلامی ادامه می‌یابد
+[Nest] 27642  - 10/31/2026, 6:47:46 AM    WARN [InstancesService] منبع حقیقت در دسترس نبود (status=400) — اعتبارسنجی با formStatus اعلامی ادامه می‌یابد
+[Nest] 27642  - 10/31/2026, 6:47:46 AM    WARN [EntityLinkService] write-back وضعیت سند V-266456-1 → 4 ناموفق بود (status=400 err=)
+[Nest] 27642  - 10/31/2026, 6:47:46 AM    WARN [InstancesService] منبع حقیقت در دسترس نبود (status=400) — اعتبارسنجی با formStatus اعلامی ادامه می‌یابد
+[Nest] 27642  - 10/31/2026, 6:47:46 AM    WARN [EntityLinkService] write-back وضعیت سند V-266456-2 → 4 ناموفق بود (status=400 err=)
+[Nest] 27642  - 10/31/2026, 6:47:46 AM    WARN [InstancesService] منبع حقیقت در دسترس نبود (status=400) — اعتبارسنجی با formStatus اعلامی ادامه می‌یابد
+[Nest] 27642  - 10/31/2026, 6:47:46 AM    WARN [EntityLinkService] write-back وضعیت سند V-266456-3 → 1 ناموفق بود (status=400 err=)
+[Nest] 27642  - 10/31/2026, 6:47:46 AM    WARN [InstancesService] منبع حقیقت در دسترس نبود (status=400) — اعتبارسنجی با formStatus اعلامی ادامه می‌یابد
+[Nest] 27642  - 10/31/2026, 6:47:46 AM    WARN [EntityLinkService] write-back وضعیت سند V-266456-3 → 5 ناموفق بود (status=400 err=)
+[Nest] 27642  - 10/31/2026, 6:47:46 AM    WARN [InstancesService] منبع حقیقت در دسترس نبود (status=400) — اعتبارسنجی با formStatus اعلامی ادامه می‌یابد
+[Nest] 27642  - 10/31/2026, 6:47:51 AM    WARN [InstancesService] منبع حقیقت در دسترس نبود (status=400) — اعتبارسنجی با formStatus اعلامی ادامه می‌یابد
+[Nest] 27642  - 10/31/2026, 6:47:51 AM    WARN [InstancesService] منبع حقیقت در دسترس نبود (status=400) — اعتبارسنجی با formStatus اعلامی ادامه می‌یابد
+[Nest] 27642  - 10/31/2026, 6:47:51 AM    WARN [InstancesService] منبع حقیقت در دسترس نبود (status=400) — اعتبارسنجی با formStatus اعلامی ادامه می‌یابد
+[Nest] 27642  - 10/31/2026, 6:47:51 AM    WARN [InstancesService] منبع حقیقت در دسترس نبود (status=400) — اعتبارسنجی با formStatus اعلامی ادامه می‌یابد
+[Nest] 27642  - 10/31/2026, 6:47:51 AM    WARN [InstancesService] منبع حقیقت در دسترس نبود (status=400) — اعتبارسنجی با formStatus اعلامی ادامه می‌یابد
+[Nest] 27642  - 10/31/2026, 6:47:51 AM    WARN [EntityLinkService] write-back وضعیت سند V-271689-1 → 4 ناموفق بود (status=400 err=)
+[Nest] 27642  - 10/31/2026, 6:47:51 AM    WARN [InstancesService] منبع حقیقت در دسترس نبود (status=400) — اعتبارسنجی با formStatus اعلامی ادامه می‌یابد
+[Nest] 27642  - 10/31/2026, 6:47:51 AM    WARN [EntityLinkService] write-back وضعیت سند V-271689-2 → 4 ناموفق بود (status=400 err=)
+[Nest] 27642  - 10/31/2026, 6:47:51 AM    WARN [InstancesService] منبع حقیقت در دسترس نبود (status=400) — اعتبارسنجی با formStatus اعلامی ادامه می‌یابد
+[Nest] 27642  - 10/31/2026, 6:47:51 AM    WARN [EntityLinkService] write-back وضعیت سند V-271689-3 → 1 ناموفق بود (status=400 err=)
+[Nest] 27642  - 10/31/2026, 6:47:52 AM    WARN [InstancesService] منبع حقیقت در دسترس نبود (status=400) — اعتبارسنجی با formStatus اعلامی ادامه می‌یابد
+[Nest] 27642  - 10/31/2026, 6:47:52 AM    WARN [EntityLinkService] write-back وضعیت سند V-271689-3 → 5 ناموفق بود (status=400 err=)
+[Nest] 27642  - 10/31/2026, 6:47:52 AM    WARN [InstancesService] منبع حقیقت در دسترس نبود (status=400) — اعتبارسنجی با formStatus اعلامی ادامه می‌یابد
+[Nest] 27642  - 10/31/2026, 6:48:18 AM    WARN [InstancesService] منبع حقیقت در دسترس نبود (status=400) — اعتبارسنجی با formStatus اعلامی ادامه می‌یابد
+[Nest] 27642  - 10/31/2026, 6:48:18 AM    WARN [InstancesService] منبع حقیقت در دسترس نبود (status=400) — اعتبارسنجی با formStatus اعلامی ادامه می‌یابد
+[Nest] 27642  - 10/31/2026, 6:48:18 AM    WARN [InstancesService] منبع حقیقت در دسترس نبود (status=400) — اعتبارسنجی با formStatus اعلامی ادامه می‌یابد
+[Nest] 27642  - 10/31/2026, 6:48:18 AM    WARN [InstancesService] منبع حقیقت در دسترس نبود (status=400) — اعتبارسنجی با formStatus اعلامی ادامه می‌یابد
+[Nest] 27642  - 10/31/2026, 6:48:18 AM    WARN [InstancesService] منبع حقیقت در دسترس نبود (status=400) — اعتبارسنجی با formStatus اعلامی ادامه می‌یابد
+[Nest] 27642  - 10/31/2026, 6:48:18 AM    WARN [EntityLinkService] write-back وضعیت سند V-298240-1 → 4 ناموفق بود (status=400 err=)
+[Nest] 27642  - 10/31/2026, 6:48:18 AM    WARN [InstancesService] منبع حقیقت در دسترس نبود (status=400) — اعتبارسنجی با formStatus اعلامی ادامه می‌یابد
+[Nest] 27642  - 10/31/2026, 6:48:18 AM    WARN [EntityLinkService] write-back وضعیت سند V-298240-2 → 4 ناموفق بود (status=400 err=)
+[Nest] 27642  - 10/31/2026, 6:48:18 AM    WARN [InstancesService] منبع حقیقت در دسترس نبود (status=400) — اعتبارسنجی با formStatus اعلامی ادامه می‌یابد
+[Nest] 27642  - 10/31/2026, 6:48:18 AM    WARN [EntityLinkService] write-back وضعیت سند V-298240-3 → 1 ناموفق بود (status=400 err=)
+[Nest] 27642  - 10/31/2026, 6:48:18 AM    WARN [InstancesService] منبع حقیقت در دسترس نبود (status=400) — اعتبارسنجی با formStatus اعلامی ادامه می‌یابد
+[Nest] 27642  - 10/31/2026, 6:48:18 AM    WARN [EntityLinkService] write-back وضعیت سند V-298240-3 → 5 ناموفق بود (status=400 err=)
+[Nest] 27642  - 10/31/2026, 6:48:18 AM    WARN [InstancesService] منبع حقیقت در دسترس نبود (status=400) — اعتبارسنجی با formStatus اعلامی ادامه می‌یابد
+[Nest] 27642  - 10/31/2026, 6:49:01 AM     LOG [CartableService] SLA check: 4 گام بررسی شد — 2 هشدار ساخته شد
+[Nest] 27642  - 10/31/2026, 6:49:05 AM     LOG [CartableService] SLA check: 4 گام بررسی شد — 2 هشدار ساخته شد
+[Nest] 27642  - 10/31/2026, 6:49:26 AM     LOG [CartableService] SLA check: 4 گام بررسی شد — 2 هشدار ساخته شد

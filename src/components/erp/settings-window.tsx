@@ -228,7 +228,7 @@ export function SettingsWindow() {
           </span>
         </div>
         <div className="min-h-0 flex-1">
-          <WorkflowDesignerForm onBack={() => setPage("home")} />
+          <WorkflowDesignerForm />
         </div>
       </div>
     );
