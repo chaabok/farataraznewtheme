@@ -409,3 +409,7 @@ $ DATABASE_URL="file:/home/z/my-project/db/workflow.db" NODE_PATH=./node_modules
 [Nest] 27642  - 10/31/2026, 6:49:01 AM     LOG [CartableService] SLA check: 4 گام بررسی شد — 2 هشدار ساخته شد
 [Nest] 27642  - 10/31/2026, 6:49:05 AM     LOG [CartableService] SLA check: 4 گام بررسی شد — 2 هشدار ساخته شد
 [Nest] 27642  - 10/31/2026, 6:49:26 AM     LOG [CartableService] SLA check: 4 گام بررسی شد — 2 هشدار ساخته شد
+[Nest] 27642  - 10/31/2026, 6:52:32 AM     LOG [DefinitionsService] New version WF-VOUCHER v5 copied from v4
+[Nest] 27642  - 10/31/2026, 6:54:24 AM     LOG [DefinitionsService] Graph replaced for WF-VOUCHER v5 — 7 nodes / 7 transitions
+[Nest] 27642  - 10/31/2026, 6:55:00 AM     LOG [DefinitionsService] Graph replaced for WF-VOUCHER v5 — 7 nodes / 7 transitions
+[Nest] 27642  - 10/31/2026, 6:55:10 AM     LOG [DefinitionsService] Activated WF-VOUCHER v5 (entityType=voucher)

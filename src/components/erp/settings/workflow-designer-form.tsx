@@ -131,7 +131,15 @@ interface DefDetail {
   usedByInstances: boolean;
   instanceCount: number;
   nodes: Array<Omit<GNode, "nodeType"> & { nodeType: string }>;
-  transitions: GTrans[];
+  /* سرور گذارها را با ID گره می‌فرستد — کلاینت به nodeCode نگاشت می‌کند */
+  transitions: Array<{
+    id: number;
+    fromNodeId: number;
+    toNodeId: number;
+    action: string;
+    conditionExpr: string;
+    isDefault: boolean;
+  }>;
 }
 
 /* ------------------------------ ثابت‌ها ------------------------------ */
@@ -272,6 +280,8 @@ export function WorkflowDesignerForm() {
       ...d,
       nodes: d.nodes.map((n) => ({ ...n, nodeType: n.nodeType as GNode["nodeType"] })),
     };
+    /* نگاشت ID گره → nodeCode برای گذارها (مرجع پایدار سمت کلاینت) */
+    const idToCode = new Map(mapped.nodes.map((n) => [n.id, n.nodeCode]));
     setDetail({
       id: mapped.id,
       code: mapped.code,
@@ -304,8 +314,8 @@ export function WorkflowDesignerForm() {
     setTransitions(
       mapped.transitions.map((tr) => ({
         id: tr.id,
-        fromCode: tr.fromCode,
-        toCode: tr.toCode,
+        fromCode: idToCode.get(tr.fromNodeId) ?? "",
+        toCode: idToCode.get(tr.toNodeId) ?? "",
         action: tr.action,
         conditionExpr: tr.conditionExpr,
         isDefault: tr.isDefault,
@@ -677,8 +687,12 @@ export function WorkflowDesignerForm() {
     try {
       await wf.post<DefDetail>(`workflow-definitions/${d.id}/activate`, {});
       toast.success(t("wf.des.activatedToast"));
-      const [dd] = await Promise.all([fetchDefs().catch(() => [] as DefItem[])]);
+      const [dd, cc] = await Promise.all([
+        fetchDefs().catch(() => [] as DefItem[]),
+        fetchCatalog().catch(() => [] as CatalogItem[]),
+      ]);
       setDefs(dd);
+      setCatalog(cc); /* چیپ «فرآیند فعال» کاتالوگ هم به‌روز شود */
       if (selId === d.id) await openDef(d.id);
     } catch (e) {
       toast.error(e instanceof Error && e.message ? e.message : t("common.error"));
